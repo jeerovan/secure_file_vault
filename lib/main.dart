@@ -1,7 +1,22 @@
-import 'package:flutter/material.dart';
+import 'dart:io';
+import 'dart:ui';
 
-void main() {
-  runApp(const FileVaultApp());
+import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/storage/storage_sqlite.dart';
+import 'package:file_vault_bb/ui/pages/page_signin.dart';
+import 'package:file_vault_bb/ui/themes.dart';
+import 'package:file_vault_bb/utils/common.dart';
+import 'package:file_vault_bb/utils/enums.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+final logger = AppLogger(prefixes: ["main"]);
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await StorageSqlite.initialize(mode: ExecutionMode.appForeground);
+  await initializeSupabase();
+  runApp(const MainApp());
 }
 
 // --- Data Models and Mock Service ---
@@ -104,22 +119,104 @@ class FileSystemService {
 
 // --- Main Application Widget ---
 
-class FileVaultApp extends StatelessWidget {
-  const FileVaultApp({super.key});
+class MainApp extends StatefulWidget {
+  const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> with WidgetsBindingObserver {
+  ThemeMode _themeMode = ThemeMode.system;
+  late bool _isDarkMode;
+
+  final logger = AppLogger(prefixes: ["MainApp"]);
+
+  @override
+  void initState() {
+    super.initState();
+    // Load the theme from saved preferences
+    String? savedTheme = ModelSetting.get("theme", null);
+    switch (savedTheme) {
+      case "light":
+        _themeMode = ThemeMode.light;
+        _isDarkMode = false;
+        break;
+      case "dark":
+        _themeMode = ThemeMode.dark;
+        _isDarkMode = true;
+        break;
+      default:
+        // Default to system theme
+        _themeMode = ThemeMode.system;
+        _isDarkMode =
+            PlatformDispatcher.instance.platformBrightness == Brightness.dark;
+        break;
+    }
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    logger.info("App State:$state");
+    if (Platform.isIOS || Platform.isAndroid) {
+      if (state == AppLifecycleState.resumed) {
+        //SyncUtils().startAutoSync();
+        logger.info("Started Foreground Sync");
+      } else if (state == AppLifecycleState.paused) {
+        //SyncUtils().stopAutoSync();
+        logger.info("Stopped Foreground Sync");
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // Toggle between light and dark modes
+  Future<void> _onThemeToggle() async {
+    setState(() {
+      _themeMode = _isDarkMode ? ThemeMode.light : ThemeMode.dark;
+      _isDarkMode = !_isDarkMode;
+    });
+    await ModelSetting.set("theme", _isDarkMode ? "dark" : "light");
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'File Vault',
-      theme: ThemeData.from(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
-      home: const FileExplorerScreen(),
-      debugShowCheckedModeBanner: false,
+    bool isLargeScreen = false;
+    if (isDebugEnabled) {
+      isLargeScreen = MediaQuery.of(context).size.width > 600;
+    } else {
+      isLargeScreen =
+          Platform.isWindows || Platform.isMacOS || Platform.isLinux;
+    }
+    Widget page = PageSignin(runningOnDesktop: isLargeScreen);
+    return ChangeNotifierProvider(
+      create: (_) => FontSizeController(),
+      child: Builder(builder: (context) {
+        return MaterialApp(
+          builder: (context, child) {
+            final textScaler =
+                Provider.of<FontSizeController>(context).textScaler;
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: textScaler,
+              ),
+              child: child!,
+            );
+          },
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: _themeMode,
+          // Uses system theme by default
+          home: page,
+          debugShowCheckedModeBanner: false,
+        );
+      }),
     );
   }
 }
