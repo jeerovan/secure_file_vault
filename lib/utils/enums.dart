@@ -1,3 +1,13 @@
+enum SetupStep {
+  loading,
+  /* registration,
+  planSelection,
+  deviceSetup,
+  securityKey, */
+  storagePermission,
+  complete,
+}
+
 enum PageType {
   settings,
   categories,
@@ -200,7 +210,7 @@ extension AppStringExtension on AppString {
       case AppString.deviceRegistered:
         return "device_registered";
       case AppString.appName:
-        return "app_name";
+        return "FiFe";
       case AppString.reviewDialogShown:
         return "review_dialog_shown";
       case AppString.installedAt:

@@ -4,6 +4,7 @@ import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -134,6 +135,9 @@ class _PageSigninState extends State<PageSignin> {
               AppString.signedIn.string, "yes"); // used for simulation
           //navigateToOnboardCheck();
           logger.info("Login Successfull");
+          if (mounted) {
+            //await context.read<AppSetupState>().completeRegistration();
+          }
         }
         errorVerifyingOtp = false;
       } catch (e, s) {

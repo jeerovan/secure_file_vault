@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:uuid/uuid.dart';
@@ -19,7 +18,6 @@ class StorageSqlite {
   static Database? _database;
   static Completer<Database>? _databaseCompleter;
   final logger = AppLogger(prefixes: ["StorageSqlite"]);
-  SecureStorage secureStorage = SecureStorage();
   StorageSqlite._init();
 
   Future<Database> get database async {
@@ -121,52 +119,42 @@ class StorageSqlite {
         created_at INTEGER
       )
     ''');
-    await db.execute('''
-      CREATE TABLE folder (
-        id TEXT PRIMARY KEY,
-        folder_id TEXT,
-        title TEXT NOT NULL,
-        state INTEGER,
-        thumbnail INTEGER DEFAULT 0,
-        created_at INTEGER,
-        updated_at INTEGER,
-        FOREIGN KEY (folder_id) REFERENCES folder(id) ON DELETE CASCADE
-      )
-    ''');
+    // id as hash
     await db.execute('''
       CREATE TABLE file (
         id TEXT PRIMARY KEY,
-        folder_id TEXT NOT NULL,
         title TEXT NOT NULL,
-        type INTEGER,
-        metadata TEXT,
-        created_at INTEGER,
-        updated_at INTEGER,
+        path TEXT NOT NULL,
+        type INTEGER NOT NULL,
+        size INTEGER NOT NULL,
         thumbnail INTEGER DEFAULT 0,
-        state INTEGER,
-        FOREIGN KEY (folder_id) REFERENCES folder(id) ON DELETE CASCADE
+        state INTEGER DEFAULT 0,
+        created_at INTEGER,
+        updated_at INTEGER
       )
     ''');
     await db.execute('''
       CREATE INDEX idx_file_title ON file(title)
     ''');
+    // type: 0(file),1(private folder),2(device folder)
     await db.execute('''
-      CREATE VIRTUAL TABLE file_fts USING fts4(title, file_id);
-    ''');
-    await db.execute('''
-      CREATE TRIGGER file_ai AFTER INSERT ON file BEGIN
-        INSERT INTO file_fts(rowid, title) VALUES (new.id, new.title);
-      END;
-    ''');
-    await db.execute('''
-      CREATE TRIGGER file_au AFTER UPDATE ON file BEGIN
-        UPDATE file_fts SET title = new.title WHERE rowid = old.id;
-      END;
-    ''');
-    await db.execute('''
-      CREATE TRIGGER file_ad AFTER DELETE ON file BEGIN
-        DELETE FROM file_fts WHERE rowid = old.id;
-      END;
+      CREATE TABLE item (
+        id TEXT PRIMARY KEY,
+        is_folder INTEGER NOT NULL,
+        item_id TEXT,
+        file_id TEXT,
+        path TEXT,
+        title TEXT NOT NULL,
+        size INTEGER DEFAULT 0,
+        thumbnail INTEGER DEFAULT 0,
+        state INTEGER DEFAULT 0,
+        type INTEGER DEFAULT 0,
+        archived_at INTEGER,
+        created_at INTEGER,
+        updated_at INTEGER,
+        FOREIGN KEY (item_id) REFERENCES item(id) ON DELETE CASCADE,
+        FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE
+      )
     ''');
     await db.execute('''
       CREATE TABLE setting (

@@ -1,14 +1,150 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:file_vault_bb/storage/storage_secure.dart';
+import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../utils/common.dart';
+
+class AppSetupState extends ChangeNotifier {
+  final SecureStorage _prefs;
+
+  SetupStep _currentStep = SetupStep.loading;
+
+  // User data
+  String? _selectedPlan;
+  String? _deviceId;
+  bool _hasSecurityKey = false;
+
+  AppSetupState(this._prefs) {
+    _checkSetupStatus();
+  }
+
+  // Getters
+  SetupStep get currentStep => _currentStep;
+  String? get selectedPlan => _selectedPlan;
+  String? get deviceId => _deviceId;
+  bool get hasSecurityKey => _hasSecurityKey;
+
+  // Check all setup steps on app start
+  Future<void> _checkSetupStatus() async {
+    _currentStep = SetupStep.loading;
+    notifyListeners();
+
+    // Simulate loading delay
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    /* if (getSignedInUserId() == null) {
+      _currentStep = SetupStep.registration;
+      notifyListeners();
+      return;
+    }
+
+    // Check security key
+    String? securityKey = await _prefs.read(key: 'security_key');
+    _hasSecurityKey = securityKey != null;
+    if (!_hasSecurityKey) {
+      _currentStep = SetupStep.securityKey;
+      notifyListeners();
+      return;
+    }
+
+    // Check device registration
+    _deviceId = await _prefs.read(key: 'device_id');
+    if (_deviceId == null) {
+      _currentStep = SetupStep.deviceSetup;
+      notifyListeners();
+      return;
+    }
+
+    // Check plan subscription
+    _selectedPlan = await _prefs.read(key: 'selected_plan');
+    if (_selectedPlan == null) {
+      _currentStep = SetupStep.planSelection;
+      notifyListeners();
+      return;
+    } */
+
+    PermissionStatus storagePermission = await getStoragePermissionStatus();
+    if (!storagePermission.isGranted) {
+      _currentStep = SetupStep.storagePermission;
+      notifyListeners();
+      return;
+    }
+
+    // All setup complete
+    _currentStep = SetupStep.complete;
+    notifyListeners();
+  }
+
+  /* // Registration
+  Future<void> completeRegistration() async {
+    _currentStep = SetupStep.securityKey;
+    notifyListeners();
+  } */
+
+  /* 
+  // Security key
+  Future<void> setupSecurityKey(String key) async {
+    await Future.delayed(const Duration(seconds: 1)); // Simulate saving
+
+    await _prefs.write(key: 'security_key', value: key);
+    _hasSecurityKey = true;
+    _currentStep = SetupStep.deviceSetup;
+    notifyListeners();
+  } 
+
+  // Device setup
+  Future<void> registerDevice(String deviceName) async {
+    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+
+    final deviceId = '${deviceName}_${DateTime.now().millisecondsSinceEpoch}';
+    await _prefs.write(key: 'device_id', value: deviceId);
+    _deviceId = deviceId;
+    _currentStep = SetupStep.planSelection;
+    notifyListeners();
+  }
+  */
+
+  // Plan selection
+  Future<void> selectPlan(String planId) async {
+    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
+
+    await _prefs.write(key: 'selected_plan', value: planId);
+    _selectedPlan = planId;
+    _currentStep = SetupStep.storagePermission;
+    notifyListeners();
+  }
+
+  Future<void> hasStoragePermission() async {
+    _currentStep = SetupStep.complete;
+    notifyListeners();
+  }
+
+  // Logout / Reset
+  Future<void> logout() async {
+    await _prefs.delete(key: 'device_id');
+    await _prefs.delete(key: 'security_key');
+    await _prefs.delete(key: 'selected_plan');
+    _selectedPlan = null;
+    _deviceId = null;
+    _hasSecurityKey = false;
+    //_currentStep = SetupStep.registration;
+    notifyListeners();
+  }
+
+  // Force recheck (useful after app resumes from background)
+  Future<void> recheckStatus() async {
+    await _checkSetupStatus();
+  }
+}
 
 class MessageInCenter extends StatelessWidget {
   final String text;

@@ -14,12 +14,12 @@ import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
-import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -804,6 +804,23 @@ Future<bool> hasInternetConnection() async {
   }
 }
 
+// storage permission
+Future<PermissionStatus> getStoragePermissionStatus() async {
+  if (Platform.isAndroid) {
+    final deviceInfo = DeviceInfoPlugin();
+    final androidInfo = await deviceInfo.androidInfo;
+    if (androidInfo.version.sdkInt >= 33) {
+      return await Permission.manageExternalStorage.status;
+    } else {
+      // For Android 12 and below
+      return await Permission.storage.status;
+    }
+  } else {
+    // TODO implement for other platforms
+    return PermissionStatus.granted;
+  }
+}
+
 SupabaseClient? getSupabaseClient() {
   try {
     return Supabase.instance.client;
@@ -845,6 +862,53 @@ Future<void> initializeSupabase(
     AppLogger(prefixes: [mode.string]).info("Initialized Supabase");
     //EventStream().publish(AppEvent(type: EventType.checkPlanStatus));
   }
+}
+
+String? getSignedInUserId() {
+  if (simulateOnboarding()) {
+    if (ModelSetting.get(AppString.signedIn.string, "no") == "yes") {
+      return "tester";
+    } else {
+      return null;
+    }
+  }
+  bool supabaseInitialized =
+      ModelSetting.get(AppString.supabaseInitialized.string, "no") == "yes";
+  if (!supabaseInitialized) return null;
+  SupabaseClient supabaseClient = Supabase.instance.client;
+  User? currentUser = supabaseClient.auth.currentUser;
+  if (currentUser != null) {
+    return currentUser.id;
+  } else {
+    return null;
+  }
+}
+
+String? getSignedInEmailId() {
+  if (simulateOnboarding()) {
+    return "fife@jeerovan.com";
+  }
+  bool supabaseInitialized =
+      ModelSetting.get(AppString.supabaseInitialized.string, "no") == "yes";
+  if (!supabaseInitialized) return null;
+  SupabaseClient supabaseClient = Supabase.instance.client;
+  User? currentUser = supabaseClient.auth.currentUser;
+  if (currentUser != null) {
+    return currentUser.email;
+  } else {
+    return null;
+  }
+}
+
+Future<String?> getMasterKey() async {
+  String? signedInUserId = getSignedInUserId();
+  if (signedInUserId == null) {
+    return null;
+  }
+  SecureStorage storage = SecureStorage();
+  String keyForMasterKey = '${signedInUserId}_mk';
+  String? masterKeyBase64 = await storage.read(key: keyForMasterKey);
+  return masterKeyBase64;
 }
 
 Future<void> signalToUpdateHome() async {}
