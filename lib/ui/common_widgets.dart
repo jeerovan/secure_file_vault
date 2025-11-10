@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter/gestures.dart';
@@ -56,14 +57,6 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    // Check device registration
-    _deviceId = await _prefs.read(key: 'device_id');
-    if (_deviceId == null) {
-      _currentStep = SetupStep.deviceSetup;
-      notifyListeners();
-      return;
-    }
-
     // Check plan subscription
     _selectedPlan = await _prefs.read(key: 'selected_plan');
     if (_selectedPlan == null) {
@@ -71,6 +64,14 @@ class AppSetupState extends ChangeNotifier {
       notifyListeners();
       return;
     } */
+
+    // Check device registration
+    _deviceId = await _prefs.read(key: 'device_id');
+    if (_deviceId == null) {
+      _currentStep = SetupStep.deviceSetup;
+      notifyListeners();
+      return;
+    }
 
     PermissionStatus storagePermission = await getStoragePermissionStatus();
     if (!storagePermission.isGranted) {
@@ -100,18 +101,23 @@ class AppSetupState extends ChangeNotifier {
     _currentStep = SetupStep.deviceSetup;
     notifyListeners();
   } 
+  */
 
   // Device setup
-  Future<void> registerDevice(String deviceName) async {
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
-
-    final deviceId = '${deviceName}_${DateTime.now().millisecondsSinceEpoch}';
+  Future<void> registerDevice() async {
+    String deviceId = await getDeviceId();
+    String deviceName = await getDeviceName();
+    ModelItem deviceItem = await ModelItem.fromMap({
+      "id": deviceId,
+      "name": deviceName,
+      "is_folder": 1,
+    });
+    await deviceItem.insert();
     await _prefs.write(key: 'device_id', value: deviceId);
     _deviceId = deviceId;
-    _currentStep = SetupStep.planSelection;
+    _currentStep = SetupStep.storagePermission;
     notifyListeners();
   }
-  */
 
   // Plan selection
   Future<void> selectPlan(String planId) async {
@@ -136,7 +142,7 @@ class AppSetupState extends ChangeNotifier {
     _selectedPlan = null;
     _deviceId = null;
     _hasSecurityKey = false;
-    //_currentStep = SetupStep.registration;
+    _currentStep = SetupStep.deviceSetup;
     notifyListeners();
   }
 

@@ -17,7 +17,7 @@ class PageLoading extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'File Vault',
+              'File Ferry',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 48),

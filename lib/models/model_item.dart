@@ -1,115 +1,77 @@
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/models/model_item_file.dart';
 import 'package:file_vault_bb/models/model_preferences.dart';
-import 'package:file_vault_bb/services/service_events.dart';
 import 'package:uuid/uuid.dart';
-import 'package:path/path.dart' as path;
 import '../storage/storage_sqlite.dart';
 
 class ModelItem {
   String? id;
-  String folderId;
-  String text;
-  Uint8List? thumbnail;
-  int? starred;
-  int? pinned;
-  int? archivedAt;
-  ItemType type;
+  String? path;
+  String name;
+  bool isFolder;
+  String? itemId;
+  int? fileId;
+  int? size;
+  int? thumbnail;
   int? state;
-  Map<String, dynamic>? data;
-  ModelItem? replyOn;
-  int? at;
+  int? archivedAt;
+  int? createdAt;
   int? updatedAt;
 
   ModelItem({
     this.id,
-    required this.folderId,
-    required this.text,
+    this.path,
+    required this.name,
+    required this.isFolder,
+    this.itemId,
+    this.fileId,
+    this.size,
     this.thumbnail,
-    this.starred,
-    this.pinned,
-    this.archivedAt,
-    required this.type,
     this.state,
-    this.data,
-    this.replyOn,
-    this.at,
+    this.archivedAt,
+    this.createdAt,
     this.updatedAt,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'group_id': folderId,
-      'text': text,
-      'thumbnail': thumbnail == null ? null : base64Encode(thumbnail!),
-      'starred': starred,
-      'pinned': pinned,
-      'archived_at': archivedAt,
-      'type': type.value,
+      'path': path,
+      'name': name,
+      'is_folder': isFolder ? 1 : 0,
+      'item_id': itemId,
+      'file_id': fileId,
+      'size': size,
+      'thumbnail': thumbnail,
       'state': state,
-      'data': data == null
-          ? null
-          : data is String
-              ? data
-              : jsonEncode(data),
-      'at': at,
+      'archived_at': archivedAt,
+      'created_at': createdAt,
       'updated_at': updatedAt
     };
   }
 
+  // -- Examples --
+  // DeviceFolder: id:DeviceId,name:DeviceName
+  // SyncFolder: itemId:DeviceFolderId,Path:FolderPath,name:path.basename(FolderPath)
+  // ChildFolder: itemId:ParentFolderId,name: path.basename(ChildFolderPath)
+
   static Future<ModelItem> fromMap(Map<String, dynamic> map) async {
     Uuid uuid = const Uuid();
-    Map<String, dynamic>? dataMap;
-    ModelItem? replyOn;
-    if (map.containsKey('data') && map['data'] != null) {
-      if (map['data'] is String) {
-        dataMap = jsonDecode(map['data']);
-      } else {
-        dataMap = map['data'];
-      }
-    }
-    if (dataMap != null) {
-      if (dataMap.containsKey("reply_on")) {
-        String replyOnId = dataMap["reply_on"];
-        replyOn = await get(replyOnId);
-      }
-    }
-    Uint8List? thumbnail;
-    if (map.containsKey("thumbnail")) {
-      if (map["thumbnail"] is String) {
-        thumbnail = base64Decode(map["thumbnail"]);
-      } else {
-        thumbnail = map["thumbnail"];
-      }
-    }
-    ItemType mediaType = ItemType.text;
-    if (map.containsKey('type')) {
-      if (map['type'] is ItemType) {
-        mediaType = map['type'];
-      } else {
-        mediaType = ItemTypeExtension.fromValue(map['type'])!;
-      }
-    }
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     return ModelItem(
       id: map.containsKey('id') ? map['id'] : uuid.v4(),
-      folderId: getValueFromMap(map, "group_id", defaultValue: ""),
-      text: getValueFromMap(map, "text", defaultValue: ""),
-      thumbnail: thumbnail,
-      starred: getValueFromMap(map, "starred", defaultValue: 0),
-      pinned: getValueFromMap(map, "pinned", defaultValue: 0),
-      archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
-      type: mediaType,
+      path: getValueFromMap(map, "path", defaultValue: ""),
+      name: getValueFromMap(map, "name", defaultValue: ""),
+      isFolder: getValueFromMap(map, "is_folder", defaultValue: 0) == 0
+          ? false
+          : true,
+      itemId: getValueFromMap(map, "item_id", defaultValue: null),
+      fileId: getValueFromMap(map, "file_id", defaultValue: null),
+      size: getValueFromMap(map, "size", defaultValue: 0),
+      thumbnail: getValueFromMap(map, "thumbnail", defaultValue: 0),
       state: getValueFromMap(map, "state", defaultValue: 0),
-      data: dataMap,
-      replyOn: replyOn,
-      at: getValueFromMap(map, "at", defaultValue: utcNow),
+      archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
+      createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }
@@ -180,94 +142,31 @@ class ModelItem {
     return null;
   }
 
-  static Future<ModelItem?> getLatestInGroup(String groupId) async {
+  static Future<List<ModelItem>> getInFolder(ModelItem? item) async {
+    if (item == null) return [];
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
       "item",
-      where:
-          "type >= ? AND type < ? AND group_id = ? AND archived_at = 0 AND type != ?",
+      where: "item_id = ?",
       whereArgs: [
-        ItemType.text.value,
-        ItemType.task.value + 10000,
-        groupId,
-        ItemType.date.value
+        item.id,
       ],
-      orderBy: 'at DESC',
-      limit: 1,
     );
-    if (rows.isNotEmpty) {
-      return await fromMap(rows.first);
-    }
-    return null;
+    return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<List<ModelItem>> getInGroup(
-      String groupId, Map<String, bool> filters) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<String> filterParams = [];
-    if (filters["pinned"]!) {
-      filterParams.add("pinned = 1");
-    }
-    if (filters["starred"]!) {
-      filterParams.add("starred = 1");
-    }
-    if (filters["notes"]!) {
-      filterParams.add("type = ${ItemType.text.value}");
-    }
-    if (filters["tasks"]!) {
-      filterParams.add("type = ${ItemType.task.value}");
-      filterParams.add("type = ${ItemType.completedTask.value}");
-    }
-    if (filters["links"]!) {
-      filterParams.add("text LIKE '%http%'");
-    }
-    if (filters["images"]!) {
-      filterParams.add("type = ${ItemType.image.value}");
-    }
-    if (filters["audio"]!) {
-      filterParams.add("type = ${ItemType.audio.value}");
-    }
-    if (filters["video"]!) {
-      filterParams.add("type = ${ItemType.video.value}");
-    }
-    if (filters["documents"]!) {
-      filterParams.add("type = ${ItemType.document.value}");
-    }
-    if (filters["contacts"]!) {
-      filterParams.add("type = ${ItemType.contact.value}");
-    }
-    if (filters["locations"]!) {
-      filterParams.add("type = ${ItemType.location.value}");
-    }
-    String filterQuery = "";
-    if (filterParams.isNotEmpty) {
-      if (filterParams.length == 1) {
-        filterQuery = " AND ${filterParams.join("")}";
-      } else {
-        filterQuery = " AND (${filterParams.join(" OR ")})";
+  static Future<ModelItem?> getParentItem(ModelItem? item) async {
+    if (item == null) return null;
+    ModelItem? currentItem = await get(item.id!);
+    ModelItem? parentItem;
+    if (currentItem != null) {
+      String? parentItemId = currentItem.itemId;
+      if (parentItemId != null) {
+        parentItem = await get(parentItemId);
       }
     }
-    List<Map<String, dynamic>> rows = await db.rawQuery('''
-        SELECT * FROM item
-        WHERE type != ${ItemType.date.value} AND group_id = '$groupId' AND archived_at = 0 $filterQuery
-        ORDER BY at DESC
-      ''');
-    return await Future.wait(rows.map((map) => fromMap(map)));
-  }
-
-  static Future<List<ModelItem>> getAllInGroup(String groupId) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows = await db.query(
-      "item",
-      where: "group_id = ?",
-      whereArgs: [
-        groupId,
-      ],
-    );
-    return await Future.wait(rows.map((map) => fromMap(map)));
+    return parentItem;
   }
 
   static Future<List<ModelItem>> getStarred(int offset, int limit) async {
@@ -309,25 +208,6 @@ class ModelItem {
     return rows.isNotEmpty ? rows[0]['count'] as int : 0;
   }
 
-  static Future<bool> removeUrlInfo(String itemId) async {
-    ModelItem? item = await get(itemId);
-    if (item != null && item.data != null) {
-      Map<String, dynamic> data = item.data!;
-      dynamic urlInfo = data.remove("url_info");
-      if (urlInfo != null) {
-        String fileName = '$itemId-urlimage.png';
-        File? imageFile = await getFile("image", fileName);
-        if (imageFile != null && imageFile.existsSync()) {
-          imageFile.deleteSync();
-        }
-      }
-      item.data = data;
-      await item.update(["data"]);
-      return true;
-    }
-    return false;
-  }
-
   static Future<ModelItem?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
     List<Map<String, dynamic>> rows = await dbHelper.getWithId("item", id);
@@ -344,28 +224,16 @@ class ModelItem {
     return await db.query("item");
   }
 
-  static Future<List<ModelItem>> getDateItemForGroupId(
-      String groupId, String date) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows = await db.query(
-      "item",
-      where: "group_id = ? AND text = ? AND type = ?",
-      whereArgs: [groupId, date, ItemType.date.value],
-    );
-    return await Future.wait(rows.map((map) => fromMap(map)));
-  }
-
   static Future<List<ModelItem>> getImageAudio() async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query("item",
         where: "type = ? OR type = ?",
-        whereArgs: [ItemType.image.value, ItemType.audio.value]);
+        whereArgs: [FileType.image.value, FileType.audio.value]);
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<List<ModelItem>> getForType(ItemType itemType) async {
+  static Future<List<ModelItem>> getForType(FileType itemType) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows =
@@ -435,28 +303,6 @@ class ModelItem {
   Future<int> delete({bool withServerSync = false}) async {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 1;
-    if (data != null) {
-      if (data!.containsKey("path")) {
-        final String filePath = data!["path"];
-        String fileHash = path.basename(filePath);
-        List<String> fileHashItemIds =
-            await ModelItemFile.getFileHashItemIds(fileHash);
-        File file = File(filePath);
-        if (fileHashItemIds.length == 1 && fileHashItemIds[0] == id) {
-          if (file.existsSync()) {
-            deleteTask = 2;
-            file.deleteSync();
-          }
-        }
-      }
-      if (data!.containsKey("url_info")) {
-        String fileName = '$id-urlimage.png';
-        File? imageFile = await getFile("image", fileName);
-        if (imageFile != null && imageFile.existsSync()) {
-          imageFile.deleteSync();
-        }
-      }
-    }
     Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete("item", id);
     bool syncEnabled = await ModelPreferences.get(

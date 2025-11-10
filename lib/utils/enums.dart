@@ -1,8 +1,8 @@
 enum SetupStep {
   loading,
+  deviceSetup,
   /* registration,
   planSelection,
-  deviceSetup,
   securityKey, */
   storagePermission,
   complete,
@@ -32,67 +32,37 @@ enum PageType {
   devices,
 }
 
-enum ItemType {
-  text,
+enum FileType {
   image,
   video,
   audio,
   document,
-  location,
-  contact,
-  date,
-  task,
-  completedTask,
 }
 
-extension ItemTypeExtension on ItemType {
+extension ItemTypeExtension on FileType {
   int get value {
     switch (this) {
-      case ItemType.text:
-        return 100000;
-      case ItemType.image:
+      case FileType.image:
         return 110000;
-      case ItemType.video:
+      case FileType.video:
         return 120000;
-      case ItemType.audio:
+      case FileType.audio:
         return 130000;
-      case ItemType.document:
+      case FileType.document:
         return 140000;
-      case ItemType.location:
-        return 150000;
-      case ItemType.contact:
-        return 160000;
-      case ItemType.date:
-        return 170000;
-      case ItemType.task:
-        return 180000;
-      case ItemType.completedTask:
-        return 180010;
     }
   }
 
-  static ItemType? fromValue(int value) {
+  static FileType? fromValue(int value) {
     switch (value) {
-      case 100000:
-        return ItemType.text;
       case 110000:
-        return ItemType.image;
+        return FileType.image;
       case 120000:
-        return ItemType.video;
+        return FileType.video;
       case 130000:
-        return ItemType.audio;
+        return FileType.audio;
       case 140000:
-        return ItemType.document;
-      case 150000:
-        return ItemType.location;
-      case 160000:
-        return ItemType.contact;
-      case 170000:
-        return ItemType.date;
-      case 180000:
-        return ItemType.task;
-      case 180010:
-        return ItemType.completedTask;
+        return FileType.document;
       default:
         return null;
     }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:flutter/material.dart';
@@ -20,15 +22,31 @@ class _StoragePermissionPageState extends State<StoragePermissionPage> {
     });
 
     try {
-      // Request appropriate permissions based on Android version
       PermissionStatus status;
 
-      if (await _isAndroid13OrHigher()) {
-        // Android 13+ uses granular media permissions
-        status = await Permission.manageExternalStorage.request();
+      if (Platform.isAndroid) {
+        // Request appropriate permissions based on Android version
+        if (await _isAndroid13OrHigher()) {
+          // Android 13+ uses granular media permissions
+          status = await Permission.manageExternalStorage.request();
+        } else {
+          // Android 12 and below
+          status = await Permission.storage.request();
+        }
+      } else if (Platform.isIOS) {
+        // iOS uses photo library permission for media/storage access
+        status = await Permission.photos.request();
+      } else if (Platform.isMacOS) {
+        // macOS uses photo library permission
+        // For file system access, use file picker dialogs instead
+        status = await Permission.photos.request();
+      } else if (Platform.isWindows || Platform.isLinux) {
+        // Desktop platforms (Windows/Linux) don't have runtime permissions
+        // File access is controlled by OS-level filesystem permissions
+        status = PermissionStatus.granted;
       } else {
-        // Android 12 and below
-        status = await Permission.storage.request();
+        // Fallback for any other platform
+        status = PermissionStatus.granted;
       }
 
       if (status.isGranted) {

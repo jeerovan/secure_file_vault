@@ -508,6 +508,10 @@ Future<String> getHashOfFile(File file) async {
   return sha256hash.toString();
 }
 
+Future<String> getHashOfString(String stringForHash) async {
+  return sha256.convert(utf8.encode(stringForHash)).toString();
+}
+
 Future<Map<String, dynamic>?> processAndGetFileAttributes(
     String filePath) async {
   File file = File(filePath);
@@ -770,25 +774,48 @@ Uint8List hexToBytes(String hex) {
 
 Future<String> getDeviceName() async {
   final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-
   if (Platform.isAndroid) {
     AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    return '${androidInfo.manufacturer} ${androidInfo.model}';
+    return '${androidInfo.brand} ${androidInfo.model}';
   } else if (Platform.isIOS) {
     IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-    return '${iosInfo.name} (${iosInfo.model})';
+    return '${iosInfo.utsname.machine} (${iosInfo.model})';
   } else if (Platform.isMacOS) {
     MacOsDeviceInfo macInfo = await deviceInfo.macOsInfo;
-    return 'MacOS ${macInfo.computerName}';
+    return macInfo.computerName;
   } else if (Platform.isWindows) {
     WindowsDeviceInfo winInfo = await deviceInfo.windowsInfo;
     return '${winInfo.productName} ${winInfo.computerName}';
   } else if (Platform.isLinux) {
     LinuxDeviceInfo linuxInfo = await deviceInfo.linuxInfo;
-    return 'Linux ${linuxInfo.name}';
+    return linuxInfo.name;
   } else {
-    return 'Unknown Device';
+    return 'Unknown';
   }
+}
+
+Future<String> getDeviceId() async {
+  final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+  String stringForHash = "Unknown";
+  if (Platform.isAndroid) {
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    stringForHash =
+        '${androidInfo.manufacturer}${androidInfo.model}${androidInfo.device}${androidInfo.hardware}';
+  } else if (Platform.isIOS) {
+    IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+    stringForHash =
+        '${iosInfo.identifierForVendor}${iosInfo.utsname.machine}${iosInfo.model}';
+  } else if (Platform.isMacOS) {
+    MacOsDeviceInfo macInfo = await deviceInfo.macOsInfo;
+    stringForHash = '${macInfo.systemGUID}';
+  } else if (Platform.isWindows) {
+    WindowsDeviceInfo winInfo = await deviceInfo.windowsInfo;
+    stringForHash = '${winInfo.productId}${winInfo.deviceId}';
+  } else if (Platform.isLinux) {
+    LinuxDeviceInfo linuxInfo = await deviceInfo.linuxInfo;
+    stringForHash = '${linuxInfo.machineId}';
+  }
+  return getHashOfString(stringForHash);
 }
 
 // Helper to check internet connectivity
@@ -809,14 +836,31 @@ Future<PermissionStatus> getStoragePermissionStatus() async {
   if (Platform.isAndroid) {
     final deviceInfo = DeviceInfoPlugin();
     final androidInfo = await deviceInfo.androidInfo;
+    // Android 13+ (API 33): MANAGE_EXTERNAL_STORAGE permission
     if (androidInfo.version.sdkInt >= 33) {
       return await Permission.manageExternalStorage.status;
     } else {
-      // For Android 12 and below
+      // Android 12 and below: STORAGE permission
       return await Permission.storage.status;
     }
+  } else if (Platform.isIOS) {
+    // iOS does not have a direct 'storage' permission, only photo library access
+    return await Permission.photos.status;
+  } else if (Platform.isMacOS) {
+    // macOS distinguishes photo and file system access
+    return await Permission.photos.status; // For Photos
+    // For file access, you must use file dialogs as explicit permission model does not exist
+  } else if (Platform.isWindows) {
+    // No explicit storage permission, always granted
+    return PermissionStatus.granted;
+  } else if (Platform.isLinux) {
+    // No explicit storage permission, always granted
+    return PermissionStatus.granted;
+  } else if (kIsWeb) {
+    // Web: storage access is managed by the browser, always granted
+    return PermissionStatus.granted;
   } else {
-    // TODO implement for other platforms
+    // Default fallback
     return PermissionStatus.granted;
   }
 }

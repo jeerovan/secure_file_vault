@@ -119,42 +119,56 @@ class StorageSqlite {
         created_at INTEGER
       )
     ''');
-    // id as hash
+    /* // type as 0:User 1:System(FiFe)
+    await db.execute('''
+      CREATE TABLE device (
+        id TEXT PRIMARY KEY,
+        type INTEGER DEFAULT 0,
+        updated_at INTEGER,
+        created_at INTEGER
+      )
+    '''); */
+    // id as sha-256
+    //state: 1:Local, 2:Local+Server 3:Server
     await db.execute('''
       CREATE TABLE file (
-        id TEXT PRIMARY KEY,
-        title TEXT NOT NULL,
-        path TEXT NOT NULL,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        hash TEXT NOT NULL,
         type INTEGER NOT NULL,
         size INTEGER NOT NULL,
-        thumbnail INTEGER DEFAULT 0,
+        duration INTEGER,
         state INTEGER DEFAULT 0,
+        archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER
       )
     ''');
     await db.execute('''
-      CREATE INDEX idx_file_title ON file(title)
+      CREATE INDEX idx_file_hash ON file(hash)
     ''');
     // type: 0(file),1(private folder),2(device folder)
+    // path: only for synced folders
+    // name: folder, device
     await db.execute('''
       CREATE TABLE item (
         id TEXT PRIMARY KEY,
-        is_folder INTEGER NOT NULL,
+        path TEXT,
+        name TEXT,
+        is_folder INTEGER DEFAULT 0,
         item_id TEXT,
         file_id TEXT,
-        path TEXT,
-        title TEXT NOT NULL,
         size INTEGER DEFAULT 0,
         thumbnail INTEGER DEFAULT 0,
         state INTEGER DEFAULT 0,
-        type INTEGER DEFAULT 0,
         archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER,
         FOREIGN KEY (item_id) REFERENCES item(id) ON DELETE CASCADE,
         FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE
       )
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_item_path ON item(path)
     ''');
     await db.execute('''
       CREATE TABLE setting (

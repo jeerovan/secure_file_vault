@@ -1,4 +1,15 @@
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_vault_bb/models/model_item.dart';
+import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/ui/common_widgets.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as path;
+import 'package:provider/provider.dart';
+
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PageExplorer extends StatefulWidget {
   final ThemeMode themeMode;
@@ -17,7 +28,7 @@ class _PageExplorerState extends State<PageExplorer> {
   final _fileSystem = FileSystemService();
   static const double _dualPaneBreakpoint = 800.0;
 
-  void _onItemDropped(FileItem item, FileItem destination) {
+  void _onItemDropped(ModelItem item, ModelItem destination) {
     setState(() {
       _fileSystem.moveItem(item, destination);
     });
@@ -56,7 +67,7 @@ class _PageExplorerState extends State<PageExplorer> {
 enum ViewType { list, grid }
 
 class FilePane extends StatefulWidget {
-  final Function(FileItem item, FileItem destination) onItemDrop;
+  final Function(ModelItem item, ModelItem destination) onItemDrop;
 
   const FilePane({super.key, required this.onItemDrop});
 
@@ -65,51 +76,63 @@ class FilePane extends StatefulWidget {
 }
 
 class _FilePaneState extends State<FilePane> {
+  final AppLogger logger = AppLogger(prefixes: ["Explorer"]);
+
   final _fileSystem = FileSystemService();
-  List<FileItem> _items = [];
-  String _currentPath = '/';
+  List<ModelItem> _items = [];
+  ModelItem? currentItem;
   ViewType _viewType = ViewType.list;
   bool _isLoading = true;
+  List<ModelItem> parentChilds = [];
 
   @override
   void initState() {
     super.initState();
-    _loadFiles(_currentPath);
+    _loadFiles();
   }
 
-  Future<void> _loadFiles(String path) async {
+  Future<void> _loadFiles() async {
+    if (currentItem == null) {
+      currentItem = await ModelItem.get(await getDeviceId());
+      parentChilds.add(currentItem!);
+    }
     setState(() => _isLoading = true);
-    final items = await _fileSystem.getFilesInPath(path);
+    final items = await ModelItem.getInFolder(currentItem);
     if (mounted) {
       setState(() {
-        _currentPath = path;
         _items = items;
         _isLoading = false;
       });
     }
   }
 
-  void _navigateTo(FileItem folder) {
-    if (folder.isFolder) {
-      _loadFiles('${folder.path}${folder.name}/');
+  void _navigateTo(ModelItem item) {
+    if (item.isFolder) {
+      currentItem = item;
+      _loadFiles();
+      if (parentChilds.contains(item)) {
+        parentChilds = parentChilds.sublist(0, parentChilds.indexOf(item) + 1);
+      } else {
+        parentChilds.add(item);
+      }
     }
   }
 
-  void _navigateBack() {
-    if (_currentPath != '/') {
-      final pathSegments = _currentPath.split('/')
-        ..removeLast()
-        ..removeLast();
-      _loadFiles(pathSegments.isEmpty ? '/' : '${pathSegments.join('/')}/');
+  Future<void> _navigateBack() async {
+    ModelItem? parentItem = await ModelItem.getParentItem(currentItem);
+    if (parentItem != null) {
+      parentChilds = parentChilds.sublist(0, parentChilds.length - 1);
+      currentItem = parentItem;
+      _loadFiles();
     }
   }
 
-  void _onLongPress(FileItem folder) {
+  void _onLongPress(ModelItem folder) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(folder.name),
-        content: Text(folder.isBackedUp
+        content: Text(folder.isFolder
             ? 'Disable backup for this folder?'
             : 'Enable backup for this folder?'),
         actions: [
@@ -121,7 +144,7 @@ class _FilePaneState extends State<FilePane> {
               setState(() => _fileSystem.toggleBackupStatus(folder));
               Navigator.of(context).pop();
             },
-            child: Text(folder.isBackedUp ? 'Disable' : 'Enable'),
+            child: Text(folder.isFolder ? 'Disable' : 'Enable'),
           ),
         ],
       ),
@@ -129,22 +152,20 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Widget _buildBreadcrumb() {
-    final parts = _currentPath.split('/')..removeLast();
-    if (parts.isEmpty) parts.add('');
-
     List<Widget> breadcrumbWidgets = [];
     String cumulativePath = '/';
 
-    for (int i = 0; i < parts.length; i++) {
-      final part = parts[i];
-      final isLast = i == parts.length - 1;
+    for (int i = 0; i < parentChilds.length; i++) {
+      ModelItem item = parentChilds[i];
+      final part = item.name;
+      final isLast = i == parentChilds.length - 1;
       final path = (i == 0) ? '/' : '$cumulativePath$part/';
 
       if (i > 0) cumulativePath += '$part/';
 
       breadcrumbWidgets.add(
         InkWell(
-          onTap: () => _loadFiles(path),
+          onTap: () => {_navigateTo(item)},
           borderRadius: BorderRadius.circular(4),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
@@ -173,6 +194,21 @@ class _FilePaneState extends State<FilePane> {
         child: Row(children: breadcrumbWidgets));
   }
 
+  Future<void> addSyncFolder() async {
+    String? folderPath = await getSelectFolderWithReadWritePermission();
+    if (folderPath != null) {
+      String folderName = path.basename(folderPath);
+      String parentItemId = await getDeviceId();
+      ModelItem syncFolderItem = await ModelItem.fromMap({
+        "item_id": parentItemId,
+        "path": folderPath,
+        "name": folderName,
+        "is_folder": 1
+      });
+      await syncFolderItem.insert();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -185,7 +221,7 @@ class _FilePaneState extends State<FilePane> {
                   : _buildFileView(),
         ),
         AppBar(
-          leading: _currentPath != '/'
+          leading: currentItem != '/'
               ? IconButton(
                   icon: const Icon(Icons.arrow_back), onPressed: _navigateBack)
               : null,
@@ -193,6 +229,12 @@ class _FilePaneState extends State<FilePane> {
           backgroundColor:
               Theme.of(context).colorScheme.surfaceContainerHighest,
           actions: [
+            IconButton(icon: Icon(Icons.add), onPressed: addSyncFolder),
+            IconButton(
+              icon: Icon(Icons.logout),
+              onPressed: () => setState(
+                  () async => await context.read<AppSetupState>().logout()),
+            ),
             IconButton(
               icon: Icon(_viewType == ViewType.list
                   ? Icons.grid_view
@@ -241,13 +283,69 @@ class _FilePaneState extends State<FilePane> {
   }
 }
 
+Future<String?> getSelectFolderWithReadWritePermission() async {
+  // Request storage permission for Android
+  if (Platform.isAndroid) {
+    // Android 13+ uses granular media permissions
+    if (await _isAndroid13OrAbove()) {
+      // For Android 13+, file_picker handles permissions internally
+      // when user selects via SAF (Storage Access Framework)
+      return await FilePicker.platform.getDirectoryPath();
+    } else {
+      // For Android 12 and below
+      final status = await Permission.storage.request();
+
+      if (status.isGranted) {
+        return await FilePicker.platform.getDirectoryPath();
+      }
+    }
+  }
+
+  // iOS doesn't require explicit permissions for user-selected directories
+  if (Platform.isIOS) {
+    return await FilePicker.platform.getDirectoryPath();
+  }
+
+  // Desktop platforms (Windows, macOS, Linux) don't use runtime permissions
+  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    try {
+      final String? selectedDirectory =
+          await FilePicker.platform.getDirectoryPath();
+
+      if (selectedDirectory != null) {
+        // Test write access by attempting to create a temp file
+        final testFile = File('$selectedDirectory/.test_write_access');
+        await testFile.writeAsString('test');
+        await testFile.delete();
+
+        return selectedDirectory;
+      } else {
+        return null;
+      }
+    } on FileSystemException catch (e) {
+      // Permission denied or access error
+      return null;
+    }
+  }
+
+  return null;
+}
+
+Future<bool> _isAndroid13OrAbove() async {
+  if (Platform.isAndroid) {
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    return androidInfo.version.sdkInt >= 33;
+  }
+  return false;
+}
+
 // --- UI Widgets for Items (with updated DragTarget) ---
 
 class _FileListItem extends StatelessWidget {
-  final FileItem item;
+  final ModelItem item;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  final Function(FileItem item, FileItem destination) onDrop;
+  final Function(ModelItem item, ModelItem destination) onDrop;
 
   const _FileListItem(
       {required this.item,
@@ -263,7 +361,7 @@ class _FileListItem extends StatelessWidget {
         leading: Icon(
             item.isFolder ? Icons.folder : Icons.insert_drive_file_outlined),
         title: Text(item.name, overflow: TextOverflow.ellipsis),
-        trailing: item.isBackedUp
+        trailing: item.isFolder
             ? Icon(Icons.cloud_done,
                 color: Colors.tealAccent.shade400, size: 20)
             : null,
@@ -273,7 +371,7 @@ class _FileListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final draggableItem = LongPressDraggable<FileItem>(
+    final draggableItem = LongPressDraggable<ModelItem>(
       data: item,
       feedback: Opacity(
           opacity: 0.7,
@@ -285,7 +383,7 @@ class _FileListItem extends StatelessWidget {
     );
 
     if (item.isFolder) {
-      return DragTarget<FileItem>(
+      return DragTarget<ModelItem>(
         builder: (context, candidateData, rejectedData) => draggableItem,
         onWillAcceptWithDetails: (details) => details.data.id != item.id,
         onAcceptWithDetails: (details) => onDrop(details.data, item),
@@ -296,10 +394,10 @@ class _FileListItem extends StatelessWidget {
 }
 
 class _FileGridItem extends StatelessWidget {
-  final FileItem item;
+  final ModelItem item;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  final Function(FileItem item, FileItem destination) onDrop;
+  final Function(ModelItem item, ModelItem destination) onDrop;
 
   const _FileGridItem(
       {required this.item,
@@ -339,7 +437,7 @@ class _FileGridItem extends StatelessWidget {
                 ),
               ],
             ),
-            if (item.isBackedUp)
+            if (item.isFolder)
               Positioned(
                   top: 6,
                   right: 6,
@@ -353,7 +451,7 @@ class _FileGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final draggableItem = LongPressDraggable<FileItem>(
+    final draggableItem = LongPressDraggable<ModelItem>(
       data: item,
       feedback: Transform.scale(
           scale: 1.1,
@@ -364,7 +462,7 @@ class _FileGridItem extends StatelessWidget {
     );
 
     if (item.isFolder) {
-      return DragTarget<FileItem>(
+      return DragTarget<ModelItem>(
         builder: (context, candidateData, rejectedData) => draggableItem,
         onWillAcceptWithDetails: (details) => details.data.id != item.id,
         onAcceptWithDetails: (details) => onDrop(details.data, item),
@@ -372,25 +470,6 @@ class _FileGridItem extends StatelessWidget {
     }
     return draggableItem;
   }
-}
-
-// --- Data Models and Mock Service ---
-
-/// Represents a single item in the file system (file or folder).
-class FileItem {
-  final String id;
-  final String name;
-  final String path;
-  final bool isFolder;
-  bool isBackedUp;
-
-  FileItem({
-    required this.id,
-    required this.name,
-    required this.path,
-    this.isFolder = false,
-    this.isBackedUp = false,
-  });
 }
 
 /// A mock service to simulate fetching files and folders.
@@ -402,67 +481,76 @@ class FileSystemService {
     _initializeMockFileSystem();
   }
 
-  final Map<String, List<FileItem>> _mockFileSystem = {};
+  final Map<String, List<ModelItem>> _mockFileSystem = {};
 
   void _initializeMockFileSystem() {
     _mockFileSystem['/'] = [
-      FileItem(id: '1', name: 'Documents', path: '/', isFolder: true),
-      FileItem(
-          id: '2', name: 'Photos', path: '/', isFolder: true, isBackedUp: true),
-      FileItem(id: '3', name: 'project_brief.pdf', path: '/'),
-      FileItem(id: '4', name: 'logo.png', path: '/'),
+      ModelItem(id: '1', name: 'Documents', path: '/', isFolder: true),
+      ModelItem(
+        id: '2',
+        name: 'Photos',
+        path: '/',
+        isFolder: true,
+      ),
+      ModelItem(id: '3', name: 'project_brief.pdf', path: '/', isFolder: true),
+      ModelItem(id: '4', name: 'logo.png', path: '/', isFolder: true),
     ];
     _mockFileSystem['/Documents/'] = [
-      FileItem(id: '5', name: 'Work', path: '/Documents/', isFolder: true),
-      FileItem(id: '6', name: 'Personal', path: '/Documents/', isFolder: true),
-      FileItem(id: '7', name: 'meeting_notes.txt', path: '/Documents/'),
+      ModelItem(id: '5', name: 'Work', path: '/Documents/', isFolder: true),
+      ModelItem(id: '6', name: 'Personal', path: '/Documents/', isFolder: true),
+      ModelItem(
+          id: '7',
+          name: 'meeting_notes.txt',
+          path: '/Documents/',
+          isFolder: true),
     ];
     _mockFileSystem['/Documents/Work/'] = [
-      FileItem(
-          id: '8', name: 'quarterly_report.docx', path: '/Documents/Work/'),
+      ModelItem(
+          id: '8',
+          name: 'quarterly_report.docx',
+          path: '/Documents/Work/',
+          isFolder: true),
     ];
     _mockFileSystem['/Documents/Personal/'] = [];
     _mockFileSystem['/Photos/'] = [
-      FileItem(id: '9', name: 'Vacation', path: '/Photos/', isFolder: true),
-      FileItem(id: '10', name: 'Family', path: '/Photos/', isFolder: true),
+      ModelItem(id: '9', name: 'Vacation', path: '/Photos/', isFolder: true),
+      ModelItem(id: '10', name: 'Family', path: '/Photos/', isFolder: true),
     ];
     _mockFileSystem['/Photos/Vacation/'] = [
-      FileItem(id: '11', name: 'beach.jpg', path: '/Photos/Vacation/'),
-      FileItem(id: '12', name: 'mountain.jpg', path: '/Photos/Vacation/'),
+      ModelItem(
+          id: '11',
+          name: 'beach.jpg',
+          path: '/Photos/Vacation/',
+          isFolder: true),
+      ModelItem(
+          id: '12',
+          name: 'mountain.jpg',
+          path: '/Photos/Vacation/',
+          isFolder: true),
     ];
     _mockFileSystem['/Photos/Family/'] = [];
   }
 
-  Future<List<FileItem>> getFilesInPath(String path) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    return _mockFileSystem[path] ?? [];
-  }
+  void toggleBackupStatus(ModelItem folder) {}
 
-  void toggleBackupStatus(FileItem folder) {
-    final item = _findItem(folder.id);
-    if (item != null && item.isFolder) {
-      item.isBackedUp = !item.isBackedUp;
-    }
-  }
-
-  void moveItem(FileItem itemToMove, FileItem destinationFolder) {
+  void moveItem(ModelItem itemToMove, ModelItem destinationFolder) {
     if (!destinationFolder.isFolder) return;
 
     _mockFileSystem[itemToMove.path]
         ?.removeWhere((item) => item.id == itemToMove.id);
 
     final newPath = '${destinationFolder.path}${destinationFolder.name}/';
-    final movedItem = FileItem(
-        id: itemToMove.id,
-        name: itemToMove.name,
-        path: newPath,
-        isFolder: itemToMove.isFolder,
-        isBackedUp: itemToMove.isBackedUp);
+    final movedItem = ModelItem(
+      id: itemToMove.id,
+      name: itemToMove.name,
+      path: newPath,
+      isFolder: itemToMove.isFolder,
+    );
 
     _mockFileSystem.putIfAbsent(newPath, () => []).add(movedItem);
   }
 
-  FileItem? _findItem(String id) {
+  ModelItem? _findItem(String id) {
     for (var list in _mockFileSystem.values) {
       for (var item in list) {
         if (item.id == id) return item;

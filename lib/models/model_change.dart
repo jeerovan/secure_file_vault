@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/models/model_item.dart';
-import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 
 import '../utils/enums.dart';
@@ -309,19 +308,13 @@ class ModelChange {
             : SyncChangeTask.pushMapThumbnail;
       case "item":
         int type = map["type"];
-        ItemType? itemType = ItemTypeExtension.fromValue(type);
+        FileType? itemType = ItemTypeExtension.fromValue(type);
         switch (itemType) {
-          case ItemType.text:
-          case ItemType.location:
-          case ItemType.contact:
-          case ItemType.task:
-          case ItemType.completedTask:
-            return SyncChangeTask.pushMap;
-          case ItemType.image:
-          case ItemType.video:
+          case FileType.image:
+          case FileType.video:
             return SyncChangeTask.pushMapThumbnailFile;
-          case ItemType.document:
-          case ItemType.audio:
+          case FileType.document:
+          case FileType.audio:
             return SyncChangeTask.pushMapFile;
           default:
             return SyncChangeTask.pushMap;
