@@ -65,14 +65,14 @@ class ModelItem {
   static Future<ModelItem> fromMap(Map<String, dynamic> map) async {
     Uuid uuid = const Uuid();
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
-    int? fileId = getValueFromMap(map, "file_id", defaultValue: null);
+    String? fileId = getValueFromMap(map, "file_id", defaultValue: null);
     ModelFile? file;
     if (fileId != null) {
       file = await ModelFile.get(fileId);
     }
     return ModelItem(
       id: map.containsKey('id') ? map['id'] : uuid.v4(),
-      path: getValueFromMap(map, "path", defaultValue: ""),
+      path: getValueFromMap(map, "path", defaultValue: null),
       name: getValueFromMap(map, "name", defaultValue: ""),
       isFolder: getValueFromMap(map, "is_folder", defaultValue: 0) == 1,
       parentId: getValueFromMap(map, "parent_id", defaultValue: null),

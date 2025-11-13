@@ -65,7 +65,7 @@ class ModelFile {
     }
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     return ModelFile(
-      id: getValueFromMap(map, "id", defaultValue: 0),
+      id: map["id"],
       thumbnail: thumbnail,
       duration: getValueFromMap(map, "duration", defaultValue: 0),
       size: getValueFromMap(map, "size", defaultValue: 0),
@@ -78,7 +78,7 @@ class ModelFile {
     );
   }
 
-  static Future<ModelFile?> get(int id) async {
+  static Future<ModelFile?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
     List<Map<String, dynamic>> rows = await dbHelper.getWithId("file", id);
     if (rows.isNotEmpty) {
@@ -175,7 +175,7 @@ class ModelFile {
     return deleted;
   }
 
-  static Future<void> deletedFromServer(int id) async {
+  static Future<void> deletedFromServer(String id) async {
     ModelFile? item = await ModelFile.get(id);
     if (item != null) {
       await item.delete();

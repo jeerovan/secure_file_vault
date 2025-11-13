@@ -135,6 +135,7 @@ class StorageSqlite {
         id TEXT PRIMARY KEY,
         type INTEGER NOT NULL,
         size INTEGER NOT NULL,
+        thumbnail TEXT,
         duration INTEGER,
         state INTEGER DEFAULT 0,
         modified_at INTEGER,
@@ -143,10 +144,9 @@ class StorageSqlite {
         updated_at INTEGER
       )
     ''');
-    // type: 0(file),1(private folder),2(device folder)
     // path: only for synced folders
     // name: folder, device
-    // rootId: all folders and files will have item_id of synced folder
+    // rootId: all folders and files will have item(id) of synced folder
     await db.execute('''
       CREATE TABLE item (
         id TEXT PRIMARY KEY,

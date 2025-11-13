@@ -203,14 +203,15 @@ class _FilePaneState extends State<FilePane> {
     String? folderPath = await getSelectFolderWithReadWritePermission();
     if (folderPath != null) {
       String folderName = path.basename(folderPath);
-      String parentItemId = await getDeviceId();
+      String deviceId = await getDeviceId();
       ModelItem syncFolderItem = await ModelItem.fromMap({
-        "item_id": parentItemId,
+        "parent_id": deviceId,
         "path": folderPath,
         "name": folderName,
         "is_folder": 1,
       });
       await syncFolderItem.insert();
+      _loadFiles();
     }
   }
 
