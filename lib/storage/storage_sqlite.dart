@@ -132,30 +132,30 @@ class StorageSqlite {
     //state: 1:Local, 2:Local+Server 3:Server
     await db.execute('''
       CREATE TABLE file (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        hash TEXT NOT NULL,
+        id TEXT PRIMARY KEY,
         type INTEGER NOT NULL,
         size INTEGER NOT NULL,
         duration INTEGER,
         state INTEGER DEFAULT 0,
+        modified_at INTEGER,
         archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER
       )
     ''');
-    await db.execute('''
-      CREATE INDEX idx_file_hash ON file(hash)
-    ''');
     // type: 0(file),1(private folder),2(device folder)
     // path: only for synced folders
     // name: folder, device
+    // rootId: all folders and files will have item_id of synced folder
     await db.execute('''
       CREATE TABLE item (
         id TEXT PRIMARY KEY,
         path TEXT,
         name TEXT,
         is_folder INTEGER DEFAULT 0,
-        item_id TEXT,
+        root_id TEXT,
+        scan_state INTEGER DEFAULT 0,
+        parent_id TEXT,
         file_id TEXT,
         size INTEGER DEFAULT 0,
         thumbnail INTEGER DEFAULT 0,
@@ -163,12 +163,9 @@ class StorageSqlite {
         archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER,
-        FOREIGN KEY (item_id) REFERENCES item(id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_id) REFERENCES item(id) ON DELETE CASCADE,
         FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE
       )
-    ''');
-    await db.execute('''
-      CREATE INDEX idx_item_path ON item(path)
     ''');
     await db.execute('''
       CREATE TABLE setting (

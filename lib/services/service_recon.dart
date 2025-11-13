@@ -1,641 +1,423 @@
 import 'dart:io';
+import 'package:file_vault_bb/models/model_file.dart';
+import 'package:file_vault_bb/models/model_item.dart';
+import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:flutter/services.dart';
 import 'package:crypto/crypto.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart' as path;
+import 'package:uuid/uuid.dart';
+import 'package:path/path.dart' as path_lib;
 
-class ContentBasedReconciliation {
-  final Database db;
+class ReconciliationService {
+  final AppLogger logger = AppLogger(prefixes: ["RECON"]);
+  final Uuid uuid;
+  static const double jaccardSimilarityThreshold = 0.6;
 
-  ContentBasedReconciliation(this.db);
+  ReconciliationService() : uuid = Uuid();
 
-  // Main reconciliation with hash-based tracking
-  Future<ReconciliationResult> reconcileFolder(
-    int folderId,
-    String folderPath,
-  ) async {
-    final result = ReconciliationResult();
-
-    print('Starting content-based reconciliation for: $folderPath');
-
-    // Step 1: Scan current file system with hashes
-    final currentFiles = await _scanWithHashes(folderPath);
-    final currentFolders = await _scanFolders(folderPath);
-
-    // Step 2: Load database state
-    final dbFiles = await _loadDbFiles(folderId);
-    final dbFolders = await _loadDbFolders(folderId);
-
-    // Step 3: Reconcile files (hash-based)
-    await _reconcileFiles(
-      currentFiles,
-      dbFiles,
-      folderId,
-      result,
+  /// Main entry point: reconcile a root synced folder
+  Future<void> reconcile(String rootItemId) async {
+    final rootItem = await ModelItem.get(rootItemId);
+    if (rootItem == null) return;
+    await ModelItem.resetScanState(rootItemId);
+    await _reconcileNode(
+      rootItemId: rootItemId,
+      dbParentId: rootItemId,
+      fsPath: rootItem.path!,
     );
-
-    // Step 4: Reconcile folders (content similarity-based)
-    await _reconcileFolders(
-      currentFolders,
-      dbFolders,
-      currentFiles,
-      folderId,
-      result,
-    );
-
-    return result;
   }
 
-  // Scan file system and compute hashes for files
-  Future<Map<String, FileInfo>> _scanWithHashes(String folderPath) async {
-    final Map<String, FileInfo> files = {};
-    final folder = Directory(folderPath);
+  /// Recursively reconcile a single node (folder) in the hierarchy
+  Future<void> _reconcileNode({
+    required String rootItemId,
+    required String dbParentId,
+    required String fsPath,
+  }) async {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    logger.info('📁 Reconciling: $fsPath');
 
-    if (!await folder.exists()) return files;
+    // 1. Get current state from File System and Database
+    final fsChildren = await _scanFileSystemChildren(fsPath);
 
-    await for (var entity in folder.list(recursive: true)) {
-      if (entity is File) {
-        try {
-          final stats = await entity.stat();
-          final hash = await _computeFileHash(entity.path);
+    ModelItem? dbParent = await ModelItem.get(dbParentId);
+    final dbChildren = await ModelItem.getAllInFolder(dbParent);
 
-          files[entity.path] = FileInfo(
-            path: entity.path,
-            name: path.basename(entity.path),
-            hash: hash,
-            size: stats.size,
-            modifiedTime: stats.modified.millisecondsSinceEpoch,
+    final dbChildrenByName = {for (var c in dbChildren) c.name: c};
+
+    //2. Find directly matched and modified items
+    for (final fsChild in fsChildren) {
+      final dbChild = dbChildrenByName[fsChild.name];
+      final childPath = path_lib.join(fsPath, fsChild.name);
+      if (dbChild != null) {
+        // Item with same name exists in DB under the same parent
+        await ModelItem.setScanState(dbChild.id, 1);
+        if (fsChild.isFolder) {
+          // Recurse into matched folder
+          await _reconcileNode(
+            rootItemId: rootItemId,
+            dbParentId: dbChild.id,
+            fsPath: childPath,
           );
-        } catch (e) {
-          print('Error scanning file ${entity.path}: $e');
-        }
-      }
-    }
-
-    return files;
-  }
-
-  // Scan folders separately
-  Future<Map<String, FolderInfo>> _scanFolders(String rootPath) async {
-    final Map<String, FolderInfo> folders = {};
-    final root = Directory(rootPath);
-
-    if (!await root.exists()) return folders;
-
-    await for (var entity in root.list(recursive: true)) {
-      if (entity is Directory) {
-        try {
-          // Get immediate children files (for content signature)
-          final children = await _getDirectChildren(entity.path);
-
-          folders[entity.path] = FolderInfo(
-            path: entity.path,
-            name: path.basename(entity.path),
-            childrenHashes: children,
-          );
-        } catch (e) {
-          print('Error scanning folder ${entity.path}: $e');
-        }
-      }
-    }
-
-    return folders;
-  }
-
-  // Get hashes of direct children files
-  Future<Set<String>> _getDirectChildren(String folderPath) async {
-    final children = <String>{};
-    final folder = Directory(folderPath);
-
-    try {
-      await for (var entity in folder.list(recursive: false)) {
-        if (entity is File) {
-          final hash = await _computeFileHash(entity.path);
-          children.add(hash);
         } else {
-          children.add(path.basename(entity.path));
+          // Check if the file was modified based on mtime and size
+          if (_isFileModified(fsChild, dbChild)) {
+            await ModelItem.setScanState(dbChild.id, 2);
+            await _handleModifiedFile(dbChild, fsChild, childPath, timestamp);
+          }
+        }
+      } else {
+        // 3. No direct match by name, could be renamed / moved or new item
+        bool renamed = false;
+        //3.a check if item was renamed
+        if (fsChild.isFolder) {
+          renamed = await _handleRenamedFolder(
+              rootItemId, fsChild, dbChildren, childPath);
+        } else {
+          renamed = await _handleRenamedFile(
+              rootItemId, fsChild, dbChildren, childPath);
+        }
+        ModelItem? movedDbItem;
+        if (!renamed) {
+          if (fsChild.isFolder) {
+            movedDbItem =
+                await _findMovedFolder(rootItemId, fsChild, childPath);
+          } else {
+            movedDbItem = await _findMovedFile(rootItemId, fsChild, childPath);
+          }
+        }
+
+        if (movedDbItem != null) {
+          // --- MOVE DETECTED ---
+          movedDbItem.name = fsChild.name;
+          movedDbItem.parentId = dbParentId;
+          movedDbItem.scanState = 2;
+          await movedDbItem.update(["name", "parent_id", "scan_state"]);
+          if (fsChild.isFolder) {
+            await _reconcileNode(
+                rootItemId: rootItemId,
+                dbParentId: movedDbItem.id,
+                fsPath: childPath);
+          } else {}
+        } else {
+          // 4. Create NEW ITEM
+          // No move was detected, so this is a genuinely new item.
+          if (fsChild.isFolder) {
+            await _handleFolderCreation(
+                rootItemId, fsChild, dbParentId, childPath);
+          } else {
+            await _handleFileCreation(
+                rootItemId, fsChild, dbParentId, childPath);
+          }
         }
       }
-    } catch (e) {
-      print('Error reading children of $folderPath: $e');
     }
 
-    return children;
-  }
-
-  // Compute SHA-256 hash of file content
-  Future<String> _computeFileHash(String filePath) async {
-    try {
-      final file = File(filePath);
-      final bytes = await file.readAsBytes();
-      final digest = sha256.convert(bytes);
-      return digest.toString();
-    } catch (e) {
-      print('Error hashing file $filePath: $e');
-      rethrow;
+    // 5. Mark remaining DB items as deleted
+    final remainingDbItems =
+        await ModelItem.getAllUnScannedFolderForRootItemId(rootItemId);
+    for (final dbChild in remainingDbItems) {
+      _handleDeletion(dbChild);
     }
   }
 
-  // Load files from database
-  Future<Map<String, FileInfo>> _loadDbFiles(int folderId) async {
-    final Map<String, FileInfo> files = {};
+  /// ON-DEMAND GLOBAL SEARCH: Finds a moved folder in the unresolved set.
+  Future<ModelItem?> _findMovedFolder(
+      String rootItemId, FSItem fsFolder, String fsPath) async {
+    final candidateDbFolders =
+        await ModelItem.getAllUnScannedFolderForRootItemId(rootItemId);
+    ModelItem? bestMatch;
+    double bestScore = 0.0;
+    final fsChildrenNames =
+        (await _scanFileSystemChildren(fsPath)).map((c) => c.name).toSet();
+    // Strategy 1: Find a folder with the same name. It's the strongest signal.
+    final sameNameCandidates =
+        candidateDbFolders.where((f) => f.name == fsFolder.name).toList();
+    if (sameNameCandidates.isNotEmpty) {
+      for (final candidate in sameNameCandidates) {
+        final dbChildrenNames = (await ModelItem.getAllInFolder(candidate))
+            .map((c) => c.name)
+            .toSet();
+        final score =
+            _calculateJaccardSimilarity(fsChildrenNames, dbChildrenNames);
+        if (score > bestScore) {
+          bestScore = score;
+          bestMatch = candidate;
+        }
+      }
+      if (bestMatch != null) return bestMatch;
+    }
 
-    final rows = await db.query(
-      'folder_contents',
-      where: 'parent_folder_id = ? AND is_folder = ?',
-      whereArgs: [folderId, 0],
-    );
+    // Strategy 2: If no name match, check content similarity against all other unresolved folders.
+    for (final candidate in candidateDbFolders) {
+      final dbChildrenNames = (await ModelItem.getAllInFolder(candidate))
+          .map((c) => c.name)
+          .toSet();
+      final score =
+          _calculateJaccardSimilarity(fsChildrenNames, dbChildrenNames);
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = candidate;
+      }
+    }
 
-    for (var row in rows) {
-      files[row['item_path'] as String] = FileInfo(
-        path: row['item_path'] as String,
-        name: row['item_name'] as String,
-        hash: row['content_hash'] as String?,
-        size: row['file_size'] as int? ?? 0,
-        modifiedTime: row['last_modified'] as int? ?? 0,
-        cloudId: row['cloud_id'] as String?,
+    return (bestScore >= jaccardSimilarityThreshold) ? bestMatch : null;
+  }
+
+  // ON-DEMAND GLOBAL SEARCH: Finds a moved file.
+  Future<ModelItem?> _findMovedFile(
+      String rootItemId, FSItem fsFile, String fsPath) async {
+    final hash = await _computeFileHash(fsPath);
+    // first search matching files with name and size
+    final dbCandidatesMatchingNameSize =
+        await ModelItem.getAllUnScannedFilesForRootItemIdMatchingNameAndSize(
+            rootItemId, fsFile.name, fsFile.size!);
+    // match hash to confirm
+    if (dbCandidatesMatchingNameSize.isNotEmpty) {
+      for (final candidate in dbCandidatesMatchingNameSize) {
+        if (candidate.file?.id == hash) {
+          return candidate;
+        }
+      }
+    }
+    // Search the entire unresolved map for a matching hash.
+    final dbCandidatesMatchingHash =
+        await ModelItem.getAllUnScannedFilesForRootItemIdMatchingHash(
+            rootItemId, hash);
+    if (dbCandidatesMatchingHash.isNotEmpty) {
+      return dbCandidatesMatchingHash[1];
+    }
+    return null;
+  }
+
+  /// Detects renamed folders by comparing children sets
+  Future<bool> _handleRenamedFolder(
+    String rootItemId,
+    FSItem fsItem,
+    List<ModelItem> dbChildren,
+    String fsPath,
+  ) async {
+    final fsChildrenNames =
+        (await _scanFileSystemChildren(fsPath)).map((c) => c.name).toSet();
+    final dbChildrenFolders =
+        dbChildren.where((c) => c.isFolder && c.scanState == 0).toList();
+
+    ModelItem? bestMatch;
+    double bestScore = 0.0;
+
+    for (final dbFolder in dbChildrenFolders) {
+      final dbChildrenNames =
+          (await ModelItem.getAllInFolder(dbFolder)).map((c) => c.name).toSet();
+      final score =
+          _calculateJaccardSimilarity(fsChildrenNames, dbChildrenNames);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = dbFolder;
+      }
+    }
+    bool matched = false;
+    if (bestMatch != null && bestScore >= jaccardSimilarityThreshold) {
+      matched = true;
+      bestMatch.name = fsItem.name;
+      bestMatch.scanState = 2;
+      await bestMatch.update(["name", "scan_state"]);
+      // Recurse into the now-matched folder
+      await _reconcileNode(
+        rootItemId: rootItemId,
+        dbParentId: bestMatch.id,
+        fsPath: fsPath,
       );
     }
-
-    return files;
+    return matched;
   }
 
-  // Load folders from database
-  Future<Map<String, FolderInfo>> _loadDbFolders(int folderId) async {
-    final Map<String, FolderInfo> folders = {};
-
-    final rows = await db.query(
-      'folder_contents',
-      where: 'parent_folder_id = ? AND is_folder = ?',
-      whereArgs: [folderId, 1],
-    );
-
-    for (var row in rows) {
-      final folderPath = row['item_path'] as String;
-
-      // Get children hashes from database
-      final children = await _getDbFolderChildren(folderPath, folderId);
-
-      folders[folderPath] = FolderInfo(
-        path: folderPath,
-        name: row['item_name'] as String,
-        childrenHashes: children,
-        cloudId: row['cloud_id'] as String?,
-      );
-    }
-
-    return folders;
-  }
-
-  // Get hashes of files that were in this folder
-  Future<Set<String>> _getDbFolderChildren(
-    String folderPath,
-    int parentFolderId,
+  /// Detects moved files using size, mtime, and finally hash
+  Future<bool> _handleRenamedFile(
+    String rootItemId,
+    FSItem fsFile,
+    List<ModelItem> dbChildren,
+    String fsPath,
   ) async {
-    final children = <String>{};
+    final unmatchedDbFiles =
+        dbChildren.where((c) => !c.isFolder && c.scanState == 0).toList();
+    if (unmatchedDbFiles.isEmpty) return false;
 
-    final rows = await db.query(
-      'folder_contents',
-      columns: ['content_hash'],
-      where: 'parent_folder_id = ? AND is_folder = 0 AND item_path LIKE ?',
-      whereArgs: [parentFolderId, '$folderPath/%'],
-    );
-
-    // add folder names
-    for (var row in rows) {
-      final hash = row['content_hash'] as String?;
-      if (hash != null && hash.isNotEmpty) {
-        children.add(hash);
-      }
+    // Group DB files by size for faster lookup
+    final dbFilesBySize = <int, List<ModelItem>>{};
+    for (var file in unmatchedDbFiles) {
+      dbFilesBySize.putIfAbsent(file.size, () => []).add(file);
     }
 
-    return children;
-  }
+    final candidates = dbFilesBySize[fsFile.size] ?? [];
+    ModelItem? matchedDbFile;
 
-  // Reconcile files using hash-based identification
-  Future<void> _reconcileFiles(
-    Map<String, FileInfo> currentFiles,
-    Map<String, FileInfo> dbFiles,
-    int folderId,
-    ReconciliationResult result,
-  ) async {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-
-    // Build hash -> FileInfo maps for quick lookup
-    final currentByHash = <String, FileInfo>{};
-    for (var file in currentFiles.values) {
-      if (file.hash != null) {
-        currentByHash[file.hash!] = file;
-      }
-    }
-
-    final dbByHash = <String, FileInfo>{};
-    for (var file in dbFiles.values) {
-      if (file.hash != null) {
-        dbByHash[file.hash!] = file;
-      }
-    }
-
-    // Process current files
-    for (var currentFile in currentFiles.values) {
-      final hash = currentFile.hash;
-      if (hash == null) continue;
-
-      final dbFile = dbByHash[hash];
-
-      if (dbFile == null) {
-        // NEW FILE: Hash not in database
-        await _handleFileCreated(currentFile, folderId, timestamp);
-        result.filesCreated.add(currentFile);
-      } else if (dbFile.path == currentFile.path) {
-        // SAME PATH: Check if modified
-        if (_isFileModified(currentFile, dbFile)) {
-          await _handleFileModified(currentFile, folderId, timestamp);
-          result.filesModified.add(currentFile);
-        }
-        // else: unchanged
-      } else {
-        // DIFFERENT PATH: Name change = delete old + create new
-        await _handleFileDeleted(dbFile, folderId, timestamp);
-        await _handleFileCreated(currentFile, folderId, timestamp);
-        result.filesDeleted.add(dbFile);
-        result.filesCreated.add(currentFile);
-      }
-    }
-
-    // Find deleted files (in DB but not in current state)
-    for (var dbFile in dbFiles.values) {
-      final hash = dbFile.hash;
-      if (hash == null) continue;
-
-      if (!currentByHash.containsKey(hash)) {
-        // File hash not found in current state = deleted
-        await _handleFileDeleted(dbFile, folderId, timestamp);
-        result.filesDeleted.add(dbFile);
-      }
-    }
-  }
-
-  // Check if file was modified based on modification time
-  bool _isFileModified(FileInfo current, FileInfo stored) {
-    // If modification time changed significantly, file was modified
-    final timeDiff = (current.modifiedTime - stored.modifiedTime).abs();
-    return timeDiff > 2000; // 2 second tolerance for clock skew
-  }
-
-  // Reconcile folders using content similarity (Jaccard)
-  Future<void> _reconcileFolders(
-    Map<String, FolderInfo> currentFolders,
-    Map<String, FolderInfo> dbFolders,
-    Map<String, FileInfo> currentFiles,
-    int folderId,
-    ReconciliationResult result,
-  ) async {
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    const double similarityThreshold = 0.80; // 80% match
-
-    final processedDbPaths = <String>{};
-
-    // Process current folders
-    for (var currentFolder in currentFolders.values) {
-      final matchingDbFolder = dbFolders[currentFolder.path];
-
-      if (matchingDbFolder != null) {
-        // Folder exists at same path - no change
-        processedDbPaths.add(currentFolder.path);
-        continue;
-      }
-
-      // Try to find moved folder by content similarity
-      FolderInfo? movedFrom;
-      double maxSimilarity = 0.0;
-
-      for (var dbFolder in dbFolders.values) {
-        if (processedDbPaths.contains(dbFolder.path)) continue;
-
-        final similarity = _calculateJaccardSimilarity(
-          currentFolder.childrenHashes,
-          dbFolder.childrenHashes,
-        );
-
-        if (similarity >= similarityThreshold && similarity > maxSimilarity) {
-          maxSimilarity = similarity;
-          movedFrom = dbFolder;
+    if (candidates.isNotEmpty) {
+      // Compute hash only when needed
+      final currentHash = await _computeFileHash(fsPath);
+      for (final candidate in candidates) {
+        if (candidate.file?.id == currentHash) {
+          matchedDbFile = candidate;
+          break;
         }
       }
-
-      if (movedFrom != null) {
-        // MOVED: Folder with similar content found
-        await _handleFolderMoved(
-          movedFrom,
-          currentFolder,
-          folderId,
-          timestamp,
-          maxSimilarity,
-        );
-        result.foldersMoved.add(FolderMove(
-          from: movedFrom.path,
-          to: currentFolder.path,
-          similarity: maxSimilarity,
-        ));
-        processedDbPaths.add(movedFrom.path);
-      } else {
-        // CREATED: New folder
-        await _handleFolderCreated(currentFolder, folderId, timestamp);
-        result.foldersCreated.add(currentFolder);
-      }
     }
-
-    // Find deleted folders
-    for (var dbFolder in dbFolders.values) {
-      if (!processedDbPaths.contains(dbFolder.path) &&
-          !currentFolders.containsKey(dbFolder.path)) {
-        await _handleFolderDeleted(dbFolder, folderId, timestamp);
-        result.foldersDeleted.add(dbFolder);
-      }
+    bool matched = false;
+    if (matchedDbFile != null) {
+      matched = true;
+      matchedDbFile.name = fsFile.name;
+      matchedDbFile.scanState = 2;
+      await matchedDbFile.update(["name", "scan_state"]);
     }
+    return matched;
   }
 
-  // Calculate Jaccard similarity between two sets
+  // --- Change Handlers ---
+
+  Future<void> _handleModifiedFile(
+      ModelItem dbItem, FSItem fsItem, String fsPath, int timestamp) async {
+    logger.info('  ~ Modified: ${fsItem.name}');
+
+    final newHash = await _computeFileHash(fsPath);
+    if (dbItem.file?.id == newHash) {
+      return; // Only metadata changed, no content change
+    }
+
+    // TODO decrement reference count for old item
+    final modelFile = await ModelFile.fromMap({
+      'id': newHash,
+      'size': fsItem.size,
+    });
+    await modelFile.insert();
+    dbItem.file = modelFile;
+    dbItem.size = fsItem.size!;
+    await dbItem.update(["file_id", "size"]);
+  }
+
+  Future<void> _handleFileCreation(
+    String rootItemId,
+    FSItem fsItem,
+    String parentId,
+    String fsPath,
+  ) async {
+    logger.info('  + Created File: ${fsItem.name}');
+
+    final hash = await _computeFileHash(fsPath);
+    final modelFile = await ModelFile.fromMap({
+      'id': hash,
+      'size': fsItem.size,
+    });
+    await modelFile.insert();
+    final modelItem = await ModelItem.fromMap({
+      'root_id': rootItemId,
+      'parent_id': parentId,
+      'is_folder': 0,
+      'name': fsItem.name,
+      'file_id': hash,
+      'size': fsItem.size,
+      'scan_state': 1,
+    });
+    await modelItem.insert();
+  }
+
+  Future<void> _handleFolderCreation(
+    String rootItemId,
+    FSItem fsItem,
+    String parentId,
+    String fsPath,
+  ) async {
+    logger.info('  + Created Folder: ${fsItem.name}');
+
+    final itemId = uuid.v4();
+    final modelItem = await ModelItem.fromMap({
+      'id': itemId,
+      'root_id': rootItemId,
+      'parent_id': parentId,
+      'is_folder': 1,
+      'name': fsItem.name,
+      'scan_state': 1,
+    });
+    await modelItem.insert();
+
+    // Recurse into the newly created folder to process its children
+    await _reconcileNode(
+        rootItemId: rootItemId, dbParentId: itemId, fsPath: fsPath);
+  }
+
+  Future<void> _handleDeletion(ModelItem dbItem) async {
+    logger.info('  - Deleted: ${dbItem.name}');
+    if (dbItem.isFolder) {
+      await dbItem.delete();
+    } else {
+      await dbItem.delete();
+    }
+
+    // TODO Decrement content reference count if it's a file
+  }
+
+  // --- Helpers ---
+
   double _calculateJaccardSimilarity(Set<String> set1, Set<String> set2) {
     if (set1.isEmpty && set2.isEmpty) return 1.0;
-    if (set1.isEmpty || set2.isEmpty) return 0.0;
-
     final intersection = set1.intersection(set2).length;
     final union = set1.union(set2).length;
-
-    return intersection / union;
+    return union == 0 ? 0 : intersection / union;
   }
 
-  // Handle file created
-  Future<void> _handleFileCreated(
-    FileInfo file,
-    int folderId,
-    int timestamp,
-  ) async {
-    await db.insert(
-      'folder_contents',
-      {
-        'parent_folder_id': folderId,
-        'item_path': file.path,
-        'item_name': file.name,
-        'is_folder': 0,
-        'content_hash': file.hash,
-        'file_size': file.size,
-        'last_modified': file.modifiedTime,
-        'sync_status': 'pending',
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-
-    await db.insert('sync_log', {
-      'item_path': file.path,
-      'operation': 'CREATE',
-      'content_hash': file.hash,
-      'timestamp': timestamp,
-      'synced_to_cloud': 0,
-    });
-
-    print(
-        '✓ File Created: ${file.path} [hash: ${file.hash?.substring(0, 8)}...]');
+  bool _isFileModified(FSItem fs, ModelItem dbItem) {
+    return fs.size != dbItem.size ||
+        ((fs.modifiedTime! - dbItem.file!.modifiedAt).abs() > 2000);
   }
 
-  // Handle file modified
-  Future<void> _handleFileModified(
-    FileInfo file,
-    int folderId,
-    int timestamp,
-  ) async {
-    await db.update(
-      'folder_contents',
-      {
-        'content_hash': file.hash,
-        'file_size': file.size,
-        'last_modified': file.modifiedTime,
-        'sync_status': 'pending',
-      },
-      where: 'item_path = ? AND parent_folder_id = ?',
-      whereArgs: [file.path, folderId],
-    );
-
-    await db.insert('sync_log', {
-      'item_path': file.path,
-      'operation': 'MODIFY',
-      'content_hash': file.hash,
-      'timestamp': timestamp,
-      'synced_to_cloud': 0,
-    });
-
-    print('✓ File Modified: ${file.path}');
+  Future<String> _computeFileHash(String path) async {
+    return sha256.convert(await File(path).readAsBytes()).toString();
   }
 
-  // Handle file deleted
-  Future<void> _handleFileDeleted(
-    FileInfo file,
-    int folderId,
-    int timestamp,
-  ) async {
-    if (file.cloudId != null) {
-      await db.insert('sync_log', {
-        'item_path': file.path,
-        'operation': 'DELETE',
-        'content_hash': file.hash,
-        'cloud_id': file.cloudId,
-        'timestamp': timestamp,
-        'synced_to_cloud': 0,
-      });
+  // --- Data Loading ---
+
+  Future<List<FSItem>> _scanFileSystemChildren(String dirPath) async {
+    final children = <FSItem>[];
+    final dir = Directory(dirPath);
+
+    if (!await dir.exists()) return children;
+
+    await for (var entity in dir.list(recursive: false)) {
+      try {
+        final name = path_lib.basename(entity.path);
+        final stats = await entity.stat();
+        final isFolder = entity is Directory;
+
+        children.add(FSItem(
+          name: name,
+          isFolder: isFolder,
+          size: isFolder ? 0 : stats.size,
+          modifiedTime: stats.modified.millisecondsSinceEpoch,
+        ));
+      } catch (e) {
+        logger.info('Error scanning ${entity.path}: $e');
+      }
     }
 
-    await db.delete(
-      'folder_contents',
-      where: 'item_path = ? AND parent_folder_id = ?',
-      whereArgs: [file.path, folderId],
-    );
-
-    print('✓ File Deleted: ${file.path}');
-  }
-
-  // Handle folder created
-  Future<void> _handleFolderCreated(
-    FolderInfo folder,
-    int folderId,
-    int timestamp,
-  ) async {
-    await db.insert(
-      'folder_contents',
-      {
-        'parent_folder_id': folderId,
-        'item_path': folder.path,
-        'item_name': folder.name,
-        'is_folder': 1,
-        'sync_status': 'pending',
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-
-    await db.insert('sync_log', {
-      'item_path': folder.path,
-      'operation': 'CREATE',
-      'timestamp': timestamp,
-      'synced_to_cloud': 0,
-    });
-
-    print('✓ Folder Created: ${folder.path}');
-  }
-
-  // Handle folder moved
-  Future<void> _handleFolderMoved(
-    FolderInfo from,
-    FolderInfo to,
-    int folderId,
-    int timestamp,
-    double similarity,
-  ) async {
-    await db.update(
-      'folder_contents',
-      {
-        'item_path': to.path,
-        'item_name': to.name,
-        'sync_status': 'pending',
-      },
-      where: 'item_path = ? AND parent_folder_id = ?',
-      whereArgs: [from.path, folderId],
-    );
-
-    // Update all children paths
-    await _updateChildrenPaths(from.path, to.path, folderId);
-
-    await db.insert('sync_log', {
-      'item_path': to.path,
-      'old_path': from.path,
-      'operation': 'MOVE',
-      'cloud_id': from.cloudId,
-      'timestamp': timestamp,
-      'synced_to_cloud': 0,
-    });
-
-    print(
-        '✓ Folder Moved: ${from.path} → ${to.path} (${(similarity * 100).toStringAsFixed(1)}% match)');
-  }
-
-  // Update paths of all children when folder moves
-  Future<void> _updateChildrenPaths(
-    String oldPath,
-    String newPath,
-    int folderId,
-  ) async {
-    final children = await db.query(
-      'folder_contents',
-      where: 'parent_folder_id = ? AND item_path LIKE ?',
-      whereArgs: [folderId, '$oldPath/%'],
-    );
-
-    for (var child in children) {
-      final oldChildPath = child['item_path'] as String;
-      final newChildPath = oldChildPath.replaceFirst(oldPath, newPath);
-
-      await db.update(
-        'folder_contents',
-        {'item_path': newChildPath},
-        where: 'id = ?',
-        whereArgs: [child['id']],
-      );
-    }
-  }
-
-  // Handle folder deleted
-  Future<void> _handleFolderDeleted(
-    FolderInfo folder,
-    int folderId,
-    int timestamp,
-  ) async {
-    if (folder.cloudId != null) {
-      await db.insert('sync_log', {
-        'item_path': folder.path,
-        'operation': 'DELETE',
-        'cloud_id': folder.cloudId,
-        'timestamp': timestamp,
-        'synced_to_cloud': 0,
-      });
-    }
-
-    await db.delete(
-      'folder_contents',
-      where: 'item_path = ? AND parent_folder_id = ?',
-      whereArgs: [folder.path, folderId],
-    );
-
-    print('✓ Folder Deleted: ${folder.path}');
+    return children;
   }
 }
 
-// Data models
-class FileInfo {
-  final String path;
+// --- Data Models ---
+
+class FSItem {
   final String name;
-  final String? hash;
-  final int size;
-  final int modifiedTime;
-  final String? cloudId;
-
-  FileInfo({
-    required this.path,
-    required this.name,
-    this.hash,
-    required this.size,
-    required this.modifiedTime,
-    this.cloudId,
-  });
+  final bool isFolder;
+  final int? size;
+  final int? modifiedTime;
+  String? dbMatchId; // Used to track matches during reconciliation
+  FSItem(
+      {required this.name,
+      required this.isFolder,
+      this.size,
+      this.modifiedTime});
 }
 
-class FolderInfo {
-  final String path;
-  final String name;
-  final Set<String> childrenHashes;
-  final String? cloudId;
-
-  FolderInfo({
-    required this.path,
-    required this.name,
-    required this.childrenHashes,
-    this.cloudId,
-  });
-}
-
-class FolderMove {
-  final String from;
-  final String to;
-  final double similarity;
-
-  FolderMove({
-    required this.from,
-    required this.to,
-    required this.similarity,
-  });
-}
-
-class ReconciliationResult {
-  final List<FileInfo> filesCreated = [];
-  final List<FileInfo> filesModified = [];
-  final List<FileInfo> filesDeleted = [];
-  final List<FolderInfo> foldersCreated = [];
-  final List<FolderInfo> foldersDeleted = [];
-  final List<FolderMove> foldersMoved = [];
-
-  int get totalChanges =>
-      filesCreated.length +
-      filesModified.length +
-      filesDeleted.length +
-      foldersCreated.length +
-      foldersDeleted.length +
-      foldersMoved.length;
-
-  @override
-  String toString() {
-    return '''
-Reconciliation Complete:
-  Files: ${filesCreated.length} created, ${filesModified.length} modified, ${filesDeleted.length} deleted
-  Folders: ${foldersCreated.length} created, ${foldersDeleted.length} deleted, ${foldersMoved.length} moved
-  Total changes: $totalChanges
-    ''';
-  }
+class ReconciliationStats {
+  int filesCreated = 0, filesModified = 0, filesDeleted = 0;
+  int foldersCreated = 0, foldersDeleted = 0;
+  int moves = 0;
+  // ... toString() implementation
 }

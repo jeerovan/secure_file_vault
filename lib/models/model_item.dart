@@ -1,3 +1,4 @@
+import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/models/model_preferences.dart';
@@ -5,32 +6,36 @@ import 'package:uuid/uuid.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelItem {
-  String? id;
+  String id;
   String? path;
   String name;
   bool isFolder;
-  String? itemId;
-  int? fileId;
-  int? size;
+  String? parentId;
+  String? rootId;
+  int scanState;
+  ModelFile? file;
+  int size;
   int? thumbnail;
-  int? state;
-  int? archivedAt;
-  int? createdAt;
-  int? updatedAt;
+  int state;
+  int archivedAt;
+  int createdAt;
+  int updatedAt;
 
   ModelItem({
-    this.id,
+    required this.id,
     this.path,
     required this.name,
     required this.isFolder,
-    this.itemId,
-    this.fileId,
-    this.size,
+    this.parentId,
+    this.rootId,
+    required this.scanState,
+    this.file,
+    required this.size,
     this.thumbnail,
-    this.state,
-    this.archivedAt,
-    this.createdAt,
-    this.updatedAt,
+    required this.state,
+    required this.archivedAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   Map<String, dynamic> toMap() {
@@ -39,8 +44,10 @@ class ModelItem {
       'path': path,
       'name': name,
       'is_folder': isFolder ? 1 : 0,
-      'item_id': itemId,
-      'file_id': fileId,
+      'parent_id': parentId,
+      'root_id': rootId,
+      'scan_state': scanState,
+      'file_id': file?.id,
       'size': size,
       'thumbnail': thumbnail,
       'state': state,
@@ -58,15 +65,20 @@ class ModelItem {
   static Future<ModelItem> fromMap(Map<String, dynamic> map) async {
     Uuid uuid = const Uuid();
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
+    int? fileId = getValueFromMap(map, "file_id", defaultValue: null);
+    ModelFile? file;
+    if (fileId != null) {
+      file = await ModelFile.get(fileId);
+    }
     return ModelItem(
       id: map.containsKey('id') ? map['id'] : uuid.v4(),
       path: getValueFromMap(map, "path", defaultValue: ""),
       name: getValueFromMap(map, "name", defaultValue: ""),
-      isFolder: getValueFromMap(map, "is_folder", defaultValue: 0) == 0
-          ? false
-          : true,
-      itemId: getValueFromMap(map, "item_id", defaultValue: null),
-      fileId: getValueFromMap(map, "file_id", defaultValue: null),
+      isFolder: getValueFromMap(map, "is_folder", defaultValue: 0) == 1,
+      parentId: getValueFromMap(map, "parent_id", defaultValue: null),
+      rootId: getValueFromMap(map, "root_id", defaultValue: null),
+      scanState: getValueFromMap(map, "scan_state", defaultValue: 0),
+      file: file,
       size: getValueFromMap(map, "size", defaultValue: 0),
       thumbnail: getValueFromMap(map, "thumbnail", defaultValue: 0),
       state: getValueFromMap(map, "state", defaultValue: 0),
@@ -76,79 +88,13 @@ class ModelItem {
     );
   }
 
-  static Future<int> mediaCountInGroup(String groupId) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    String sql = '''
-      SELECT count(*) as count
-      FROM item
-      WHERE type > 100000 AND type < 130000
-        AND group_id = ? AND archived_at = 0
-    ''';
-    final rows = await db.rawQuery(sql, [groupId]);
-    return rows.isNotEmpty ? rows[0]['count'] as int : 0;
-  }
-
-  static Future<int> mediaIndexInGroup(String groupId, String currentId) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    String sql = '''
-      SELECT count(*) as count
-      FROM item
-      WHERE type > 100000 AND type < 130000
-        AND group_id = ? AND archived_at = 0
-        AND at < (SELECT at FROM item WHERE id = ?)
-      ORDER BY at ASC
-    ''';
-    final rows = await db.rawQuery(sql, [groupId, currentId]);
-    return rows.isNotEmpty ? rows[0]['count'] as int : 0;
-  }
-
-  static Future<ModelItem?> getPreviousMediaItemInGroup(
-      String groupId, String currentId) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    String sql = '''
-      SELECT * FROM item
-      WHERE type > 100000 AND type < 130000 AND group_id = ? AND archived_at = 0
-        AND at < (SELECT at FROM item WHERE id = ?)
-      ORDER BY at DESC
-      LIMIT 1
-      ''';
-    final rows = await db.rawQuery(sql, [groupId, currentId]);
-    if (rows.isNotEmpty) {
-      Map<String, dynamic> map = rows.first;
-      return await fromMap(map);
-    }
-    return null;
-  }
-
-  static Future<ModelItem?> getNextMediaItemInGroup(
-      String groupId, String currentId) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    String sql = '''
-      SELECT * FROM item
-      WHERE type > 100000 AND type < 130000 AND group_id = ? AND archived_at = 0
-        AND at > (SELECT at FROM item WHERE id = ?)
-      ORDER BY at ASC
-      LIMIT 1
-      ''';
-    final rows = await db.rawQuery(sql, [groupId, currentId]);
-    if (rows.isNotEmpty) {
-      Map<String, dynamic> map = rows.first;
-      return await fromMap(map);
-    }
-    return null;
-  }
-
-  static Future<List<ModelItem>> getInFolder(ModelItem? item) async {
+  static Future<List<ModelItem>> getAllInFolder(ModelItem? item) async {
     if (item == null) return [];
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
       "item",
-      where: "item_id = ?",
+      where: "parent_id = ?",
       whereArgs: [
         item.id,
       ],
@@ -161,7 +107,7 @@ class ModelItem {
     ModelItem? currentItem = await get(item.id!);
     ModelItem? parentItem;
     if (currentItem != null) {
-      String? parentItemId = currentItem.itemId;
+      String? parentItemId = currentItem.parentId;
       if (parentItemId != null) {
         parentItem = await get(parentItemId);
       }
@@ -169,16 +115,52 @@ class ModelItem {
     return parentItem;
   }
 
-  static Future<List<ModelItem>> getStarred(int offset, int limit) async {
+  static Future<List<ModelItem>> getAllUnScannedFolderForRootItemId(
+      String itemId) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
       "item",
-      where: "starred = ? AND archived_at = 0",
-      whereArgs: [1],
-      orderBy: 'at DESC',
-      offset: offset,
-      limit: limit,
+      where: "root_id = ? AND is_folder = ? AND scan_state = ?",
+      whereArgs: [itemId, 1, 0],
+    );
+    return await Future.wait(rows.map((map) => fromMap(map)));
+  }
+
+  static Future<List<ModelItem>>
+      getAllUnScannedFilesForRootItemIdMatchingNameAndSize(
+          String itemId, String name, int size) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows = await db.query(
+      "item",
+      where:
+          "root_id = ? AND is_folder = ? AND scan_state = ? AND name = ? AND size = ?",
+      whereArgs: [itemId, 0, 0, name, size],
+    );
+    return await Future.wait(rows.map((map) => fromMap(map)));
+  }
+
+  static Future<List<ModelItem>> getAllUnScannedFilesForRootItemIdMatchingHash(
+      String itemId, String hash) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows = await db.query(
+      "item",
+      where: "root_id = ? AND is_folder = ? AND scan_state = ? AND file_id = ?",
+      whereArgs: [itemId, 0, 0, hash],
+    );
+    return await Future.wait(rows.map((map) => fromMap(map)));
+  }
+
+  static Future<List<ModelItem>> getAllUnScannedForRootItemId(
+      String itemId, String hash) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows = await db.query(
+      "item",
+      where: "root_id = ? AND scan_state = ?",
+      whereArgs: [itemId, 0],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
@@ -195,17 +177,18 @@ class ModelItem {
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<int> pinnedCountInGroup(String groupId) async {
+  static Future<void> resetScanState(String rootItemId) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    String sql = '''
-      SELECT count(*) as count
-      FROM item
-      WHERE pinned = 1 AND
-        AND group_id = ? AND archived_at = 0
-    ''';
-    final rows = await db.rawQuery(sql, [groupId]);
-    return rows.isNotEmpty ? rows[0]['count'] as int : 0;
+    await db.execute(
+        'UPDATE item SET scan_state = 0 WHERE root_id = ?', [rootItemId]);
+  }
+
+  static Future<void> setScanState(String itemId, int state) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    await db.execute(
+        'UPDATE item SET scan_state = ? WHERE id = ?', [state, itemId]);
   }
 
   static Future<ModelItem?> get(String id) async {
@@ -216,29 +199,6 @@ class ModelItem {
       return await fromMap(map);
     }
     return null;
-  }
-
-  static Future<List<Map<String, dynamic>>> getAllRawRowsMap() async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    return await db.query("item");
-  }
-
-  static Future<List<ModelItem>> getImageAudio() async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows = await db.query("item",
-        where: "type = ? OR type = ?",
-        whereArgs: [FileType.image.value, FileType.audio.value]);
-    return await Future.wait(rows.map((map) => fromMap(map)));
-  }
-
-  static Future<List<ModelItem>> getForType(FileType itemType) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows =
-        await db.query("item", where: "type = ?", whereArgs: [itemType.value]);
-    return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
   Future<int> insert() async {

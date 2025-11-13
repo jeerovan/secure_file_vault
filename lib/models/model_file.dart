@@ -4,30 +4,31 @@ import 'package:flutter/foundation.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/models/model_preferences.dart';
-import 'package:uuid/uuid.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelFile {
-  String? id;
+  String id;
   FileType type;
   int size;
   Uint8List? thumbnail;
-  int? duration;
-  int? state;
-  int? archivedAt;
-  int? createdAt;
-  int? updatedAt;
+  int duration;
+  int state;
+  int modifiedAt;
+  int archivedAt;
+  int createdAt;
+  int updatedAt;
 
   ModelFile({
-    this.id,
+    required this.id,
     required this.type,
     required this.size,
     this.thumbnail,
-    this.duration,
-    this.state,
-    this.archivedAt,
-    this.createdAt,
-    this.updatedAt,
+    required this.duration,
+    required this.state,
+    required this.modifiedAt,
+    required this.archivedAt,
+    required this.createdAt,
+    required this.updatedAt,
   });
 
   Map<String, dynamic> toMap() {
@@ -38,6 +39,7 @@ class ModelFile {
       'thumbnail': thumbnail == null ? null : base64Encode(thumbnail!),
       'duration': duration,
       'state': state,
+      'modified_at': modifiedAt,
       'archived_at': archivedAt,
       'created_at': createdAt,
       'updated_at': updatedAt
@@ -45,7 +47,6 @@ class ModelFile {
   }
 
   static Future<ModelFile> fromMap(Map<String, dynamic> map) async {
-    Uuid uuid = const Uuid();
     Uint8List? thumbnail;
     if (map.containsKey("thumbnail")) {
       if (map["thumbnail"] is String) {
@@ -64,21 +65,22 @@ class ModelFile {
     }
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     return ModelFile(
-      id: map.containsKey('id') ? map['id'] : uuid.v4(),
+      id: getValueFromMap(map, "id", defaultValue: 0),
       thumbnail: thumbnail,
       duration: getValueFromMap(map, "duration", defaultValue: 0),
       size: getValueFromMap(map, "size", defaultValue: 0),
       type: fileType,
       state: getValueFromMap(map, "state", defaultValue: 0),
+      modifiedAt: getValueFromMap(map, "modified_at", defaultValue: 0),
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
       createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }
 
-  static Future<ModelFile?> get(String id) async {
+  static Future<ModelFile?> get(int id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("item", id);
+    List<Map<String, dynamic>> rows = await dbHelper.getWithId("file", id);
     if (rows.isNotEmpty) {
       Map<String, dynamic> map = rows.first;
       return await fromMap(map);
@@ -90,20 +92,20 @@ class ModelFile {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows =
-        await db.query("item", where: "type = ?", whereArgs: [itemType.value]);
+        await db.query("file", where: "type = ?", whereArgs: [itemType.value]);
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("item", map);
+    int inserted = await dbHelper.insert("file", map);
     bool syncEnabled = await ModelPreferences.get(
             AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (syncEnabled) {
-      map["table"] = "item";
+      map["table"] = "file";
       /* SyncUtils.encryptAndPushChange(
         map,
       ); */
@@ -119,14 +121,14 @@ class ModelFile {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update("item", updatedMap, id);
+    int updated = await dbHelper.update("file", updatedMap, id);
     bool syncEnabled = await ModelPreferences.get(
             AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (pushToSync && syncEnabled) {
       map["updated_at"] = utcNow;
-      map["table"] = "item";
+      map["table"] = "file";
       //SyncUtils.encryptAndPushChange(map, mediaChanges: false);
     }
     return updated;
@@ -136,14 +138,14 @@ class ModelFile {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("item", id);
+    List<Map<String, dynamic>> rows = await dbHelper.getWithId("file", id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("item", map);
+      result = await dbHelper.insert("file", map);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update("item", map, id);
+        result = await dbHelper.update("file", map, id);
       } else {
         result = 0;
       }
@@ -157,14 +159,14 @@ class ModelFile {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 2;
     Map<String, dynamic> map = toMap();
-    int deleted = await dbHelper.delete("item", id);
+    int deleted = await dbHelper.delete("file", id);
     bool syncEnabled = await ModelPreferences.get(
             AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (withServerSync && syncEnabled) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
-      map["table"] = "item";
+      map["table"] = "file";
       /* SyncUtils.encryptAndPushChange(
         map,
         deleteTask: deleteTask,
@@ -173,7 +175,7 @@ class ModelFile {
     return deleted;
   }
 
-  static Future<void> deletedFromServer(String id) async {
+  static Future<void> deletedFromServer(int id) async {
     ModelFile? item = await ModelFile.get(id);
     if (item != null) {
       await item.delete();

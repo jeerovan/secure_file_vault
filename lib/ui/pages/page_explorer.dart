@@ -1,6 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/services/service_recon.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
@@ -25,12 +26,11 @@ class PageExplorer extends StatefulWidget {
 }
 
 class _PageExplorerState extends State<PageExplorer> {
-  final _fileSystem = FileSystemService();
   static const double _dualPaneBreakpoint = 800.0;
 
   void _onItemDropped(ModelItem item, ModelItem destination) {
     setState(() {
-      _fileSystem.moveItem(item, destination);
+      //TODO handle move item
     });
   }
 
@@ -78,11 +78,10 @@ class FilePane extends StatefulWidget {
 class _FilePaneState extends State<FilePane> {
   final AppLogger logger = AppLogger(prefixes: ["Explorer"]);
 
-  final _fileSystem = FileSystemService();
   List<ModelItem> _items = [];
   ModelItem? currentItem;
   ViewType _viewType = ViewType.list;
-  bool _isLoading = true;
+  bool _isLoading = false;
   List<ModelItem> parentChilds = [];
 
   @override
@@ -94,16 +93,23 @@ class _FilePaneState extends State<FilePane> {
   Future<void> _loadFiles() async {
     if (currentItem == null) {
       currentItem = await ModelItem.get(await getDeviceId());
-      parentChilds.add(currentItem!);
+      if (currentItem != null) parentChilds.add(currentItem!);
     }
+    if (currentItem == null) return;
     setState(() => _isLoading = true);
-    final items = await ModelItem.getInFolder(currentItem);
+    final items = await ModelItem.getAllInFolder(currentItem);
     if (mounted) {
       setState(() {
         _items = items;
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _syncRootFolder() async {
+    final reconService = ReconciliationService();
+    await reconService.reconcile(currentItem!.id);
+    _loadFiles();
   }
 
   void _navigateTo(ModelItem item) {
@@ -141,7 +147,6 @@ class _FilePaneState extends State<FilePane> {
               child: const Text('Cancel')),
           TextButton(
             onPressed: () {
-              setState(() => _fileSystem.toggleBackupStatus(folder));
               Navigator.of(context).pop();
             },
             child: Text(folder.isFolder ? 'Disable' : 'Enable'),
@@ -203,7 +208,7 @@ class _FilePaneState extends State<FilePane> {
         "item_id": parentItemId,
         "path": folderPath,
         "name": folderName,
-        "is_folder": 1
+        "is_folder": 1,
       });
       await syncFolderItem.insert();
     }
@@ -229,11 +234,13 @@ class _FilePaneState extends State<FilePane> {
           backgroundColor:
               Theme.of(context).colorScheme.surfaceContainerHighest,
           actions: [
+            if (currentItem?.path != null)
+              IconButton(icon: Icon(Icons.sync), onPressed: _syncRootFolder),
             IconButton(icon: Icon(Icons.add), onPressed: addSyncFolder),
             IconButton(
               icon: Icon(Icons.logout),
-              onPressed: () => setState(
-                  () async => await context.read<AppSetupState>().logout()),
+              onPressed: () async =>
+                  {await context.read<AppSetupState>().logout()},
             ),
             IconButton(
               icon: Icon(_viewType == ViewType.list
@@ -469,93 +476,5 @@ class _FileGridItem extends StatelessWidget {
       );
     }
     return draggableItem;
-  }
-}
-
-/// A mock service to simulate fetching files and folders.
-class FileSystemService {
-  static final FileSystemService _instance = FileSystemService._internal();
-  factory FileSystemService() => _instance;
-
-  FileSystemService._internal() {
-    _initializeMockFileSystem();
-  }
-
-  final Map<String, List<ModelItem>> _mockFileSystem = {};
-
-  void _initializeMockFileSystem() {
-    _mockFileSystem['/'] = [
-      ModelItem(id: '1', name: 'Documents', path: '/', isFolder: true),
-      ModelItem(
-        id: '2',
-        name: 'Photos',
-        path: '/',
-        isFolder: true,
-      ),
-      ModelItem(id: '3', name: 'project_brief.pdf', path: '/', isFolder: true),
-      ModelItem(id: '4', name: 'logo.png', path: '/', isFolder: true),
-    ];
-    _mockFileSystem['/Documents/'] = [
-      ModelItem(id: '5', name: 'Work', path: '/Documents/', isFolder: true),
-      ModelItem(id: '6', name: 'Personal', path: '/Documents/', isFolder: true),
-      ModelItem(
-          id: '7',
-          name: 'meeting_notes.txt',
-          path: '/Documents/',
-          isFolder: true),
-    ];
-    _mockFileSystem['/Documents/Work/'] = [
-      ModelItem(
-          id: '8',
-          name: 'quarterly_report.docx',
-          path: '/Documents/Work/',
-          isFolder: true),
-    ];
-    _mockFileSystem['/Documents/Personal/'] = [];
-    _mockFileSystem['/Photos/'] = [
-      ModelItem(id: '9', name: 'Vacation', path: '/Photos/', isFolder: true),
-      ModelItem(id: '10', name: 'Family', path: '/Photos/', isFolder: true),
-    ];
-    _mockFileSystem['/Photos/Vacation/'] = [
-      ModelItem(
-          id: '11',
-          name: 'beach.jpg',
-          path: '/Photos/Vacation/',
-          isFolder: true),
-      ModelItem(
-          id: '12',
-          name: 'mountain.jpg',
-          path: '/Photos/Vacation/',
-          isFolder: true),
-    ];
-    _mockFileSystem['/Photos/Family/'] = [];
-  }
-
-  void toggleBackupStatus(ModelItem folder) {}
-
-  void moveItem(ModelItem itemToMove, ModelItem destinationFolder) {
-    if (!destinationFolder.isFolder) return;
-
-    _mockFileSystem[itemToMove.path]
-        ?.removeWhere((item) => item.id == itemToMove.id);
-
-    final newPath = '${destinationFolder.path}${destinationFolder.name}/';
-    final movedItem = ModelItem(
-      id: itemToMove.id,
-      name: itemToMove.name,
-      path: newPath,
-      isFolder: itemToMove.isFolder,
-    );
-
-    _mockFileSystem.putIfAbsent(newPath, () => []).add(movedItem);
-  }
-
-  ModelItem? _findItem(String id) {
-    for (var list in _mockFileSystem.values) {
-      for (var item in list) {
-        if (item.id == id) return item;
-      }
-    }
-    return null;
   }
 }
