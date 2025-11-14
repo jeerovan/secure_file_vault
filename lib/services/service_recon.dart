@@ -75,37 +75,40 @@ class ReconciliationService {
           renamed = await _handleRenamedFile(
               rootItemId, fsChild, dbChildren, childPath);
         }
-        ModelItem? movedDbItem;
-        if (!renamed) {
+        if (renamed) {
+          logger.info("Renamed: $childPath");
+        } else {
+          ModelItem? movedDbItem;
           if (fsChild.isFolder) {
             movedDbItem =
                 await _findMovedFolder(rootItemId, fsChild, childPath);
           } else {
             movedDbItem = await _findMovedFile(rootItemId, fsChild, childPath);
           }
-        }
 
-        if (movedDbItem != null) {
-          // --- MOVE DETECTED ---
-          movedDbItem.name = fsChild.name;
-          movedDbItem.parentId = dbParentId;
-          movedDbItem.scanState = 2;
-          await movedDbItem.update(["name", "parent_id", "scan_state"]);
-          if (fsChild.isFolder) {
-            await _reconcileNode(
-                rootItemId: rootItemId,
-                dbParentId: movedDbItem.id,
-                fsPath: childPath);
-          } else {}
-        } else {
-          // 4. Create NEW ITEM
-          // No move was detected, so this is a genuinely new item.
-          if (fsChild.isFolder) {
-            await _handleFolderCreation(
-                rootItemId, fsChild, dbParentId, childPath);
+          if (movedDbItem != null) {
+            // --- MOVE DETECTED ---
+            logger.info("Moved: $childPath");
+            movedDbItem.name = fsChild.name;
+            movedDbItem.parentId = dbParentId;
+            movedDbItem.scanState = 2;
+            await movedDbItem.update(["name", "parent_id", "scan_state"]);
+            if (fsChild.isFolder) {
+              await _reconcileNode(
+                  rootItemId: rootItemId,
+                  dbParentId: movedDbItem.id,
+                  fsPath: childPath);
+            }
           } else {
-            await _handleFileCreation(
-                rootItemId, fsChild, dbParentId, childPath);
+            // 4. Create NEW ITEM
+            // No move was detected, so this is a genuinely new item.
+            if (fsChild.isFolder) {
+              await _handleFolderCreation(
+                  rootItemId, fsChild, dbParentId, childPath);
+            } else {
+              await _handleFileCreation(
+                  rootItemId, fsChild, dbParentId, childPath);
+            }
           }
         }
       }
@@ -183,7 +186,7 @@ class ReconciliationService {
         await ModelItem.getAllUnScannedFilesForRootItemIdMatchingHash(
             rootItemId, hash);
     if (dbCandidatesMatchingHash.isNotEmpty) {
-      return dbCandidatesMatchingHash[1];
+      return dbCandidatesMatchingHash[0];
     }
     return null;
   }
@@ -304,6 +307,7 @@ class ReconciliationService {
     final modelFile = await ModelFile.fromMap({
       'id': hash,
       'size': fsItem.size,
+      'modified_at': fsItem.modifiedTime,
     });
     await modelFile.insert();
     final modelItem = await ModelItem.fromMap({
