@@ -104,7 +104,7 @@ class ModelItem {
 
   static Future<ModelItem?> getParentItem(ModelItem? item) async {
     if (item == null) return null;
-    ModelItem? currentItem = await get(item.id!);
+    ModelItem? currentItem = await get(item.id);
     ModelItem? parentItem;
     if (currentItem != null) {
       String? parentItemId = currentItem.parentId;
@@ -149,6 +149,18 @@ class ModelItem {
       "item",
       where: "root_id = ? AND is_folder = ? AND scan_state = ? AND file_id = ?",
       whereArgs: [itemId, 0, 0, hash],
+    );
+    return await Future.wait(rows.map((map) => fromMap(map)));
+  }
+
+  static Future<List<ModelItem>> getAllUnScannedItemsForRootItemId(
+      String itemId) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows = await db.query(
+      "item",
+      where: "root_id = ? AND scan_state = ?",
+      whereArgs: [itemId, 0],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
   }

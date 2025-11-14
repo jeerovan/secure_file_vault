@@ -18,12 +18,32 @@ class ReconciliationService {
   Future<void> reconcile(String rootItemId) async {
     final rootItem = await ModelItem.get(rootItemId);
     if (rootItem == null) return;
+    // initialize scan
     await ModelItem.resetScanState(rootItemId);
     await _reconcileNode(
       rootItemId: rootItemId,
       dbParentId: rootItemId,
       fsPath: rootItem.path!,
     );
+
+    // Mark remaining DB items as deleted
+    final remainingDbItems =
+        await ModelItem.getAllUnScannedItemsForRootItemId(rootItemId);
+    // first delete all files
+    for (final dbChild in remainingDbItems) {
+      if (!dbChild.isFolder) {
+        _handleDeletion(dbChild);
+      }
+    }
+    // delete folders if they do not have any files
+    for (final dbChild in remainingDbItems) {
+      if (dbChild.isFolder) {
+        final folderItems = await ModelItem.getAllInFolder(dbChild);
+        if (folderItems.isEmpty) {
+          _handleDeletion(dbChild);
+        }
+      }
+    }
   }
 
   /// Recursively reconcile a single node (folder) in the hierarchy
@@ -45,7 +65,9 @@ class ReconciliationService {
 
     //2. Find directly matched and modified items
     for (final fsChild in fsChildren) {
-      final dbChild = dbChildrenByName[fsChild.name];
+      final dbChildItem = dbChildrenByName[fsChild.name];
+      final dbChild =
+          dbChildItem?.isFolder == fsChild.isFolder ? dbChildItem : null;
       final childPath = path_lib.join(fsPath, fsChild.name);
       if (dbChild != null) {
         // Item with same name exists in DB under the same parent
@@ -76,7 +98,7 @@ class ReconciliationService {
               rootItemId, fsChild, dbChildren, childPath);
         }
         if (renamed) {
-          logger.info("Renamed: $childPath");
+          logger.info("  ~ Renamed: $childPath");
         } else {
           ModelItem? movedDbItem;
           if (fsChild.isFolder) {
@@ -88,11 +110,11 @@ class ReconciliationService {
 
           if (movedDbItem != null) {
             // --- MOVE DETECTED ---
-            logger.info("Moved: $childPath");
             movedDbItem.name = fsChild.name;
             movedDbItem.parentId = dbParentId;
             movedDbItem.scanState = 2;
             await movedDbItem.update(["name", "parent_id", "scan_state"]);
+            logger.info("  ~ Moved: $childPath |Id: ${movedDbItem.id}");
             if (fsChild.isFolder) {
               await _reconcileNode(
                   rootItemId: rootItemId,
@@ -112,13 +134,6 @@ class ReconciliationService {
           }
         }
       }
-    }
-
-    // 5. Mark remaining DB items as deleted
-    final remainingDbItems =
-        await ModelItem.getAllUnScannedFolderForRootItemId(rootItemId);
-    for (final dbChild in remainingDbItems) {
-      _handleDeletion(dbChild);
     }
   }
 
@@ -277,8 +292,6 @@ class ReconciliationService {
 
   Future<void> _handleModifiedFile(
       ModelItem dbItem, FSItem fsItem, String fsPath, int timestamp) async {
-    logger.info('  ~ Modified: ${fsItem.name}');
-
     final newHash = await _computeFileHash(fsPath);
     if (dbItem.file?.id == newHash) {
       return; // Only metadata changed, no content change
@@ -293,6 +306,7 @@ class ReconciliationService {
     dbItem.file = modelFile;
     dbItem.size = fsItem.size!;
     await dbItem.update(["file_id", "size"]);
+    logger.info('  ~ Modified: ${fsItem.name}');
   }
 
   Future<void> _handleFileCreation(
@@ -301,15 +315,16 @@ class ReconciliationService {
     String parentId,
     String fsPath,
   ) async {
-    logger.info('  + Created File: ${fsItem.name}');
-
     final hash = await _computeFileHash(fsPath);
-    final modelFile = await ModelFile.fromMap({
-      'id': hash,
-      'size': fsItem.size,
-      'modified_at': fsItem.modifiedTime,
-    });
-    await modelFile.insert();
+    final hashFile = await ModelFile.get(hash);
+    if (hashFile == null) {
+      final modelFile = await ModelFile.fromMap({
+        'id': hash,
+        'size': fsItem.size,
+        'modified_at': fsItem.modifiedTime,
+      });
+      await modelFile.insert();
+    }
     final modelItem = await ModelItem.fromMap({
       'root_id': rootItemId,
       'parent_id': parentId,
@@ -320,6 +335,7 @@ class ReconciliationService {
       'scan_state': 1,
     });
     await modelItem.insert();
+    logger.info('  + Created File: ${fsItem.name}');
   }
 
   Future<void> _handleFolderCreation(
@@ -328,8 +344,6 @@ class ReconciliationService {
     String parentId,
     String fsPath,
   ) async {
-    logger.info('  + Created Folder: ${fsItem.name}');
-
     final itemId = uuid.v4();
     final modelItem = await ModelItem.fromMap({
       'id': itemId,
@@ -340,6 +354,7 @@ class ReconciliationService {
       'scan_state': 1,
     });
     await modelItem.insert();
+    logger.info('  + Created Folder: ${fsItem.name}');
 
     // Recurse into the newly created folder to process its children
     await _reconcileNode(
@@ -347,11 +362,12 @@ class ReconciliationService {
   }
 
   Future<void> _handleDeletion(ModelItem dbItem) async {
-    logger.info('  - Deleted: ${dbItem.name}');
     if (dbItem.isFolder) {
       await dbItem.delete();
+      logger.info('  - Deleted Folder: ${dbItem.name}');
     } else {
       await dbItem.delete();
+      logger.info('  - Deleted File: ${dbItem.name}');
     }
 
     // TODO Decrement content reference count if it's a file
@@ -417,11 +433,4 @@ class FSItem {
       required this.isFolder,
       this.size,
       this.modifiedTime});
-}
-
-class ReconciliationStats {
-  int filesCreated = 0, filesModified = 0, filesDeleted = 0;
-  int foldersCreated = 0, foldersDeleted = 0;
-  int moves = 0;
-  // ... toString() implementation
 }
