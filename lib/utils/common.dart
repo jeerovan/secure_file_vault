@@ -469,6 +469,16 @@ Future<String> getFilePath(String mimeDirectory, String fileName) async {
   return path.join(directory.path, mediaDir, mimeDirectory, fileName);
 }
 
+Future<bool> directoryExistAtPath(String path) async {
+  Directory dir = Directory(path);
+  return await dir.exists();
+}
+
+Future<bool> fileExistAtPath(String path) async {
+  File file = File(path);
+  return await file.exists();
+}
+
 void copyFile(Map<String, String> mediaData) {
   File systemFile = File(mediaData["oldPath"]!);
   String newPath = mediaData["newPath"]!;

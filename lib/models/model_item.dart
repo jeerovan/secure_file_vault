@@ -4,6 +4,7 @@ import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/models/model_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../storage/storage_sqlite.dart';
+import 'package:path/path.dart' as path_lib;
 
 class ModelItem {
   String id;
@@ -187,6 +188,18 @@ class ModelItem {
       orderBy: 'at DESC',
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
+  }
+
+  static Future<String> getPathForItem(String id) async {
+    ModelItem? item = await get(id);
+    List<String> pathParts = [];
+    while (item?.path == null) {
+      pathParts.add(item!.name);
+      item = await get(item.parentId!);
+    }
+    String path = item!.path!;
+    String pathItems = path_lib.joinAll(pathParts.reversed);
+    return path_lib.join(path, pathItems);
   }
 
   static Future<void> resetScanState(String rootItemId) async {

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/services.dart';
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
@@ -66,11 +67,15 @@ class ReconciliationService {
     //2. Find directly matched and modified items
     for (final fsChild in fsChildren) {
       final dbChildItem = dbChildrenByName[fsChild.name];
-      final dbChild =
-          dbChildItem?.isFolder == fsChild.isFolder ? dbChildItem : null;
+      ModelItem? dbChild;
+      if (dbChildItem?.isFolder == fsChild.isFolder &&
+          dbChildItem?.scanState == 0) {
+        dbChild = dbChildItem;
+      }
       final childPath = path_lib.join(fsPath, fsChild.name);
       if (dbChild != null) {
         // Item with same name exists in DB under the same parent
+        dbChild.scanState = 1;
         await ModelItem.setScanState(dbChild.id, 1);
         if (fsChild.isFolder) {
           // Recurse into matched folder
@@ -110,11 +115,12 @@ class ReconciliationService {
 
           if (movedDbItem != null) {
             // --- MOVE DETECTED ---
+            String dbItemPath = await ModelItem.getPathForItem(movedDbItem.id);
             movedDbItem.name = fsChild.name;
             movedDbItem.parentId = dbParentId;
             movedDbItem.scanState = 2;
             await movedDbItem.update(["name", "parent_id", "scan_state"]);
-            logger.info("  ~ Moved: $childPath |Id: ${movedDbItem.id}");
+            logger.info("  ~ Moved: $dbItemPath to $childPath");
             if (fsChild.isFolder) {
               await _reconcileNode(
                   rootItemId: rootItemId,
@@ -137,7 +143,7 @@ class ReconciliationService {
     }
   }
 
-  /// ON-DEMAND GLOBAL SEARCH: Finds a moved folder in the unresolved set.
+  /// ON-DEMAND GLOBAL SEARCH: Finds a moved/renamed folder in the unresolved set.
   Future<ModelItem?> _findMovedFolder(
       String rootItemId, FSItem fsFolder, String fsPath) async {
     final candidateDbFolders =
@@ -146,7 +152,7 @@ class ReconciliationService {
     double bestScore = 0.0;
     final fsChildrenNames =
         (await _scanFileSystemChildren(fsPath)).map((c) => c.name).toSet();
-    // Strategy 1: Find a folder with the same name. It's the strongest signal.
+    // Strategy 1:Folder Move: Find a folder with the same name. It's the strongest signal.
     final sameNameCandidates =
         candidateDbFolders.where((f) => f.name == fsFolder.name).toList();
     if (sameNameCandidates.isNotEmpty) {
@@ -161,10 +167,16 @@ class ReconciliationService {
           bestMatch = candidate;
         }
       }
-      if (bestMatch != null) return bestMatch;
+      if (bestMatch != null) {
+        String directoryPath = await ModelItem.getPathForItem(bestMatch.id);
+        bool directoryExist = await directoryExistAtPath(directoryPath);
+        if (!directoryExist) {
+          return bestMatch;
+        }
+      }
     }
 
-    // Strategy 2: If no name match, check content similarity against all other unresolved folders.
+    // Strategy 2:Folder Rename: If no name match, check content similarity against all other unresolved folders.
     for (final candidate in candidateDbFolders) {
       final dbChildrenNames = (await ModelItem.getAllInFolder(candidate))
           .map((c) => c.name)
@@ -176,8 +188,14 @@ class ReconciliationService {
         bestMatch = candidate;
       }
     }
-
-    return (bestScore >= jaccardSimilarityThreshold) ? bestMatch : null;
+    if (bestScore >= jaccardSimilarityThreshold && bestMatch != null) {
+      String directoryPath = await ModelItem.getPathForItem(bestMatch.id);
+      bool directoryExist = await directoryExistAtPath(directoryPath);
+      if (!directoryExist) {
+        return bestMatch;
+      }
+    }
+    return null;
   }
 
   // ON-DEMAND GLOBAL SEARCH: Finds a moved file.
@@ -192,7 +210,9 @@ class ReconciliationService {
     if (dbCandidatesMatchingNameSize.isNotEmpty) {
       for (final candidate in dbCandidatesMatchingNameSize) {
         if (candidate.file?.id == hash) {
-          return candidate;
+          String filePath = await ModelItem.getPathForItem(candidate.id);
+          bool fileExist = await fileExistAtPath(filePath);
+          if (!fileExist) return candidate;
         }
       }
     }
@@ -201,7 +221,10 @@ class ReconciliationService {
         await ModelItem.getAllUnScannedFilesForRootItemIdMatchingHash(
             rootItemId, hash);
     if (dbCandidatesMatchingHash.isNotEmpty) {
-      return dbCandidatesMatchingHash[0];
+      ModelItem candidate = dbCandidatesMatchingHash[0];
+      String filePath = await ModelItem.getPathForItem(candidate.id);
+      bool fileExist = await fileExistAtPath(filePath);
+      if (!fileExist) return candidate;
     }
     return null;
   }
