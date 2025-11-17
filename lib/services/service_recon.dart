@@ -33,7 +33,7 @@ class ReconciliationService {
     // first delete all files
     for (final dbChild in remainingDbItems) {
       if (!dbChild.isFolder) {
-        _handleDeletion(dbChild);
+        await _handleDeletion(dbChild);
       }
     }
     // delete folders if they do not have any files
@@ -41,7 +41,7 @@ class ReconciliationService {
       if (dbChild.isFolder) {
         final folderItems = await ModelItem.getAllInFolder(dbChild);
         if (folderItems.isEmpty) {
-          _handleDeletion(dbChild);
+          await _handleDeletion(dbChild);
         }
       }
     }
