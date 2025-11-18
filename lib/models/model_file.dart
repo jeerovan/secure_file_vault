@@ -11,8 +11,10 @@ class ModelFile {
   FileType type;
   int size;
   Uint8List? thumbnail;
-  int duration;
+  int? duration;
   int state;
+  int referenceCount;
+  int chunkCount;
   int modifiedAt;
   int archivedAt;
   int createdAt;
@@ -25,6 +27,8 @@ class ModelFile {
     this.thumbnail,
     required this.duration,
     required this.state,
+    required this.referenceCount,
+    required this.chunkCount,
     required this.modifiedAt,
     required this.archivedAt,
     required this.createdAt,
@@ -39,8 +43,10 @@ class ModelFile {
       'thumbnail': thumbnail == null ? null : base64Encode(thumbnail!),
       'duration': duration,
       'state': state,
-      'modified_at': modifiedAt,
+      'reference_count': referenceCount,
+      'chunk_count': chunkCount,
       'archived_at': archivedAt,
+      'modified_at': modifiedAt,
       'created_at': createdAt,
       'updated_at': updatedAt
     };
@@ -71,11 +77,22 @@ class ModelFile {
       size: getValueFromMap(map, "size", defaultValue: 0),
       type: fileType,
       state: getValueFromMap(map, "state", defaultValue: 0),
+      referenceCount: getValueFromMap(map, "reference_count", defaultValue: 0),
+      chunkCount: getValueFromMap(map, "chunk_count", defaultValue: 0),
       modifiedAt: getValueFromMap(map, "modified_at", defaultValue: 0),
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
       createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
+  }
+
+  static Future<void> updateReferenceCount(ModelFile file, bool added) async {
+    if (added) {
+      file.referenceCount = file.referenceCount + 1;
+    } else {
+      file.referenceCount = file.referenceCount - 1;
+    }
+    await file.update(["reference_count"]);
   }
 
   static Future<ModelFile?> get(String id) async {

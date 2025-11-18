@@ -128,25 +128,10 @@ class StorageSqlite {
         created_at INTEGER
       )
     '''); */
-    // id as sha-256
-    //state: 1:Local, 2:Local+Server 3:Server
-    await db.execute('''
-      CREATE TABLE file (
-        id TEXT PRIMARY KEY,
-        type INTEGER NOT NULL,
-        size INTEGER NOT NULL,
-        thumbnail TEXT,
-        duration INTEGER,
-        state INTEGER DEFAULT 0,
-        modified_at INTEGER,
-        archived_at INTEGER,
-        created_at INTEGER,
-        updated_at INTEGER
-      )
-    ''');
     // path: only for synced folders
     // name: folder, device
     // rootId: all folders and files will have item(id) of synced folder
+    // thumbnail can be changed for a folder
     await db.execute('''
       CREATE TABLE item (
         id TEXT PRIMARY KEY,
@@ -171,6 +156,25 @@ class StorageSqlite {
       CREATE TABLE setting (
         id TEXT PRIMARY KEY,
         value TEXT NOT NULL,
+        created_at INTEGER,
+        updated_at INTEGER
+      )
+    ''');
+    // id as sha-256
+    //state: 1:Local, 2:Local+Server 3:Server
+    // thumbnail for a file is static
+    await db.execute('''
+      CREATE TABLE file (
+        id TEXT PRIMARY KEY,
+        type INTEGER NOT NULL,
+        size INTEGER NOT NULL,
+        thumbnail TEXT,
+        duration INTEGER,
+        state INTEGER DEFAULT 0,
+        reference_count INTEGER DEFAULT 0,
+        chunk_count INTEGER,
+        modified_at INTEGER,
+        archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER
       )

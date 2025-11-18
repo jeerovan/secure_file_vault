@@ -3,7 +3,6 @@ import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/utils/common.dart';
-import 'package:flutter/services.dart';
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path_lib;
@@ -344,9 +343,12 @@ class ReconciliationService {
       final modelFile = await ModelFile.fromMap({
         'id': hash,
         'size': fsItem.size,
+        'reference_count': 1,
         'modified_at': fsItem.modifiedTime,
       });
       await modelFile.insert();
+    } else {
+      await ModelFile.updateReferenceCount(hashFile, true);
     }
     final modelItem = await ModelItem.fromMap({
       'root_id': rootItemId,
@@ -389,6 +391,10 @@ class ReconciliationService {
       await dbItem.delete();
       logger.info('  - Deleted Folder: ${dbItem.name}');
     } else {
+      ModelFile? file = dbItem.file;
+      if (file != null) {
+        await ModelFile.updateReferenceCount(file, false);
+      }
       await dbItem.delete();
       logger.info('  - Deleted File: ${dbItem.name}');
     }
@@ -407,7 +413,7 @@ class ReconciliationService {
 
   bool _isFileModified(FSItem fs, ModelItem dbItem) {
     return fs.size != dbItem.size ||
-        ((fs.modifiedTime! - dbItem.file!.modifiedAt).abs() > 2000);
+        ((fs.modifiedTime! - dbItem.file!.referenceCount).abs() > 2000);
   }
 
   Future<String> _computeFileHash(String path) async {
