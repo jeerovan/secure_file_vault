@@ -4,6 +4,10 @@ import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:crypto/crypto.dart';
+import 'package:file_vault_bb/utils/utils_crypto.dart';
+import 'package:file_vault_bb/utils/utils_file.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sodium_libs/sodium_libs_sumo.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path_lib;
 

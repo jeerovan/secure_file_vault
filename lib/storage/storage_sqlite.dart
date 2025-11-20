@@ -153,6 +153,27 @@ class StorageSqlite {
       )
     ''');
     await db.execute('''
+        CREATE VIRTUAL TABLE item_fts USING fts4(
+            name, 
+            tokenize=unicode61
+        );
+    ''');
+    await db.execute('''
+        CREATE TRIGGER item_ai AFTER INSERT ON item BEGIN
+          INSERT INTO item_fts(docid, name) VALUES(new.rowid, new.name);
+        END;
+    ''');
+    await db.execute('''
+        CREATE TRIGGER item_ad AFTER DELETE ON item BEGIN
+          DELETE FROM item_fts WHERE docid = old.rowid;
+        END;
+    ''');
+    await db.execute('''
+        CREATE TRIGGER item_au AFTER UPDATE ON item BEGIN
+          UPDATE item_fts SET name = new.name WHERE docid = old.rowid;
+        END;
+    ''');
+    await db.execute('''
       CREATE TABLE setting (
         id TEXT PRIMARY KEY,
         value TEXT NOT NULL,

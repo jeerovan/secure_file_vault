@@ -216,6 +216,18 @@ class ModelItem {
         'UPDATE item SET scan_state = ? WHERE id = ?', [state, itemId]);
   }
 
+  static Future<List<ModelItem>> searchItem(String term) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows = await db.rawQuery('''
+        SELECT * FROM item 
+        WHERE rowid IN (
+            SELECT docid FROM item_fts WHERE name MATCH '$term'
+        );
+      ''');
+    return await Future.wait(rows.map((map) => fromMap(map)));
+  }
+
   static Future<ModelItem?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
     List<Map<String, dynamic>> rows = await dbHelper.getWithId("item", id);
