@@ -88,8 +88,9 @@ class ReconciliationService {
             fsPath: childPath,
           );
         } else {
-          // Check if the file was modified based on mtime and size
-          if (_isFileModified(fsChild, dbChild)) {
+          // Check if the file was modified based on hash
+          bool fileModified = await _isFileModified(childPath, dbChild);
+          if (fileModified) {
             await ModelItem.setScanState(dbChild.id, 2);
             await _handleModifiedFile(dbChild, fsChild, childPath, timestamp);
           }
@@ -348,7 +349,6 @@ class ReconciliationService {
         'id': hash,
         'size': fsItem.size,
         'reference_count': 1,
-        'modified_at': fsItem.modifiedTime,
       });
       await modelFile.insert();
     } else {
@@ -415,9 +415,9 @@ class ReconciliationService {
     return union == 0 ? 0 : intersection / union;
   }
 
-  bool _isFileModified(FSItem fs, ModelItem dbItem) {
-    return fs.size != dbItem.size ||
-        ((fs.modifiedTime! - dbItem.file!.referenceCount).abs() > 2000);
+  Future<bool> _isFileModified(String fsPath, ModelItem dbItem) async {
+    String fsHash = await _computeFileHash(fsPath);
+    return dbItem.file?.id != fsHash;
   }
 
   Future<String> _computeFileHash(String path) async {
@@ -442,7 +442,6 @@ class ReconciliationService {
           name: name,
           isFolder: isFolder,
           size: isFolder ? 0 : stats.size,
-          modifiedTime: stats.modified.millisecondsSinceEpoch,
         ));
       } catch (e) {
         logger.info('Error scanning ${entity.path}: $e');
@@ -459,11 +458,9 @@ class FSItem {
   final String name;
   final bool isFolder;
   final int? size;
-  final int? modifiedTime;
-  String? dbMatchId; // Used to track matches during reconciliation
-  FSItem(
-      {required this.name,
-      required this.isFolder,
-      this.size,
-      this.modifiedTime});
+  FSItem({
+    required this.name,
+    required this.isFolder,
+    this.size,
+  });
 }

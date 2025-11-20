@@ -15,7 +15,6 @@ class ModelFile {
   int state;
   int referenceCount;
   int chunkCount;
-  int modifiedAt;
   int archivedAt;
   int createdAt;
   int updatedAt;
@@ -29,7 +28,6 @@ class ModelFile {
     required this.state,
     required this.referenceCount,
     required this.chunkCount,
-    required this.modifiedAt,
     required this.archivedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -46,7 +44,6 @@ class ModelFile {
       'reference_count': referenceCount,
       'chunk_count': chunkCount,
       'archived_at': archivedAt,
-      'modified_at': modifiedAt,
       'created_at': createdAt,
       'updated_at': updatedAt
     };
@@ -79,7 +76,6 @@ class ModelFile {
       state: getValueFromMap(map, "state", defaultValue: 0),
       referenceCount: getValueFromMap(map, "reference_count", defaultValue: 0),
       chunkCount: getValueFromMap(map, "chunk_count", defaultValue: 0),
-      modifiedAt: getValueFromMap(map, "modified_at", defaultValue: 0),
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
       createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),

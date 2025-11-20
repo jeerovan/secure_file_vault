@@ -194,7 +194,6 @@ class StorageSqlite {
         state INTEGER DEFAULT 0,
         reference_count INTEGER DEFAULT 0,
         chunk_count INTEGER,
-        modified_at INTEGER,
         archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER
