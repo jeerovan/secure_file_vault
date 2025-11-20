@@ -6,6 +6,8 @@ import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
+import 'package:file_vault_bb/ui/pages/page_access_key.dart';
+import 'package:file_vault_bb/ui/pages/page_access_key_notice.dart';
 import 'package:file_vault_bb/ui/pages/page_devices.dart';
 import 'package:file_vault_bb/ui/pages/page_explorer.dart';
 import 'package:file_vault_bb/ui/pages/page_loading.dart';
@@ -157,12 +159,16 @@ class AppNavigator extends StatelessWidget {
         switch (setupState.currentStep) {
           case SetupStep.loading:
             return const PageLoading();
-          /* case SetupStep.registration:
+          case SetupStep.signin:
             return PageSignin(runningOnDesktop: isLargeScreen);
-          case SetupStep.securityKey:
-            return const SecurityKeyScreen();
-          case SetupStep.planSelection:
+          /* case SetupStep.planSelection:
             return const PlanSelectionScreen(); */
+          case SetupStep.generateAccessKey:
+            return const PageAccessKeyNotice(
+              runningOnDesktop: false,
+            );
+          case SetupStep.showAccessKey:
+            return const PageAccessKey(runningOnDesktop: false);
           case SetupStep.deviceSetup:
             return const PageDevices();
           case SetupStep.storagePermission:

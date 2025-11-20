@@ -125,18 +125,11 @@ class _PageSigninState extends State<PageSignin> {
         if (session != null || simulateOnboarding()) {
           await ModelSetting.delete(AppString.otpSentTo.string);
           await ModelSetting.delete(AppString.otpSentAt.string);
-          String? existingDeviceId =
-              await ModelPreferences.get(AppString.deviceId.string);
-          if (existingDeviceId == null) {
-            String newDeviceId = Uuid().v4();
-            await ModelPreferences.set(AppString.deviceId.string, newDeviceId);
-          }
           await ModelSetting.set(
               AppString.signedIn.string, "yes"); // used for simulation
-          //navigateToOnboardCheck();
           logger.info("Login Successfull");
           if (mounted) {
-            //await context.read<AppSetupState>().completeRegistration();
+            await context.read<AppSetupState>().completeSignin();
           }
         }
         errorVerifyingOtp = false;

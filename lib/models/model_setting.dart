@@ -5,8 +5,8 @@ class ModelSetting {
 
   static Future<void> set(String key, dynamic value) async {
     settingJson[key] = value;
-    //final dbHelper = StorageSqlite.instance;
-    //await dbHelper.insert('setting', {'id': key, 'value': value});
+    final dbHelper = StorageSqlite.instance;
+    await dbHelper.insert('setting', {'id': key, 'value': value});
   }
 
   static dynamic get(String key, dynamic defaultValue) {

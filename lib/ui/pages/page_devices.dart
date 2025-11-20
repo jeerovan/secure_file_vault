@@ -29,6 +29,7 @@ class _PageDevicesState extends State<PageDevices> {
   }
 
   Future<void> registerDevice() async {
+    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
     if (mounted) {
       await context.read<AppSetupState>().registerDevice();
     }

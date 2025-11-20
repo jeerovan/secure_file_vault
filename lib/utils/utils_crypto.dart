@@ -7,7 +7,6 @@ import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
-import 'package:crypto/crypto.dart';
 import 'enums.dart';
 
 import 'package:http/http.dart' as http;
@@ -104,7 +103,8 @@ class CryptoUtils {
           .pipe(
             File(fileOut).openWrite(),
           );
-      executionResult = ExecutionResult.success({"key": secretKeyBase64});
+      executionResult =
+          ExecutionResult.success({AppString.key.string: secretKeyBase64});
     } catch (e, s) {
       logger.error("encryptFile", error: e, stackTrace: s);
       executionResult = ExecutionResult.failure(reason: e.toString());
@@ -296,31 +296,28 @@ class CryptoUtils {
     ExecutionResult masterKeyEncryptedWithAccessKeyResult =
         encryptBytes(plainBytes: masterKeyBytes, key: accessKeyBytes);
     Uint8List masterKeyEncryptedWithAccessKeyBytes =
-        masterKeyEncryptedWithAccessKeyResult.getResult()!["encrypted"];
+        masterKeyEncryptedWithAccessKeyResult
+            .getResult()![AppString.encrypted.string];
     Uint8List masterKeyAccessKeyNonceBytes =
-        masterKeyEncryptedWithAccessKeyResult.getResult()!["nonce"];
+        masterKeyEncryptedWithAccessKeyResult
+            .getResult()![AppString.nonce.string];
     String masterKeyEncryptedWithAccessKeyBase64 =
         base64Encode(masterKeyEncryptedWithAccessKeyBytes);
     String masterKeyAccessKeyNonceBase64 =
         base64Encode(masterKeyAccessKeyNonceBytes);
 
     Map<String, dynamic> serverKeysBase64 = {
-      "cipher": masterKeyEncryptedWithAccessKeyBase64,
-      "nonce": masterKeyAccessKeyNonceBase64,
+      AppString.cipher.string: masterKeyEncryptedWithAccessKeyBase64,
+      AppString.nonce.string: masterKeyAccessKeyNonceBase64,
     };
 
     Map<String, dynamic> privateKeysBase64 = {
-      "master_key": masterKeyBase64,
-      "access_key": accessKeyBase64
+      AppString.masterKey.string: masterKeyBase64,
+      AppString.accessKey.string: accessKeyBase64
     };
-    return ExecutionResult.success(
-        {"server_keys": serverKeysBase64, "private_keys": privateKeysBase64});
-  }
-
-  static Future<String> generateSHA1(String filePath) async {
-    final file = File(filePath);
-    Stream<List<int>> stream = file.openRead();
-    final sha = await stream.transform(sha1).first;
-    return sha.toString();
+    return ExecutionResult.success({
+      AppString.serverKeys.string: serverKeysBase64,
+      AppString.privateKeys.string: privateKeysBase64
+    });
   }
 }

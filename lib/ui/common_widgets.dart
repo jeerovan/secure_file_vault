@@ -16,7 +16,7 @@ import '../utils/common.dart';
 
 class AppSetupState extends ChangeNotifier {
   final SecureStorage _prefs;
-
+  final AppLogger logger = AppLogger(prefixes: ["AppSetupState"]);
   SetupStep _currentStep = SetupStep.loading;
 
   // User data
@@ -42,21 +42,21 @@ class AppSetupState extends ChangeNotifier {
     // Simulate loading delay
     await Future.delayed(const Duration(milliseconds: 500));
 
-    /* if (getSignedInUserId() == null) {
-      _currentStep = SetupStep.registration;
+    if (getSignedInUserId() == null) {
+      _currentStep = SetupStep.signin;
       notifyListeners();
       return;
     }
 
     // Check security key
-    String? securityKey = await _prefs.read(key: 'security_key');
+    String? securityKey = await _prefs.read(key: AppString.masterKey.string);
     _hasSecurityKey = securityKey != null;
     if (!_hasSecurityKey) {
-      _currentStep = SetupStep.securityKey;
+      _currentStep = SetupStep.generateAccessKey;
       notifyListeners();
       return;
     }
-
+    /*
     // Check plan subscription
     _selectedPlan = await _prefs.read(key: 'selected_plan');
     if (_selectedPlan == null) {
@@ -66,7 +66,7 @@ class AppSetupState extends ChangeNotifier {
     } */
 
     // Check device registration
-    _deviceId = await _prefs.read(key: 'device_id');
+    _deviceId = await _prefs.read(key: AppString.deviceId.string);
     if (_deviceId == null) {
       _currentStep = SetupStep.deviceSetup;
       notifyListeners();
@@ -85,23 +85,23 @@ class AppSetupState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /* // Registration
-  Future<void> completeRegistration() async {
-    _currentStep = SetupStep.securityKey;
+  // Registration
+  Future<void> completeSignin() async {
+    _currentStep = SetupStep.generateAccessKey;
     notifyListeners();
-  } */
+  }
 
-  /* 
   // Security key
-  Future<void> setupSecurityKey(String key) async {
-    await Future.delayed(const Duration(seconds: 1)); // Simulate saving
-
-    await _prefs.write(key: 'security_key', value: key);
+  Future<void> hasAccessKeys() async {
     _hasSecurityKey = true;
+    _currentStep = SetupStep.showAccessKey;
+    notifyListeners();
+  }
+
+  Future<void> shownAccessKeys() async {
     _currentStep = SetupStep.deviceSetup;
     notifyListeners();
-  } 
-  */
+  }
 
   // Device setup
   Future<void> registerDevice() async {
@@ -113,7 +113,7 @@ class AppSetupState extends ChangeNotifier {
       "is_folder": 1,
     });
     await deviceItem.insert();
-    await _prefs.write(key: 'device_id', value: deviceId);
+    await _prefs.write(key: AppString.deviceId.string, value: deviceId);
     _deviceId = deviceId;
     _currentStep = SetupStep.storagePermission;
     notifyListeners();
@@ -136,13 +136,14 @@ class AppSetupState extends ChangeNotifier {
 
   // Logout / Reset
   Future<void> logout() async {
-    await _prefs.delete(key: 'device_id');
-    await _prefs.delete(key: 'security_key');
+    await _prefs.delete(key: AppString.deviceId.string);
+    await _prefs.delete(key: AppString.masterKey.string);
+    await _prefs.delete(key: AppString.accessKey.string);
     await _prefs.delete(key: 'selected_plan');
     _selectedPlan = null;
     _deviceId = null;
     _hasSecurityKey = false;
-    _currentStep = SetupStep.deviceSetup;
+    _currentStep = SetupStep.signin;
     notifyListeners();
   }
 

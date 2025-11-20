@@ -1,9 +1,10 @@
 enum SetupStep {
   loading,
   deviceSetup,
-  /* registration,
-  planSelection,
-  securityKey, */
+  signin,
+  /* planSelection, */
+  generateAccessKey,
+  showAccessKey,
   storagePermission,
   complete,
 }
@@ -135,7 +136,12 @@ enum AppString {
   hideSyncButton,
 
   // Cipher
+  masterKey,
+  accessKey,
+  serverKeys,
+  privateKeys,
   key,
+  cipher,
   nonce,
   encrypted,
   decrypted,
@@ -149,6 +155,16 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.serverKeys:
+        return 'server_keys';
+      case AppString.privateKeys:
+        return 'private_keys';
+      case AppString.masterKey:
+        return 'master_key';
+      case AppString.accessKey:
+        return 'access_key';
+      case AppString.cipher:
+        return 'cipher';
       case AppString.hideSyncButton:
         return "hide_sync_button";
       case AppString.simulateTesting:
