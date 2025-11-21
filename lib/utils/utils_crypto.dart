@@ -142,7 +142,7 @@ class CryptoUtils {
   Future<bool> downloadDecryptFile(Map<String, dynamic> data) async {
     bool downloadDecrypted = false;
     String fileName = data["name"];
-    Map<String, dynamic> serverData = await getDataToDownloadFile(fileName);
+    Map<String, dynamic> serverData = {};
     String? masterKeyBase64 = await getMasterKey();
     if (serverData.containsKey("url") && serverData["url"].isNotEmpty) {
       String downloadUrl = serverData["url"];
@@ -159,7 +159,7 @@ class CryptoUtils {
           await fileInSink.close();
           // decrypt file
           String mimeDirectory = data["mime"].split("/").first;
-          String fileOutPath = await getFilePath(mimeDirectory, fileName);
+          String fileOutPath = "removed_getFile";
           await checkAndCreateDirectory(fileOutPath);
           String keyCipherBase64 = serverData[AppString.key.string];
           String keyNonceBase64 = serverData[AppString.nonce.string];

@@ -8,8 +8,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'package:image/image.dart' as img;
+import 'package:image/image.dart' as image_lib;
 import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
 import '../utils/enums.dart';
@@ -17,7 +16,7 @@ import '../models/model_setting.dart';
 import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:path/path.dart' as path;
+import 'package:path/path.dart' as path_lib;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -280,39 +279,6 @@ String getReadableDate(DateTime date) {
   }
 }
 
-String getNoteGroupDateTitle() {
-  const days = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-    'Sunday'
-  ];
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec'
-  ];
-  final now = DateTime.now();
-  final dayOfWeek = days[now.weekday - 1];
-  final day = now.day.toString().padLeft(2, '0'); // Ensure 2 digits
-  final month = months[now.month - 1];
-  //final year = now.year % 100; // Last two digits of the year
-
-  return "$month $day, $dayOfWeek";
-}
-
 String getFormattedTime(int utcMilliSeconds) {
   final DateTime dateTime =
       DateTime.fromMillisecondsSinceEpoch(utcMilliSeconds, isUtc: true);
@@ -376,16 +342,16 @@ int mediaFileDurationFromString(String duration) {
 
 Uint8List? getImageThumbnail(Uint8List bytes) {
   int maxSize = 200;
-  img.Image? src = img.decodeImage(bytes);
+  image_lib.Image? src = image_lib.decodeImage(bytes);
   if (src != null) {
-    img.Image resized = img.copyResize(src, width: maxSize);
-    return Uint8List.fromList(img.encodePng(resized));
+    image_lib.Image resized = image_lib.copyResize(src, width: maxSize);
+    return Uint8List.fromList(image_lib.encodePng(resized));
   }
   return null;
 }
 
 Map<String, int> getImageDimension(Uint8List bytes) {
-  img.Image? src = img.decodeImage(bytes);
+  image_lib.Image? src = image_lib.decodeImage(bytes);
   if (src != null) {
     int srcWidth = src.width;
     int srcHeight = src.height;
@@ -430,15 +396,6 @@ String colorToHex(Color color) {
   return '$alpha$red$green$blue';
 }
 
-Future<File?> getFile(String fileType, String fileName) async {
-  String filePath = await getFilePath(fileType, fileName);
-  File file = File(filePath);
-  if (file.existsSync()) {
-    return file;
-  }
-  return null;
-}
-
 Future<String> getDbStoragePath() async {
   String? dbDirPath;
   if (Platform.isMacOS || Platform.isIOS) {
@@ -462,13 +419,6 @@ Future<String> getDbStoragePath() async {
   return dbDirPath;
 }
 
-Future<String> getFilePath(String mimeDirectory, String fileName) async {
-  SecureStorage secureStorage = SecureStorage();
-  final directory = await getApplicationDocumentsDirectory();
-  String? mediaDir = await secureStorage.read(key: "media_dir");
-  return path.join(directory.path, mediaDir, mimeDirectory, fileName);
-}
-
 Future<bool> directoryExistAtPath(String path) async {
   Directory dir = Directory(path);
   return await dir.exists();
@@ -486,7 +436,7 @@ void copyFile(Map<String, String> mediaData) {
 }
 
 Future<void> checkAndCreateDirectory(String filePath) async {
-  String dirPath = path.dirname(filePath);
+  String dirPath = path_lib.dirname(filePath);
   final directory = Directory(dirPath);
   bool exists = await directory.exists();
   if (!exists) {
@@ -499,13 +449,13 @@ Future<void> initializeDirectories() async {
   final directory = await getApplicationDocumentsDirectory();
   AppLogger(prefixes: ["MediaDirPath"]).info(directory.path);
   String? mediaDir = await secureStorage.read(key: "media_dir");
-  String mediaDirPath = path.join(directory.path, mediaDir);
+  String mediaDirPath = path_lib.join(directory.path, mediaDir);
   final mediaDirectory = Directory(mediaDirPath);
   if (!mediaDirectory.existsSync()) {
     await mediaDirectory.create(recursive: true);
   }
   String? backupDir = await secureStorage.read(key: "backup_dir");
-  String backupDirPath = path.join(directory.path, backupDir);
+  String backupDirPath = path_lib.join(directory.path, backupDir);
   final backupDirectory = Directory(backupDirPath);
   if (!backupDirectory.existsSync()) {
     await backupDirectory.create(recursive: true);
@@ -522,86 +472,19 @@ Future<String> getHashOfString(String stringForHash) async {
   return sha256.convert(utf8.encode(stringForHash)).toString();
 }
 
-Future<Map<String, dynamic>?> processAndGetFileAttributes(
-    String filePath) async {
+Future<String?> getFileMime(String filePath) async {
   File file = File(filePath);
   if (!file.existsSync()) {
     return null;
   }
   String mime = "application/unknown";
-  final String extension = path.extension(filePath);
   String? fileMime = lookupMimeType(filePath);
   if (fileMime == null) {
     return null;
   } else {
     mime = fileMime;
   }
-  String hash = await getHashOfFile(file);
-  String fileTitle = path.basename(file.path);
-  String fileName = '$hash$extension';
-  int fileSize = file.lengthSync();
-  String mimeDirectory = mime.split("/").first;
-  File? existing = await getFile(mimeDirectory, fileName);
-  String newPath = await getFilePath(mimeDirectory, fileName);
-  await checkAndCreateDirectory(newPath);
-  if (existing == null) {
-    Map<String, String> mediaData = {"oldPath": filePath, "newPath": newPath};
-    await compute(copyFile, mediaData);
-  }
-  return {
-    "path": newPath,
-    "name": fileName,
-    "size": fileSize,
-    "mime": mime,
-    "title": fileTitle
-  };
-}
-
-Future<int> checkDownloadNetworkImage(String itemId, String imageUrl) async {
-  final logger = AppLogger(prefixes: ["common", "checkDownloadNetworkImage"]);
-  String fileName = '$itemId-urlimage.png';
-  String directory = "image";
-  String newPath = await getFilePath(directory, fileName);
-  await checkAndCreateDirectory(newPath);
-  int portrait = 1;
-  try {
-    final response = await http.get(Uri.parse(imageUrl));
-    if (response.statusCode == 200) {
-      Uint8List imageBytes = response.bodyBytes;
-      Uint8List? thumbnail = getImageThumbnail(imageBytes);
-      if (thumbnail != null) {
-        final file = File(newPath);
-        await file.writeAsBytes(thumbnail);
-        Map<String, int> imageDimension = getImageDimension(thumbnail);
-        int imageWidth = imageDimension["width"]!;
-        int imageHeight = imageDimension["height"]!;
-        if (imageWidth > 0 && imageHeight > 0) {
-          if (imageWidth > imageHeight) {
-            portrait = 0;
-          }
-        }
-      }
-    }
-  } catch (e, s) {
-    logger.error("Exception", error: e, stackTrace: s);
-  }
-  return portrait;
-}
-
-Future<Map<String, dynamic>> getDataToDownloadFile(String fileName) async {
-  SupabaseClient supabase = Supabase.instance.client;
-  Map<String, dynamic> downloadData = {};
-  try {
-    final res = await supabase.functions
-        .invoke('get_download_url', body: {'fileName': fileName});
-    Map<String, dynamic> data = jsonDecode(res.data);
-    downloadData.addAll(data);
-  } on FunctionException catch (e) {
-    downloadData["error"] = e.details.toString();
-  } catch (e) {
-    downloadData["error"] = e.toString();
-  }
-  return downloadData;
+  return mime;
 }
 
 Map<String, String> getMapUrls(double lat, double lng) {
@@ -609,25 +492,6 @@ Map<String, String> getMapUrls(double lat, double lng) {
     "google": 'https://www.google.com/maps/search/?api=1&query=$lat,$lng',
     "apple": 'https://maps.apple.com/?q=$lat,$lng'
   };
-}
-
-Future<void> openLocationInMap(double lat, double lng) async {
-  Map<String, String> mapUrls = getMapUrls(lat, lng);
-  final googleMapsUri = Uri.parse(mapUrls["google"]!);
-  final appleMapsUri = Uri.parse(mapUrls["apple"]!);
-
-  if (await canLaunchUrl(googleMapsUri)) {
-    await launchUrl(googleMapsUri);
-  } else if (await canLaunchUrl(appleMapsUri)) {
-    await launchUrl(appleMapsUri);
-  } else {
-    // Open Google Maps URL in the browser as a fallback
-    await launchUrl(
-      googleMapsUri,
-      mode: LaunchMode
-          .externalApplication, // Ensures it opens in the external browser
-    );
-  }
 }
 
 class FontSizeController extends ChangeNotifier {

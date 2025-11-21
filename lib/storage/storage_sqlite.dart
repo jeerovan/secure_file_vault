@@ -143,7 +143,6 @@ class StorageSqlite {
         scan_state INTEGER DEFAULT 0,
         file_id TEXT,
         size INTEGER DEFAULT 0,
-        thumbnail INTEGER DEFAULT 0,
         state INTEGER DEFAULT 0,
         archived_at INTEGER,
         created_at INTEGER,
@@ -187,10 +186,8 @@ class StorageSqlite {
     await db.execute('''
       CREATE TABLE file (
         id TEXT PRIMARY KEY,
-        type INTEGER NOT NULL,
+        mime TEXT NOT NULL,
         size INTEGER DEFAULT 0,
-        thumbnail TEXT,
-        duration INTEGER DEFAULT 0,
         state INTEGER DEFAULT 0,
         item_count INTEGER DEFAULT 0,
         parts INTEGER DEFAULT 1,

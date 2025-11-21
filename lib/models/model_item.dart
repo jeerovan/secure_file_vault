@@ -16,7 +16,6 @@ class ModelItem {
   int scanState;
   ModelFile? file;
   int size;
-  int? thumbnail;
   int state;
   int archivedAt;
   int createdAt;
@@ -32,7 +31,6 @@ class ModelItem {
     required this.scanState,
     this.file,
     required this.size,
-    this.thumbnail,
     required this.state,
     required this.archivedAt,
     required this.createdAt,
@@ -50,7 +48,6 @@ class ModelItem {
       'scan_state': scanState,
       'file_id': file?.id,
       'size': size,
-      'thumbnail': thumbnail,
       'state': state,
       'archived_at': archivedAt,
       'created_at': createdAt,
@@ -81,7 +78,6 @@ class ModelItem {
       scanState: getValueFromMap(map, "scan_state", defaultValue: 0),
       file: file,
       size: getValueFromMap(map, "size", defaultValue: 0),
-      thumbnail: getValueFromMap(map, "thumbnail", defaultValue: 0),
       state: getValueFromMap(map, "state", defaultValue: 0),
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
       createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),

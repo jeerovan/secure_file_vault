@@ -33,43 +33,6 @@ enum PageType {
   devices,
 }
 
-enum FileType {
-  image,
-  video,
-  audio,
-  document,
-}
-
-extension ItemTypeExtension on FileType {
-  int get value {
-    switch (this) {
-      case FileType.image:
-        return 110000;
-      case FileType.video:
-        return 120000;
-      case FileType.audio:
-        return 130000;
-      case FileType.document:
-        return 140000;
-    }
-  }
-
-  static FileType? fromValue(int value) {
-    switch (value) {
-      case 110000:
-        return FileType.image;
-      case 120000:
-        return FileType.video;
-      case 130000:
-        return FileType.audio;
-      case 140000:
-        return FileType.document;
-      default:
-        return null;
-    }
-  }
-}
-
 enum ExecutionStatus {
   failure,
   success,

@@ -18,6 +18,7 @@ class FileSplitter {
     int maxPartSize = _getMaxPartSize(fileSize);
     List<int> parts = [];
     int remainingSize = fileSize;
+    const int minPartSize = 5 * 1024 * 1024;
 
     while (remainingSize > maxPartSize) {
       parts.add(maxPartSize);
@@ -26,16 +27,23 @@ class FileSplitter {
     if (remainingSize > 0) {
       parts.add(remainingSize);
     }
+
+    // If last part is less than min, merge with previous
+    if (parts.length > 1 && parts.last < minPartSize) {
+      parts[parts.length - 2] += parts.last;
+      parts.removeLast();
+    }
     return parts;
   }
 
   /// Returns max part size based on file size
   int _getMaxPartSize(int size) {
-    if (size <= 100 * 1024 * 1024) return 10 * 1024 * 1024;
-    if (size <= 200 * 1024 * 1024) return 20 * 1024 * 1024;
-    if (size <= 300 * 1024 * 1024) return 30 * 1024 * 1024;
-    if (size <= 400 * 1024 * 1024) return 40 * 1024 * 1024;
-    if (size <= 500 * 1024 * 1024) return 50 * 1024 * 1024;
+    if (size <= 100 * 1024 * 1024) return 5 * 1024 * 1024;
+    if (size <= 200 * 1024 * 1024) return 10 * 1024 * 1024;
+    if (size <= 400 * 1024 * 1024) return 20 * 1024 * 1024;
+    if (size <= 600 * 1024 * 1024) return 30 * 1024 * 1024;
+    if (size <= 800 * 1024 * 1024) return 40 * 1024 * 1024;
+    if (size <= 1000 * 1024 * 1024) return 50 * 1024 * 1024;
     return 50 * 1024 * 1024;
   }
 

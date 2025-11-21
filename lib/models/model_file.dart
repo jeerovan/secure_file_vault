@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
 import '../models/model_preferences.dart';
@@ -8,10 +5,8 @@ import '../storage/storage_sqlite.dart';
 
 class ModelFile {
   String id;
-  FileType type;
+  String mime;
   int size;
-  Uint8List? thumbnail;
-  int? duration;
   int state;
   int itemCount;
   int parts;
@@ -24,10 +19,8 @@ class ModelFile {
 
   ModelFile({
     required this.id,
-    required this.type,
+    required this.mime,
     required this.size,
-    this.thumbnail,
-    required this.duration,
     required this.state,
     required this.itemCount,
     required this.parts,
@@ -42,10 +35,8 @@ class ModelFile {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'type': type.value,
+      'mime': mime,
       'size': size,
-      'thumbnail': thumbnail == null ? null : base64Encode(thumbnail!),
-      'duration': duration,
       'state': state,
       'item_count': itemCount,
       'parts': parts,
@@ -59,31 +50,13 @@ class ModelFile {
   }
 
   static Future<ModelFile> fromMap(Map<String, dynamic> map) async {
-    Uint8List? thumbnail;
-    if (map.containsKey("thumbnail")) {
-      if (map["thumbnail"] is String) {
-        thumbnail = base64Decode(map["thumbnail"]);
-      } else {
-        thumbnail = map["thumbnail"];
-      }
-    }
-    FileType fileType = FileType.document;
-    if (map.containsKey('type')) {
-      if (map['type'] is FileType) {
-        fileType = map['type'];
-      } else {
-        fileType = ItemTypeExtension.fromValue(map['type'])!;
-      }
-    }
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     return ModelFile(
       id: map["id"],
-      type: fileType,
+      mime: getValueFromMap(map, "mime", defaultValue: ""),
       size: getValueFromMap(map, "size", defaultValue: 0),
-      thumbnail: thumbnail,
-      duration: getValueFromMap(map, "duration", defaultValue: 0),
       state: getValueFromMap(map, "state", defaultValue: 0),
-      itemCount: getValueFromMap(map, "item_count", defaultValue: 0),
+      itemCount: getValueFromMap(map, "item_count", defaultValue: 1),
       parts: getValueFromMap(map, "parts", defaultValue: 0),
       partsUploaded: getValueFromMap(map, "parts_uploaded", defaultValue: 0),
       uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
@@ -112,14 +85,6 @@ class ModelFile {
       return await fromMap(map);
     }
     return null;
-  }
-
-  static Future<List<ModelFile>> getForType(FileType itemType) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows =
-        await db.query("file", where: "type = ?", whereArgs: [itemType.value]);
-    return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
   Future<int> insert() async {
