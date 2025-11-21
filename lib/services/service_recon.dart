@@ -1,11 +1,11 @@
 import 'dart:io';
-import 'package:file_vault_bb/models/model_file.dart';
-import 'package:file_vault_bb/models/model_item.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
-import 'package:file_vault_bb/utils/common.dart';
+import '../models/model_file.dart';
+import '../models/model_item.dart';
+import '../services/service_logger.dart';
+import '../utils/common.dart';
 import 'package:crypto/crypto.dart';
-import 'package:file_vault_bb/utils/utils_crypto.dart';
-import 'package:file_vault_bb/utils/utils_file.dart';
+import '../utils/utils_crypto.dart';
+import '../utils/utils_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
 import 'package:uuid/uuid.dart';
@@ -324,7 +324,9 @@ class ReconciliationService {
       return; // Only metadata changed, no content change
     }
 
-    // TODO decrement reference count for old item
+    // decrement reference count for old file
+    await ModelFile.updateItemCount(dbItem.file!, false);
+
     final modelFile = await ModelFile.fromMap({
       'id': newHash,
       'size': fsItem.size,
@@ -352,7 +354,7 @@ class ReconciliationService {
       });
       await modelFile.insert();
     } else {
-      await ModelFile.updateReferenceCount(hashFile, true);
+      await ModelFile.updateItemCount(hashFile, true);
     }
     final modelItem = await ModelItem.fromMap({
       'root_id': rootItemId,
@@ -397,7 +399,7 @@ class ReconciliationService {
     } else {
       ModelFile? file = dbItem.file;
       if (file != null) {
-        await ModelFile.updateReferenceCount(file, false);
+        await ModelFile.updateItemCount(file, false);
       }
       await dbItem.delete();
       logger.info('  - Deleted File: ${dbItem.name}');

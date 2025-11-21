@@ -5,10 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:file_vault_bb/utils/common.dart';
-import 'package:file_vault_bb/ui/common_widgets.dart';
-import 'package:file_vault_bb/storage/storage_secure.dart';
-import 'package:file_vault_bb/utils/utils_crypto.dart';
+import '../../utils/common.dart';
+import '../../ui/common_widgets.dart';
+import '../../storage/storage_secure.dart';
+import '../../utils/utils_crypto.dart';
 import 'package:provider/provider.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
 

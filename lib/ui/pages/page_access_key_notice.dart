@@ -1,4 +1,4 @@
-import 'package:file_vault_bb/services/service_logger.dart';
+import '../../services/service_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';

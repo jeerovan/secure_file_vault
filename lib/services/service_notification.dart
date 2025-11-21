@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/models/model_preferences.dart';
+import '../utils/enums.dart';
+import '../models/model_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
+import '../services/service_logger.dart';
 
 class NotificationService {
   NotificationService._();

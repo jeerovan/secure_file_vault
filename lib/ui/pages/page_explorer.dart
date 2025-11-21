@@ -1,9 +1,9 @@
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:file_vault_bb/models/model_item.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
-import 'package:file_vault_bb/services/service_recon.dart';
-import 'package:file_vault_bb/ui/common_widgets.dart';
-import 'package:file_vault_bb/utils/common.dart';
+import '../../models/model_item.dart';
+import '../../services/service_logger.dart';
+import '../../services/service_recon.dart';
+import '../../ui/common_widgets.dart';
+import '../../utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path;
 import 'package:provider/provider.dart';

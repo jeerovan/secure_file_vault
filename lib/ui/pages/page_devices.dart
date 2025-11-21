@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:file_vault_bb/utils/common.dart';
-import 'package:file_vault_bb/ui/common_widgets.dart';
-import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/models/model_preferences.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
+import '../../utils/common.dart';
+import '../../ui/common_widgets.dart';
+import '../../utils/enums.dart';
+import '../../models/model_preferences.dart';
+import '../../services/service_logger.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

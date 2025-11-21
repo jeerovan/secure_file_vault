@@ -1,8 +1,8 @@
-import 'package:file_vault_bb/models/model_preferences.dart';
-import 'package:file_vault_bb/models/model_setting.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
-import 'package:file_vault_bb/storage/storage_secure.dart';
-import 'package:file_vault_bb/ui/common_widgets.dart';
+import '../../models/model_preferences.dart';
+import '../../models/model_setting.dart';
+import '../../services/service_logger.dart';
+import '../../storage/storage_secure.dart';
+import '../../ui/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

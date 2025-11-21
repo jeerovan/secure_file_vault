@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'package:file_vault_bb/utils/common.dart';
-import 'package:file_vault_bb/models/model_item.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
+import '../utils/common.dart';
+import '../models/model_item.dart';
+import '../services/service_logger.dart';
 
 import '../utils/enums.dart';
 import '../storage/storage_sqlite.dart';

@@ -1,7 +1,7 @@
-import 'package:file_vault_bb/models/model_file.dart';
-import 'package:file_vault_bb/utils/common.dart';
-import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/models/model_preferences.dart';
+import '../models/model_file.dart';
+import '../utils/common.dart';
+import '../utils/enums.dart';
+import '../models/model_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../storage/storage_sqlite.dart';
 import 'package:path/path.dart' as path_lib;

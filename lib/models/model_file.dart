@@ -1,9 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:file_vault_bb/utils/common.dart';
-import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/models/model_preferences.dart';
+import '../utils/common.dart';
+import '../utils/enums.dart';
+import '../models/model_preferences.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelFile {
@@ -13,8 +13,11 @@ class ModelFile {
   Uint8List? thumbnail;
   int? duration;
   int state;
-  int referenceCount;
-  int chunkCount;
+  int itemCount;
+  int parts;
+  int partsUploaded;
+  int uploadedAt;
+  String? b2Id;
   int archivedAt;
   int createdAt;
   int updatedAt;
@@ -26,8 +29,11 @@ class ModelFile {
     this.thumbnail,
     required this.duration,
     required this.state,
-    required this.referenceCount,
-    required this.chunkCount,
+    required this.itemCount,
+    required this.parts,
+    required this.partsUploaded,
+    required this.uploadedAt,
+    this.b2Id,
     required this.archivedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -41,8 +47,11 @@ class ModelFile {
       'thumbnail': thumbnail == null ? null : base64Encode(thumbnail!),
       'duration': duration,
       'state': state,
-      'reference_count': referenceCount,
-      'chunk_count': chunkCount,
+      'item_count': itemCount,
+      'parts': parts,
+      'parts_uploaded': partsUploaded,
+      'uploaded_at': uploadedAt,
+      'b2_id': b2Id,
       'archived_at': archivedAt,
       'created_at': createdAt,
       'updated_at': updatedAt
@@ -69,26 +78,30 @@ class ModelFile {
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     return ModelFile(
       id: map["id"],
+      type: fileType,
+      size: getValueFromMap(map, "size", defaultValue: 0),
       thumbnail: thumbnail,
       duration: getValueFromMap(map, "duration", defaultValue: 0),
-      size: getValueFromMap(map, "size", defaultValue: 0),
-      type: fileType,
       state: getValueFromMap(map, "state", defaultValue: 0),
-      referenceCount: getValueFromMap(map, "reference_count", defaultValue: 0),
-      chunkCount: getValueFromMap(map, "chunk_count", defaultValue: 0),
+      itemCount: getValueFromMap(map, "item_count", defaultValue: 0),
+      parts: getValueFromMap(map, "parts", defaultValue: 0),
+      partsUploaded: getValueFromMap(map, "parts_uploaded", defaultValue: 0),
+      uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
+      b2Id: getValueFromMap(map, "b2_id", defaultValue: ""),
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
       createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }
 
-  static Future<void> updateReferenceCount(ModelFile file, bool added) async {
+  static Future<void> updateItemCount(ModelFile file, bool added) async {
     if (added) {
-      file.referenceCount = file.referenceCount + 1;
+      file.itemCount = file.itemCount + 1;
     } else {
-      file.referenceCount = file.referenceCount - 1;
+      file.itemCount = file.itemCount - 1;
     }
-    await file.update(["reference_count"]);
+    await file.update(["item_count"]);
+    // TODO if count is zero, add for deletion
   }
 
   static Future<ModelFile?> get(String id) async {

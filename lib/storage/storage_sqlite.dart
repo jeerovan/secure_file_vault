@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:file_vault_bb/utils/enums.dart';
+import '../utils/enums.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:uuid/uuid.dart';
@@ -129,7 +129,7 @@ class StorageSqlite {
       )
     '''); */
     // path: only for synced folders
-    // name: folder, device
+    // name: file, folder, device
     // rootId: all folders and files will have item(id) of synced folder
     // thumbnail can be changed for a folder
     await db.execute('''
@@ -138,9 +138,9 @@ class StorageSqlite {
         path TEXT,
         name TEXT,
         is_folder INTEGER DEFAULT 0,
+        parent_id TEXT,
         root_id TEXT,
         scan_state INTEGER DEFAULT 0,
-        parent_id TEXT,
         file_id TEXT,
         size INTEGER DEFAULT 0,
         thumbnail INTEGER DEFAULT 0,
@@ -188,54 +188,34 @@ class StorageSqlite {
       CREATE TABLE file (
         id TEXT PRIMARY KEY,
         type INTEGER NOT NULL,
-        size INTEGER NOT NULL,
+        size INTEGER DEFAULT 0,
         thumbnail TEXT,
-        duration INTEGER,
+        duration INTEGER DEFAULT 0,
         state INTEGER DEFAULT 0,
-        reference_count INTEGER DEFAULT 0,
-        chunk_count INTEGER,
+        item_count INTEGER DEFAULT 0,
+        parts INTEGER DEFAULT 1,
+        parts_uploaded INTEGER DEFAULT 0,
+        uploaded_at INTEGER,
+        b2_id TEXT,
         archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER
       )
     ''');
+    // id as uuid
+    //state:
     await db.execute('''
-      CREATE TABLE change (
+      CREATE TABLE part (
         id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        data TEXT NOT NULL,
-        type INTEGER NOT NULL,
-        thumbnail INTEGER DEFAULT 0,
-        map TEXT,
-        created_at INTEGER,
-        updated_at INTEGER
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE bbfile (
-        id TEXT PRIMARY KEY,
-        change_id TEXT NOT NULL,
-        path TEXT NOT NULL,
-        size INTEGER NOT NULL,
-        parts INTEGER NOT NULL,
-        parts_uploaded INTEGER NOT NULL,
-        key_cipher TEXT NOT NULL,
-        key_nonce TEXT NOT NULL,
-        uploaded_at INTEGER NOT NULL,
-        b2_id TEXT,
-        created_at INTEGER,
-        updated_at INTEGER,
-        FOREIGN KEY (change_id) REFERENCES change(id) ON DELETE CASCADE
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE parts (
-        id TEXT PRIMARY KEY,
-        bbfile_id TEXT NOT NULL,
+        file_id TEXT NOT NULL,
         part_number INTEGER NOT NULL,
+        size INTEGER DEFAULT 0,
+        state INTEGER DEFAULT 0,
+        cipher TEXT NOT NULL,
+        nonce TEXT NOT NULL,
         created_at INTEGER,
         updated_at INTEGER,
-        FOREIGN KEY (bbfile_id) REFERENCES bbfile(id) ON DELETE CASCADE
+        FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE
       )
     ''');
     await db.execute('''

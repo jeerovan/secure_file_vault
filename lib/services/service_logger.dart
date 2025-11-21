@@ -1,7 +1,7 @@
 import 'dart:developer' as dev;
 import 'dart:io';
 
-import 'package:file_vault_bb/models/model_log.dart';
+import '../models/model_log.dart';
 
 import '../utils/enums.dart';
 import '../models/model_setting.dart';

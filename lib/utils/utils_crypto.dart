@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:file_vault_bb/utils/common.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
+import '../utils/common.dart';
+import '../services/service_logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
 import 'enums.dart';

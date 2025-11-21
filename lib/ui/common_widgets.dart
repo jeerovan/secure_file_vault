@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:file_vault_bb/models/model_item.dart';
-import 'package:file_vault_bb/storage/storage_secure.dart';
-import 'package:file_vault_bb/utils/enums.dart';
+import '../models/model_item.dart';
+import '../storage/storage_secure.dart';
+import '../utils/enums.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
+import '../services/service_logger.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
