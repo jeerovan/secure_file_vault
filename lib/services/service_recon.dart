@@ -327,8 +327,14 @@ class ReconciliationService {
     // decrement reference count for old file
     await ModelFile.updateItemCount(dbItem.file!, false);
     String? mime = await getFileMime(fsPath);
-    final modelFile = await ModelFile.fromMap(
-        {'id': newHash, 'size': fsItem.size, 'mime': mime ?? ""});
+    FileSplitter fileSplitter = FileSplitter(File(fsPath));
+    int parts = fileSplitter.partSizes.length;
+    final modelFile = await ModelFile.fromMap({
+      'id': newHash,
+      'size': fsItem.size,
+      'mime': mime ?? "",
+      'parts': parts
+    });
     await modelFile.insert();
     dbItem.file = modelFile;
     dbItem.size = fsItem.size!;
@@ -344,10 +350,16 @@ class ReconciliationService {
   ) async {
     final hash = await _computeFileHash(fsPath);
     final hashFile = await ModelFile.get(hash);
-    String? mime = await getFileMime(fsPath);
     if (hashFile == null) {
-      final modelFile = await ModelFile.fromMap(
-          {'id': hash, 'size': fsItem.size, 'mime': mime ?? ""});
+      String? mime = await getFileMime(fsPath);
+      FileSplitter fileSplitter = FileSplitter(File(fsPath));
+      int parts = fileSplitter.partSizes.length;
+      final modelFile = await ModelFile.fromMap({
+        'id': hash,
+        'size': fsItem.size,
+        'mime': mime ?? "",
+        'parts': parts
+      });
       await modelFile.insert();
     } else {
       await ModelFile.updateItemCount(hashFile, true);
