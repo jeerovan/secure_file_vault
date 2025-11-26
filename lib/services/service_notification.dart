@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../utils/enums.dart';
-import '../models/model_preferences.dart';
+import '../models/model_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/service_logger.dart';
 
@@ -62,8 +62,8 @@ class NotificationService {
   // Save FCM token to Supabase
   Future<void> _saveFcmToken(String token) async {
     logger.info("Received FCM Token:$token");
-    await ModelPreferences.set(AppString.fcmId.string, token);
-    String? deviceId = await ModelPreferences.get(AppString.deviceId.string);
+    await ModelState.set(AppString.fcmId.string, token);
+    String? deviceId = await ModelState.get(AppString.deviceId.string);
     if (deviceId != null) {
       try {
         SupabaseClient supabase = Supabase.instance.client;

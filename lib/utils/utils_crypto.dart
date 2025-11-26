@@ -217,8 +217,8 @@ class CryptoUtils {
     String keyCipherBase64 = base64Encode(keyCipherBytes);
     String keyNonceBase64 = base64Encode(keyNonceBytes);
 
-    changeMap[AppString.cipherText.string] = cipherBase64;
-    changeMap[AppString.cipherNonce.string] = nonceBase64;
+    changeMap[AppString.textCipher.string] = cipherBase64;
+    changeMap[AppString.textNonce.string] = nonceBase64;
     changeMap[AppString.keyCipher.string] = keyCipherBase64;
     changeMap[AppString.keyNonce.string] = keyNonceBase64;
     return changeMap;
@@ -237,8 +237,8 @@ class CryptoUtils {
     Uint8List keyBytes =
         keyDecryptionResult.getResult()![AppString.decrypted.string];
 
-    String cipherTextBase64 = map[AppString.cipherText.string];
-    String cipherNonceBase64 = map[AppString.cipherNonce.string];
+    String cipherTextBase64 = map[AppString.textCipher.string];
+    String cipherNonceBase64 = map[AppString.textNonce.string];
     Uint8List cipherBytes = base64Decode(cipherTextBase64);
     Uint8List nonceBytes = base64Decode(cipherNonceBase64);
 

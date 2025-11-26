@@ -28,7 +28,7 @@ bool canUseVideoPlayer =
 
 bool isDebugEnabled = kDebugMode;
 
-bool simulateOnboarding() {
+bool simulateTesting() {
   return ModelSetting.get(AppString.simulateTesting.string, "no") == "yes";
 }
 
@@ -783,7 +783,7 @@ Future<void> initializeSupabase(
 }
 
 String? getSignedInUserId() {
-  if (simulateOnboarding()) {
+  if (simulateTesting()) {
     if (ModelSetting.get(AppString.signedIn.string, "no") == "yes") {
       return "tester";
     } else {
@@ -803,7 +803,7 @@ String? getSignedInUserId() {
 }
 
 String? getSignedInEmailId() {
-  if (simulateOnboarding()) {
+  if (simulateTesting()) {
     return "fife@jeerovan.com";
   }
   bool supabaseInitialized =
@@ -819,13 +819,8 @@ String? getSignedInEmailId() {
 }
 
 Future<String?> getMasterKey() async {
-  String? signedInUserId = getSignedInUserId();
-  if (signedInUserId == null) {
-    return null;
-  }
   SecureStorage storage = SecureStorage();
-  String keyForMasterKey = '${signedInUserId}_mk';
-  String? masterKeyBase64 = await storage.read(key: keyForMasterKey);
+  String? masterKeyBase64 = await storage.read(key: AppString.masterKey.string);
   return masterKeyBase64;
 }
 

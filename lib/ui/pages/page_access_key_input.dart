@@ -38,7 +38,7 @@ class _PageAccessKeyInputState extends State<PageAccessKeyInput> {
   @override
   void initState() {
     super.initState();
-    if (simulateOnboarding()) {
+    if (simulateTesting()) {
       simulateKeyInput();
     }
   }

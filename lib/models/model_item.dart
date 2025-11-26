@@ -1,7 +1,7 @@
 import '../models/model_file.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
-import '../models/model_preferences.dart';
+import 'model_state.dart';
 import 'package:uuid/uuid.dart';
 import '../storage/storage_sqlite.dart';
 import 'package:path/path.dart' as path_lib;
@@ -14,9 +14,8 @@ class ModelItem {
   String? parentId;
   String? rootId;
   int scanState;
-  ModelFile? file;
+  String? fileId;
   int size;
-  int state;
   int archivedAt;
   int createdAt;
   int updatedAt;
@@ -29,9 +28,8 @@ class ModelItem {
     this.parentId,
     this.rootId,
     required this.scanState,
-    this.file,
+    this.fileId,
     required this.size,
-    required this.state,
     required this.archivedAt,
     required this.createdAt,
     required this.updatedAt,
@@ -46,9 +44,8 @@ class ModelItem {
       'parent_id': parentId,
       'root_id': rootId,
       'scan_state': scanState,
-      'file_id': file?.id,
+      'file_id': fileId,
       'size': size,
-      'state': state,
       'archived_at': archivedAt,
       'created_at': createdAt,
       'updated_at': updatedAt
@@ -63,11 +60,6 @@ class ModelItem {
   static Future<ModelItem> fromMap(Map<String, dynamic> map) async {
     Uuid uuid = const Uuid();
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
-    String? fileId = getValueFromMap(map, "file_id", defaultValue: null);
-    ModelFile? file;
-    if (fileId != null) {
-      file = await ModelFile.get(fileId);
-    }
     return ModelItem(
       id: map.containsKey('id') ? map['id'] : uuid.v4(),
       path: getValueFromMap(map, "path", defaultValue: null),
@@ -76,9 +68,8 @@ class ModelItem {
       parentId: getValueFromMap(map, "parent_id", defaultValue: null),
       rootId: getValueFromMap(map, "root_id", defaultValue: null),
       scanState: getValueFromMap(map, "scan_state", defaultValue: 0),
-      file: file,
+      fileId: getValueFromMap(map, "file_id", defaultValue: null),
       size: getValueFromMap(map, "size", defaultValue: 0),
-      state: getValueFromMap(map, "state", defaultValue: 0),
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
       createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
@@ -162,18 +153,6 @@ class ModelItem {
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<List<ModelItem>> getAllUnScannedForRootItemId(
-      String itemId, String hash) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows = await db.query(
-      "item",
-      where: "root_id = ? AND scan_state = ?",
-      whereArgs: [itemId, 0],
-    );
-    return await Future.wait(rows.map((map) => fromMap(map)));
-  }
-
   static Future<List<ModelItem>> getArchived() async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
@@ -212,6 +191,14 @@ class ModelItem {
         'UPDATE item SET scan_state = ? WHERE id = ?', [state, itemId]);
   }
 
+  static Future<void> removeAllSyncedFolders() async {
+    final deviceId = await getDeviceId();
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    await db.execute(
+        'DELETE from item WHERE path != NULL AND parent_id = ?', [deviceId]);
+  }
+
   static Future<List<ModelItem>> searchItem(String term) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
@@ -238,8 +225,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert("item", map);
-    bool syncEnabled = await ModelPreferences.get(
-            AppString.hasEncryptionKeys.string,
+    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (syncEnabled) {
@@ -260,8 +246,7 @@ class ModelItem {
       updatedMap[attr] = map[attr];
     }
     int updated = await dbHelper.update("item", updatedMap, id);
-    bool syncEnabled = await ModelPreferences.get(
-            AppString.hasEncryptionKeys.string,
+    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (pushToSync && syncEnabled) {
@@ -298,8 +283,7 @@ class ModelItem {
     int deleteTask = 1;
     Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete("item", id);
-    bool syncEnabled = await ModelPreferences.get(
-            AppString.hasEncryptionKeys.string,
+    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (withServerSync && syncEnabled) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/common.dart';
 import '../../ui/common_widgets.dart';
 import '../../utils/enums.dart';
-import '../../models/model_preferences.dart';
+import '../../models/model_state.dart';
 import '../../services/service_logger.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -83,8 +83,7 @@ class _PageDevicesState extends State<PageDevices> {
   }
 
   Future<void> showDisableDialog(String deviceId) async {
-    String? thisDeviceId =
-        await ModelPreferences.get(AppString.deviceId.string);
+    String? thisDeviceId = await ModelState.get(AppString.deviceId.string);
     if (thisDeviceId != null && deviceId == thisDeviceId && mounted) {
       displaySnackBar(context,
           message: "Can't remove this device!", seconds: 2);

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import '../models/model_file.dart';
 import '../models/model_item.dart';
@@ -213,7 +214,7 @@ class ReconciliationService {
     // match hash to confirm
     if (dbCandidatesMatchingNameSize.isNotEmpty) {
       for (final candidate in dbCandidatesMatchingNameSize) {
-        if (candidate.file?.id == hash) {
+        if (candidate.fileId == hash) {
           String filePath = await ModelItem.getPathForItem(candidate.id);
           bool fileExist = await fileExistAtPath(filePath);
           if (!fileExist) return candidate;
@@ -299,7 +300,7 @@ class ReconciliationService {
       // Compute hash only when needed
       final currentHash = await _computeFileHash(fsPath);
       for (final candidate in candidates) {
-        if (candidate.file?.id == currentHash) {
+        if (candidate.fileId == currentHash) {
           matchedDbFile = candidate;
           break;
         }
@@ -320,23 +321,19 @@ class ReconciliationService {
   Future<void> _handleModifiedFile(
       ModelItem dbItem, FSItem fsItem, String fsPath, int timestamp) async {
     final newHash = await _computeFileHash(fsPath);
-    if (dbItem.file?.id == newHash) {
+    if (dbItem.fileId == newHash) {
       return; // Only metadata changed, no content change
     }
 
     // decrement reference count for old file
-    await ModelFile.updateItemCount(dbItem.file!, false);
+    await ModelFile.updateItemCount(dbItem.fileId!, false);
     String? mime = await getFileMime(fsPath);
     FileSplitter fileSplitter = FileSplitter(File(fsPath));
     int parts = fileSplitter.partSizes.length;
-    final modelFile = await ModelFile.fromMap({
-      'id': newHash,
-      'size': fsItem.size,
-      'mime': mime ?? "",
-      'parts': parts
-    });
+    final modelFile = await ModelFile.fromMap(
+        {'id': newHash, 'mime': mime ?? "", 'parts': parts});
     await modelFile.insert();
-    dbItem.file = modelFile;
+    dbItem.fileId = newHash;
     dbItem.size = fsItem.size!;
     await dbItem.update(["file_id", "size"]);
     logger.info('  ~ Modified: ${fsItem.name}');
@@ -354,15 +351,11 @@ class ReconciliationService {
       String? mime = await getFileMime(fsPath);
       FileSplitter fileSplitter = FileSplitter(File(fsPath));
       int parts = fileSplitter.partSizes.length;
-      final modelFile = await ModelFile.fromMap({
-        'id': hash,
-        'size': fsItem.size,
-        'mime': mime ?? "",
-        'parts': parts
-      });
+      final modelFile = await ModelFile.fromMap(
+          {'id': hash, 'mime': mime ?? "", 'parts': parts});
       await modelFile.insert();
     } else {
-      await ModelFile.updateItemCount(hashFile, true);
+      await ModelFile.updateItemCount(hash, true);
     }
     final modelItem = await ModelItem.fromMap({
       'root_id': rootItemId,
@@ -405,9 +398,8 @@ class ReconciliationService {
       await dbItem.delete();
       logger.info('  - Deleted Folder: ${dbItem.name}');
     } else {
-      ModelFile? file = dbItem.file;
-      if (file != null) {
-        await ModelFile.updateItemCount(file, false);
+      if (dbItem.fileId != null) {
+        await ModelFile.updateItemCount(dbItem.fileId!, false);
       }
       await dbItem.delete();
       logger.info('  - Deleted File: ${dbItem.name}');
@@ -427,11 +419,17 @@ class ReconciliationService {
 
   Future<bool> _isFileModified(String fsPath, ModelItem dbItem) async {
     String fsHash = await _computeFileHash(fsPath);
-    return dbItem.file?.id != fsHash;
+    return dbItem.fileId != fsHash;
   }
 
   Future<String> _computeFileHash(String path) async {
-    return sha256.convert(await File(path).readAsBytes()).toString();
+    String? masterKey = await getMasterKey();
+    // 1. Create the HMAC using SHA-256 and your secret key
+    var hmac = Hmac(sha256, base64Decode(masterKey!));
+    // 2. Pass the file bytes (content) to the HMAC
+    var digest = hmac.convert(await File(path).readAsBytes());
+    // 3. Return the hexadecimal string representation
+    return digest.toString();
   }
 
   // --- Data Loading ---

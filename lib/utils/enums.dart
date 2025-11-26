@@ -110,8 +110,8 @@ enum AppString {
   decrypted,
   keyCipher,
   keyNonce,
-  cipherText,
-  cipherNonce,
+  textCipher,
+  textNonce,
   debugCipherData,
 }
 
@@ -176,9 +176,9 @@ extension AppStringExtension on AppString {
         return "key_cipher";
       case AppString.keyNonce:
         return "key_nonce";
-      case AppString.cipherText:
+      case AppString.textCipher:
         return "cipher_text";
-      case AppString.cipherNonce:
+      case AppString.textNonce:
         return "cipher_nonce";
       case AppString.key:
         return "key";
@@ -195,93 +195,53 @@ extension AppStringExtension on AppString {
 }
 
 enum SyncChangeTask {
-  delete, // delete current change
-  pushMap, // text,tasks,contact,location
-  pushMapFile, // audio,documents
-  pushFile, // upload file after data/thumbnail upload
-  pushMapThumbnailFile, // image,video
-  pushThumbnailFile, // upload thumbnail and file after data upload
-  pushMapThumbnail, // for category/groups
-  pushThumbnail, // for category/groups after data upload
+  delete,
+  pushMap,
+  pushMapFile,
+  pushFile,
 
-  fetchThumbnail, // requires only thumbnail: category,groups
-  fetchThumbnailFile, // requires thumbnail + file : image/video
-  fetchFile, // requires only file: audio,document or after thumbnail
+  fetchFile, // requires only file
 
-  pushMapDeleteThumbnailFile,
-  pushMapDeleteThumbnail,
-  deleteThumbnailFile,
-  deleteThumbnail,
+  pushMapDeleteFile,
+  deleteFile,
 }
 
 extension SyncChangeTaskExtension on SyncChangeTask {
   int get value {
     switch (this) {
       case SyncChangeTask.delete:
-        return 0;
-      case SyncChangeTask.pushMap:
         return 10;
-      case SyncChangeTask.pushFile:
+      case SyncChangeTask.pushMap:
         return 20;
-      case SyncChangeTask.pushMapThumbnailFile:
+      case SyncChangeTask.pushFile:
         return 30;
       case SyncChangeTask.pushMapFile:
         return 40;
-      case SyncChangeTask.pushThumbnailFile:
-        return 50;
-      case SyncChangeTask.pushMapThumbnail:
-        return 60;
-      case SyncChangeTask.pushThumbnail:
-        return 70;
-      case SyncChangeTask.fetchThumbnail:
-        return 80;
-      case SyncChangeTask.fetchThumbnailFile:
-        return 90;
       case SyncChangeTask.fetchFile:
-        return 100;
-      case SyncChangeTask.pushMapDeleteThumbnailFile:
-        return 110;
-      case SyncChangeTask.pushMapDeleteThumbnail:
-        return 120;
-      case SyncChangeTask.deleteThumbnailFile:
-        return 130;
-      case SyncChangeTask.deleteThumbnail:
-        return 140;
+        return 50;
+      case SyncChangeTask.pushMapDeleteFile:
+        return 60;
+      case SyncChangeTask.deleteFile:
+        return 70;
     }
   }
 
   static SyncChangeTask? fromValue(int value) {
     switch (value) {
-      case 0:
-        return SyncChangeTask.delete;
       case 10:
-        return SyncChangeTask.pushMap;
+        return SyncChangeTask.delete;
       case 20:
-        return SyncChangeTask.pushFile;
+        return SyncChangeTask.pushMap;
       case 30:
-        return SyncChangeTask.pushMapThumbnailFile;
+        return SyncChangeTask.pushFile;
       case 40:
         return SyncChangeTask.pushMapFile;
       case 50:
-        return SyncChangeTask.pushThumbnailFile;
-      case 60:
-        return SyncChangeTask.pushMapThumbnail;
-      case 70:
-        return SyncChangeTask.pushThumbnail;
-      case 80:
-        return SyncChangeTask.fetchThumbnail;
-      case 90:
-        return SyncChangeTask.fetchThumbnailFile;
-      case 100:
         return SyncChangeTask.fetchFile;
-      case 110:
-        return SyncChangeTask.pushMapDeleteThumbnailFile;
-      case 120:
-        return SyncChangeTask.pushMapDeleteThumbnail;
-      case 130:
-        return SyncChangeTask.deleteThumbnailFile;
-      case 140:
-        return SyncChangeTask.deleteThumbnail;
+      case 60:
+        return SyncChangeTask.pushMapDeleteFile;
+      case 70:
+        return SyncChangeTask.deleteFile;
       default:
         return null;
     }

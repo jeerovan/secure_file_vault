@@ -1,33 +1,27 @@
 import '../utils/common.dart';
 import '../utils/enums.dart';
-import '../models/model_preferences.dart';
+import 'model_state.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelFile {
   String id;
   String mime;
-  int size;
-  int state;
   int itemCount;
   int parts;
   int partsUploaded;
   int uploadedAt;
-  String? b2Id;
-  int archivedAt;
+  String? remoteId;
   int createdAt;
   int updatedAt;
 
   ModelFile({
     required this.id,
     required this.mime,
-    required this.size,
-    required this.state,
     required this.itemCount,
     required this.parts,
     required this.partsUploaded,
     required this.uploadedAt,
-    this.b2Id,
-    required this.archivedAt,
+    this.remoteId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -36,14 +30,11 @@ class ModelFile {
     return {
       'id': id,
       'mime': mime,
-      'size': size,
-      'state': state,
       'item_count': itemCount,
       'parts': parts,
       'parts_uploaded': partsUploaded,
       'uploaded_at': uploadedAt,
-      'b2_id': b2Id,
-      'archived_at': archivedAt,
+      'remote_id': remoteId,
       'created_at': createdAt,
       'updated_at': updatedAt
     };
@@ -53,21 +44,20 @@ class ModelFile {
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     return ModelFile(
       id: map["id"],
-      mime: getValueFromMap(map, "mime", defaultValue: ""),
-      size: getValueFromMap(map, "size", defaultValue: 0),
-      state: getValueFromMap(map, "state", defaultValue: 0),
+      mime: getValueFromMap(map, "mime", defaultValue: "application/unknown"),
       itemCount: getValueFromMap(map, "item_count", defaultValue: 1),
       parts: getValueFromMap(map, "parts", defaultValue: 0),
       partsUploaded: getValueFromMap(map, "parts_uploaded", defaultValue: 0),
       uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
-      b2Id: getValueFromMap(map, "b2_id", defaultValue: ""),
-      archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
+      remoteId: getValueFromMap(map, "remote_id", defaultValue: ""),
       createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }
 
-  static Future<void> updateItemCount(ModelFile file, bool added) async {
+  static Future<void> updateItemCount(String fileId, bool added) async {
+    ModelFile? file = await get(fileId);
+    if (file == null) return;
     if (added) {
       file.itemCount = file.itemCount + 1;
     } else {
@@ -91,8 +81,7 @@ class ModelFile {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert("file", map);
-    bool syncEnabled = await ModelPreferences.get(
-            AppString.hasEncryptionKeys.string,
+    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (syncEnabled) {
@@ -113,8 +102,7 @@ class ModelFile {
       updatedMap[attr] = map[attr];
     }
     int updated = await dbHelper.update("file", updatedMap, id);
-    bool syncEnabled = await ModelPreferences.get(
-            AppString.hasEncryptionKeys.string,
+    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (pushToSync && syncEnabled) {
@@ -151,8 +139,7 @@ class ModelFile {
     int deleteTask = 2;
     Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete("file", id);
-    bool syncEnabled = await ModelPreferences.get(
-            AppString.hasEncryptionKeys.string,
+    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (withServerSync && syncEnabled) {

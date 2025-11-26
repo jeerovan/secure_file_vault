@@ -1,4 +1,4 @@
-import '../../models/model_preferences.dart';
+import '../../models/model_state.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_logger.dart';
 import '../../storage/storage_secure.dart';
@@ -110,8 +110,8 @@ class _PageSigninState extends State<PageSignin> {
       });
       try {
         Session? session;
-        if (simulateOnboarding()) {
-          if (await ModelPreferences.get(AppString.dataSeeded.string,
+        if (simulateTesting()) {
+          if (await ModelState.get(AppString.dataSeeded.string,
                   defaultValue: "no") ==
               "no") {
             //await seedGroupsAndNotes();
@@ -122,7 +122,7 @@ class _PageSigninState extends State<PageSignin> {
               .verifyOTP(email: email, token: otp, type: OtpType.email);
           session = response.session;
         }
-        if (session != null || simulateOnboarding()) {
+        if (session != null || simulateTesting()) {
           await ModelSetting.delete(AppString.otpSentTo.string);
           await ModelSetting.delete(AppString.otpSentAt.string);
           await ModelSetting.set(

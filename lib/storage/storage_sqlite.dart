@@ -128,10 +128,45 @@ class StorageSqlite {
         created_at INTEGER
       )
     '''); */
-    // path: only for synced folders
+    // id as sha-256
+    // state: 1:Local, 2:Local+Server 3:Server
+    // thumbnail for a file is static
+    // size can track occupied storage
+    await db.execute('''
+      CREATE TABLE file (
+        id TEXT PRIMARY KEY,
+        mime TEXT NOT NULL,
+        item_count INTEGER DEFAULT 0,
+        parts INTEGER DEFAULT 1,
+        parts_uploaded INTEGER DEFAULT 0,
+        uploaded_at INTEGER DEFAULT 0,
+        uploaded_to INTEGER DEFAULT 0,
+        remote_id TEXT,
+        created_at INTEGER,
+        updated_at INTEGER
+      )
+    ''');
+    // id as uuid
+    //state:
+    await db.execute('''
+      CREATE TABLE part (
+        id TEXT PRIMARY KEY,
+        file_id TEXT NOT NULL,
+        part_number INTEGER NOT NULL,
+        size INTEGER DEFAULT 0,
+        state INTEGER DEFAULT 0,
+        cipher TEXT NOT NULL,
+        nonce TEXT NOT NULL,
+        created_at INTEGER,
+        updated_at INTEGER,
+        FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE
+      )
+    ''');
+    // id: uuid
+    // path: only for synced folders, rest will be relative by parent_id
     // name: file, folder, device
     // rootId: all folders and files will have item(id) of synced folder
-    // thumbnail can be changed for a folder
+    // size required while reconciliation for quickly find matching files
     await db.execute('''
       CREATE TABLE item (
         id TEXT PRIMARY KEY,
@@ -143,7 +178,6 @@ class StorageSqlite {
         scan_state INTEGER DEFAULT 0,
         file_id TEXT,
         size INTEGER DEFAULT 0,
-        state INTEGER DEFAULT 0,
         archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER,
@@ -180,43 +214,17 @@ class StorageSqlite {
         updated_at INTEGER
       )
     ''');
-    // id as sha-256
-    //state: 1:Local, 2:Local+Server 3:Server
-    // thumbnail for a file is static
     await db.execute('''
-      CREATE TABLE file (
+      CREATE TABLE change (
         id TEXT PRIMARY KEY,
-        mime TEXT NOT NULL,
-        size INTEGER DEFAULT 0,
-        state INTEGER DEFAULT 0,
-        item_count INTEGER DEFAULT 0,
-        parts INTEGER DEFAULT 1,
-        parts_uploaded INTEGER DEFAULT 0,
-        uploaded_at INTEGER,
-        b2_id TEXT,
-        archived_at INTEGER,
-        created_at INTEGER,
-        updated_at INTEGER
-      )
-    ''');
-    // id as uuid
-    //state:
-    await db.execute('''
-      CREATE TABLE part (
-        id TEXT PRIMARY KEY,
-        file_id TEXT NOT NULL,
-        part_number INTEGER NOT NULL,
-        size INTEGER DEFAULT 0,
-        state INTEGER DEFAULT 0,
-        cipher TEXT NOT NULL,
-        nonce TEXT NOT NULL,
-        created_at INTEGER,
-        updated_at INTEGER,
-        FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE
+        table TEXT NOT NULL,
+        data TEXT NOT NULL,
+        type INTEGER NOT NULL,
+        map TEXT
       )
     ''');
     await db.execute('''
-      CREATE TABLE preferences (
+      CREATE TABLE state (
         id TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         created_at INTEGER,
