@@ -115,16 +115,14 @@ class ModelItem {
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<List<ModelItem>>
-      getAllUnScannedFilesForRootItemIdMatchingNameAndSize(
-          String itemId, String name, int size) async {
+  static Future<List<ModelItem>> getAllUnScannedFilesForRootItemIdMatchingSize(
+      String itemId, int size) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
       "items",
-      where:
-          "root_id = ? AND is_folder = ? AND scan_state = ? AND name = ? AND size = ?",
-      whereArgs: [itemId, 0, 0, name, size],
+      where: "root_id = ? AND is_folder = ? AND scan_state = ? AND size = ?",
+      whereArgs: [itemId, 0, 0, size],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
@@ -225,6 +223,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert("items", map);
+
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
@@ -263,7 +262,7 @@ class ModelItem {
     Map<String, dynamic> map = toMap();
     List<Map<String, dynamic>> rows = await dbHelper.getWithId("items", id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("items", map);
+      result = await insert();
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
@@ -283,6 +282,7 @@ class ModelItem {
     int deleteTask = 1;
     Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete("items", id);
+
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";

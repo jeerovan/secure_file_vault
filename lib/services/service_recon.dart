@@ -15,7 +15,7 @@ import 'package:path/path.dart' as path_lib;
 class ReconciliationService {
   final AppLogger logger = AppLogger(prefixes: ["RECON"]);
   final Uuid uuid;
-  static const double jaccardSimilarityThreshold = 0.6;
+  static const double jaccardSimilarityThreshold = 0.7;
 
   ReconciliationService() : uuid = Uuid();
 
@@ -151,49 +151,42 @@ class ReconciliationService {
   /// ON-DEMAND GLOBAL SEARCH: Finds a moved/renamed folder in the unresolved set. A moved directory in db will not exist at its fsPath.
   Future<ModelItem?> _findMovedFolder(
       String rootItemId, FSItem fsFolder, String fsPath) async {
+    final fsChildren = await _scanFileSystemChildren(fsPath);
+    final fsSizes = fsChildren.map((c) => c.size ?? 0).toSet();
     final candidateDbFolders =
         await ModelItem.getAllUnScannedFolderForRootItemId(rootItemId);
     ModelItem? bestMatch;
     double bestScore = 0.0;
-    final fsChildrenNames =
-        (await _scanFileSystemChildren(fsPath)).map((c) => c.name).toSet();
-    // Strategy 1:Folder Move: Find a folder with the same name. It's the strongest signal.
-    final sameNameCandidates =
-        candidateDbFolders.where((f) => f.name == fsFolder.name).toList();
-    if (sameNameCandidates.isNotEmpty) {
-      for (final candidate in sameNameCandidates) {
-        final dbChildrenNames = (await ModelItem.getAllInFolder(candidate))
-            .map((c) => c.name)
-            .toSet();
-        final score =
-            _calculateJaccardSimilarity(fsChildrenNames, dbChildrenNames);
-        if (score > bestScore) {
+    for (final candidate in candidateDbFolders) {
+      // Fetch children once
+      final dbChildren = await ModelItem.getAllInFolder(candidate);
+
+      // If the folder is massive, checking name similarity is cheap.
+
+      // Score 1: Name Match (Strongest signal)
+      if (candidate.name == fsFolder.name) {
+        // Lower the threshold if the folder name is identical.
+        // Even a small content overlap indicates a move if the name is same.
+        double score = _calculateJaccardSimilarity(
+            fsSizes, dbChildren.map((c) => c.size).toSet());
+        if (score > 0.3 && score > bestScore) {
           bestScore = score;
           bestMatch = candidate;
         }
+        continue;
       }
-      if (bestMatch != null) {
-        String directoryPath = await ModelItem.getPathForItem(bestMatch.id);
-        bool directoryExist = await directoryExistAtPath(directoryPath);
-        if (!directoryExist) {
-          return bestMatch;
-        }
-      }
-    }
 
-    // Strategy 2:Folder Rename: If no name match, check content similarity against all other unresolved folders.
-    for (final candidate in candidateDbFolders) {
-      final dbChildrenNames = (await ModelItem.getAllInFolder(candidate))
-          .map((c) => c.name)
-          .toSet();
-      final score =
-          _calculateJaccardSimilarity(fsChildrenNames, dbChildrenNames);
+      // Score 2: Content Match
+      final dbSizes = dbChildren.map((c) => c.size).toSet();
+      double score = _calculateJaccardSimilarity(fsSizes, dbSizes);
+
       if (score > bestScore) {
         bestScore = score;
         bestMatch = candidate;
       }
     }
-    if (bestScore >= jaccardSimilarityThreshold && bestMatch != null) {
+
+    if (bestMatch != null && bestScore > jaccardSimilarityThreshold) {
       String directoryPath = await ModelItem.getPathForItem(bestMatch.id);
       bool directoryExist = await directoryExistAtPath(directoryPath);
       if (!directoryExist) {
@@ -206,30 +199,21 @@ class ReconciliationService {
   // ON-DEMAND GLOBAL SEARCH: Finds a moved file. A moved file in db will not be available at its fsPath.
   Future<ModelItem?> _findMovedFile(
       String rootItemId, FSItem fsFile, String fsPath) async {
-    final hash = await _computeFileHash(fsPath);
-    // first search matching files with name and size
-    final dbCandidatesMatchingNameSize =
-        await ModelItem.getAllUnScannedFilesForRootItemIdMatchingNameAndSize(
-            rootItemId, fsFile.name, fsFile.size!);
-    // match hash to confirm
-    if (dbCandidatesMatchingNameSize.isNotEmpty) {
-      for (final candidate in dbCandidatesMatchingNameSize) {
-        if (candidate.fileId == hash) {
-          String filePath = await ModelItem.getPathForItem(candidate.id);
-          bool fileExist = await fileExistAtPath(filePath);
-          if (!fileExist) return candidate;
-        }
-      }
+    // first search matching files with size
+    final dbCandidatesMatchingSize =
+        await ModelItem.getAllUnScannedFilesForRootItemIdMatchingSize(
+            rootItemId, fsFile.size!);
+    if (dbCandidatesMatchingSize.isEmpty) {
+      return null;
     }
-    // Search the entire unresolved map for a matching hash.
-    final dbCandidatesMatchingHash =
-        await ModelItem.getAllUnScannedFilesForRootItemIdMatchingHash(
-            rootItemId, hash);
-    if (dbCandidatesMatchingHash.isNotEmpty) {
-      ModelItem candidate = dbCandidatesMatchingHash[0];
-      String filePath = await ModelItem.getPathForItem(candidate.id);
-      bool fileExist = await fileExistAtPath(filePath);
-      if (!fileExist) return candidate;
+    final hash = await _computeFileHash(fsPath);
+    // match hash to confirm
+    for (final candidate in dbCandidatesMatchingSize) {
+      if (candidate.fileId == hash) {
+        String filePath = await ModelItem.getPathForItem(candidate.id);
+        bool fileExist = await fileExistAtPath(filePath);
+        if (!fileExist) return candidate;
+      }
     }
     return null;
   }
@@ -241,8 +225,8 @@ class ReconciliationService {
     List<ModelItem> dbChildren,
     String fsPath,
   ) async {
-    final fsChildrenNames =
-        (await _scanFileSystemChildren(fsPath)).map((c) => c.name).toSet();
+    final fsSizes =
+        (await _scanFileSystemChildren(fsPath)).map((c) => c.size ?? 0).toSet();
     final dbChildrenFolders =
         dbChildren.where((c) => c.isFolder && c.scanState == 0).toList();
 
@@ -250,10 +234,9 @@ class ReconciliationService {
     double bestScore = 0.0;
 
     for (final dbFolder in dbChildrenFolders) {
-      final dbChildrenNames =
-          (await ModelItem.getAllInFolder(dbFolder)).map((c) => c.name).toSet();
-      final score =
-          _calculateJaccardSimilarity(fsChildrenNames, dbChildrenNames);
+      final dbSizes =
+          (await ModelItem.getAllInFolder(dbFolder)).map((c) => c.size).toSet();
+      final score = _calculateJaccardSimilarity(fsSizes, dbSizes);
 
       if (score > bestScore) {
         bestScore = score;
@@ -404,13 +387,11 @@ class ReconciliationService {
       await dbItem.delete();
       logger.info('  - Deleted File: ${dbItem.name}');
     }
-
-    // TODO Decrement content reference count if it's a file
   }
 
   // --- Helpers ---
 
-  double _calculateJaccardSimilarity(Set<String> set1, Set<String> set2) {
+  double _calculateJaccardSimilarity(Set<int> set1, Set<int> set2) {
     if (set1.isEmpty && set2.isEmpty) return 1.0;
     final intersection = set1.intersection(set2).length;
     final union = set1.union(set2).length;
