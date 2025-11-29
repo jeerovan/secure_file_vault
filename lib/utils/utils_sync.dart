@@ -227,38 +227,34 @@ class SyncUtils {
 
       String table = map["table"];
       String rowId = map['id'];
-      String changeId = '$userId|$rowId';
+      String changeId = '$table|$rowId';
       int updatedAt = map['updated_at'];
       map["deleted"] = deleteTask;
 
-      Map<String, dynamic> changeMap = {
-        "id": changeId,
-        "user_id": userId,
-        "updated_at": updatedAt,
-        "device_id": deviceId
-      };
+      Map<String, dynamic> changeMap = {"device_id": deviceId};
 
-      SodiumSumo sodium = await SodiumSumoInit.init();
-      CryptoUtils cryptoUtils = CryptoUtils(sodium);
+      if (table == Tables.items.string) {
+        changeMap.addAll({
+          "id": rowId,
+          "updated_at": updatedAt,
+        });
+        SodiumSumo sodium = await SodiumSumoInit.init();
+        CryptoUtils cryptoUtils = CryptoUtils(sodium);
 
-      String jsonString = jsonEncode(map);
-      Uint8List plainBytes = Uint8List.fromList(utf8.encode(jsonString));
-      Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
+        String jsonString = jsonEncode(map);
+        Uint8List plainBytes = Uint8List.fromList(utf8.encode(jsonString));
 
-      Map<String, dynamic> encryptedDataMap =
-          cryptoUtils.getEncryptedBytesMap(plainBytes, masterKeyBytes);
+        Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
+        Map<String, dynamic> encryptedDataMap =
+            cryptoUtils.getEncryptedBytesMap(plainBytes, masterKeyBytes);
 
-      changeMap.addAll(encryptedDataMap);
+        changeMap.addAll(encryptedDataMap);
+      } else {
+        changeMap.addAll(map);
+      }
 
       String changeData = jsonEncode(changeMap);
-      Map<String, dynamic>? dataMap;
-      if (map.containsKey('data') && map['data'] != null) {
-        if (map['data'] is String) {
-          dataMap = jsonDecode(map['data']);
-        } else if (map['data'] is Map) {
-          dataMap = map['data'];
-        }
-      }
+
       SyncChangeTask changeTask = SyncChangeTask.pushMap;
       if (deleteTask == 0) {
         changeTask = ModelChange.getPushChangeTaskType(table, map);
@@ -268,8 +264,8 @@ class SyncUtils {
         //TODO handle file being uploaded
       }
       // add/update change if any upload/download exist
-      await ModelChange.addUpdate(changeId, table, changeData, changeTask.value,
-          dataMap: dataMap);
+      await ModelChange.addUpdate(
+          changeId, table, changeData, changeTask.value);
       logger.info("encryptAndPushChange:$table|$changeId|${changeTask.value}");
       await ModelChange.updateTypeState(changeId, SyncState.uploading);
       if (pushToSync) waitAndSyncChanges();
@@ -283,15 +279,19 @@ class SyncUtils {
     List<Map<String, dynamic>> allChanges = [];
     bool hasMoreChanges = false;
     List<String> changeIds = [];
-    for (String table in ["category", "itemgroup", "item"]) {
+    for (String table in [
+      Tables.files.string,
+      Tables.items.string,
+      Tables.parts.string
+    ]) {
       List<ModelChange> changes =
           await ModelChange.requiresMapPushForTable(table);
-      if (table == "item" && changes.length >= 100) {
+      if (table == Tables.items.string && changes.length >= 100) {
         hasMoreChanges = true;
       }
       List<Map<String, dynamic>> changeMaps = [];
       for (ModelChange change in changes) {
-        changeMaps.add(jsonDecode(change.data));
+        changeMaps.add(change.changedData);
         changeIds.add(change.id);
       }
       if (changeMaps.isNotEmpty) {
@@ -334,7 +334,8 @@ class SyncUtils {
 
   static Future<void> deleteFile(
       ModelChange change, SupabaseClient supabaseClient) async {
-    Map<String, dynamic>? map = change.map;
+    Map<String, dynamic> map = change.changedData;
+    //TODO fix getting file to delete
     if (map != null && map.containsKey("name") && map["name"].isNotEmpty) {
       String fileName = map["name"];
       try {
@@ -356,9 +357,6 @@ class SyncUtils {
     if (map.containsKey("username")) {
       changeMap["username"] = map["username"];
     }
-    if (map.containsKey("url")) {
-      changeMap["url"] = map["url"];
-    }
     try {
       await supabaseClient
           .from("profiles")
@@ -379,14 +377,14 @@ class SyncUtils {
       await Future.delayed(const Duration(seconds: 2));
       return;
     }
-    String deviceId = await ModelState.get(AppString.deviceId.string);
+    String deviceId = await getDeviceId();
     Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
     SodiumSumo sodium = await SodiumSumoInit.init();
     CryptoUtils cryptoUtils = CryptoUtils(sodium);
     SupabaseClient supabaseClient = Supabase.instance.client;
-    String lastFetchedAt = await ModelState.get(
+    int lastFetchedAt = await ModelState.get(
         AppString.lastChangesFetchedAt.string,
-        defaultValue: "2011-11-11 11:11:11.111111+00");
+        defaultValue: 0);
     try {
       // fetch public profile changes
       /* logger.info("fetch profile changes");
@@ -398,117 +396,58 @@ class SyncUtils {
         ModelProfile profile = await ModelProfile.fromMap(map);
         await profile.upcertChangeFromServer();
       } */
-      // fetch notes changes
+      // fetch changes
       final response = await supabaseClient.functions.invoke("fetch_changes",
           headers: {"deviceId": deviceId}, body: {"lastAt": lastFetchedAt});
       Map<String, dynamic> tableChanges = jsonDecode(response.data);
-      List<String> tables = ["category", "itemgroup", "item"];
+      List<String> tables = [
+        Tables.files.string,
+        Tables.items.string,
+        Tables.parts.string
+      ];
       bool hadChanges = false;
       for (String table in tables) {
         if (!tableChanges.containsKey(table)) continue;
         hadChanges = true;
         List<dynamic> changesMap = tableChanges[table];
         for (Map<String, dynamic> changeMap in changesMap) {
-          Uint8List? decryptedBytes =
-              cryptoUtils.getDecryptedBytesFromMap(changeMap, masterKeyBytes);
-          if (decryptedBytes == null) continue;
-          String jsonString = utf8.decode(decryptedBytes);
-          Map<String, dynamic> map = jsonDecode(jsonString);
+          Map<String, dynamic> map = changeMap;
+          if (table == Tables.items.string) {
+            Uint8List? decryptedBytes =
+                cryptoUtils.getDecryptedBytesFromMap(changeMap, masterKeyBytes);
+            if (decryptedBytes == null) continue;
+            String jsonString = utf8.decode(decryptedBytes);
+            map = jsonDecode(jsonString);
+          }
+          //TODO handle changeId/rowId
           String changeId = changeMap["id"];
           String rowId = map["id"];
           int deleteTask = int.parse(map.remove("deleted").toString());
-          bool hasThumbnail =
-              int.parse(map.remove("thumbnail").toString()) == 1 ? true : false;
           if (deleteTask > 0) {
-            // thumbnail and file already been deleted from server
-            switch (table) {
-              case "category":
-                await ModelCategory.deletedFromServer(rowId);
-              case "itemgroup":
-                await ModelGroup.deletedFromServer(rowId);
-              case "item":
-                await ModelItem.deletedFromServer(rowId);
+            // file already been deleted from server
+            if (table == Tables.files.string) {
+              await ModelFile.deletedFromServer(rowId);
+            } else if (table == Tables.items.string) {
+              await ModelItem.deletedFromServer(rowId);
             }
           } else {
-            Map<String, dynamic>? dataMap;
-            switch (table) {
-              case "category":
-                ModelCategory category = await ModelCategory.fromMap(map);
-                await category.upcertFromServer();
-              case "itemgroup":
-                ModelGroup group = await ModelGroup.fromMap(map);
-                await group.upcertFromServer();
-              case "item":
-                ModelItem item = await ModelItem.fromMap(map);
-                dataMap = item.data;
-                item.state = SyncState.downloaded.value;
-                await item.upcertFromServer();
-                // fix file path in data map
-                if (dataMap != null) {
-                  if (dataMap.containsKey("path")) {
-                    String fileName = dataMap["name"];
-                    String mimeDirectory = dataMap["mime"].split("/").first;
-                    String fileOutPath =
-                        await getFilePath(mimeDirectory, fileName);
-                    dataMap["path"] = fileOutPath;
-                    item.data = dataMap;
-                    await item.update(["data"], pushToSync: false);
-                    // check file
-                    File fileOut = File(fileOutPath);
-                    if (fileOut.existsSync()) {
-                      // duplicate note item (may be different group)
-                      ModelItemFile itemFile =
-                          ModelItemFile(id: item.id!, fileHash: fileName);
-                      await itemFile.insert();
-                    }
-                  }
-                  // check for urls and add preview image
-                  if (dataMap.containsKey("url_info")) {
-                    Map<String, dynamic> urlInfo = dataMap["url_info"];
-                    String imageUrl = urlInfo["image"];
-                    await checkDownloadNetworkImage(item.id!, imageUrl);
-                  } else {
-                    // remove if exists
-                    String fileName = '${item.id}-urlimage.png';
-                    File? imageFile = await getFile("image", fileName);
-                    if (imageFile != null && imageFile.existsSync()) {
-                      imageFile.deleteSync();
-                    }
-                  }
-                }
+            if (table == Tables.files.string) {
+              ModelFile newFile = await ModelFile.fromMap(map);
+              await newFile.upcertFromServer();
+            } else if (table == Tables.parts.string) {
+              ModelPart newPart = await ModelPart.fromMap(map);
+              await newPart.upcertFromServer();
+            } else if (table == Tables.items.string) {
+              ModelItem item = await ModelItem.fromMap(map);
+              await item.upcertFromServer();
             }
             SyncChangeTask changeType = SyncChangeTask.delete;
-            switch (table) {
-              case "category":
-              case "itemgroup":
-                if (hasThumbnail) {
-                  changeType = SyncChangeTask.fetchThumbnail;
-                }
-              case "item":
-                ItemType? itemType = ItemTypeExtension.fromValue(map["type"]);
-                switch (itemType) {
-                  case ItemType.document:
-                  case ItemType.audio:
-                    changeType = SyncChangeTask.fetchFile;
-                  case ItemType.contact:
-                    if (hasThumbnail) {
-                      changeType = SyncChangeTask.fetchThumbnail;
-                    }
-                  case ItemType.image:
-                  case ItemType.video:
-                    changeType = SyncChangeTask.fetchThumbnailFile;
-                  case ItemType.text:
-                  case ItemType.task:
-                  case ItemType.completedTask:
-                  case ItemType.location:
-                  case ItemType.date:
-                  case null:
-                    changeType = SyncChangeTask.delete;
-                }
+            if (table == Tables.files.string) {
+              changeType = SyncChangeTask.fetchFile;
             }
             if (changeType.value > SyncChangeTask.delete.value) {
-              await ModelChange.addUpdate(changeId, table, "", changeType.value,
-                  dataMap: dataMap);
+              await ModelChange.addUpdate(
+                  changeId, table, "", changeType.value);
               logger.info(
                   "fetchChangesForTable|$table|Added change:$table|$changeId|${changeType.value}");
               await ModelChange.updateTypeState(
@@ -519,9 +458,8 @@ class SyncUtils {
       }
       // update last fetched at iso time
       if (hadChanges) {
-        String nowUtcCurrent = nowUtcInISO();
-        await ModelState.set(
-            AppString.lastChangesFetchedAt.string, nowUtcCurrent);
+        String fetchedAt = tableChanges[AppString.lastChangesFetchedAt.string];
+        await ModelState.set(AppString.lastChangesFetchedAt.string, fetchedAt);
       }
       await ModelState.set(AppString.hasValidPlan.string, "yes");
       logger.info("Fetched Map Changes");
@@ -552,7 +490,7 @@ class SyncUtils {
         await ModelChange.upgradeSyncTask(changeId);
         continue;
       }
-      Map<String, dynamic>? data = change.map;
+      Map<String, dynamic> data = change.changedData;
       if (data != null) {
         String fileName = data["name"];
         String filePath = data["path"];
@@ -591,6 +529,23 @@ class SyncUtils {
     logger.info("Files fetched");
   }
 
+  static Future<Map<String, dynamic>> getDataToDownloadFile(
+      String fileName) async {
+    SupabaseClient supabase = Supabase.instance.client;
+    Map<String, dynamic> downloadData = {};
+    try {
+      final res = await supabase.functions
+          .invoke('get_download_url', body: {'fileName': fileName});
+      Map<String, dynamic> data = jsonDecode(res.data);
+      downloadData.addAll(data);
+    } on FunctionException catch (e) {
+      downloadData["error"] = e.details.toString();
+    } catch (e) {
+      downloadData["error"] = e.toString();
+    }
+    return downloadData;
+  }
+
   static Future<bool> pushFiles(int startedAt, bool inBackground) async {
     logger.info("Push Files");
     bool hasPendingUploads = false;
@@ -614,7 +569,7 @@ class SyncUtils {
             .eq("id", fileId)
             .lt("uploaded_at", completedUpload.uploadedAt);
 
-        String changeId = completedUpload.changeId;
+        String changeId = ""; // TODO get changeId
         await completedUpload
             .delete(); // deletes the encrypted file in temp dir
         // upgrade changetask
@@ -627,7 +582,7 @@ class SyncUtils {
         "pushed Completed Uploads. Spent: ${DateTime.now().toUtc().millisecondsSinceEpoch - startedAt}");
     //uploading partial pending files
     // where uploadedAt = 0
-    List<ModelFile> pendingUploads = await ModelFile.pendingUploads();
+    List<ModelFile> pendingUploads = []; // TODO get files pendinf for upload
     for (ModelFile pendingFile in pendingUploads) {
       await pushFile(pendingFile);
       hasPendingUploads = true;
@@ -647,7 +602,7 @@ class SyncUtils {
 
   static Future<void> checkPushFile(ModelChange change) async {
     SupabaseClient supabaseClient = Supabase.instance.client;
-    Map<String, dynamic>? dataMap = change.map;
+    Map<String, dynamic> dataMap = change.changedData;
     if (dataMap != null) {
       List<String> userIdRowId = change.id.split("|");
       String userId = userIdRowId[0];
@@ -830,7 +785,8 @@ class SyncUtils {
             } // single file upload will have uploaded_at > 0 when parts == partsUploaded
           }
         } else {
-          await ModelChange.upgradeSyncTask(modelFile.changeId);
+          String changeId = ""; // TODO get changeid
+          await ModelChange.upgradeSyncTask(changeId);
         }
       }
     } catch (e, s) {
@@ -845,8 +801,12 @@ class SyncUtils {
     String userId = userIdFileName[0];
     String fileName = userIdFileName[1];
     logger.info("pushFilePart|$fileName|get bytes to upload");
-    File? fileOut = await getCreateEncryptedFileToUpload(modelFile.filePath,
-        modelFile.keyCipher, modelFile.keyNonce, cryptoUtils);
+    // TODO get file part
+    String filePath = "";
+    String keyCipher = "";
+    String keyNonce = "";
+    File? fileOut = await getCreateEncryptedFileToUpload(
+        filePath, keyCipher, keyNonce, cryptoUtils);
     if (fileOut == null) {
       logger.error("pushFilePart:error creating encrypted file");
     } else {

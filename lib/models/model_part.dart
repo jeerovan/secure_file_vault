@@ -72,6 +72,27 @@ class ModelPart {
     return updated;
   }
 
+  Future<int> upcertFromServer() async {
+    int result;
+    final dbHelper = StorageSqlite.instance;
+    Map<String, dynamic> map = toMap();
+    List<Map<String, dynamic>> rows = await dbHelper.getWithId("item", id);
+    if (rows.isEmpty) {
+      result = await dbHelper.insert("item", map);
+    } else {
+      int existingUpdatedAt = rows[0]["updated_at"];
+      int incomingUpdatedAt = map["updated_at"];
+      if (incomingUpdatedAt > existingUpdatedAt) {
+        result = await dbHelper.update("item", map, id);
+      } else {
+        result = 0;
+      }
+    }
+    // signal item update
+    //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
+    return result;
+  }
+
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
     int deleted = await dbHelper.delete("parts", id);

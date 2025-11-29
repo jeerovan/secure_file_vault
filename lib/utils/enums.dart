@@ -9,6 +9,29 @@ enum SetupStep {
   complete,
 }
 
+enum Tables { items, files, parts, changes, settings, states, logs }
+
+extension TablesExtension on Tables {
+  String get string {
+    switch (this) {
+      case Tables.items:
+        return "items";
+      case Tables.files:
+        return "files";
+      case Tables.parts:
+        return "parts";
+      case Tables.changes:
+        return "changes";
+      case Tables.settings:
+        return "settings";
+      case Tables.states:
+        return "states";
+      case Tables.logs:
+        return "logs";
+    }
+  }
+}
+
 enum PageType {
   settings,
   categories,

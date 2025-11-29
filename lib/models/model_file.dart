@@ -5,7 +5,6 @@ import '../storage/storage_sqlite.dart';
 
 class ModelFile {
   String id;
-  String mime;
   int itemCount;
   int parts;
   int partsUploaded;
@@ -16,7 +15,6 @@ class ModelFile {
 
   ModelFile({
     required this.id,
-    required this.mime,
     required this.itemCount,
     required this.parts,
     required this.partsUploaded,
@@ -29,7 +27,6 @@ class ModelFile {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'mime': mime,
       'item_count': itemCount,
       'parts': parts,
       'parts_uploaded': partsUploaded,
@@ -44,7 +41,6 @@ class ModelFile {
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     return ModelFile(
       id: map["id"],
-      mime: getValueFromMap(map, "mime", defaultValue: "application/unknown"),
       itemCount: getValueFromMap(map, "item_count", defaultValue: 1),
       parts: getValueFromMap(map, "parts", defaultValue: 0),
       partsUploaded: getValueFromMap(map, "parts_uploaded", defaultValue: 0),
@@ -67,9 +63,17 @@ class ModelFile {
     // TODO if count is zero, add for deletion
   }
 
+  static Future<List<ModelFile>> pendingForPush() async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows =
+        await db.query("files", where: "uploaded_at  > ?", whereArgs: [0]);
+    return await Future.wait(rows.map((map) => fromMap(map)));
+  }
+
   static Future<ModelFile?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("file", id);
+    List<Map<String, dynamic>> rows = await dbHelper.getWithId("files", id);
     if (rows.isNotEmpty) {
       Map<String, dynamic> map = rows.first;
       return await fromMap(map);
@@ -80,12 +84,12 @@ class ModelFile {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("file", map);
+    int inserted = await dbHelper.insert("files", map);
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (syncEnabled) {
-      map["table"] = "file";
+      map["table"] = "files";
       /* SyncUtils.encryptAndPushChange(
         map,
       ); */
@@ -101,7 +105,7 @@ class ModelFile {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update("file", updatedMap, id);
+    int updated = await dbHelper.update("files", updatedMap, id);
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
@@ -117,14 +121,14 @@ class ModelFile {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("file", id);
+    List<Map<String, dynamic>> rows = await dbHelper.getWithId("files", id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("file", map);
+      result = await dbHelper.insert("files", map);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update("file", map, id);
+        result = await dbHelper.update("files", map, id);
       } else {
         result = 0;
       }
@@ -138,7 +142,8 @@ class ModelFile {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 2;
     Map<String, dynamic> map = toMap();
-    int deleted = await dbHelper.delete("file", id);
+    int deleted = await dbHelper.delete("files", id);
+    //TODO parts should be deleted also
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
@@ -158,6 +163,7 @@ class ModelFile {
     if (item != null) {
       await item.delete();
     }
+    // TODO delete parts also
     //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
   }
 }

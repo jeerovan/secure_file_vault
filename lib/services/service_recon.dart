@@ -148,7 +148,7 @@ class ReconciliationService {
     }
   }
 
-  /// ON-DEMAND GLOBAL SEARCH: Finds a moved/renamed folder in the unresolved set.
+  /// ON-DEMAND GLOBAL SEARCH: Finds a moved/renamed folder in the unresolved set. A moved directory in db will not exist at its fsPath.
   Future<ModelItem?> _findMovedFolder(
       String rootItemId, FSItem fsFolder, String fsPath) async {
     final candidateDbFolders =
@@ -203,7 +203,7 @@ class ReconciliationService {
     return null;
   }
 
-  // ON-DEMAND GLOBAL SEARCH: Finds a moved file.
+  // ON-DEMAND GLOBAL SEARCH: Finds a moved file. A moved file in db will not be available at its fsPath.
   Future<ModelItem?> _findMovedFile(
       String rootItemId, FSItem fsFile, String fsPath) async {
     final hash = await _computeFileHash(fsPath);
@@ -426,10 +426,8 @@ class ReconciliationService {
     String? masterKey = await getMasterKey();
     // 1. Create the HMAC using SHA-256 and your secret key
     var hmac = Hmac(sha256, base64Decode(masterKey!));
-    // 2. Pass the file bytes (content) to the HMAC
-    var digest = hmac.convert(await File(path).readAsBytes());
-    // 3. Return the hexadecimal string representation
-    return digest.toString();
+    // Use openRead to stream chunks instead of loading fully into memory
+    return (await hmac.bind(File(path).openRead()).first).toString();
   }
 
   // --- Data Loading ---

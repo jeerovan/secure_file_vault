@@ -53,7 +53,7 @@ class ModelPart {
 
   static Future<ModelPart?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> list = await dbHelper.getWithId("part", id);
+    List<Map<String, dynamic>> list = await dbHelper.getWithId("parts", id);
     if (list.isNotEmpty) {
       Map<String, dynamic> map = list.first;
       return await fromMap(map);
@@ -64,7 +64,7 @@ class ModelPart {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("part", map);
+    int inserted = await dbHelper.insert("parts", map);
     return inserted;
   }
 
@@ -75,13 +75,13 @@ class ModelPart {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update("part", updatedMap, id);
+    int updated = await dbHelper.update("parts", updatedMap, id);
     return updated;
   }
 
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete("part", id);
+    int deleted = await dbHelper.delete("parts", id);
     return deleted;
   }
 }

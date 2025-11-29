@@ -81,7 +81,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "item",
+      "items",
       where: "parent_id = ?",
       whereArgs: [
         item.id,
@@ -108,7 +108,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "item",
+      "items",
       where: "root_id = ? AND is_folder = ? AND scan_state = ?",
       whereArgs: [itemId, 1, 0],
     );
@@ -121,7 +121,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "item",
+      "items",
       where:
           "root_id = ? AND is_folder = ? AND scan_state = ? AND name = ? AND size = ?",
       whereArgs: [itemId, 0, 0, name, size],
@@ -134,7 +134,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "item",
+      "items",
       where: "root_id = ? AND is_folder = ? AND scan_state = ? AND file_id = ?",
       whereArgs: [itemId, 0, 0, hash],
     );
@@ -146,7 +146,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "item",
+      "items",
       where: "root_id = ? AND scan_state = ?",
       whereArgs: [itemId, 0],
     );
@@ -157,7 +157,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "item",
+      "items",
       where: "archived_at > ?",
       whereArgs: [0],
       orderBy: 'at DESC',
@@ -181,14 +181,14 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     await db.execute(
-        'UPDATE item SET scan_state = 0 WHERE root_id = ?', [rootItemId]);
+        'UPDATE items SET scan_state = 0 WHERE root_id = ?', [rootItemId]);
   }
 
   static Future<void> setScanState(String itemId, int state) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     await db.execute(
-        'UPDATE item SET scan_state = ? WHERE id = ?', [state, itemId]);
+        'UPDATE items SET scan_state = ? WHERE id = ?', [state, itemId]);
   }
 
   static Future<void> removeAllSyncedFolders() async {
@@ -196,14 +196,14 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     await db.execute(
-        'DELETE from item WHERE path != NULL AND parent_id = ?', [deviceId]);
+        'DELETE from items WHERE path != NULL AND parent_id = ?', [deviceId]);
   }
 
   static Future<List<ModelItem>> searchItem(String term) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.rawQuery('''
-        SELECT * FROM item 
+        SELECT * FROM items 
         WHERE rowid IN (
             SELECT docid FROM item_fts WHERE name MATCH '$term'
         );
@@ -213,7 +213,7 @@ class ModelItem {
 
   static Future<ModelItem?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("item", id);
+    List<Map<String, dynamic>> rows = await dbHelper.getWithId("items", id);
     if (rows.isNotEmpty) {
       Map<String, dynamic> map = rows.first;
       return await fromMap(map);
@@ -224,12 +224,12 @@ class ModelItem {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("item", map);
+    int inserted = await dbHelper.insert("items", map);
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (syncEnabled) {
-      map["table"] = "item";
+      map["table"] = "items";
       /* SyncUtils.encryptAndPushChange(
         map,
       ); */
@@ -245,13 +245,13 @@ class ModelItem {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update("item", updatedMap, id);
+    int updated = await dbHelper.update("items", updatedMap, id);
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (pushToSync && syncEnabled) {
       map["updated_at"] = utcNow;
-      map["table"] = "item";
+      map["table"] = "items";
       //SyncUtils.encryptAndPushChange(map, mediaChanges: false);
     }
     return updated;
@@ -261,14 +261,14 @@ class ModelItem {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("item", id);
+    List<Map<String, dynamic>> rows = await dbHelper.getWithId("items", id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("item", map);
+      result = await dbHelper.insert("items", map);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update("item", map, id);
+        result = await dbHelper.update("items", map, id);
       } else {
         result = 0;
       }
@@ -282,13 +282,13 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 1;
     Map<String, dynamic> map = toMap();
-    int deleted = await dbHelper.delete("item", id);
+    int deleted = await dbHelper.delete("items", id);
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (withServerSync && syncEnabled) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
-      map["table"] = "item";
+      map["table"] = "items";
       /* SyncUtils.encryptAndPushChange(
         map,
         deleteTask: deleteTask,

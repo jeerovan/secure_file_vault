@@ -128,14 +128,13 @@ class StorageSqlite {
         created_at INTEGER
       )
     '''); */
-    // id as sha-256
+    // id as hmac sha-256
     // state: 1:Local, 2:Local+Server 3:Server
     // thumbnail for a file is static
     // size can track occupied storage
     await db.execute('''
-      CREATE TABLE file (
+      CREATE TABLE files (
         id TEXT PRIMARY KEY,
-        mime TEXT NOT NULL,
         item_count INTEGER DEFAULT 0,
         parts INTEGER DEFAULT 1,
         parts_uploaded INTEGER DEFAULT 0,
@@ -149,7 +148,7 @@ class StorageSqlite {
     // id as uuid
     //state:
     await db.execute('''
-      CREATE TABLE part (
+      CREATE TABLE parts (
         id TEXT PRIMARY KEY,
         file_id TEXT NOT NULL,
         part_number INTEGER NOT NULL,
@@ -168,7 +167,7 @@ class StorageSqlite {
     // rootId: all folders and files will have item(id) of synced folder
     // size required while reconciliation for quickly find matching files
     await db.execute('''
-      CREATE TABLE item (
+      CREATE TABLE items (
         id TEXT PRIMARY KEY,
         path TEXT,
         name TEXT,
@@ -207,7 +206,7 @@ class StorageSqlite {
         END;
     ''');
     await db.execute('''
-      CREATE TABLE setting (
+      CREATE TABLE settings (
         id TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         created_at INTEGER,
@@ -215,16 +214,16 @@ class StorageSqlite {
       )
     ''');
     await db.execute('''
-      CREATE TABLE change (
+      CREATE TABLE changes (
         id TEXT PRIMARY KEY,
-        table TEXT NOT NULL,
-        data TEXT NOT NULL,
-        type INTEGER NOT NULL,
+        table_name TEXT NOT NULL,
+        changed_data TEXT NOT NULL,
+        changed_type INTEGER NOT NULL,
         map TEXT
       )
     ''');
     await db.execute('''
-      CREATE TABLE state (
+      CREATE TABLE states (
         id TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         created_at INTEGER,

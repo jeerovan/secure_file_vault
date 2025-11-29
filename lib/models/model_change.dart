@@ -10,60 +10,45 @@ class ModelChange {
   static AppLogger logger = AppLogger(prefixes: ["ModelChange"]);
 
   String id;
-  String table;
-  String data;
-  int type;
-  Map<String, dynamic>? map;
+  String tableName;
+  Map<String, dynamic> changedData;
+  int changeType;
 
   ModelChange({
     required this.id,
-    required this.table,
-    required this.data,
-    required this.type,
-    this.map,
+    required this.tableName,
+    required this.changedData,
+    required this.changeType,
   });
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'table': table,
-      'data': data,
-      'type': type,
-      'map': map == null
-          ? null
-          : map is String
-              ? map
-              : jsonEncode(map),
+      'table_name': tableName,
+      'changed_data':
+          changedData is String ? changedData : jsonEncode(changedData),
+      'changed_type': changeType,
     };
   }
 
   static Future<ModelChange> fromMap(Map<String, dynamic> map) async {
-    Map<String, dynamic>? dataMap;
-    if (map.containsKey('map') && map['map'] != null) {
-      if (map['map'] is String) {
-        dataMap = jsonDecode(map['map']);
-      } else {
-        dataMap = map['map'];
-      }
-    }
+    final changedData = map['changed_data'];
     return ModelChange(
       id: map['id'],
-      table: map['table'],
-      data: map['data'],
-      type: getValueFromMap(map, 'type'),
-      map: dataMap,
+      tableName: map['table_name'],
+      changedData:
+          changedData is String ? jsonDecode(changedData) : changedData,
+      changeType: getValueFromMap(map, 'changed_type'),
     );
   }
 
   static Future<void> addUpdate(
-      String changeId, String table, String changeData, int changeType,
-      {Map<String, dynamic>? dataMap}) async {
+      String changeId, String table, Object changedData, int changeType) async {
     ModelChange change = await ModelChange.fromMap({
       'id': changeId,
-      'table': table,
-      'data': changeData,
-      'type': changeType,
-      'map': jsonEncode(dataMap),
+      'table_name': table,
+      'changed_data': changedData,
+      'changed_type': changeType,
     });
     await change.upcert();
   }
@@ -72,7 +57,7 @@ class ModelChange {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "change",
+      "changes",
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
@@ -89,8 +74,8 @@ class ModelChange {
     final placeholders = List.filled(changeTypes.length, '?').join(',');
     changeTypes.insert(0, table);
     int? limitOnItemsOnly = table == "item" ? 100 : null;
-    List<Map<String, dynamic>> rows = await db.query("change",
-        where: "name = ? AND type IN ($placeholders)",
+    List<Map<String, dynamic>> rows = await db.query("changes",
+        where: "table_name = ? AND changed_type IN ($placeholders)",
         whereArgs: changeTypes,
         limit: limitOnItemsOnly);
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -101,8 +86,8 @@ class ModelChange {
     final db = await dbHelper.database;
     int changeType = SyncChangeTask.pushFile.value;
     List<Map<String, dynamic>> rows = await db.query(
-      "change",
-      where: "type = ?",
+      "changes",
+      where: "changed_type = ?",
       whereArgs: [changeType],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -113,8 +98,8 @@ class ModelChange {
     final db = await dbHelper.database;
     int changeType = SyncChangeTask.deleteFile.value;
     List<Map<String, dynamic>> rows = await db.query(
-      "change",
-      where: "type = ?",
+      "changes",
+      where: "changed_type = ?",
       whereArgs: [changeType],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -125,8 +110,8 @@ class ModelChange {
     final db = await dbHelper.database;
     int changeType = SyncChangeTask.fetchFile.value;
     List<Map<String, dynamic>> rows = await db.query(
-      "change",
-      where: "type = ?",
+      "changes",
+      where: "changed_type = ?",
       whereArgs: [changeType],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -143,15 +128,15 @@ class ModelChange {
     ModelChange? change = await get(changeId);
     if (change != null) {
       SyncChangeTask? currentType =
-          SyncChangeTaskExtension.fromValue(change.type);
+          SyncChangeTaskExtension.fromValue(change.changeType);
       SyncChangeTask nextTaskType = getNextTaskType(currentType!);
       SyncState newState = getNextSyncState(currentType);
       if (updateState) await updateTypeState(changeId, newState);
       if (nextTaskType == SyncChangeTask.delete) {
         await change.delete();
       } else {
-        change.type = nextTaskType.value;
-        await change.update(["type"]);
+        change.changeType = nextTaskType.value;
+        await change.update(["changed_type"]);
         logger.info(
             "upgradeType|${change.id}|${currentType.value}->${nextTaskType.value}");
       }
@@ -162,7 +147,7 @@ class ModelChange {
       String changeId, SyncState newState) async {
     ModelChange? change = await get(changeId);
     if (change != null) {
-      String table = change.table;
+      String table = change.tableName;
       List<String> userIdRowId = changeId.split("|");
       String rowId = userIdRowId[1];
       switch (table) {}
@@ -171,7 +156,7 @@ class ModelChange {
 
   static Future<ModelChange?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> list = await dbHelper.getWithId("change", id);
+    List<Map<String, dynamic>> list = await dbHelper.getWithId("changes", id);
     if (list.isNotEmpty) {
       Map<String, dynamic> map = list.first;
       return await fromMap(map);
@@ -182,7 +167,7 @@ class ModelChange {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("change", map);
+    int inserted = await dbHelper.insert("changes", map);
     return inserted;
   }
 
@@ -193,7 +178,7 @@ class ModelChange {
     for (String attr in attrs) {
       updateMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update("change", updateMap, id);
+    int updated = await dbHelper.update("changes", updateMap, id);
     return updated;
   }
 
@@ -201,18 +186,18 @@ class ModelChange {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("change", id);
+    List<Map<String, dynamic>> rows = await dbHelper.getWithId("changes", id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("change", map);
+      result = await dbHelper.insert("changes", map);
     } else {
-      result = await dbHelper.update("change", map, id);
+      result = await dbHelper.update("changes", map, id);
     }
     return result;
   }
 
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete("change", id);
+    int deleted = await dbHelper.delete("changes", id);
     return deleted;
   }
 
@@ -224,7 +209,7 @@ class ModelChange {
       await item.delete(withServerSync: true);
     }
     final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete("change", id);
+    int deleted = await dbHelper.delete("changes", id);
     return deleted;
   }
 

@@ -462,12 +462,6 @@ Future<void> initializeDirectories() async {
   }
 }
 
-Future<String> getHashOfFile(File file) async {
-  final Stream<List<int>> stream = file.openRead();
-  final sha256hash = await stream.transform(sha256).first;
-  return sha256hash.toString();
-}
-
 Future<String> getHashOfString(String stringForHash) async {
   return sha256.convert(utf8.encode(stringForHash)).toString();
 }
