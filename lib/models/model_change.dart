@@ -57,7 +57,7 @@ class ModelChange {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "changes",
+      Tables.changes.string,
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
@@ -73,8 +73,8 @@ class ModelChange {
     // Generate placeholders (?, ?, ?) for the number of IDs
     final placeholders = List.filled(changeTypes.length, '?').join(',');
     changeTypes.insert(0, table);
-    int? limitOnItemsOnly = table == "item" ? 100 : null;
-    List<Map<String, dynamic>> rows = await db.query("changes",
+    int? limitOnItemsOnly = table == Tables.items.string ? 100 : null;
+    List<Map<String, dynamic>> rows = await db.query(Tables.changes.string,
         where: "table_name = ? AND changed_type IN ($placeholders)",
         whereArgs: changeTypes,
         limit: limitOnItemsOnly);
@@ -86,7 +86,7 @@ class ModelChange {
     final db = await dbHelper.database;
     int changeType = SyncChangeTask.pushFile.value;
     List<Map<String, dynamic>> rows = await db.query(
-      "changes",
+      Tables.changes.string,
       where: "changed_type = ?",
       whereArgs: [changeType],
     );
@@ -98,7 +98,7 @@ class ModelChange {
     final db = await dbHelper.database;
     int changeType = SyncChangeTask.deleteFile.value;
     List<Map<String, dynamic>> rows = await db.query(
-      "changes",
+      Tables.changes.string,
       where: "changed_type = ?",
       whereArgs: [changeType],
     );
@@ -110,7 +110,7 @@ class ModelChange {
     final db = await dbHelper.database;
     int changeType = SyncChangeTask.fetchFile.value;
     List<Map<String, dynamic>> rows = await db.query(
-      "changes",
+      Tables.changes.string,
       where: "changed_type = ?",
       whereArgs: [changeType],
     );
@@ -119,11 +119,11 @@ class ModelChange {
 
   static Future<void> upgradeTypeForIds(List<String> ids) async {
     for (String id in ids) {
-      await upgradeSyncTask(id);
+      await upgradeChangeTask(id);
     }
   }
 
-  static Future<void> upgradeSyncTask(String changeId,
+  static Future<void> upgradeChangeTask(String changeId,
       {bool updateState = true}) async {
     ModelChange? change = await get(changeId);
     if (change != null) {
@@ -156,7 +156,8 @@ class ModelChange {
 
   static Future<ModelChange?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> list = await dbHelper.getWithId("changes", id);
+    List<Map<String, dynamic>> list =
+        await dbHelper.getWithId(Tables.changes.string, id);
     if (list.isNotEmpty) {
       Map<String, dynamic> map = list.first;
       return await fromMap(map);
@@ -167,7 +168,7 @@ class ModelChange {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("changes", map);
+    int inserted = await dbHelper.insert(Tables.changes.string, map);
     return inserted;
   }
 
@@ -178,7 +179,7 @@ class ModelChange {
     for (String attr in attrs) {
       updateMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update("changes", updateMap, id);
+    int updated = await dbHelper.update(Tables.changes.string, updateMap, id);
     return updated;
   }
 
@@ -186,18 +187,19 @@ class ModelChange {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("changes", id);
+    List<Map<String, dynamic>> rows =
+        await dbHelper.getWithId(Tables.changes.string, id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("changes", map);
+      result = await dbHelper.insert(Tables.changes.string, map);
     } else {
-      result = await dbHelper.update("changes", map, id);
+      result = await dbHelper.update(Tables.changes.string, map, id);
     }
     return result;
   }
 
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete("changes", id);
+    int deleted = await dbHelper.delete(Tables.changes.string, id);
     return deleted;
   }
 
@@ -209,17 +211,16 @@ class ModelChange {
       await item.delete(withServerSync: true);
     }
     final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete("changes", id);
+    int deleted = await dbHelper.delete(Tables.changes.string, id);
     return deleted;
   }
 
   static SyncChangeTask getPushChangeTaskType(
       String table, Map<String, dynamic> map) {
-    switch (table) {
-      case "part":
-        return SyncChangeTask.pushMapFile;
-      default:
-        return SyncChangeTask.pushMap;
+    if (table == Tables.parts.string) {
+      return SyncChangeTask.pushMapFile;
+    } else {
+      return SyncChangeTask.pushMap;
     }
   }
 

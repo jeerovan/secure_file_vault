@@ -1,3 +1,5 @@
+import 'package:file_vault_bb/utils/utils_sync.dart';
+
 import '../utils/common.dart';
 import '../utils/enums.dart';
 import 'model_state.dart';
@@ -66,14 +68,15 @@ class ModelFile {
   static Future<List<ModelFile>> pendingForPush() async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows =
-        await db.query("files", where: "uploaded_at  > ?", whereArgs: [0]);
+    List<Map<String, dynamic>> rows = await db
+        .query(Tables.files.string, where: "uploaded_at  > ?", whereArgs: [0]);
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
   static Future<ModelFile?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("files", id);
+    List<Map<String, dynamic>> rows =
+        await dbHelper.getWithId(Tables.files.string, id);
     if (rows.isNotEmpty) {
       Map<String, dynamic> map = rows.first;
       return await fromMap(map);
@@ -84,15 +87,15 @@ class ModelFile {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("files", map);
+    int inserted = await dbHelper.insert(Tables.files.string, map);
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (syncEnabled) {
-      map["table"] = "files";
-      /* SyncUtils.encryptAndPushChange(
+      map["table"] = Tables.files.string;
+      SyncUtils.logChangeToPush(
         map,
-      ); */
+      );
     }
     return inserted;
   }
@@ -105,14 +108,14 @@ class ModelFile {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update("files", updatedMap, id);
+    int updated = await dbHelper.update(Tables.files.string, updatedMap, id);
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (pushToSync && syncEnabled) {
       map["updated_at"] = utcNow;
-      map["table"] = "file";
-      //SyncUtils.encryptAndPushChange(map, mediaChanges: false);
+      map["table"] = Tables.files.string;
+      SyncUtils.logChangeToPush(map, mediaChanges: false);
     }
     return updated;
   }
@@ -121,14 +124,15 @@ class ModelFile {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("files", id);
+    List<Map<String, dynamic>> rows =
+        await dbHelper.getWithId(Tables.files.string, id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("files", map);
+      result = await dbHelper.insert(Tables.files.string, map);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update("files", map, id);
+        result = await dbHelper.update(Tables.files.string, map, id);
       } else {
         result = 0;
       }
@@ -142,18 +146,18 @@ class ModelFile {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 2;
     Map<String, dynamic> map = toMap();
-    int deleted = await dbHelper.delete("files", id);
+    int deleted = await dbHelper.delete(Tables.files.string, id);
     //TODO parts should be deleted also
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (withServerSync && syncEnabled) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
-      map["table"] = "file";
-      /* SyncUtils.encryptAndPushChange(
+      map["table"] = Tables.files.string;
+      SyncUtils.logChangeToPush(
         map,
         deleteTask: deleteTask,
-      ); */
+      );
     }
     return deleted;
   }

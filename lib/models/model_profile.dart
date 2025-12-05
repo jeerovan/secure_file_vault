@@ -1,3 +1,5 @@
+import 'package:file_vault_bb/utils/enums.dart';
+
 import '../utils/common.dart';
 
 import '../storage/storage_sqlite.dart';
@@ -42,14 +44,15 @@ class ModelProfile {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "profile",
+      Tables.profiles.string,
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
   static Future<ModelProfile?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> list = await dbHelper.getWithId("profile", id);
+    List<Map<String, dynamic>> list =
+        await dbHelper.getWithId(Tables.profiles.string, id);
     if (list.isNotEmpty) {
       Map<String, dynamic> map = list.first;
       return await fromMap(map);
@@ -60,7 +63,7 @@ class ModelProfile {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("profile", map);
+    int inserted = await dbHelper.insert(Tables.profiles.string, map);
     return inserted;
   }
 
@@ -73,23 +76,24 @@ class ModelProfile {
       updatedMap[attr] = map[attr];
     }
     //SyncUtils.pushProfileChange(updatedMap);
-    int updated = await dbHelper.update("profile", updatedMap, id);
+    int updated = await dbHelper.update(Tables.profiles.string, updatedMap, id);
     return updated;
   }
 
-  Future<int> upcertChangeFromServer() async {
+  Future<int> upcertFromServer() async {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("profile", id);
+    List<Map<String, dynamic>> rows =
+        await dbHelper.getWithId(Tables.profiles.string, id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("profile", map);
+      result = await dbHelper.insert(Tables.profiles.string, map);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
         map.remove("email");
-        result = await dbHelper.update("profile", map, id);
+        result = await dbHelper.update(Tables.profiles.string, map, id);
       } else {
         result = 0;
       }
@@ -99,7 +103,7 @@ class ModelProfile {
 
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete("profile", id);
+    int deleted = await dbHelper.delete(Tables.profiles.string, id);
     // delete related categories
     return deleted;
   }

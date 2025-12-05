@@ -69,7 +69,8 @@ class StorageSqlite {
       databaseFactory = databaseFactoryFfi;
     }
     await instance.ensureInitialized();
-    List<Map<String, dynamic>> keyValuePairs = await instance.getAll('setting');
+    List<Map<String, dynamic>> keyValuePairs =
+        await instance.getAll(Tables.settings.string);
     ModelSetting.settingJson = {
       for (var pair in keyValuePairs) pair['id']: pair['value']
     };
@@ -99,8 +100,8 @@ class StorageSqlite {
     await initTables(db);
     logger.info('Database created with version: $version');
     int now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await db
-        .insert("setting", {"id": AppString.installedAt.string, "value": now});
+    await db.insert(Tables.settings.string,
+        {"id": AppString.installedAt.string, "value": now});
     await createDbEntriesOnFreshInstall(db);
   }
 
@@ -110,8 +111,10 @@ class StorageSqlite {
   }
 
   Future<void> initTables(Database db) async {
+    // email required for internal communication
+    // username required for sharing files
     await db.execute('''
-      CREATE TABLE profile (
+      CREATE TABLE profiles (
         id TEXT PRIMARY KEY,
         email TEXT NOT NULL,
         username TEXT,
@@ -119,19 +122,7 @@ class StorageSqlite {
         created_at INTEGER
       )
     ''');
-    /* // type as 0:User 1:System(FiFe)
-    await db.execute('''
-      CREATE TABLE device (
-        id TEXT PRIMARY KEY,
-        type INTEGER DEFAULT 0,
-        updated_at INTEGER,
-        created_at INTEGER
-      )
-    '''); */
     // id as hmac sha-256
-    // state: 1:Local, 2:Local+Server 3:Server
-    // thumbnail for a file is static
-    // size can track occupied storage
     await db.execute('''
       CREATE TABLE files (
         id TEXT PRIMARY KEY,
@@ -145,7 +136,7 @@ class StorageSqlite {
         updated_at INTEGER
       )
     ''');
-    // id as uuid
+    // id as sha1 of encrypted part as required by bb
     //state:
     await db.execute('''
       CREATE TABLE parts (
@@ -158,12 +149,12 @@ class StorageSqlite {
         nonce TEXT NOT NULL,
         created_at INTEGER,
         updated_at INTEGER,
-        FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE
+        FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
       )
     ''');
     // id: uuid
     // path: only for synced folders, rest will be relative by parent_id
-    // name: file, folder, device
+    // name: file, folder , device (will not have path, rootId and parentId)
     // rootId: all folders and files will have item(id) of synced folder
     // size required while reconciliation for quickly find matching files
     await db.execute('''
@@ -180,29 +171,29 @@ class StorageSqlite {
         archived_at INTEGER,
         created_at INTEGER,
         updated_at INTEGER,
-        FOREIGN KEY (parent_id) REFERENCES item(id) ON DELETE CASCADE,
-        FOREIGN KEY (file_id) REFERENCES file(id) ON DELETE CASCADE
+        FOREIGN KEY (parent_id) REFERENCES items(id) ON DELETE CASCADE,
+        FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
       )
     ''');
     await db.execute('''
-        CREATE VIRTUAL TABLE item_fts USING fts4(
+        CREATE VIRTUAL TABLE items_fts USING fts4(
             name, 
             tokenize=unicode61
         );
     ''');
     await db.execute('''
-        CREATE TRIGGER item_ai AFTER INSERT ON item BEGIN
-          INSERT INTO item_fts(docid, name) VALUES(new.rowid, new.name);
+        CREATE TRIGGER items_ai AFTER INSERT ON items BEGIN
+          INSERT INTO items_fts(docid, name) VALUES(new.rowid, new.name);
         END;
     ''');
     await db.execute('''
-        CREATE TRIGGER item_ad AFTER DELETE ON item BEGIN
-          DELETE FROM item_fts WHERE docid = old.rowid;
+        CREATE TRIGGER items_ad AFTER DELETE ON items BEGIN
+          DELETE FROM items_fts WHERE docid = old.rowid;
         END;
     ''');
     await db.execute('''
-        CREATE TRIGGER item_au AFTER UPDATE ON item BEGIN
-          UPDATE item_fts SET name = new.name WHERE docid = old.rowid;
+        CREATE TRIGGER items_au AFTER UPDATE ON items BEGIN
+          UPDATE items_fts SET name = new.name WHERE docid = old.rowid;
         END;
     ''');
     await db.execute('''
@@ -218,8 +209,7 @@ class StorageSqlite {
         id TEXT PRIMARY KEY,
         table_name TEXT NOT NULL,
         changed_data TEXT NOT NULL,
-        changed_type INTEGER NOT NULL,
-        map TEXT
+        change_type INTEGER NOT NULL
       )
     ''');
     await db.execute('''
@@ -285,312 +275,6 @@ class StorageSqlite {
 
   Future<void> clear(String tableName) async {
     final db = await instance.database;
-    await db.execute('DELETE FROM $tableName');
-  }
-
-  // db migration from 7 to 8
-  Future<void> dbMigration_8(Database db) async {
-    // Create new tables
-    await initTables(db);
-
-    // Create a category first
-    int at = DateTime.now().toUtc().millisecondsSinceEpoch;
-    Uuid uuid = const Uuid();
-    String categoryId = uuid.v4();
-    Color color = getIndexedColor(1);
-    await db.insert("category", {
-      "id": categoryId,
-      "title": "DND",
-      "color": colorToHex(color),
-      "thumbnail": null,
-      "position": 0,
-      "archived_at": 0,
-      "at": at,
-      "updated_at": at,
-    });
-
-    // create note groups
-    int groupCount = 1;
-    List<Map<String, dynamic>> groupRows = await db.query(
-      "notegroups",
-    );
-    for (Map<String, dynamic> groupRow in groupRows) {
-      if (groupRow.containsKey("uuid") &&
-          groupRow.containsKey("title") &&
-          groupRow.containsKey("image")) {
-        final String? groupUuid = groupRow["uuid"];
-        final String title = groupRow["title"];
-        final String image = groupRow["image"];
-        final int? order = groupRow["order"];
-        if (groupUuid == null) continue;
-        final int at = groupRow["updatedAt"];
-        String? thumbnail;
-        if (image.length > 10) {
-          File file = File(image);
-          if (file.existsSync()) {
-            Uint8List bytes = await file.readAsBytes();
-            Uint8List? thumbnailBytes = await compute(getImageThumbnail, bytes);
-            thumbnail = base64Encode(thumbnailBytes!);
-          }
-        }
-        int position = order ?? groupCount * 1000;
-        Color color = getIndexedColor(groupCount);
-        if (groupUuid.isNotEmpty && title.isNotEmpty) {
-          await db.insert("itemgroup", {
-            "id": groupUuid,
-            "category_id": categoryId,
-            "title": title,
-            "pinned": 0,
-            "position": position,
-            "archived_at": 0,
-            "color": colorToHex(color),
-            "thumbnail": thumbnail,
-            "at": at,
-            "updated_at": at
-          });
-        }
-        groupCount = groupCount + 1;
-      }
-    }
-
-    // process notes
-    List<Map<String, dynamic>> noteRows = await db.query(
-      "notes",
-    );
-    for (Map<String, dynamic> noteRow in noteRows) {
-      if (noteRow.containsKey("uuid") && noteRow.containsKey("group_uuid")) {
-        String? groupId = noteRow["group_uuid"];
-        if (groupId == null) continue;
-        List<Map<String, dynamic>> groupRows =
-            await db.query("itemgroup", where: "id = ?", whereArgs: [groupId]);
-        if (groupRows.isNotEmpty) {
-          String? noteId = noteRow["uuid"];
-          if (noteId == null) continue;
-          int noteType = noteRow["note_type"];
-          String noteText = noteRow["text"];
-          String? mediaPath = noteRow["media"];
-          double? lat = noteRow["latitude"];
-          double? lng = noteRow["longitude"];
-          int at = noteRow["updatedAt"];
-          switch (noteType) {
-            case 1:
-              await db.insert("item", {
-                "id": noteId,
-                "group_id": groupId,
-                "text": noteText,
-                "starred": 0,
-                "pinned": 0,
-                "archived_at": 0,
-                "type": 100000,
-                "data": null,
-                "thumbnail": null,
-                "state": 0,
-                "at": at,
-                "updated_at": at
-              });
-              break;
-            case 2:
-              if (mediaPath != null) {
-                File imageFile = File(mediaPath);
-                if (imageFile.existsSync()) {
-                  Map<String, dynamic> imageDataMap = {
-                    "path": mediaPath,
-                    "mime": "image/jpg",
-                    "name": "",
-                    "size": 0
-                  };
-                  String imageData = jsonEncode(imageDataMap);
-                  await db.insert("item", {
-                    "id": noteId,
-                    "group_id": groupId,
-                    "text": "DND|#image",
-                    "starred": 0,
-                    "pinned": 0,
-                    "archived_at": 0,
-                    "type": 110000,
-                    "data": imageData,
-                    "thumbnail": null,
-                    "state": 0,
-                    "at": at,
-                    "updated_at": at
-                  });
-                }
-              }
-              break;
-            case 3:
-              if (mediaPath != null) {
-                File audioFile = File(mediaPath);
-                if (audioFile.existsSync()) {
-                  Map<String, dynamic> audioDataMap = {
-                    "path": mediaPath,
-                    "mime": "audio/mp4",
-                    "name": "",
-                    "size": 0,
-                    "duration": "00:00"
-                  };
-                  String audioData = jsonEncode(audioDataMap);
-                  await db.insert("item", {
-                    "id": noteId,
-                    "group_id": groupId,
-                    "text": "DND|#audio",
-                    "starred": 0,
-                    "pinned": 0,
-                    "archived_at": 0,
-                    "type": 130000,
-                    "data": audioData,
-                    "thumbnail": null,
-                    "state": 0,
-                    "at": at,
-                    "updated_at": at
-                  });
-                }
-              }
-              break;
-            case 6:
-              if (lat != null && lng != null) {
-                Map<String, dynamic> locationDataMap = {"lat": lat, "lng": lng};
-                String locationData = jsonEncode(locationDataMap);
-                await db.insert("item", {
-                  "id": noteId,
-                  "group_id": groupId,
-                  "text": "DND|#location",
-                  "starred": 0,
-                  "pinned": 0,
-                  "archived_at": 0,
-                  "type": 150000,
-                  "data": locationData,
-                  "thumbnail": null,
-                  "state": 0,
-                  "at": at,
-                  "updated_at": at
-                });
-              }
-              break;
-          }
-        }
-      }
-    }
-    await db.insert("setting", {"id": "process_media", "value": "yes"});
-  }
-
-  Future<void> dbMigration_9(Database db) async {
-    await db.execute("ALTER TABLE category ADD COLUMN position INTEGER");
-    await db.execute("ALTER TABLE category ADD COLUMN archived_at INTEGER");
-
-    await db.execute("ALTER TABLE itemgroup ADD COLUMN position INTEGER");
-  }
-
-  Future<void> dbMigration_10(Database db) async {
-    await db.execute('''
-      CREATE TABLE itemfile (
-        id TEXT PRIMARY KEY,
-        hash TEXT NOT NULL,
-        FOREIGN KEY (id) REFERENCES item(id) ON DELETE CASCADE
-        )
-    ''');
-    await db.execute('''
-      CREATE INDEX idx_itemfile_hash ON itemfile(hash)
-    ''');
-    await db.execute("ALTER TABLE category ADD COLUMN updated_at INTEGER");
-    await db.execute("ALTER TABLE itemgroup ADD COLUMN updated_at INTEGER");
-    await db.execute("ALTER TABLE item ADD COLUMN updated_at INTEGER");
-  }
-
-  Future<void> dbMigration_11(Database db) async {
-    await db.execute('''
-      CREATE TABLE profile (
-        id TEXT PRIMARY KEY,
-        email TEXT NOT NULL,
-        username TEXT,
-        thumbnail TEXT,
-        url TEXT,
-        type INTEGER,
-        updated_at INTEGER,
-        at INTEGER
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE change (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        data TEXT NOT NULL,
-        type INTEGER NOT NULL,
-        thumbnail TEXT,
-        map TEXT
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE files (
-        id TEXT PRIMARY KEY,
-        change_id TEXT NOT NULL,
-        path TEXT NOT NULL,
-        size INTEGER NOT NULL,
-        parts INTEGER NOT NULL,
-        parts_uploaded INTEGER NOT NULL,
-        key_cipher TEXT NOT NULL,
-        key_nonce TEXT NOT NULL,
-        uploaded_at INTEGER NOT NULL,
-        b2_id TEXT,
-        FOREIGN KEY (change_id) REFERENCES change(id) ON DELETE CASCADE
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE parts (
-        id TEXT PRIMARY KEY,
-        file_id TEXT NOT NULL,
-        part_number INTEGER NOT NULL,
-        FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
-      )
-    ''');
-    await db.execute("ALTER TABLE category ADD COLUMN state INTEGER DEFAULT 0");
-    await db.execute("ALTER TABLE category ADD COLUMN profile_id TEXT");
-    await db.execute('''
-      CREATE VIRTUAL TABLE item_fts USING fts4(text, item_id);
-    ''');
-    await db.execute('''
-      CREATE TRIGGER item_ai AFTER INSERT ON item BEGIN
-        INSERT INTO item_fts(rowid, text, item_id) VALUES (new.rowid, new.text, new.id);
-      END;
-    ''');
-    await db.execute('''
-      CREATE TRIGGER item_au AFTER UPDATE ON item BEGIN
-        UPDATE item_fts SET text = new.text WHERE item_id = old.id;
-      END;
-    ''');
-    await db.execute('''
-      CREATE TRIGGER item_ad AFTER DELETE ON item BEGIN
-        DELETE FROM item_fts WHERE item_id = old.id;
-      END;
-    ''');
-    await db.execute('''
-        INSERT INTO item_fts(rowid, text, item_id) 
-        SELECT rowid, text, id FROM item;
-      ''');
-  }
-
-  Future<void> dbMigration_12(Database db) async {
-    bool columnExists = await _checkColumnExists(db, 'category', 'state');
-    if (!columnExists) {
-      await db
-          .execute("ALTER TABLE category ADD COLUMN state INTEGER DEFAULT 0");
-    }
-  }
-
-  Future<void> dbMigration_13(Database db) async {
-    await db.execute('''
-      CREATE TABLE preferences (
-        id TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      )
-    ''');
-    await db.execute(
-      'CREATE TABLE logs(id INTEGER PRIMARY KEY AUTOINCREMENT, log TEXT)',
-    );
-  }
-
-  Future<bool> _checkColumnExists(
-      Database db, String tableName, String columnName) async {
-    final result = await db.rawQuery('PRAGMA table_info($tableName);');
-    return result.any((row) => row['name'] == columnName);
+    await db.delete(tableName);
   }
 }

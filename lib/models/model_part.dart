@@ -1,33 +1,62 @@
+import 'package:file_vault_bb/utils/enums.dart';
+
+import '../utils/common.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelPart {
   String id;
   String fileId;
   int partNumber;
+  int size;
+  int state;
+  String cipher;
+  String nonce;
+  int createdAt;
+  int updatedAt;
 
-  ModelPart({
-    required this.id,
-    required this.fileId,
-    required this.partNumber,
-  });
+  ModelPart(
+      {required this.id,
+      required this.fileId,
+      required this.partNumber,
+      required this.size,
+      required this.state,
+      required this.cipher,
+      required this.nonce,
+      required this.updatedAt,
+      required this.createdAt});
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'file_id': fileId,
       'part_number': partNumber,
+      'size': size,
+      'state': state,
+      'cipher': cipher,
+      'nonce': nonce,
+      'updated_at': updatedAt,
+      'created_at': createdAt,
     };
   }
 
   static Future<ModelPart> fromMap(Map<String, dynamic> map) async {
     return ModelPart(
-        id: map['id'], fileId: map['file_id'], partNumber: map['part_number']);
+      id: map['id'],
+      fileId: map['file_id'],
+      partNumber: map["part_number"],
+      size: map['size'],
+      state: map['state'],
+      cipher: map["cipher"],
+      nonce: map["nonce"],
+      createdAt: getValueFromMap(map, "created_at", defaultValue: 0),
+      updatedAt: getValueFromMap(map, "updated_at", defaultValue: 0),
+    );
   }
 
   static Future<List<String>> shasForFileId(String fileId) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows = await db.query("parts",
+    List<Map<String, dynamic>> rows = await db.query(Tables.parts.string,
         columns: ["id"],
         where: "file_id = ?",
         whereArgs: [fileId],
@@ -39,18 +68,10 @@ class ModelPart {
     return shas;
   }
 
-  static Future<List<ModelPart>> all() async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows = await db.query(
-      "parts",
-    );
-    return await Future.wait(rows.map((map) => fromMap(map)));
-  }
-
   static Future<ModelPart?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> list = await dbHelper.getWithId("parts", id);
+    List<Map<String, dynamic>> list =
+        await dbHelper.getWithId(Tables.parts.string, id);
     if (list.isNotEmpty) {
       Map<String, dynamic> map = list.first;
       return await fromMap(map);
@@ -61,14 +82,18 @@ class ModelPart {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("parts", map);
+    int inserted = await dbHelper.insert(Tables.parts.string, map);
     return inserted;
   }
 
   Future<int> update(List<String> attrs) async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int updated = await dbHelper.update("parts", map, id);
+    Map<String, dynamic> updatedMap = {};
+    for (String attr in attrs) {
+      updatedMap[attr] = map[attr];
+    }
+    int updated = await dbHelper.update(Tables.parts.string, updatedMap, id);
     return updated;
   }
 
@@ -76,14 +101,15 @@ class ModelPart {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("item", id);
+    List<Map<String, dynamic>> rows =
+        await dbHelper.getWithId(Tables.parts.string, id);
     if (rows.isEmpty) {
-      result = await dbHelper.insert("item", map);
+      result = await dbHelper.insert(Tables.parts.string, map);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update("item", map, id);
+        result = await dbHelper.update(Tables.parts.string, map, id);
       } else {
         result = 0;
       }
@@ -95,7 +121,7 @@ class ModelPart {
 
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete("parts", id);
+    int deleted = await dbHelper.delete(Tables.parts.string, id);
     return deleted;
   }
 }

@@ -1,3 +1,5 @@
+import 'package:file_vault_bb/utils/utils_sync.dart';
+
 import '../models/model_file.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
@@ -81,7 +83,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "items",
+      Tables.items.string,
       where: "parent_id = ?",
       whereArgs: [
         item.id,
@@ -108,7 +110,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "items",
+      Tables.items.string,
       where: "root_id = ? AND is_folder = ? AND scan_state = ?",
       whereArgs: [itemId, 1, 0],
     );
@@ -120,7 +122,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "items",
+      Tables.items.string,
       where: "root_id = ? AND is_folder = ? AND scan_state = ? AND size = ?",
       whereArgs: [itemId, 0, 0, size],
     );
@@ -132,7 +134,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "items",
+      Tables.items.string,
       where: "root_id = ? AND is_folder = ? AND scan_state = ? AND file_id = ?",
       whereArgs: [itemId, 0, 0, hash],
     );
@@ -144,7 +146,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "items",
+      Tables.items.string,
       where: "root_id = ? AND scan_state = ?",
       whereArgs: [itemId, 0],
     );
@@ -155,7 +157,7 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
-      "items",
+      Tables.items.string,
       where: "archived_at > ?",
       whereArgs: [0],
       orderBy: 'at DESC',
@@ -178,23 +180,23 @@ class ModelItem {
   static Future<void> resetScanState(String rootItemId) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    await db.execute(
-        'UPDATE items SET scan_state = 0 WHERE root_id = ?', [rootItemId]);
+    await db.update(Tables.items.string, {"scan_state": 0},
+        where: "root_id = ?", whereArgs: [rootItemId]);
   }
 
   static Future<void> setScanState(String itemId, int state) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    await db.execute(
-        'UPDATE items SET scan_state = ? WHERE id = ?', [state, itemId]);
+    await db.update(Tables.items.string, {"scan_state": state},
+        where: "id = ?", whereArgs: [itemId]);
   }
 
   static Future<void> removeAllSyncedFolders() async {
     final deviceId = await getDeviceId();
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    await db.execute(
-        'DELETE from items WHERE path != NULL AND parent_id = ?', [deviceId]);
+    await db.delete(Tables.items.string,
+        where: "path != ? AND parent_id = ?", whereArgs: [null, deviceId]);
   }
 
   static Future<List<ModelItem>> searchItem(String term) async {
@@ -203,7 +205,7 @@ class ModelItem {
     List<Map<String, dynamic>> rows = await db.rawQuery('''
         SELECT * FROM items 
         WHERE rowid IN (
-            SELECT docid FROM item_fts WHERE name MATCH '$term'
+            SELECT docid FROM items_fts WHERE name MATCH '$term'
         );
       ''');
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -211,7 +213,8 @@ class ModelItem {
 
   static Future<ModelItem?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("items", id);
+    List<Map<String, dynamic>> rows =
+        await dbHelper.getWithId(Tables.items.string, id);
     if (rows.isNotEmpty) {
       Map<String, dynamic> map = rows.first;
       return await fromMap(map);
@@ -222,16 +225,16 @@ class ModelItem {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("items", map);
+    int inserted = await dbHelper.insert(Tables.items.string, map);
 
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (syncEnabled) {
-      map["table"] = "items";
-      /* SyncUtils.encryptAndPushChange(
+      map["table"] = Tables.items.string;
+      SyncUtils.logChangeToPush(
         map,
-      ); */
+      );
     }
     return inserted;
   }
@@ -244,14 +247,14 @@ class ModelItem {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update("items", updatedMap, id);
+    int updated = await dbHelper.update(Tables.items.string, updatedMap, id);
     bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
             defaultValue: "no") ==
         "yes";
     if (pushToSync && syncEnabled) {
       map["updated_at"] = utcNow;
-      map["table"] = "items";
-      //SyncUtils.encryptAndPushChange(map, mediaChanges: false);
+      map["table"] = Tables.items.string;
+      SyncUtils.logChangeToPush(map, mediaChanges: false);
     }
     return updated;
   }
@@ -260,14 +263,15 @@ class ModelItem {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows = await dbHelper.getWithId("items", id);
+    List<Map<String, dynamic>> rows =
+        await dbHelper.getWithId(Tables.items.string, id);
     if (rows.isEmpty) {
       result = await insert();
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update("items", map, id);
+        result = await dbHelper.update(Tables.items.string, map, id);
       } else {
         result = 0;
       }
@@ -288,11 +292,11 @@ class ModelItem {
         "yes";
     if (withServerSync && syncEnabled) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
-      map["table"] = "items";
-      /* SyncUtils.encryptAndPushChange(
+      map["table"] = Tables.items.string;
+      SyncUtils.logChangeToPush(
         map,
         deleteTask: deleteTask,
-      ); */
+      );
     }
     return deleted;
   }

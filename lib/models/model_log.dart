@@ -1,3 +1,5 @@
+import 'package:file_vault_bb/utils/enums.dart';
+
 import '../storage/storage_sqlite.dart';
 
 class ModelLog {
@@ -36,7 +38,7 @@ class ModelLog {
     }
     if (searches.isEmpty) {
       List<Map<String, dynamic>> rows =
-          await db.query("logs", orderBy: "id DESC");
+          await db.query(Tables.logs.string, orderBy: "id DESC");
       return await Future.wait(rows.map((map) => fromMap(map)));
     }
 
@@ -44,14 +46,15 @@ class ModelLog {
     final where = searches.map((word) => 'log LIKE ?').join(' AND ');
     final args = searches.map((word) => '%$word%').toList();
 
-    List<Map<String, dynamic>> rows = await db.query('logs',
+    List<Map<String, dynamic>> rows = await db.query(Tables.logs.string,
         where: where, whereArgs: args, orderBy: "id DESC");
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
   static Future<ModelLog?> get(int id) async {
     final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> list = await dbHelper.getWithId("logs", id);
+    List<Map<String, dynamic>> list =
+        await dbHelper.getWithId(Tables.logs.string, id);
     if (list.isNotEmpty) {
       Map<String, dynamic> map = list.first;
       return await fromMap(map);
@@ -62,13 +65,13 @@ class ModelLog {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert("logs", map);
+    int inserted = await dbHelper.insert(Tables.logs.string, map);
     return inserted;
   }
 
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete("logs", id);
+    int deleted = await dbHelper.delete(Tables.logs.string, id);
     // delete related categories
     return deleted;
   }
@@ -76,6 +79,6 @@ class ModelLog {
   static Future<void> clear() async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    await db.execute('DELETE FROM logs');
+    await db.delete(Tables.logs.string);
   }
 }

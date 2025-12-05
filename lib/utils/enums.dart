@@ -9,11 +9,13 @@ enum SetupStep {
   complete,
 }
 
-enum Tables { items, files, parts, changes, settings, states, logs }
+enum Tables { profiles, items, files, parts, changes, settings, states, logs }
 
 extension TablesExtension on Tables {
   String get string {
     switch (this) {
+      case Tables.profiles:
+        return "profiles";
       case Tables.items:
         return "items";
       case Tables.files:
@@ -119,6 +121,10 @@ enum AppString {
   syncInProgress,
   pushedLocalContentForSync,
   lastChangesFetchedAt,
+  lastProfilesChangesFetchedAt,
+  lastFilesChangesFetchedAt,
+  lastItemsChangesFetchedAt,
+  lastPartsChangesFetchedAt,
   hideSyncButton,
 
   // Cipher
@@ -191,6 +197,14 @@ extension AppStringExtension on AppString {
         return "device_id";
       case AppString.lastChangesFetchedAt:
         return "last_changes_fetched_at";
+      case AppString.lastProfilesChangesFetchedAt:
+        return "last_profiles_changes_fetched_at";
+      case AppString.lastFilesChangesFetchedAt:
+        return "last_files_changes_fetched_at";
+      case AppString.lastItemsChangesFetchedAt:
+        return "last_items_changes_fetched_at";
+      case AppString.lastPartsChangesFetchedAt:
+        return "last_parts_changes_fetched_at";
       case AppString.otpSentTo:
         return "otp_sent_to";
       case AppString.otpSentAt:
