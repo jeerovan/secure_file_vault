@@ -336,3 +336,34 @@ extension SyncStateExtension on SyncState {
     }
   }
 }
+
+enum ScanState {
+  initial,
+  exists,
+  modified,
+}
+
+extension ScanStateExtension on ScanState {
+  int get value {
+    switch (this) {
+      case ScanState.initial:
+        return 0;
+      case ScanState.exists:
+        return 1;
+      case ScanState.modified:
+        return 2;
+    }
+  }
+
+  static ScanState? fromValue(int value) {
+    switch (value) {
+      case 0:
+        return ScanState.initial;
+      case 1:
+        return ScanState.exists;
+      case 2:
+        return ScanState.modified;
+    }
+    return null;
+  }
+}

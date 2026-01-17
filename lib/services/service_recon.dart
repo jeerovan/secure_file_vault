@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'package:file_vault_bb/utils/enums.dart';
+
 import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../services/service_logger.dart';
@@ -77,8 +79,8 @@ class ReconciliationService {
       final childPath = path_lib.join(fsPath, fsChild.name);
       if (dbChild != null) {
         // Item with same name exists in DB under the same parent
-        dbChild.scanState = 1;
-        await ModelItem.setScanState(dbChild.id, 1);
+        dbChild.scanState = ScanState.exists.value;
+        await ModelItem.setScanState(dbChild.id, ScanState.exists.value);
         if (fsChild.isFolder) {
           // Recurse into matched folder
           await _reconcileNode(
@@ -90,7 +92,7 @@ class ReconciliationService {
           // Check if the file was modified based on hash
           bool fileModified = await _isFileModified(childPath, dbChild);
           if (fileModified) {
-            await ModelItem.setScanState(dbChild.id, 2);
+            await ModelItem.setScanState(dbChild.id, ScanState.modified.value);
             await _handleModifiedFile(dbChild, fsChild, childPath, timestamp);
           }
         }
@@ -121,7 +123,7 @@ class ReconciliationService {
             String dbItemPath = await ModelItem.getPathForItem(movedDbItem.id);
             movedDbItem.name = fsChild.name;
             movedDbItem.parentId = dbParentId;
-            movedDbItem.scanState = 2;
+            movedDbItem.scanState = ScanState.modified.value;
             await movedDbItem.update(["name", "parent_id", "scan_state"]);
             logger.info("  ~ Moved: $dbItemPath to $childPath");
             if (fsChild.isFolder) {
@@ -245,7 +247,7 @@ class ReconciliationService {
     if (bestMatch != null && bestScore >= jaccardSimilarityThreshold) {
       matched = true;
       bestMatch.name = fsItem.name;
-      bestMatch.scanState = 2;
+      bestMatch.scanState = ScanState.modified.value;
       await bestMatch.update(["name", "scan_state"]);
       // Recurse into the now-matched folder
       await _reconcileNode(
