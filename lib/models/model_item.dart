@@ -1,9 +1,7 @@
 import 'package:file_vault_bb/utils/utils_sync.dart';
 
-import '../models/model_file.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
-import 'model_state.dart';
 import 'package:uuid/uuid.dart';
 import '../storage/storage_sqlite.dart';
 import 'package:path/path.dart' as path_lib;
@@ -226,16 +224,10 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert(Tables.items.string, map);
-
-    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
-            defaultValue: "no") ==
-        "yes";
-    if (syncEnabled) {
-      map["table"] = Tables.items.string;
-      SyncUtils.logChangeToPush(
-        map,
-      );
-    }
+    map["table"] = Tables.items.string;
+    SyncUtils.logChangeToPush(
+      map,
+    );
     return inserted;
   }
 
@@ -248,13 +240,12 @@ class ModelItem {
       updatedMap[attr] = map[attr];
     }
     int updated = await dbHelper.update(Tables.items.string, updatedMap, id);
-    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
-            defaultValue: "no") ==
-        "yes";
-    if (pushToSync && syncEnabled) {
+    if (pushToSync) {
       map["updated_at"] = utcNow;
       map["table"] = Tables.items.string;
-      SyncUtils.logChangeToPush(map, mediaChanges: false);
+      SyncUtils.logChangeToPush(
+        map,
+      );
     }
     return updated;
   }
@@ -281,16 +272,12 @@ class ModelItem {
     return result;
   }
 
-  Future<int> delete({bool withServerSync = false}) async {
+  Future<int> delete({bool pushToSync = false}) async {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 1;
     Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete("items", id);
-
-    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
-            defaultValue: "no") ==
-        "yes";
-    if (withServerSync && syncEnabled) {
+    if (pushToSync) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
       map["table"] = Tables.items.string;
       SyncUtils.logChangeToPush(

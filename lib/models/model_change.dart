@@ -13,13 +13,14 @@ class ModelChange {
   String tableName;
   Map<String, dynamic> changedData;
   int changeType;
+  int updatedAt;
 
-  ModelChange({
-    required this.id,
-    required this.tableName,
-    required this.changedData,
-    required this.changeType,
-  });
+  ModelChange(
+      {required this.id,
+      required this.tableName,
+      required this.changedData,
+      required this.changeType,
+      required this.updatedAt});
 
   Map<String, dynamic> toMap() {
     return {
@@ -28,18 +29,20 @@ class ModelChange {
       'changed_data':
           changedData is String ? changedData : jsonEncode(changedData),
       'changed_type': changeType,
+      'updated_at': updatedAt
     };
   }
 
   static Future<ModelChange> fromMap(Map<String, dynamic> map) async {
+    int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     final changedData = map['changed_data'];
     return ModelChange(
-      id: map['id'],
-      tableName: map['table_name'],
-      changedData:
-          changedData is String ? jsonDecode(changedData) : changedData,
-      changeType: getValueFromMap(map, 'changed_type'),
-    );
+        id: map['id'],
+        tableName: map['table_name'],
+        changedData:
+            changedData is String ? jsonDecode(changedData) : changedData,
+        changeType: getValueFromMap(map, 'changed_type'),
+        updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow));
   }
 
   static Future<void> addUpdate(
@@ -62,7 +65,7 @@ class ModelChange {
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<List<ModelChange>> requiresMapPushForTable(String table) async {
+  static Future<List<ModelChange>> fetch100MapPushForTable(String table) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<dynamic> changeTypes = [
@@ -73,11 +76,11 @@ class ModelChange {
     // Generate placeholders (?, ?, ?) for the number of IDs
     final placeholders = List.filled(changeTypes.length, '?').join(',');
     changeTypes.insert(0, table);
-    int? limitOnItemsOnly = table == Tables.items.string ? 100 : null;
+    int? singlePushLimit = 100;
     List<Map<String, dynamic>> rows = await db.query(Tables.changes.string,
         where: "table_name = ? AND changed_type IN ($placeholders)",
         whereArgs: changeTypes,
-        limit: limitOnItemsOnly);
+        limit: singlePushLimit);
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
@@ -117,21 +120,21 @@ class ModelChange {
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<void> upgradeTypeForIds(List<String> ids) async {
-    for (String id in ids) {
-      await upgradeChangeTask(id);
+  static Future<void> updateChangeState(List<ModelChange> changes) async {
+    for (ModelChange change in changes) {
+      await upgradeChangeTask(change);
     }
   }
 
-  static Future<void> upgradeChangeTask(String changeId,
+  static Future<void> upgradeChangeTask(ModelChange changeTask,
       {bool updateState = true}) async {
-    ModelChange? change = await get(changeId);
-    if (change != null) {
+    ModelChange? change = await get(changeTask.id);
+    if (change != null && change.updatedAt == changeTask.updatedAt) {
       SyncChangeTask? currentType =
           SyncChangeTaskExtension.fromValue(change.changeType);
       SyncChangeTask nextTaskType = getNextTaskType(currentType!);
       SyncState newState = getNextSyncState(currentType);
-      if (updateState) await updateTypeState(changeId, newState);
+      if (updateState) await updateTypeState(change.id, newState);
       if (nextTaskType == SyncChangeTask.delete) {
         await change.delete();
       } else {
@@ -175,7 +178,8 @@ class ModelChange {
   Future<int> update(List<String> attrs) async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    Map<String, dynamic> updateMap = {};
+    int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
+    Map<String, dynamic> updateMap = {"updated_at": utcNow};
     for (String attr in attrs) {
       updateMap[attr] = map[attr];
     }
@@ -192,6 +196,8 @@ class ModelChange {
     if (rows.isEmpty) {
       result = await dbHelper.insert(Tables.changes.string, map);
     } else {
+      int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
+      map["updated_at"] = utcNow;
       result = await dbHelper.update(Tables.changes.string, map, id);
     }
     return result;
@@ -208,7 +214,7 @@ class ModelChange {
     String rowId = userIdRowId.last;
     ModelItem? item = await ModelItem.get(rowId);
     if (item != null) {
-      await item.delete(withServerSync: true);
+      await item.delete(pushToSync: true);
     }
     final dbHelper = StorageSqlite.instance;
     int deleted = await dbHelper.delete(Tables.changes.string, id);

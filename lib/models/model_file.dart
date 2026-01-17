@@ -2,7 +2,6 @@ import 'package:file_vault_bb/utils/utils_sync.dart';
 
 import '../utils/common.dart';
 import '../utils/enums.dart';
-import 'model_state.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelFile {
@@ -12,6 +11,8 @@ class ModelFile {
   int partsUploaded;
   int uploadedAt;
   String? remoteId;
+  String? accessToken;
+  int tokenExpiry;
   int createdAt;
   int updatedAt;
 
@@ -22,6 +23,8 @@ class ModelFile {
     required this.partsUploaded,
     required this.uploadedAt,
     this.remoteId,
+    this.accessToken,
+    required this.tokenExpiry,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -34,6 +37,8 @@ class ModelFile {
       'parts_uploaded': partsUploaded,
       'uploaded_at': uploadedAt,
       'remote_id': remoteId,
+      'access_token': accessToken,
+      'token_expiry': tokenExpiry,
       'created_at': createdAt,
       'updated_at': updatedAt
     };
@@ -47,7 +52,9 @@ class ModelFile {
       parts: getValueFromMap(map, "parts", defaultValue: 0),
       partsUploaded: getValueFromMap(map, "parts_uploaded", defaultValue: 0),
       uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
-      remoteId: getValueFromMap(map, "remote_id", defaultValue: ""),
+      remoteId: getValueFromMap(map, "remote_id", defaultValue: null),
+      accessToken: getValueFromMap(map, "access_token", defaultValue: null),
+      tokenExpiry: getValueFromMap(map, "token_expiry", defaultValue: 0),
       createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
@@ -88,15 +95,10 @@ class ModelFile {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert(Tables.files.string, map);
-    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
-            defaultValue: "no") ==
-        "yes";
-    if (syncEnabled) {
-      map["table"] = Tables.files.string;
-      SyncUtils.logChangeToPush(
-        map,
-      );
-    }
+    map["table"] = Tables.files.string;
+    SyncUtils.logChangeToPush(
+      map,
+    );
     return inserted;
   }
 
@@ -109,13 +111,12 @@ class ModelFile {
       updatedMap[attr] = map[attr];
     }
     int updated = await dbHelper.update(Tables.files.string, updatedMap, id);
-    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
-            defaultValue: "no") ==
-        "yes";
-    if (pushToSync && syncEnabled) {
+    if (pushToSync) {
       map["updated_at"] = utcNow;
       map["table"] = Tables.files.string;
-      SyncUtils.logChangeToPush(map, mediaChanges: false);
+      SyncUtils.logChangeToPush(
+        map,
+      );
     }
     return updated;
   }
@@ -142,16 +143,13 @@ class ModelFile {
     return result;
   }
 
-  Future<int> delete({bool withServerSync = false}) async {
+  Future<int> delete({bool pushToSync = false}) async {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 2;
     Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete(Tables.files.string, id);
     //TODO parts should be deleted also
-    bool syncEnabled = await ModelState.get(AppString.hasEncryptionKeys.string,
-            defaultValue: "no") ==
-        "yes";
-    if (withServerSync && syncEnabled) {
+    if (pushToSync) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
       map["table"] = Tables.files.string;
       SyncUtils.logChangeToPush(

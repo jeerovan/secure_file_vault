@@ -1,4 +1,5 @@
 import 'package:file_vault_bb/utils/enums.dart';
+import 'package:file_vault_bb/utils/utils_sync.dart';
 
 import '../utils/common.dart';
 import '../storage/storage_sqlite.dart';
@@ -40,6 +41,7 @@ class ModelPart {
   }
 
   static Future<ModelPart> fromMap(Map<String, dynamic> map) async {
+    int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
     return ModelPart(
       id: map['id'],
       fileId: map['file_id'],
@@ -48,8 +50,8 @@ class ModelPart {
       state: map['state'],
       cipher: map["cipher"],
       nonce: map["nonce"],
-      createdAt: getValueFromMap(map, "created_at", defaultValue: 0),
-      updatedAt: getValueFromMap(map, "updated_at", defaultValue: 0),
+      createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
+      updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }
 
@@ -83,17 +85,29 @@ class ModelPart {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert(Tables.parts.string, map);
+    map["table"] = Tables.items.string;
+    SyncUtils.logChangeToPush(
+      map,
+    );
     return inserted;
   }
 
-  Future<int> update(List<String> attrs) async {
+  Future<int> update(List<String> attrs, {bool pushToSync = true}) async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    Map<String, dynamic> updatedMap = {};
+    int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
+    Map<String, dynamic> updatedMap = {"updated_at": utcNow};
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
     int updated = await dbHelper.update(Tables.parts.string, updatedMap, id);
+    if (pushToSync) {
+      map["updated_at"] = utcNow;
+      map["table"] = Tables.parts.string;
+      SyncUtils.logChangeToPush(
+        map,
+      );
+    }
     return updated;
   }
 
@@ -115,13 +129,23 @@ class ModelPart {
       }
     }
     // signal item update
-    //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
+    // EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
     return result;
   }
 
-  Future<int> delete() async {
+  Future<int> delete({bool pushToSync = false}) async {
     final dbHelper = StorageSqlite.instance;
+    int deleteTask = 1;
+    Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete(Tables.parts.string, id);
+    if (pushToSync) {
+      map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
+      map["table"] = Tables.parts.string;
+      SyncUtils.logChangeToPush(
+        map,
+        deleteTask: deleteTask,
+      );
+    }
     return deleted;
   }
 }

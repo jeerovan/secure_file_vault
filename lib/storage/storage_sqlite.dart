@@ -1,13 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../utils/enums.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:uuid/uuid.dart';
 
 import '../utils/common.dart';
 import '../models/model_setting.dart';
@@ -132,6 +129,8 @@ class StorageSqlite {
         uploaded_at INTEGER DEFAULT 0,
         uploaded_to INTEGER DEFAULT 0,
         remote_id TEXT,
+        access_token TEXT,
+        token_expiry INTEGER DEFAULT 0,
         created_at INTEGER,
         updated_at INTEGER
       )
@@ -177,31 +176,34 @@ class StorageSqlite {
     ''');
     await db.execute('''
         CREATE VIRTUAL TABLE items_fts USING fts4(
+            content="items",
             name, 
             tokenize=unicode61
         );
     ''');
     await db.execute('''
-        CREATE TRIGGER items_ai AFTER INSERT ON items BEGIN
-          INSERT INTO items_fts(docid, name) VALUES(new.rowid, new.name);
-        END;
+      CREATE TRIGGER items_bd BEFORE DELETE ON items BEGIN
+        DELETE FROM items_fts WHERE docid = old.rowid;
+      END;
     ''');
     await db.execute('''
-        CREATE TRIGGER items_ad AFTER DELETE ON items BEGIN
-          DELETE FROM items_fts WHERE docid = old.rowid;
-        END;
+      CREATE TRIGGER items_bu BEFORE UPDATE ON items 
+      WHEN old.text IS NOT new.text
+      BEGIN
+        DELETE FROM items_fts WHERE docid = old.rowid;
+      END;
     ''');
     await db.execute('''
-        CREATE TRIGGER items_au AFTER UPDATE ON items BEGIN
-          UPDATE items_fts SET name = new.name WHERE docid = old.rowid;
-        END;
+      CREATE TRIGGER items_au AFTER UPDATE ON items 
+      WHEN old.text IS NOT new.text
+      BEGIN
+        INSERT INTO items_fts(docid, text) VALUES (new.rowid, new.text);
+      END;
     ''');
     await db.execute('''
       CREATE TABLE settings (
         id TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        created_at INTEGER,
-        updated_at INTEGER
+        value TEXT NOT NULL
       )
     ''');
     await db.execute('''
@@ -209,23 +211,20 @@ class StorageSqlite {
         id TEXT PRIMARY KEY,
         table_name TEXT NOT NULL,
         changed_data TEXT NOT NULL,
-        change_type INTEGER NOT NULL
+        change_type INTEGER NOT NULL,
+        updated_at INTEGER
       )
     ''');
     await db.execute('''
       CREATE TABLE states (
         id TEXT PRIMARY KEY,
-        value TEXT NOT NULL,
-        created_at INTEGER,
-        updated_at INTEGER
+        value TEXT NOT NULL
       )
     ''');
     await db.execute('''
       CREATE TABLE logs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        log TEXT,
-        created_at INTEGER,
-        updated_at INTEGER
+        log TEXT
       )
     ''');
     logger.info("Tables Created");

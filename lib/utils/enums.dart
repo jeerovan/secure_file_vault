@@ -142,11 +142,16 @@ enum AppString {
   textCipher,
   textNonce,
   debugCipherData,
+
+  // API
+  tableMaps,
 }
 
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.tableMaps:
+        return "table_maps";
       case AppString.serverKeys:
         return 'server_keys';
       case AppString.privateKeys:
