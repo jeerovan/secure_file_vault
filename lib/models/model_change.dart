@@ -28,7 +28,7 @@ class ModelChange {
       'table_name': tableName,
       'changed_data':
           changedData is String ? changedData : jsonEncode(changedData),
-      'changed_type': changeType,
+      'change_type': changeType,
       'updated_at': updatedAt
     };
   }
@@ -41,7 +41,7 @@ class ModelChange {
         tableName: map['table_name'],
         changedData:
             changedData is String ? jsonDecode(changedData) : changedData,
-        changeType: getValueFromMap(map, 'changed_type'),
+        changeType: getValueFromMap(map, 'change_type'),
         updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow));
   }
 
@@ -51,7 +51,7 @@ class ModelChange {
       'id': changeId,
       'table_name': table,
       'changed_data': changedData,
-      'changed_type': changeType,
+      'change_type': changeType,
     });
     await change.upcert();
   }
@@ -78,7 +78,7 @@ class ModelChange {
     changeTypes.insert(0, table);
     int? singlePushLimit = 100;
     List<Map<String, dynamic>> rows = await db.query(Tables.changes.string,
-        where: "table_name = ? AND changed_type IN ($placeholders)",
+        where: "table_name = ? AND change_type IN ($placeholders)",
         whereArgs: changeTypes,
         limit: singlePushLimit);
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -90,7 +90,7 @@ class ModelChange {
     int changeType = SyncChangeTask.pushFile.value;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.changes.string,
-      where: "changed_type = ?",
+      where: "change_type = ?",
       whereArgs: [changeType],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -102,7 +102,7 @@ class ModelChange {
     int changeType = SyncChangeTask.deleteFile.value;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.changes.string,
-      where: "changed_type = ?",
+      where: "change_type = ?",
       whereArgs: [changeType],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -114,7 +114,7 @@ class ModelChange {
     int changeType = SyncChangeTask.fetchFile.value;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.changes.string,
-      where: "changed_type = ?",
+      where: "change_type = ?",
       whereArgs: [changeType],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -139,7 +139,7 @@ class ModelChange {
         await change.delete();
       } else {
         change.changeType = nextTaskType.value;
-        await change.update(["changed_type"]);
+        await change.update(["change_type"]);
         logger.info(
             "upgradeType|${change.id}|${currentType.value}->${nextTaskType.value}");
       }

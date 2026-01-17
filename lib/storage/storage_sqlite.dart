@@ -152,7 +152,7 @@ class StorageSqlite {
       )
     ''');
     // id: uuid
-    // path: only for synced folders, rest will be relative by parent_id
+    // path: only for synced folders, rest will be relative to parent_id
     // name: file, folder , device (will not have path, rootId and parentId)
     // rootId: all folders and files will have item(id) of synced folder
     // size required while reconciliation for quickly find matching files
@@ -182,29 +182,28 @@ class StorageSqlite {
         );
     ''');
     await db.execute('''
+    CREATE TRIGGER items_ai AFTER INSERT ON items BEGIN
+      INSERT INTO items_fts(rowid, name) VALUES (new.rowid, new.name);
+    END;
+  ''');
+    await db.execute('''
       CREATE TRIGGER items_bd BEFORE DELETE ON items BEGIN
         DELETE FROM items_fts WHERE docid = old.rowid;
       END;
     ''');
     await db.execute('''
       CREATE TRIGGER items_bu BEFORE UPDATE ON items 
-      WHEN old.text IS NOT new.text
+      WHEN old.name IS NOT new.name
       BEGIN
         DELETE FROM items_fts WHERE docid = old.rowid;
       END;
     ''');
     await db.execute('''
       CREATE TRIGGER items_au AFTER UPDATE ON items 
-      WHEN old.text IS NOT new.text
+      WHEN old.name IS NOT new.name
       BEGIN
-        INSERT INTO items_fts(docid, text) VALUES (new.rowid, new.text);
+        INSERT INTO items_fts(docid, name) VALUES (new.rowid, new.name);
       END;
-    ''');
-    await db.execute('''
-      CREATE TABLE settings (
-        id TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      )
     ''');
     await db.execute('''
       CREATE TABLE changes (
@@ -213,6 +212,12 @@ class StorageSqlite {
         changed_data TEXT NOT NULL,
         change_type INTEGER NOT NULL,
         updated_at INTEGER
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE settings (
+        id TEXT PRIMARY KEY,
+        value TEXT NOT NULL
       )
     ''');
     await db.execute('''

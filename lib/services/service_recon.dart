@@ -1,14 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../services/service_logger.dart';
 import '../utils/common.dart';
 import 'package:crypto/crypto.dart';
-import '../utils/utils_crypto.dart';
 import '../utils/utils_file.dart';
-import 'package:flutter/foundation.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
 import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path_lib;
 
@@ -405,10 +403,16 @@ class ReconciliationService {
 
   Future<String> _computeFileHash(String path) async {
     String? masterKey = await getMasterKey();
-    // 1. Create the HMAC using SHA-256 and your secret key
-    var hmac = Hmac(sha256, base64Decode(masterKey!));
-    // Use openRead to stream chunks instead of loading fully into memory
-    return (await hmac.bind(File(path).openRead()).first).toString();
+    if (masterKey == null) throw Exception("Key missing");
+
+    return await Isolate.run(() => _calculateHashInIsolate(path, masterKey));
+  }
+
+  static Future<String> _calculateHashInIsolate(String path, String key) async {
+    final file = File(path);
+    final hmac = Hmac(sha256, base64Decode(key));
+    final digest = await hmac.bind(file.openRead()).first;
+    return digest.toString();
   }
 
   // --- Data Loading ---
