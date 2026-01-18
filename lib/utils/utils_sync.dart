@@ -60,7 +60,7 @@ class SyncUtils {
       {bool manualSync = false, bool firstFetch = false}) {
     _hasPendingChanges = true;
     _debounceTimer?.cancel(); // Cancel any ongoing debounce
-    _debounceTimer = Timer(Duration(seconds: 1), () {
+    _debounceTimer = Timer(Duration(seconds: 2), () {
       if (_hasPendingChanges) {
         _hasPendingChanges = false;
         triggerSync(inBackground,
@@ -106,13 +106,11 @@ class SyncUtils {
       bool removed = await SyncUtils.checkDeviceStatus();
       if (!removed) {
         await fetchMapChanges();
-
-        await deleteFiles();
+        await cleanupFiles();
         await pushMapChanges();
-
         // pushing files is a time consuming task
         hasPendingUploads = await pushFiles(startedAt, inBackground);
-        // large files over 20 mb should not be fetched
+        // large files over 20 mb should not be fetched automatically
         await fetchFiles(startedAt, inBackground);
       }
     } catch (e) {
@@ -121,11 +119,11 @@ class SyncUtils {
     _processTimer?.cancel();
     _processTimer = null;
     if (manualSync) {
-      // Send Signal to update home with DND category
+      // Send Signal to update home
       await signalToUpdateHome();
     }
     if (firstFetch) {
-      // Send Signal to update home with DND category
+      // Send Signal to update home
       await signalToUpdateHome();
       EventStream().publish(AppEvent(type: EventType.serverFirstFetchEnds));
     }
@@ -164,7 +162,7 @@ class SyncUtils {
         // signout
         await signout();
         removed = true;
-        // Send Signal to update home with DND category
+        // Send Signal to update home
         await signalToUpdateHome();
       }
       logger.info("device Status Checked");
@@ -325,7 +323,7 @@ class SyncUtils {
     }
   }
 
-  static Future<void> deleteFiles() async {
+  static Future<void> cleanupFiles() async {
     logger.info("Delete Files");
     List<ModelChange> changes = await ModelChange.requiresFileDelete();
     if (changes.isEmpty) return;

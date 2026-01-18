@@ -1,4 +1,5 @@
 import 'package:file_vault_bb/utils/utils_sync.dart';
+import 'package:flutter/foundation.dart';
 
 import '../utils/common.dart';
 import '../utils/enums.dart';
@@ -200,12 +201,28 @@ class ModelItem {
   static Future<List<ModelItem>> searchItem(String term) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows = await db.rawQuery('''
-        SELECT * FROM items 
-        WHERE rowid IN (
-            SELECT docid FROM items_fts WHERE name MATCH '$term'
-        );
-      ''');
+    List<String> tokens = term.trim().split(RegExp(r'\s+'));
+
+    String normalizedQuery = tokens.map((token) => '$token*').join(' ');
+
+    List<Map<String, dynamic>> rows = [];
+    try {
+      List<Map<String, dynamic>> filteredRows = await db.rawQuery(
+        '''SELECT item.*
+       FROM item
+       JOIN item_fts ON item.rowid = item_fts.docid
+       WHERE item_fts MATCH ?
+       ORDER BY item.at DESC
+       ''',
+        [
+          normalizedQuery,
+        ],
+      );
+
+      rows.addAll(filteredRows);
+    } catch (e) {
+      debugPrint(e.toString());
+    }
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
