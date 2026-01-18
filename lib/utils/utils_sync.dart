@@ -24,6 +24,8 @@ import 'package:sodium_libs/sodium_libs_sumo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as path_lib;
 import 'package:http/http.dart' as http_lib;
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:synchronized/synchronized.dart';
 
 class SyncUtils {
   // Singleton setup
@@ -32,26 +34,18 @@ class SyncUtils {
   SyncUtils._internal();
 
   Timer? _debounceTimer;
-  Timer? _syncTimer;
   Timer? _processTimer;
+
+  bool _isSyncing = false;
   bool _hasPendingChanges = false;
+
+  // Use a Lock for concurrency safety
+  final Lock _lock = Lock();
+
   static final logger = AppLogger(prefixes: [
     "utils_sync",
   ]);
   static final String processRunningAt = "sync_running_at";
-
-  void startAutoSync() {
-    // Starts the interval sync
-    _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(Duration(minutes: 1), (timer) {
-      waitAndSyncChanges();
-    });
-  }
-
-  void stopAutoSync() {
-    _syncTimer?.cancel();
-    _syncTimer = null;
-  }
 
   // Static method to trigger change detection
   static void waitAndSyncChanges(
@@ -77,27 +71,35 @@ class SyncUtils {
 
   Future<void> triggerSync(bool inBackground,
       {bool manualSync = false, bool firstFetch = false}) async {
-    String mode = inBackground ? "Background" : "Foreground";
-    logger.info("sync request from:$mode");
-    bool canSync = await SyncUtils.canSync();
-    if (!canSync) return;
-    bool hasInternet = await hasInternetConnection();
-    if (!hasInternet) return;
-    int startedAt = DateTime.now().millisecondsSinceEpoch;
-    String? lastRunningAtString = await ModelState.get(processRunningAt);
-    int? lastRunningAt =
-        lastRunningAtString == null ? null : int.parse(lastRunningAtString);
-    if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
-      logger.warning("$mode|Sync|Already Syncing");
-      return;
-    }
-    await ModelState.set(processRunningAt, startedAt);
-    // set timer to update running state every seconds
-    _processTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      await ModelState.set(
-          processRunningAt, DateTime.now().millisecondsSinceEpoch);
+    await _lock.synchronized(() async {
+      if (_isSyncing) {
+        logger.warning("Sync already in progress, skipping.");
+        return;
+      }
+      try {
+        _isSyncing = true;
+
+        String mode = inBackground ? "Background" : "Foreground";
+        logger.info("sync request from:$mode");
+        bool canSync = await SyncUtils.canSync();
+        if (!canSync) return;
+        bool hasInternet = await InternetConnection().hasInternetAccess;
+        if (!hasInternet) return;
+        await _performSyncOperations(inBackground, manualSync, firstFetch);
+      } catch (e, stack) {
+        logger.error("Sync failed", error: e, stackTrace: stack);
+      } finally {
+        // Always release the flag, even if code crashes
+        _isSyncing = false;
+      }
     });
+  }
+
+  Future<void> _performSyncOperations(
+      bool inBackground, bool manualSync, bool firstFetch) async {
+    String mode = inBackground ? "Background" : "Foreground";
     logger.info("$mode|Sync|------------------START----------------");
+    int startedAt = DateTime.now().millisecondsSinceEpoch;
     bool hasPendingUploads = false;
     bool hasMoreMapChangesToPush = false;
     try {

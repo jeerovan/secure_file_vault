@@ -686,19 +686,6 @@ Future<String> getDeviceId() async {
   return getHashOfString(stringForHash);
 }
 
-// Helper to check internet connectivity
-Future<bool> hasInternetConnection() async {
-  try {
-    // Try to actually establish a socket connection to Google's DNS
-    final socket = await Socket.connect('8.8.8.8', 53,
-        timeout: const Duration(seconds: 2));
-    socket.destroy();
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
 // storage permission
 Future<PermissionStatus> getStoragePermissionStatus() async {
   if (Platform.isAndroid) {

@@ -85,11 +85,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (Platform.isIOS || Platform.isAndroid) {
       if (state == AppLifecycleState.resumed) {
         context.read<AppSetupState>().recheckStatus();
-        //SyncUtils().startAutoSync();
-        logger.info("Started Foreground Sync");
-      } else if (state == AppLifecycleState.paused) {
-        //SyncUtils().stopAutoSync();
-        logger.info("Stopped Foreground Sync");
       }
     }
   }
