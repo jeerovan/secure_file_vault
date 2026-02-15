@@ -1,21 +1,21 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:file_vault_bb/models/model_setting.dart';
-import 'package:file_vault_bb/services/service_logger.dart';
-import 'package:file_vault_bb/storage/storage_secure.dart';
-import 'package:file_vault_bb/storage/storage_sqlite.dart';
-import 'package:file_vault_bb/ui/common_widgets.dart';
-import 'package:file_vault_bb/ui/pages/page_access_key.dart';
-import 'package:file_vault_bb/ui/pages/page_access_key_notice.dart';
-import 'package:file_vault_bb/ui/pages/page_devices.dart';
-import 'package:file_vault_bb/ui/pages/page_explorer.dart';
-import 'package:file_vault_bb/ui/pages/page_loading.dart';
-import 'package:file_vault_bb/ui/pages/page_signin.dart';
-import 'package:file_vault_bb/ui/pages/page_storage_permission.dart';
-import 'package:file_vault_bb/ui/themes.dart';
-import 'package:file_vault_bb/utils/common.dart';
-import 'package:file_vault_bb/utils/enums.dart';
+import '../models/model_setting.dart';
+import '../services/service_logger.dart';
+import '../storage/storage_secure.dart';
+import '../storage/storage_sqlite.dart';
+import '../ui/common_widgets.dart';
+import '../ui/pages/page_access_key.dart';
+import '../ui/pages/page_access_key_notice.dart';
+import '../ui/pages/page_devices.dart';
+import '../ui/pages/page_explorer.dart';
+import '../ui/pages/page_loading.dart';
+import '../ui/pages/page_signin.dart';
+import '../ui/pages/page_storage_permission.dart';
+import '../ui/themes.dart';
+import '../utils/common.dart';
+import '../utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

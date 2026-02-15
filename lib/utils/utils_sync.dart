@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
-import 'package:file_vault_bb/models/model_change.dart';
-import 'package:file_vault_bb/models/model_profile.dart';
+import '../models/model_change.dart';
+import '../models/model_profile.dart';
 import 'package:flutter/foundation.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';

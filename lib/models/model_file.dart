@@ -1,4 +1,4 @@
-import 'package:file_vault_bb/utils/utils_sync.dart';
+import '../utils/utils_sync.dart';
 
 import '../utils/common.dart';
 import '../utils/enums.dart';

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
-import 'package:file_vault_bb/utils/enums.dart';
+import '../utils/enums.dart';
 
 import '../models/model_file.dart';
 import '../models/model_item.dart';

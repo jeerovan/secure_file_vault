@@ -1,5 +1,5 @@
-import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/utils/utils_sync.dart';
+import '../utils/enums.dart';
+import '../utils/utils_sync.dart';
 
 import '../utils/common.dart';
 import '../storage/storage_sqlite.dart';
