@@ -34,9 +34,10 @@ class ReconciliationService {
     // Mark remaining DB items as deleted
     final remainingDbItems =
         await ModelItem.getAllUnScannedItemsForRootItemId(rootItemId);
-    // first delete all files
+    // first delete all files if they are not uploaded yet
     for (final dbChild in remainingDbItems) {
       if (!dbChild.isFolder) {
+        // TODO check upload status before deletion
         await _handleDeletion(dbChild);
       }
     }
