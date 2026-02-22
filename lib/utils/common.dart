@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_vault_bb/main.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +24,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+
+final String testEmailId = "fife@jeerovan.com";
 
 bool canUseVideoPlayer =
     Platform.isAndroid || Platform.isIOS || Platform.isMacOS || kIsWeb;
@@ -662,6 +666,22 @@ Future<String> getDeviceName() async {
   }
 }
 
+Future<int> getDeviceType() async {
+  if (Platform.isAndroid) {
+    return 1;
+  } else if (Platform.isIOS) {
+    return 2;
+  } else if (Platform.isMacOS) {
+    return 3;
+  } else if (Platform.isWindows) {
+    return 4;
+  } else if (Platform.isLinux) {
+    return 5;
+  } else {
+    return 0;
+  }
+}
+
 Future<String> getDeviceId() async {
   final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
   String stringForHash = "Unknown";
@@ -785,7 +805,7 @@ String? getSignedInUserId() {
 
 String? getSignedInEmailId() {
   if (simulateTesting()) {
-    return "fife@jeerovan.com";
+    return testEmailId;
   }
   bool supabaseInitialized =
       ModelSetting.get(AppString.supabaseInitialized.string, "no") == "yes";

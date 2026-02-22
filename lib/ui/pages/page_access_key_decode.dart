@@ -12,23 +12,19 @@ import '../../utils/utils_crypto.dart';
 import 'package:provider/provider.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
 
-import '../../utils/enums.dart' hide FileType;
+import '../../utils/enums.dart';
 
-class PageAccessKeyInput extends StatefulWidget {
+class PageAccessKeyDecode extends StatefulWidget {
   final bool runningOnDesktop;
   final Function(PageType, bool, PageParams)? setShowHidePage;
-  final Map<String, dynamic> cipherData;
-  const PageAccessKeyInput(
-      {super.key,
-      required this.cipherData,
-      required this.runningOnDesktop,
-      this.setShowHidePage});
+  const PageAccessKeyDecode(
+      {super.key, required this.runningOnDesktop, this.setShowHidePage});
 
   @override
-  State<PageAccessKeyInput> createState() => _PageAccessKeyInputState();
+  State<PageAccessKeyDecode> createState() => _PageAccessKeyDecodeState();
 }
 
-class _PageAccessKeyInputState extends State<PageAccessKeyInput> {
+class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
   String _loadedFileContent = '';
@@ -89,8 +85,10 @@ class _PageAccessKeyInputState extends State<PageAccessKeyInput> {
     String accessKeyHex = bip39.mnemonicToEntropy(words);
     Uint8List accessKeyBytes = hexToBytes(accessKeyHex);
 
-    String masterKeyCipheredBase64 = widget.cipherData[AppString.cipher.string];
-    String masterKeyNonceBase64 = widget.cipherData[AppString.nonce.string];
+    String masterKeyCipheredBase64 =
+        await secureStorage.read(key: AppString.keyCipher.string) as String;
+    String masterKeyNonceBase64 =
+        await secureStorage.read(key: AppString.keyNonce.string) as String;
 
     Uint8List masterKeyCipheredBytes = base64Decode(masterKeyCipheredBase64);
     Uint8List masterKeyNonceBytes = base64Decode(masterKeyNonceBase64);
@@ -113,8 +111,12 @@ class _PageAccessKeyInputState extends State<PageAccessKeyInput> {
       await secureStorage.write(
           key: AppString.accessKey.string, value: base64Encode(accessKeyBytes));
 
+      // delete keycipher and keynonce
+      await secureStorage.delete(key: AppString.keyCipher.string);
+      await secureStorage.delete(key: AppString.keyNonce.string);
+
       if (mounted) {
-        await context.read<AppSetupState>().hasAccessKeys();
+        await context.read<AppSetupState>().registerDevice();
       }
     }
     setState(() {

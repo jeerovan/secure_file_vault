@@ -1,3 +1,5 @@
+import 'package:file_vault_bb/services/service_backend.dart';
+
 import '../../services/service_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,11 +23,12 @@ class PageAccessKeyNotice extends StatefulWidget {
 }
 
 class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
+  AppLogger logger = AppLogger(prefixes: ["PageAccessKeyNotice"]);
   SupabaseClient supabaseClient = Supabase.instance.client;
   SecureStorage secureStorage = SecureStorage();
+  final api = BackendApi();
   bool processing = false;
   String? appName = "";
-  AppLogger logger = AppLogger(prefixes: ["PageAccessKeyNotice"]);
 
   @override
   void initState() {
@@ -56,17 +59,24 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
     Map<String, dynamic> serverKeys = keys[AppString.serverKeys.string];
     serverKeys['id'] = userId;
     try {
-      //TODO await supabaseClient.from("keys").upsert(serverKeys).eq("id", userId);
-      String masterKeyBase64 = privateKeys[AppString.masterKey.string];
-      String accessKeyBase64 = privateKeys[AppString.accessKey.string];
-      await secureStorage.write(
-          key: AppString.masterKey.string, value: masterKeyBase64);
-      await secureStorage.write(
-          key: AppString.accessKey.string, value: accessKeyBase64);
-
-      // navigate to display key
-      if (mounted) {
-        await context.read<AppSetupState>().hasAccessKeys();
+      final result =
+          await api.post(endpoint: '/user-keys', jsonBody: serverKeys);
+      final status = result["status"];
+      if (status <= 0) {
+        if (mounted) {
+          displaySnackBar(context, message: result["error"], seconds: 2);
+        }
+      } else {
+        String masterKeyBase64 = privateKeys[AppString.masterKey.string];
+        String accessKeyBase64 = privateKeys[AppString.accessKey.string];
+        await secureStorage.write(
+            key: AppString.masterKey.string, value: masterKeyBase64);
+        await secureStorage.write(
+            key: AppString.accessKey.string, value: accessKeyBase64);
+        // navigate to display key
+        if (mounted) {
+          await context.read<AppSetupState>().showAccessKeys();
+        }
       }
     } catch (e, s) {
       logger.error("generateKeys", error: e, stackTrace: s);

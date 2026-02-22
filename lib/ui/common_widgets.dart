@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:typed_data';
 
+import 'package:file_vault_bb/models/model_setting.dart';
+
 import '../models/model_item.dart';
 import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
@@ -21,8 +23,6 @@ class AppSetupState extends ChangeNotifier {
 
   // User data
   String? _selectedPlan;
-  String? _deviceId;
-  bool _hasSecurityKey = false;
 
   AppSetupState(this._prefs) {
     _checkSetupStatus();
@@ -31,11 +31,10 @@ class AppSetupState extends ChangeNotifier {
   // Getters
   SetupStep get currentStep => _currentStep;
   String? get selectedPlan => _selectedPlan;
-  String? get deviceId => _deviceId;
-  bool get hasSecurityKey => _hasSecurityKey;
 
   // Check all setup steps on app start
   Future<void> _checkSetupStatus() async {
+    logger.info("Checking..");
     _currentStep = SetupStep.loading;
     notifyListeners();
 
@@ -43,6 +42,7 @@ class AppSetupState extends ChangeNotifier {
     await Future.delayed(const Duration(milliseconds: 500));
 
     if (getSignedInUserId() == null) {
+      logger.info("Signin");
       _currentStep = SetupStep.signin;
       notifyListeners();
       return;
@@ -50,35 +50,38 @@ class AppSetupState extends ChangeNotifier {
 
     // Check security key
     String? securityKey = await _prefs.read(key: AppString.masterKey.string);
-    _hasSecurityKey = securityKey != null;
-    if (!_hasSecurityKey) {
-      _currentStep = SetupStep.generateAccessKey;
+    if (securityKey == null) {
+      logger.info("SecurityKey");
+      _currentStep = SetupStep.checkAccessKey;
       notifyListeners();
       return;
     }
-    /*
-    // Check plan subscription
-    _selectedPlan = await _prefs.read(key: 'selected_plan');
-    if (_selectedPlan == null) {
-      _currentStep = SetupStep.planSelection;
-      notifyListeners();
-      return;
-    } */
 
     // Check device registration
-    _deviceId = await _prefs.read(key: AppString.deviceId.string);
-    if (_deviceId == null) {
-      _currentStep = SetupStep.deviceSetup;
+    String? deviceId = await _prefs.read(key: AppString.deviceId.string);
+    if (deviceId == null) {
+      logger.info("Registration");
+      _currentStep = SetupStep.registerDevice;
       notifyListeners();
       return;
     }
 
     PermissionStatus storagePermission = await getStoragePermissionStatus();
     if (!storagePermission.isGranted) {
+      logger.info("Storage Permission");
       _currentStep = SetupStep.storagePermission;
       notifyListeners();
       return;
     }
+
+    /*
+    // Check plan subscription with revenuecat
+    _selectedPlan = await _prefs.read(key: 'selected_plan');
+    if (_selectedPlan == null) {
+      _currentStep = SetupStep.planSelection;
+      notifyListeners();
+      return;
+    } */
 
     // All setup complete
     _currentStep = SetupStep.complete;
@@ -87,34 +90,33 @@ class AppSetupState extends ChangeNotifier {
 
   // Registration
   Future<void> completeSignin() async {
-    _currentStep = SetupStep.generateAccessKey;
+    _currentStep = SetupStep.checkAccessKey;
     notifyListeners();
   }
 
   // Security key
-  Future<void> hasAccessKeys() async {
-    _hasSecurityKey = true;
-    _currentStep = SetupStep.showAccessKey;
+  Future<void> decodeAccessKey() async {
+    _currentStep = SetupStep.decodeAccessKey;
     notifyListeners();
   }
 
-  Future<void> shownAccessKeys() async {
-    _currentStep = SetupStep.deviceSetup;
+  Future<void> generateAccessKey() async {
+    _currentStep = SetupStep.generateAccessKey;
+    notifyListeners();
+  }
+
+  Future<void> showAccessKeys() async {
+    _currentStep = SetupStep.showAccessKey;
     notifyListeners();
   }
 
   // Device setup
   Future<void> registerDevice() async {
-    String deviceId = await getDeviceId();
-    String deviceName = await getDeviceName();
-    ModelItem deviceItem = await ModelItem.fromMap({
-      "id": deviceId,
-      "name": deviceName,
-      "is_folder": 1,
-    });
-    await deviceItem.insert();
-    await _prefs.write(key: AppString.deviceId.string, value: deviceId);
-    _deviceId = deviceId;
+    _currentStep = SetupStep.registerDevice;
+    notifyListeners();
+  }
+
+  Future<void> deviceRegistered() async {
     _currentStep = SetupStep.storagePermission;
     notifyListeners();
   }
@@ -139,10 +141,9 @@ class AppSetupState extends ChangeNotifier {
     await _prefs.delete(key: AppString.deviceId.string);
     await _prefs.delete(key: AppString.masterKey.string);
     await _prefs.delete(key: AppString.accessKey.string);
+    await ModelSetting.delete(AppString.signedIn.string);
     await _prefs.delete(key: 'selected_plan');
     _selectedPlan = null;
-    _deviceId = null;
-    _hasSecurityKey = false;
     _currentStep = SetupStep.signin;
     notifyListeners();
   }

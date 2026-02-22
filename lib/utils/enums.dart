@@ -1,11 +1,14 @@
 enum SetupStep {
   loading,
-  deviceSetup,
   signin,
-  /* planSelection, */
+  checkAccessKey,
   generateAccessKey,
+  decodeAccessKey,
   showAccessKey,
+  registerDevice,
+  manageDevices,
   storagePermission,
+  /* planSelection, */
   complete,
 }
 

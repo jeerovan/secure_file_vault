@@ -77,7 +77,7 @@ class _PageAccessKeyState extends State<PageAccessKey> {
 
   Future<void> continueToNext() async {
     if (mounted) {
-      await context.read<AppSetupState>().shownAccessKeys();
+      await context.read<AppSetupState>().registerDevice();
     }
   }
 

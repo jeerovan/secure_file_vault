@@ -1,12 +1,16 @@
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
+import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
+import 'package:file_vault_bb/ui/pages/page_device_register.dart';
+
 import '../models/model_setting.dart';
 import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import '../storage/storage_sqlite.dart';
 import '../ui/common_widgets.dart';
-import '../ui/pages/page_access_key.dart';
+import 'ui/pages/page_access_key_display.dart';
 import '../ui/pages/page_access_key_notice.dart';
 import '../ui/pages/page_devices.dart';
 import '../ui/pages/page_explorer.dart';
@@ -156,18 +160,24 @@ class AppNavigator extends StatelessWidget {
             return const PageLoading();
           case SetupStep.signin:
             return PageSignin(runningOnDesktop: isLargeScreen);
-          /* case SetupStep.planSelection:
-            return const PlanSelectionScreen(); */
+          case SetupStep.checkAccessKey:
+            return PageAccessKeyCheck();
           case SetupStep.generateAccessKey:
             return const PageAccessKeyNotice(
               runningOnDesktop: false,
             );
+          case SetupStep.decodeAccessKey:
+            return PageAccessKeyDecode(runningOnDesktop: false);
           case SetupStep.showAccessKey:
             return const PageAccessKey(runningOnDesktop: false);
-          case SetupStep.deviceSetup:
+          case SetupStep.registerDevice:
+            return PageRegisterDevice();
+          case SetupStep.manageDevices:
             return const PageDevices();
           case SetupStep.storagePermission:
             return const StoragePermissionPage();
+          /* case SetupStep.planSelection:
+            return const PlanSelectionScreen(); */
           case SetupStep.complete:
             return PageExplorer(
               themeMode: themeMode,

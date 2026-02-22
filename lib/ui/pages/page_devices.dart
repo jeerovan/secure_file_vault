@@ -25,14 +25,7 @@ class _PageDevicesState extends State<PageDevices> {
   @override
   void initState() {
     super.initState();
-    registerDevice();
-  }
-
-  Future<void> registerDevice() async {
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
-    if (mounted) {
-      await context.read<AppSetupState>().registerDevice();
-    }
+    fetchDevices();
   }
 
   Future<void> fetchDevices() async {

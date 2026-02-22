@@ -104,7 +104,7 @@ class ModelProfile {
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
     int deleted = await dbHelper.delete(Tables.profiles.string, id);
-    // delete related categories
+    // delete related content
     return deleted;
   }
 }

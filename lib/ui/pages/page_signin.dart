@@ -1,3 +1,5 @@
+import 'package:file_vault_bb/main.dart';
+
 import '../../models/model_state.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_logger.dart';
@@ -70,7 +72,7 @@ class _PageSigninState extends State<PageSignin> {
         processing = true;
       });
       try {
-        if (email == 'fife@jeerovan.com') {
+        if (email == testEmailId) {
           await Future.delayed(const Duration(seconds: 1));
           await ModelSetting.set(AppString.simulateTesting.string, "yes");
         } else {
@@ -147,25 +149,6 @@ class _PageSigninState extends State<PageSignin> {
           processing = false;
         });
       }
-    }
-  }
-
-  Future<void> navigateToOnboardCheck() async {
-    if (widget.runningOnDesktop) {
-      widget.setShowHidePage!(
-          PageType.userTask, true, PageParams(appTask: AppTask.checkCloudSync));
-      widget.setShowHidePage!(PageType.signIn, false, PageParams());
-    } else {
-      // Navigate
-      /* Navigator.of(context).pushReplacement(
-        AnimatedPageRoute(
-          child: PageUserTask(
-            runningOnDesktop: widget.runningOnDesktop,
-            setShowHidePage: widget.setShowHidePage,
-            task: AppTask.checkCloudSync,
-          ),
-        ),
-      ); */
     }
   }
 

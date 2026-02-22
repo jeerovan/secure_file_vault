@@ -26,12 +26,12 @@ export const userData = sqliteTable('user_data', {
 });
 
 export const userDevice = sqliteTable('user_device', {
-	Id: text('id').primaryKey(), // UserId_DeviceHash
+	id: text('id').primaryKey(), // UserId_DeviceId
 	userId: text('user_id').notNull(),
 	title: text('title').notNull(),
-	type: integer('type').notNull().default(0),
+	type: integer('type').notNull().default(0), // 1:Android/2:iOS/3:MacOS/4:Windows/5:Linux
 	notificationId: text('notification_id'),
-	status: integer('status').default(0),
+	status: integer('status').default(1), // 1:Active/0:Inactive
 	lastActiveAt: integer('last_active_at').default(0),
 	updatedAt: integer('updated_at', { mode: 'timestamp' })
 		.$defaultFn(() => new Date())
