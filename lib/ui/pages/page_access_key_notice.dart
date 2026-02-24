@@ -28,19 +28,11 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   SecureStorage secureStorage = SecureStorage();
   final api = BackendApi();
   bool processing = false;
-  String? appName = "";
+  String appName = AppString.appName.string;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      initialize();
-    });
-  }
-
-  Future<void> initialize() async {
-    appName = await secureStorage.read(key: AppString.appName.string);
-    setState(() {});
   }
 
   Future<void> generateKeys() async {
@@ -106,7 +98,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
           children: [
             SizedBox(height: 20),
             Text(
-              'On the next page you\'ll see a series of 24 words. This is your unique and private encryption key and it is the ONLY way to recover your notes in case of logout, device loss or malfunction.',
+              'On the next page you\'ll see a series of 24 words. This is your unique and private encryption key and it is the ONLY way to recover your data in case of logout, device loss or malfunction.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
             ),
@@ -135,10 +127,13 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
                         ),
                       ),
                     ),
-                  Text(
-                    textAlign: TextAlign.center,
-                    'I understand.\nShow me the key.',
-                    style: TextStyle(color: Colors.black),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      textAlign: TextAlign.center,
+                      'I understand.\nShow me the key.',
+                      style: TextStyle(color: Colors.black),
+                    ),
                   ),
                 ],
               ),

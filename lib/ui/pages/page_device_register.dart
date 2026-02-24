@@ -54,6 +54,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
         "id": deviceId,
         "name": deviceName,
         "is_folder": 1,
+        "parent_id": "fife",
       });
       await deviceItem.insert();
       await storage.write(key: AppString.deviceId.string, value: deviceId);

@@ -92,6 +92,10 @@ class _FilePaneState extends State<FilePane> {
 
   Future<void> _loadFiles() async {
     if (currentItem == null) {
+      ModelItem? rootFife = await ModelItem.get("fife");
+      if (rootFife != null) {
+        parentChilds.add(rootFife);
+      }
       currentItem = await ModelItem.get(await getDeviceId());
       if (currentItem != null) parentChilds.add(currentItem!);
     }
@@ -173,7 +177,7 @@ class _FilePaneState extends State<FilePane> {
           onTap: () => {_navigateTo(item)},
           borderRadius: BorderRadius.circular(4),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 4.0),
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
             child: Text(
               part.isEmpty ? 'Home' : part,
               style: TextStyle(
@@ -227,7 +231,7 @@ class _FilePaneState extends State<FilePane> {
                   : _buildFileView(),
         ),
         AppBar(
-          leading: currentItem != '/'
+          leading: currentItem?.id != 'fife'
               ? IconButton(
                   icon: const Icon(Icons.arrow_back), onPressed: _navigateBack)
               : null,

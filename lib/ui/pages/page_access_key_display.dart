@@ -160,9 +160,12 @@ class _PageAccessKeyState extends State<PageAccessKey> {
                   borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
-              child: Text(
-                "Continue",
-                style: TextStyle(fontSize: 16.0),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: Text(
+                  "Continue",
+                  style: TextStyle(fontSize: 16.0),
+                ),
               ),
             ),
           ],

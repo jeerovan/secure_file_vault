@@ -159,7 +159,7 @@ class AppNavigator extends StatelessWidget {
           case SetupStep.loading:
             return const PageLoading();
           case SetupStep.signin:
-            return PageSignin(runningOnDesktop: isLargeScreen);
+            return PageSignin();
           case SetupStep.checkAccessKey:
             return PageAccessKeyCheck();
           case SetupStep.generateAccessKey:

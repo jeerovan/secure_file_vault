@@ -1,5 +1,4 @@
-import 'package:file_vault_bb/main.dart';
-
+import '../../models/model_item.dart';
 import '../../models/model_state.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_logger.dart';
@@ -8,16 +7,14 @@ import '../../ui/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../utils/common.dart';
 import '../../utils/enums.dart';
 
 class PageSignin extends StatefulWidget {
-  final bool runningOnDesktop;
-  final Function(PageType, bool, PageParams)? setShowHidePage;
-  const PageSignin(
-      {super.key, required this.runningOnDesktop, this.setShowHidePage});
+  const PageSignin({
+    super.key,
+  });
 
   @override
   State<PageSignin> createState() => _PageSigninState();
@@ -129,6 +126,13 @@ class _PageSigninState extends State<PageSignin> {
           await ModelSetting.delete(AppString.otpSentAt.string);
           await ModelSetting.set(
               AppString.signedIn.string, "yes"); // used for simulation
+          // insert root folder: fife
+          ModelItem deviceItem = await ModelItem.fromMap({
+            "id": "fife",
+            "name": "FiFe",
+            "is_folder": 1,
+          });
+          await deviceItem.insert();
           logger.info("Login Successfull");
           if (mounted) {
             await context.read<AppSetupState>().completeSignin();
@@ -170,13 +174,6 @@ class _PageSigninState extends State<PageSignin> {
     return Scaffold(
       appBar: AppBar(
         title: Text(otpSent ? 'Verify OTP' : 'Email SignIn'),
-        leading: widget.runningOnDesktop
-            ? BackButton(
-                onPressed: () {
-                  widget.setShowHidePage!(PageType.signIn, false, PageParams());
-                },
-              )
-            : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
