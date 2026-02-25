@@ -48,7 +48,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, error: 'Missing required fields: cipher, nonce' });
 	}
 
-	if (authUser.email == 'fife@jeerovan.com') {
+	if (authUser.email === 'fife@jeerovan.com') {
 		return json({ status: 1 });
 	}
 

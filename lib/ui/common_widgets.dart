@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/model_item.dart';
 import '../storage/storage_secure.dart';
@@ -37,9 +38,6 @@ class AppSetupState extends ChangeNotifier {
     logger.info("Checking..");
     _currentStep = SetupStep.loading;
     notifyListeners();
-
-    // Simulate loading delay
-    await Future.delayed(const Duration(milliseconds: 500));
 
     if (getSignedInUserId() == null) {
       logger.info("Signin");
@@ -138,9 +136,13 @@ class AppSetupState extends ChangeNotifier {
 
   // Logout / Reset
   Future<void> logout() async {
+    if (!simulateTesting()) {
+      await Supabase.instance.client.auth.signOut();
+    }
     await _prefs.delete(key: AppString.deviceId.string);
     await _prefs.delete(key: AppString.masterKey.string);
     await _prefs.delete(key: AppString.accessKey.string);
+    await ModelSetting.delete(AppString.simulateTesting.string);
     await ModelSetting.delete(AppString.signedIn.string);
     await _prefs.delete(key: 'selected_plan');
     _selectedPlan = null;

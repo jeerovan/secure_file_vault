@@ -74,7 +74,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     // State 1: Loading
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator.adaptive(),
+        child: CircularProgressIndicator(),
       );
     }
 

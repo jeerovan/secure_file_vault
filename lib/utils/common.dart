@@ -793,7 +793,10 @@ String? getSignedInUserId() {
   }
   bool supabaseInitialized =
       ModelSetting.get(AppString.supabaseInitialized.string, "no") == "yes";
-  if (!supabaseInitialized) return null;
+  if (!supabaseInitialized) {
+    AppLogger(prefixes: ["Common"]).error("Supabase not initialized");
+    return null;
+  }
   SupabaseClient supabaseClient = Supabase.instance.client;
   User? currentUser = supabaseClient.auth.currentUser;
   if (currentUser != null) {

@@ -21,7 +21,7 @@ class PageSignin extends StatefulWidget {
 }
 
 class _PageSigninState extends State<PageSignin> {
-  final logger = AppLogger(prefixes: ["page_signin"]);
+  final logger = AppLogger(prefixes: ["Signin"]);
   final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final otpController = TextEditingController();
@@ -39,16 +39,20 @@ class _PageSigninState extends State<PageSignin> {
   void initState() {
     super.initState();
     if (supabase.auth.currentSession == null) {
+      logger.info("Not signed in");
       int sentOtpAt =
           int.parse(ModelSetting.get(AppString.otpSentAt.string, 0).toString());
       int nowUtc = DateTime.now().toUtc().millisecondsSinceEpoch;
-      if (nowUtc - sentOtpAt < 900000) {
+      if (sentOtpAt > 0 && nowUtc - sentOtpAt < 900000) {
         otpSent = true;
       }
     } else {
       signedIn = true;
       String? accessToken = supabase.auth.currentSession?.accessToken;
       logger.info("Access Token: $accessToken");
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<AppSetupState>().completeSignin();
+      });
     }
   }
 
@@ -117,15 +121,38 @@ class _PageSigninState extends State<PageSignin> {
             await signalToUpdateHome(); // update home with data
           }
         } else {
-          AuthResponse response = await supabase.auth
-              .verifyOTP(email: email, token: otp, type: OtpType.email);
-          session = response.session;
+          try {
+            final AuthResponse response = await supabase.auth.verifyOTP(
+              email: email,
+              token: otp,
+              type: OtpType.email,
+            );
+
+            // If we reach this point without an exception, the OTP was valid.
+            // A successful sign-in will return a valid session.
+            if (response.session != null) {
+              session = response.session;
+              logger.debug(
+                  'Success: Sign-in complete. User ID: ${response.user?.id}');
+            } else {
+              logger.debug(
+                  'Warning: OTP verified, but no session was established.');
+            }
+          } on AuthException catch (error) {
+            // Catches Supabase-specific authentication errors (e.g., wrong OTP, expired token)
+            logger.debug(
+                'Failure: Sign-in failed. Reason: ${error.message} (Status Code: ${error.statusCode})');
+          } catch (error) {
+            // Catches any other unexpected framework or network errors
+            logger.debug(
+                'Failure: An unexpected error occurred during sign-in: $error');
+          }
         }
         if (session != null || simulateTesting()) {
           await ModelSetting.delete(AppString.otpSentTo.string);
           await ModelSetting.delete(AppString.otpSentAt.string);
           await ModelSetting.set(
-              AppString.signedIn.string, "yes"); // used for simulation
+              AppString.signedIn.string, "yes"); // used for simulation only
           // insert root folder: fife
           ModelItem deviceItem = await ModelItem.fromMap({
             "id": "fife",
@@ -133,7 +160,9 @@ class _PageSigninState extends State<PageSignin> {
             "is_folder": 1,
           });
           await deviceItem.insert();
-          logger.info("Login Successfull");
+          if (session != null) {
+            logger.info("Login Successfull");
+          }
           if (mounted) {
             await context.read<AppSetupState>().completeSignin();
           }
