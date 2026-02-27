@@ -41,7 +41,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     String deviceId = await getDeviceId();
     String deviceName = await getDeviceName();
     int deviceType = await getDeviceType();
-    final result = await api.post(endpoint: '/user-device', jsonBody: {
+    final result = await api.post(endpoint: '/devices', jsonBody: {
       "deviceId": deviceId,
       "title": deviceName,
       "type": deviceType

@@ -43,7 +43,7 @@ class SyncUtils {
   final Lock _lock = Lock();
 
   static final logger = AppLogger(prefixes: [
-    "utils_sync",
+    "Sync",
   ]);
   static final String processRunningAt = "sync_running_at";
 
@@ -184,7 +184,7 @@ class SyncUtils {
           null;
         } else {
           if (deviceId != null) {
-            //TODO set device inactive on server
+            // remove device from server
           }
           await supabase.auth.signOut();
         }
@@ -290,7 +290,7 @@ class SyncUtils {
         Tables.parts.string
       ]) {
         List<ModelChange> changes =
-            await ModelChange.fetch100MapPushForTable(table);
+            await ModelChange.fetch300MapPushForTable(table);
         List<Map<String, dynamic>> changeMaps = [];
         for (ModelChange change in changes) {
           changeMaps.add(change.changedData);
@@ -298,9 +298,6 @@ class SyncUtils {
         }
         if (changeMaps.isNotEmpty) {
           tableMaps.add({"table": table, "changes": changeMaps});
-        }
-        if (changes.length >= 100) {
-          break;
         }
       }
       if (tableMaps.isNotEmpty) {
@@ -372,8 +369,7 @@ class SyncUtils {
   static Future<void> fetchMapChanges() async {
     logger.info("Fetching map changes");
     String? masterKeyBase64 = await getMasterKey();
-    // TODO check if canSync
-    if (masterKeyBase64 == null) return;
+    if (await canSync() == false || masterKeyBase64 == null) return;
     logger.info("Fetch Map Changes");
     if (simulateTesting()) {
       await Future.delayed(const Duration(seconds: 2));
@@ -594,7 +590,7 @@ class SyncUtils {
         "pushed Completed Uploads. Spent: ${DateTime.now().toUtc().millisecondsSinceEpoch - startedAt}");
     //uploading partial pending files
     // where uploadedAt = 0
-    List<ModelFile> pendingUploads = []; // TODO get files pendinf for upload
+    List<ModelFile> pendingUploads = []; // TODO get files pending for upload
     for (ModelFile pendingFile in pendingUploads) {
       await pushFile(pendingFile);
       hasPendingUploads = true;

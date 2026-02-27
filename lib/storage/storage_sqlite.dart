@@ -119,7 +119,7 @@ class StorageSqlite {
         created_at INTEGER
       )
     ''');
-    // id as hmac sha-256
+    // id : File Hash
     await db.execute('''
       CREATE TABLE files (
         id TEXT PRIMARY KEY,
@@ -135,12 +135,13 @@ class StorageSqlite {
         updated_at INTEGER
       )
     ''');
-    // id as sha1 of encrypted part as required by bb
+    // id : FileId_PartNumber
     //state:
     await db.execute('''
       CREATE TABLE parts (
         id TEXT PRIMARY KEY,
         file_id TEXT NOT NULL,
+        sha1 TEXT,
         part_number INTEGER NOT NULL,
         size INTEGER DEFAULT 0,
         state INTEGER DEFAULT 0,

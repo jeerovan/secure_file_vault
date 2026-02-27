@@ -37,7 +37,7 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
       _errorMessage = null;
     });
 
-    final response = await api.get(endpoint: '/user-keys');
+    final response = await api.get(endpoint: '/keys');
     final status = response["status"];
     if (status == -1) {
       _errorMessage = response["error"];

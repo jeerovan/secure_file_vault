@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	if (deviceRow) {
 		// Device exists: update column with received values
-		// Always set status to 1 (active) and update the last active timestamp
+		//  update the last active timestamp
 		await db
 			.update(userDevice)
 			.set({

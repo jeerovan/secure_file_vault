@@ -51,8 +51,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
     Map<String, dynamic> serverKeys = keys[AppString.serverKeys.string];
     serverKeys['id'] = userId;
     try {
-      final result =
-          await api.post(endpoint: '/user-keys', jsonBody: serverKeys);
+      final result = await api.post(endpoint: '/keys', jsonBody: serverKeys);
       final status = result["status"];
       if (status <= 0) {
         if (mounted) {

@@ -65,7 +65,7 @@ class ModelChange {
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<List<ModelChange>> fetch100MapPushForTable(String table) async {
+  static Future<List<ModelChange>> fetch300MapPushForTable(String table) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<dynamic> changeTypes = [
@@ -76,7 +76,7 @@ class ModelChange {
     // Generate placeholders (?, ?, ?) for the number of IDs
     final placeholders = List.filled(changeTypes.length, '?').join(',');
     changeTypes.insert(0, table);
-    int? singlePushLimit = 100;
+    int? singlePushLimit = 300;
     List<Map<String, dynamic>> rows = await db.query(Tables.changes.string,
         where: "table_name = ? AND change_type IN ($placeholders)",
         whereArgs: changeTypes,
