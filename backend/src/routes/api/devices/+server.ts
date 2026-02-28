@@ -12,7 +12,17 @@ import { eq, and, count } from 'drizzle-orm';
 export const GET: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
 
-	const result = db.select().from(userDevice).where(eq(userDevice.userId, authUser.id)).get();
+	const result = db
+		.select({
+			id: userDevice[1],
+			lastAt: userDevice[3],
+			title: userDevice[5],
+			type: userDevice[6],
+			active: userDevice[8]
+		})
+		.from(userDevice)
+		.where(eq(userDevice[4], authUser.id))
+		.get();
 
 	return json({ status: 1, data: result });
 };
@@ -30,7 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, error: 'Invalid JSON body' });
 	}
 
-	const { deviceId, title, type, notificationId, status } = body;
+	const { deviceId, title, type, notificationId, active } = body;
 
 	if (!deviceId) {
 		return json({ status: 0, error: 'Missing required fields: deviceId' });
@@ -39,7 +49,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const tableId = authUser.id + '_' + deviceId;
 
 	// Check if the device already exists for this user
-	const deviceRow = db.select().from(userDevice).where(eq(userDevice.id, tableId)).get();
+	const deviceRow = db.select().from(userDevice).where(eq(userDevice[1], tableId)).get();
 
 	if (deviceRow) {
 		// Device exists: update column with received values
@@ -47,13 +57,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		await db
 			.update(userDevice)
 			.set({
-				title: title ?? deviceRow.title,
-				type: type ?? deviceRow.type,
-				notificationId: notificationId ?? deviceRow.notificationId,
-				status: status ?? deviceRow.status,
-				lastActiveAt: new Date().getUTCMilliseconds()
+				5: title ?? deviceRow[5],
+				6: type ?? deviceRow[6],
+				7: notificationId ?? deviceRow[7],
+				8: active ?? deviceRow[8]
 			})
-			.where(eq(userDevice.id, tableId));
+			.where(eq(userDevice[1], tableId));
 
 		return json({ status: 1, data: 'Device updated successfully' });
 	} else {
@@ -61,7 +70,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		const result = db
 			.select({ count: count() })
 			.from(userDevice)
-			.where(and(eq(userDevice.userId, authUser.id), eq(userDevice.status, 1)))
+			.where(and(eq(userDevice[4], authUser.id), eq(userDevice[8], 1)))
 			.get();
 
 		const activeDevicesCount = result?.count ?? 0;
@@ -76,13 +85,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			// Insert new device with values
 			await db.insert(userDevice).values({
-				id: tableId,
-				userId: authUser.id,
-				title: title,
-				type: type,
-				notificationId: notificationId,
-				status: 1,
-				lastActiveAt: new Date().getUTCMilliseconds()
+				1: tableId,
+				4: authUser.id,
+				5: title,
+				6: type,
+				7: notificationId,
+				8: 1
 			});
 
 			return json({ status: 1, data: 'Device added successfully' });

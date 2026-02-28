@@ -49,7 +49,6 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
     Map<String, dynamic> keys = generationResult.getResult()!;
     Map<String, dynamic> privateKeys = keys[AppString.privateKeys.string];
     Map<String, dynamic> serverKeys = keys[AppString.serverKeys.string];
-    serverKeys['id'] = userId;
     try {
       final result = await api.post(endpoint: '/keys', jsonBody: serverKeys);
       final status = result["status"];

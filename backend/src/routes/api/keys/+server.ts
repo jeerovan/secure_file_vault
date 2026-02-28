@@ -14,12 +14,12 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const result = db
 		.select({
-			id: user.id,
-			cipher: user.cipher,
-			nonce: user.nonce
+			id: user[1],
+			cipher: user[5],
+			nonce: user[6]
 		})
 		.from(user)
-		.where(eq(user.id, authUser.id))
+		.where(eq(user[1], authUser.id))
 		.get();
 
 	if (!result) {
@@ -53,11 +53,10 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	const result = await db.insert(user).values({
-		id: authUser.id,
-		email: authUser.email,
-		cipher: cipher,
-		nonce: nonce,
-		createdAt: new Date()
+		1: authUser.id,
+		4: authUser.email,
+		5: cipher,
+		6: nonce
 	});
 
 	return json({ status: 1, data: result });
