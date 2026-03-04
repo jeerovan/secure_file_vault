@@ -40,13 +40,13 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, error: 'Invalid JSON body' });
 	}
 
-	const { deviceId, title, type, notificationId, active } = body;
+	const { device_id, title, type, notificationId, active } = body;
 
-	if (!deviceId) {
+	if (!device_id) {
 		return json({ status: 0, error: 'Missing required fields: deviceId' });
 	}
 
-	const tableId = authUser.id + '_' + deviceId;
+	const tableId = authUser.id + '_' + device_id;
 
 	// Check if the device already exists for this user
 	const deviceRow = db.select().from(userDevice).where(eq(userDevice[1], tableId)).get();

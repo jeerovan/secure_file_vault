@@ -9,14 +9,12 @@ class ModelProfile {
   String? email;
   String? username;
   int? updatedAt;
-  int? createdAt;
 
   ModelProfile({
     required this.id,
     this.email,
     this.username,
     this.updatedAt,
-    this.createdAt,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,7 +23,6 @@ class ModelProfile {
       'email': email,
       'username': username,
       'updated_at': updatedAt,
-      'created_at': createdAt,
     };
   }
 
@@ -36,7 +33,6 @@ class ModelProfile {
       email: getValueFromMap(map, "email", defaultValue: ""),
       username: getValueFromMap(map, "username", defaultValue: ""),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: nowUtc),
-      createdAt: getValueFromMap(map, "created_at", defaultValue: nowUtc),
     );
   }
 

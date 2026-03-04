@@ -12,7 +12,6 @@ class ModelPart {
   int state;
   String cipher;
   String nonce;
-  int createdAt;
   int updatedAt;
 
   ModelPart(
@@ -23,8 +22,7 @@ class ModelPart {
       required this.state,
       required this.cipher,
       required this.nonce,
-      required this.updatedAt,
-      required this.createdAt});
+      required this.updatedAt});
 
   Map<String, dynamic> toMap() {
     return {
@@ -36,7 +34,6 @@ class ModelPart {
       'cipher': cipher,
       'nonce': nonce,
       'updated_at': updatedAt,
-      'created_at': createdAt,
     };
   }
 
@@ -50,7 +47,6 @@ class ModelPart {
       state: map['state'],
       cipher: map["cipher"],
       nonce: map["nonce"],
-      createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }

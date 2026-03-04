@@ -22,8 +22,9 @@ export const userData = sqliteTable('user_data', {
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date()), // ServerUpdatedAt
 	4: text('4').unique(), // User Name
-	5: integer('5').notNull().default(0), // Plan Type
-	6: integer('6').notNull().default(0) // Profile Image Number
+	5: text('5').notNull(), // Device Id
+	6: integer('6').notNull().default(0), // Plan Type
+	7: integer('7').notNull().default(0) // Profile Image Number
 });
 
 export const userDevice = sqliteTable('user_device', {
@@ -50,16 +51,17 @@ export const file = sqliteTable('file', {
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date()), // ServerUpdatedAt
 	4: text('4').notNull(), // User Id
-	5: integer('5').notNull().default(0), // Items Count
-	6: integer('6').notNull().default(0), // Parts
-	7: integer('7').notNull().default(0), // Parts Uploaded
-	8: integer('8').notNull().default(0), // Uploaded At
-	9: integer('9').default(0), // Service type: Backblaze, Cloudflare etc.
-	10: text('10'), // Remote File Id
-	11: text('11'), // File Access Token
-	12: integer('12').notNull().default(0), // Token Expiry
-	13: integer('13').notNull().default(0), // ClientCreatedAt
-	14: integer('14').notNull().default(0) // ClientUpdatedAt
+	5: text('5').notNull(), // Device Id
+	6: integer('6').notNull().default(0), // Items Count
+	7: integer('7').notNull().default(0), // Parts
+	8: integer('8').notNull().default(0), // Parts Uploaded
+	9: integer('9').notNull().default(0), // Uploaded At
+	10: integer('10').default(0), // Service type: Backblaze, Cloudflare etc.
+	11: text('11'), // Remote File Id
+	12: text('12'), // File Access Token
+	13: integer('13').notNull().default(0), // Token Expiry
+	14: integer('14').notNull().default(0), // ClientUpdatedAt
+	15: integer('15').notNull().default(0) // Deleted
 });
 
 export const part = sqliteTable('part', {
@@ -70,14 +72,15 @@ export const part = sqliteTable('part', {
 	3: integer('3', { mode: 'timestamp' })
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').notNull(), // UserId_FileHash (FileId)
-	5: integer('5').notNull(), // Part Size
-	6: integer('6').notNull().default(0), // State
-	7: text('7'), // Cipher
-	8: text('8'), // Nonce
-	9: text('9'), // Sha1
-	10: integer('10').notNull().default(0), // ClientCreatedAt
-	11: integer('11').notNull().default(0) // ClientUpdatedAt
+	4: text('4').notNull(), // UserId
+	5: text('5').notNull(), // Device Id
+	6: integer('6').notNull(), // Part Size
+	7: integer('7').notNull().default(0), // State
+	8: text('8'), // Cipher
+	9: text('9'), // Nonce
+	10: text('10'), // Sha1
+	11: integer('11').notNull().default(0), // ClientUpdatedAt
+	12: integer('12').notNull().default(0) // Deleted
 });
 
 export const item = sqliteTable('item', {
@@ -89,10 +92,10 @@ export const item = sqliteTable('item', {
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date()), // ServerUpdatedAt
 	4: text('4').notNull(), // UserId
-	5: text('5').notNull(), // Cipher Text
-	6: text('6').notNull(), // Cipher Nonce
-	7: text('7').notNull(), // Key Cipher
-	8: text('8').notNull(), // Key Nonce
-	9: integer('9').notNull().default(0), // ClientCreatedAt
+	5: text('5').notNull(), // Device Id
+	6: text('6').notNull(), // Cipher Text
+	7: text('7').notNull(), // Cipher Nonce
+	8: text('8').notNull(), // Key Cipher
+	9: text('9').notNull(), // Key Nonce
 	10: integer('10').notNull().default(0) // ClientUpdatedAt
 });

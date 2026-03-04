@@ -115,8 +115,7 @@ class StorageSqlite {
         id TEXT PRIMARY KEY,
         email TEXT NOT NULL,
         username TEXT,
-        updated_at INTEGER,
-        created_at INTEGER
+        updated_at INTEGER
       )
     ''');
     // id : File Hash
@@ -131,7 +130,6 @@ class StorageSqlite {
         remote_id TEXT,
         access_token TEXT,
         token_expiry INTEGER DEFAULT 0,
-        created_at INTEGER,
         updated_at INTEGER
       )
     ''');
@@ -147,7 +145,6 @@ class StorageSqlite {
         state INTEGER DEFAULT 0,
         cipher TEXT NOT NULL,
         nonce TEXT NOT NULL,
-        created_at INTEGER,
         updated_at INTEGER,
         FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
       )
@@ -169,7 +166,6 @@ class StorageSqlite {
         file_id TEXT,
         size INTEGER DEFAULT 0,
         archived_at INTEGER,
-        created_at INTEGER,
         updated_at INTEGER,
         FOREIGN KEY (parent_id) REFERENCES items(id) ON DELETE CASCADE,
         FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE

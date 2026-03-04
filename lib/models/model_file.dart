@@ -13,7 +13,6 @@ class ModelFile {
   String? remoteId;
   String? accessToken;
   int tokenExpiry;
-  int createdAt;
   int updatedAt;
 
   ModelFile({
@@ -25,7 +24,6 @@ class ModelFile {
     this.remoteId,
     this.accessToken,
     required this.tokenExpiry,
-    required this.createdAt,
     required this.updatedAt,
   });
 
@@ -39,7 +37,6 @@ class ModelFile {
       'remote_id': remoteId,
       'access_token': accessToken,
       'token_expiry': tokenExpiry,
-      'created_at': createdAt,
       'updated_at': updatedAt
     };
   }
@@ -55,7 +52,6 @@ class ModelFile {
       remoteId: getValueFromMap(map, "remote_id", defaultValue: null),
       accessToken: getValueFromMap(map, "access_token", defaultValue: null),
       tokenExpiry: getValueFromMap(map, "token_expiry", defaultValue: 0),
-      createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }

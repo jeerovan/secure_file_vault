@@ -3,9 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../utils/enums.dart';
 
 class AppEnv {
   static const String apiBaseUrl = String.fromEnvironment(
@@ -63,16 +66,21 @@ class BackendApi {
     return uri.replace(queryParameters: qp);
   }
 
-  Map<String, String> _headers({
+  Future<Map<String, String>> _headers({
     required bool withAuth,
     Map<String, String>? extra,
-  }) {
+  }) async {
     final h = <String, String>{
       'Content-Type': 'application/json',
       if (withAuth) 'Authorization': 'Bearer ${_accessTokenOrThrow()}',
       if (!withAuth) 'Authorization': 'Bearer ${getSignedInEmailId()}',
     };
     if (extra != null) h.addAll(extra);
+    final storage = SecureStorage();
+    final deviceId = await storage.read(key: AppString.deviceId.string);
+    if (deviceId != null) {
+      h.addAll({'device_id': deviceId});
+    }
     return h;
   }
 
@@ -124,7 +132,7 @@ class BackendApi {
       final res = await _http
           .get(
             _buildUri(endpoint, queryParameters: queryParameters),
-            headers: _headers(
+            headers: await _headers(
                 withAuth: getSignedInEmailId() != testEmailId, extra: headers),
           )
           .timeout(timeout);
@@ -145,7 +153,7 @@ class BackendApi {
       final res = await _http
           .post(
             _buildUri(endpoint),
-            headers: _headers(
+            headers: await _headers(
                 withAuth: getSignedInEmailId() != testEmailId, extra: headers),
             body: jsonEncode(jsonBody),
           )

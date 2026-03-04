@@ -18,7 +18,6 @@ class ModelItem {
   String? fileId;
   int size;
   int archivedAt;
-  int createdAt;
   int updatedAt;
 
   ModelItem({
@@ -32,7 +31,6 @@ class ModelItem {
     this.fileId,
     required this.size,
     required this.archivedAt,
-    required this.createdAt,
     required this.updatedAt,
   });
 
@@ -48,7 +46,6 @@ class ModelItem {
       'file_id': fileId,
       'size': size,
       'archived_at': archivedAt,
-      'created_at': createdAt,
       'updated_at': updatedAt
     };
   }
@@ -72,7 +69,6 @@ class ModelItem {
       fileId: getValueFromMap(map, "file_id", defaultValue: null),
       size: getValueFromMap(map, "size", defaultValue: 0),
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
-      createdAt: getValueFromMap(map, "created_at", defaultValue: utcNow),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }

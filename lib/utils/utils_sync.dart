@@ -6,6 +6,7 @@ import 'package:crypto/crypto.dart';
 import '../models/model_change.dart';
 import '../models/model_profile.dart';
 import 'package:flutter/foundation.dart';
+import '../services/service_backend.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
 import '../models/model_file.dart';
@@ -142,26 +143,25 @@ class SyncUtils {
     return hasKeys;
   }
 
-  // TODO include profile changes sync
   static Future<bool> checkDeviceStatus() async {
     bool removed = false;
     if (simulateTesting()) {
       return removed;
     }
+    final api = BackendApi();
     try {
-      SupabaseClient supabaseClient = Supabase.instance.client;
-      String deviceId =
-          await ModelState.get(AppString.deviceId.string, defaultValue: "");
-      Map<String, dynamic>? row = await supabaseClient
-          .from("devices")
-          .select("status")
-          .eq("id", deviceId)
-          .maybeSingle();
-      int status = row == null ? 0 : row["status"];
-      if (status == 0) {
+      final response = await api.get(endpoint: '/devices');
+      final status = response["status"];
+      if (status == -1) {
+        logger.error("checkDeviceStatus", error: response["error"]);
+      } else if (status == 1) {
+        final data = response["data"];
+        removed = data["active"] == 0;
+      }
+
+      if (removed) {
         // signout
         await signout();
-        removed = true;
         // Send Signal to update home
         await signalToUpdateHome();
       }
@@ -224,19 +224,17 @@ class SyncUtils {
   }
 
   static Future<void> logChangeToPush(Map<String, dynamic> map,
-      {int deleteTask = 0, bool pushToSync = true}) async {
+      {int deleteTask = 0}) async {
     String? masterKeyBase64 = await getMasterKey();
     String? userId = getSignedInUserId();
     if (masterKeyBase64 != null && userId != null) {
-      String deviceId = await getDeviceId();
-
       String table = map["table"];
       String rowId = map['id'];
       String changeId = '$table|$rowId';
       int updatedAt = map['updated_at'];
       map["deleted"] = deleteTask;
 
-      Map<String, dynamic> changeMap = {"device_id": deviceId};
+      Map<String, dynamic> changeMap = {};
 
       if (table == Tables.items.string) {
         changeMap.addAll({
@@ -273,7 +271,7 @@ class SyncUtils {
           changeId, table, changeData, changeTask.value);
       logger.info("encryptAndPushChange:$table|$changeId|${changeTask.value}");
       await ModelChange.updateTypeState(changeId, SyncState.uploading);
-      //if (pushToSync) waitAndSyncChanges();
+      waitAndSyncChanges();
     }
   }
 
@@ -381,6 +379,7 @@ class SyncUtils {
     CryptoUtils cryptoUtils = CryptoUtils(sodium);
     // process in the order
     List<String> tables = [
+      Tables.profiles.string,
       Tables.files.string,
       Tables.items.string,
       Tables.parts.string
