@@ -373,7 +373,7 @@ class SyncUtils {
       await Future.delayed(const Duration(seconds: 2));
       return;
     }
-    String deviceId = await getDeviceId();
+    final api = BackendApi();
     Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
     SodiumSumo sodium = await SodiumSumoInit.init();
     CryptoUtils cryptoUtils = CryptoUtils(sodium);
@@ -403,14 +403,14 @@ class SyncUtils {
       try {
         // fetch clubbed changes
         Map<String, dynamic> requestData = {
-          AppString.deviceId.string: deviceId,
           AppString.lastProfilesChangesFetchedAt.string: lastProfilesFetchedAt,
           AppString.lastFilesChangesFetchedAt.string: lastFilesFetchedAt,
           AppString.lastItemsChangesFetchedAt.string: lastItemsFetchedAt,
           AppString.lastPartsChangesFetchedAt.string: lastPartsFetchedAt
         };
-        String responseData = ""; // TODO make request with requestData
-        Map<String, dynamic> tableChanges = jsonDecode(responseData);
+        final responseData =
+            await api.get(endpoint: '/sync', queryParameters: requestData);
+        Map<String, dynamic> tableChanges = responseData["data"];
         for (String table in tables) {
           if (!tableChanges.containsKey(table)) continue;
           changesAvailable = true;

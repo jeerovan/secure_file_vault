@@ -8,12 +8,14 @@ class ModelProfile {
   String id;
   String? email;
   String? username;
+  int? image;
   int? updatedAt;
 
   ModelProfile({
     required this.id,
     this.email,
     this.username,
+    this.image,
     this.updatedAt,
   });
 
@@ -22,6 +24,7 @@ class ModelProfile {
       'id': id,
       'email': email,
       'username': username,
+      'image': image,
       'updated_at': updatedAt,
     };
   }
@@ -32,6 +35,7 @@ class ModelProfile {
       id: map['id'],
       email: getValueFromMap(map, "email", defaultValue: ""),
       username: getValueFromMap(map, "username", defaultValue: ""),
+      image: getValueFromMap(map, "image", defaultValue: 0),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: nowUtc),
     );
   }

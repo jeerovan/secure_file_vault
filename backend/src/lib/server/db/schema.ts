@@ -97,5 +97,6 @@ export const item = sqliteTable('item', {
 	7: text('7').notNull(), // Cipher Nonce
 	8: text('8').notNull(), // Key Cipher
 	9: text('9').notNull(), // Key Nonce
-	10: integer('10').notNull().default(0) // ClientUpdatedAt
+	10: integer('10').notNull().default(0), // ClientUpdatedAt
+	11: integer('11').notNull().default(0) // Deleted
 });

@@ -5,6 +5,7 @@ import { SUPABASE_URL, SUPABASE_KEY } from '$env/static/private';
 export interface AuthUser {
 	id: string;
 	email: string;
+	did: string;
 }
 
 /**
@@ -14,6 +15,7 @@ export interface AuthUser {
  */
 export async function requireAuth(request: Request): Promise<AuthUser> {
 	const authHeader = request.headers.get('Authorization');
+	const device_id = request.headers.get('device_id') || '';
 	console.log(request.headers);
 	if (!authHeader?.startsWith('Bearer ')) {
 		throw error(401, 'Missing or invalid Authorization header');
@@ -44,6 +46,7 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 
 	return {
 		id: user.id,
-		email: user.email
+		email: user.email,
+		did: device_id
 	};
 }
