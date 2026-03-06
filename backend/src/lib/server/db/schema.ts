@@ -24,7 +24,7 @@ export const userData = sqliteTable('user_data', {
 	4: text('4').unique(), // User Name
 	5: text('5').notNull(), // Device Id
 	6: integer('6').notNull().default(0), // Plan Type
-	7: integer('7').notNull().default(0) // Profile Image Number
+	7: text('7') // Profile Image
 });
 
 export const userDevice = sqliteTable('user_device', {
@@ -93,10 +93,9 @@ export const item = sqliteTable('item', {
 		.$onUpdate(() => new Date()), // ServerUpdatedAt
 	4: text('4').notNull(), // UserId
 	5: text('5').notNull(), // Device Id
-	6: text('6').notNull(), // Cipher Text
-	7: text('7').notNull(), // Cipher Nonce
+	6: text('6').notNull(), // Text Cipher
+	7: text('7').notNull(), // Text Nonce
 	8: text('8').notNull(), // Key Cipher
 	9: text('9').notNull(), // Key Nonce
-	10: integer('10').notNull().default(0), // ClientUpdatedAt
-	11: integer('11').notNull().default(0) // Deleted
+	10: integer('10').notNull().default(0) // ClientUpdatedAt
 });

@@ -1,9 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { db } from '$lib/server/db'; // your drizzle db instance
-import { userData, file, item, part } from '$lib/server/db/schema';
-import { eq, and, count, ne, gte } from 'drizzle-orm';
+import {
+	fetchChanges,
+	saveFileChanges,
+	saveItemChanges,
+	savePartChanges
+} from '$lib/server/db/api';
 
 // ---------------------------------------------------
 // GET /api/user-device
@@ -13,60 +16,31 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
 	const deviceId = authUser.did;
 	// Fetch query parameters using url.searchParams
-	const last_profiles_changes_fetched_at = parseInt(
+	const lastProfilesTimestamp = parseInt(
 		url.searchParams.get('last_profiles_changes_fetched_at') || '0',
 		10
 	);
-	const last_files_changes_fetched_at = parseInt(
+	const lastFilesTimestamp = parseInt(
 		url.searchParams.get('last_files_changes_fetched_at') || '0',
 		10
 	);
-	const last_items_changes_fetched_at = parseInt(
+	const lastItemsTimestamp = parseInt(
 		url.searchParams.get('last_items_changes_fetched_at') || '0',
 		10
 	);
-	const last_parts_changes_fetched_at = parseInt(
+	const lastPartsTimestamp = parseInt(
 		url.searchParams.get('last_parts_changes_fetched_at') || '0',
 		10
 	);
 
-	const last_profiles_timestamp = new Date(last_profiles_changes_fetched_at);
-	const last_files_timestamp = new Date(last_files_changes_fetched_at);
-	const last_items_timestamp = new Date(last_items_changes_fetched_at);
-	const last_parts_timestamp = new Date(last_parts_changes_fetched_at);
-
-	const profile = db
-		.select()
-		.from(userData)
-		.where(
-			and(
-				eq(userData[1], authUser.id),
-				gte(userData[3], last_profiles_timestamp),
-				ne(userData[5], deviceId)
-			)
-		)
-		.get();
-
-	const fileRows = db
-		.select()
-		.from(file)
-		.where(and(eq(file[4], authUser.id), gte(file[3], last_files_timestamp), ne(file[5], deviceId)))
-		.limit(300)
-		.get();
-
-	const partRows = db
-		.select()
-		.from(part)
-		.where(and(eq(part[4], authUser.id), gte(part[3], last_parts_timestamp), ne(part[5], deviceId)))
-		.limit(300)
-		.get();
-
-	const itemRows = db
-		.select()
-		.from(item)
-		.where(and(eq(item[4], authUser.id), gte(item[3], last_items_timestamp), ne(item[5], deviceId)))
-		.limit(300)
-		.get();
+	const { profile, fileRows, partRows, itemRows } = await fetchChanges(
+		authUser.id,
+		deviceId,
+		lastProfilesTimestamp,
+		lastFilesTimestamp,
+		lastItemsTimestamp,
+		lastPartsTimestamp
+	);
 
 	return json({
 		status: 1,
@@ -79,18 +53,32 @@ export const GET: RequestHandler = async ({ request, url }) => {
 // ---------------------------------------------------
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
-	let body;
-
-	try {
-		body = await request.json();
-	} catch {
-		return json({ status: 0, error: 'Invalid JSON body' });
+	const userId = authUser.id;
+	const deviceId = authUser.did;
+	if (!deviceId) {
+		return json({ status: 0, error: 'Missing required fields: deviceId' });
 	}
 
-	const { device_id, title, type, notificationId, active } = body;
-
-	if (!device_id) {
-		return json({ status: 0, error: 'Missing required fields: deviceId' });
+	try {
+		const body = await request.json();
+		const { table_maps } = body;
+		for (const { table, changes } of table_maps) {
+			switch (table) {
+				case 'files':
+					await saveFileChanges(userId, deviceId, changes);
+					break;
+				case 'items':
+					await saveItemChanges(userId, deviceId, changes);
+					break;
+				case 'parts':
+					await savePartChanges(userId, deviceId, changes);
+					break;
+				default:
+					break;
+			}
+		}
+	} catch {
+		return json({ status: 0, error: 'Invalid JSON body' });
 	}
 
 	return json({ status: 1 });

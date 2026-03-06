@@ -222,9 +222,9 @@ extension AppStringExtension on AppString {
       case AppString.keyNonce:
         return "key_nonce";
       case AppString.textCipher:
-        return "cipher_text";
+        return "text_cipher";
       case AppString.textNonce:
-        return "cipher_nonce";
+        return "text_nonce";
       case AppString.key:
         return "key";
       case AppString.nonce:

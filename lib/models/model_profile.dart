@@ -3,12 +3,13 @@ import '../utils/enums.dart';
 import '../utils/common.dart';
 
 import '../storage/storage_sqlite.dart';
+import '../utils/utils_sync.dart';
 
 class ModelProfile {
   String id;
   String? email;
   String? username;
-  int? image;
+  String? image;
   int? updatedAt;
 
   ModelProfile({
@@ -35,7 +36,7 @@ class ModelProfile {
       id: map['id'],
       email: getValueFromMap(map, "email", defaultValue: ""),
       username: getValueFromMap(map, "username", defaultValue: ""),
-      image: getValueFromMap(map, "image", defaultValue: 0),
+      image: getValueFromMap(map, "image", defaultValue: ""),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: nowUtc),
     );
   }
@@ -67,7 +68,7 @@ class ModelProfile {
     return inserted;
   }
 
-  Future<int> update(List<String> attrs) async {
+  Future<int> update(List<String> attrs, {bool pushToSync = true}) async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -75,8 +76,14 @@ class ModelProfile {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    //SyncUtils.pushProfileChange(updatedMap);
     int updated = await dbHelper.update(Tables.profiles.string, updatedMap, id);
+    if (pushToSync) {
+      map["updated_at"] = utcNow;
+      map["table"] = Tables.profiles.string;
+      SyncUtils.logChangeToPush(
+        map,
+      );
+    }
     return updated;
   }
 

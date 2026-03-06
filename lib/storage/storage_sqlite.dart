@@ -108,6 +108,7 @@ class StorageSqlite {
   }
 
   Future<void> initTables(Database db) async {
+    // id: supabase id
     // email required for internal communication
     // username required for sharing files
     await db.execute('''
@@ -115,6 +116,7 @@ class StorageSqlite {
         id TEXT PRIMARY KEY,
         email TEXT NOT NULL,
         username TEXT,
+        image TEXT,
         updated_at INTEGER
       )
     ''');

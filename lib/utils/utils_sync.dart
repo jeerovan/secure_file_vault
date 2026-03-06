@@ -235,7 +235,6 @@ class SyncUtils {
       map["deleted"] = deleteTask;
 
       Map<String, dynamic> changeMap = {};
-
       if (table == Tables.items.string) {
         changeMap.addAll({
           "id": rowId,
@@ -250,7 +249,6 @@ class SyncUtils {
         Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
         Map<String, dynamic> encryptedDataMap =
             cryptoUtils.getEncryptedBytesMap(plainBytes, masterKeyBytes);
-
         changeMap.addAll(encryptedDataMap);
       } else {
         changeMap.addAll(map);
@@ -277,7 +275,7 @@ class SyncUtils {
 
   static Future<void> pushMapChanges() async {
     logger.info("Push Map Changes");
-    String deviceId = await ModelState.get(AppString.deviceId.string);
+    final api = BackendApi();
     bool changesAvailable = true;
     while (changesAvailable) {
       List<Map<String, dynamic>> tableMaps = [];
@@ -303,10 +301,9 @@ class SyncUtils {
         try {
           if (!simulateTesting()) {
             Map<String, dynamic> requestData = {
-              AppString.deviceId.string: deviceId,
               AppString.tableMaps.string: tableMaps
             };
-            //TODO make request
+            await api.post(endpoint: '/sync', jsonBody: requestData);
           }
           await ModelChange.updateChangeState(tableChanges);
           logger.info("Pushed Map Changes");
@@ -343,24 +340,6 @@ class SyncUtils {
       }
     } else {
       await ModelChange.upgradeChangeTask(change);
-    }
-  }
-
-  static Future<void> pushProfileChange(Map<String, dynamic> map) async {
-    SupabaseClient supabaseClient = Supabase.instance.client;
-    int updatedAt = map["updated_at"];
-    Map<String, dynamic> changeMap = {"updated_at": updatedAt};
-    if (map.containsKey("username")) {
-      changeMap["username"] = map["username"];
-    }
-    try {
-      await supabaseClient
-          .from("profiles")
-          .update(changeMap)
-          .eq('id', map["id"])
-          .gt('updated_at', updatedAt);
-    } catch (e, s) {
-      logger.error("pushProfileChange|Supabase", error: e, stackTrace: s);
     }
   }
 
