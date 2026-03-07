@@ -33,7 +33,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 		10
 	);
 
-	const { profile, fileRows, partRows, itemRows } = await fetchChanges(
+	const { profileRows, fileRows, partRows, itemRows } = await fetchChanges(
 		authUser.id,
 		deviceId,
 		lastProfilesTimestamp,
@@ -44,7 +44,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 
 	return json({
 		status: 1,
-		data: { files: fileRows, parts: partRows, items: itemRows, profiles: profile }
+		data: { files: fileRows, parts: partRows, items: itemRows, profiles: profileRows }
 	});
 };
 
@@ -60,8 +60,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	try {
-		const body = await request.json();
-		const { table_maps } = body;
+		const { table_maps } = await request.json();
 		for (const { table, changes } of table_maps) {
 			switch (table) {
 				case 'files':
@@ -77,8 +76,8 @@ export const POST: RequestHandler = async ({ request }) => {
 					break;
 			}
 		}
-	} catch {
-		return json({ status: 0, error: 'Invalid JSON body' });
+	} catch (e) {
+		return json({ status: 0, error: e });
 	}
 
 	return json({ status: 1 });

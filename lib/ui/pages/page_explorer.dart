@@ -1,4 +1,5 @@
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_vault_bb/utils/utils_sync.dart';
 import '../../models/model_item.dart';
 import '../../services/service_logger.dart';
 import '../../services/service_recon.dart';
@@ -114,6 +115,7 @@ class _FilePaneState extends State<FilePane> {
     final reconService = ReconciliationService();
     await reconService.reconcile(currentItem!.id);
     _loadFiles();
+    SyncUtils.waitAndSyncChanges();
   }
 
   void _navigateTo(ModelItem item) {

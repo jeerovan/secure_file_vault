@@ -16,7 +16,6 @@ export interface AuthUser {
 export async function requireAuth(request: Request): Promise<AuthUser> {
 	const authHeader = request.headers.get('Authorization');
 	const device_id = request.headers.get('device_id') || '';
-	console.log(request.headers);
 	if (!authHeader?.startsWith('Bearer ')) {
 		throw error(401, 'Missing or invalid Authorization header');
 	}

@@ -14,7 +14,7 @@ export async function fetchChanges(
 	const filesTimestamp = new Date(lastFilesTimestamp);
 	const itemsTimestamp = new Date(lastItemsTimestamp);
 	const partsTimestamp = new Date(lastPartsTimestamp);
-	const profile = db
+	const profileRows = db
 		.select()
 		.from(userData)
 		.where(
@@ -43,11 +43,11 @@ export async function fetchChanges(
 		.limit(300)
 		.all();
 
-	return { profile, fileRows, partRows, itemRows };
+	return { profileRows, fileRows, partRows, itemRows };
 }
 
 export async function saveFileChanges(userId: string, deviceId: string, changes: any[]) {
-	for (const { change } of changes) {
+	for (const change of changes) {
 		const fileHash = change['id'];
 		const tableKey = userId + '_' + fileHash;
 		const incomingUpdatedAt = change['updated_at'] || 0;
@@ -103,7 +103,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 }
 
 export async function savePartChanges(userId: string, deviceId: string, changes: any[]) {
-	for (const { change } of changes) {
+	for (const change of changes) {
 		const partId = change['id'];
 		const tableKey = userId + '_' + partId;
 		const incomingUpdatedAt = change['updated_at'] || 0;
@@ -144,7 +144,7 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 }
 
 export async function saveItemChanges(userId: string, deviceId: string, changes: any[]) {
-	for (const { change } of changes) {
+	for (const change of changes) {
 		const itemId = change['id'];
 		const tableKey = userId + '_' + itemId;
 		const incomingUpdatedAt = change['updated_at'] || 0;
@@ -161,10 +161,10 @@ export async function saveItemChanges(userId: string, deviceId: string, changes:
 					.update(item)
 					.set({
 						'5': deviceId,
-						'6': change['text_cipher'] ?? null,
-						'7': change['text_nonce'] ?? null,
-						'8': change['key_cipher'] ?? null,
-						'9': change['key_nonce'] ?? null,
+						'6': change['text_cipher'],
+						'7': change['text_nonce'],
+						'8': change['key_cipher'],
+						'9': change['key_nonce'],
 						'10': incomingUpdatedAt
 					})
 					.where(eq(item['1'], tableKey));
@@ -174,10 +174,10 @@ export async function saveItemChanges(userId: string, deviceId: string, changes:
 				'1': tableKey,
 				'4': userId,
 				'5': deviceId,
-				'6': change['text_cipher'] ?? null,
-				'7': change['text_nonce'] ?? null,
-				'8': change['key_cipher'] ?? null,
-				'9': change['key_nonce'] ?? null,
+				'6': change['text_cipher'],
+				'7': change['text_nonce'],
+				'8': change['key_cipher'],
+				'9': change['key_nonce'],
 				'10': incomingUpdatedAt
 			});
 		}

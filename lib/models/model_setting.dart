@@ -16,7 +16,8 @@ class ModelSetting {
   }
 
   static Future<void> delete(String key) async {
+    settingJson.remove(key);
     final dbHelper = StorageSqlite.instance;
-    int _ = await dbHelper.delete(Tables.settings.string, key);
+    await dbHelper.delete(Tables.settings.string, key);
   }
 }

@@ -53,6 +53,7 @@ class SyncUtils {
       {bool inBackground = false,
       bool manualSync = false,
       bool firstFetch = false}) {
+    logger.info("wait and sync");
     _instance._handleChange(inBackground,
         manualSync: manualSync, firstFetch: firstFetch);
   }
@@ -278,6 +279,7 @@ class SyncUtils {
     final api = BackendApi();
     bool changesAvailable = true;
     while (changesAvailable) {
+      changesAvailable = false;
       List<Map<String, dynamic>> tableMaps = [];
       List<ModelChange> tableChanges = [];
       for (String table in [
@@ -298,18 +300,17 @@ class SyncUtils {
       }
       if (tableMaps.isNotEmpty) {
         changesAvailable = true;
-        try {
-          if (!simulateTesting()) {
-            Map<String, dynamic> requestData = {
-              AppString.tableMaps.string: tableMaps
-            };
+
+        Map<String, dynamic> requestData = {
+          AppString.tableMaps.string: tableMaps
+        };
+        final response =
             await api.post(endpoint: '/sync', jsonBody: requestData);
-          }
+        if (response["status"] == 1) {
           await ModelChange.updateChangeState(tableChanges);
           logger.info("Pushed Map Changes");
-        } catch (e, s) {
+        } else {
           changesAvailable = false;
-          logger.error("pushMapChanges", error: e, stackTrace: s);
         }
       }
     }
@@ -344,14 +345,9 @@ class SyncUtils {
   }
 
   static Future<void> fetchMapChanges() async {
-    logger.info("Fetching map changes");
     String? masterKeyBase64 = await getMasterKey();
     if (await canSync() == false || masterKeyBase64 == null) return;
     logger.info("Fetch Map Changes");
-    if (simulateTesting()) {
-      await Future.delayed(const Duration(seconds: 2));
-      return;
-    }
     final api = BackendApi();
     Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
     SodiumSumo sodium = await SodiumSumoInit.init();
@@ -389,11 +385,15 @@ class SyncUtils {
         };
         final responseData =
             await api.get(endpoint: '/sync', queryParameters: requestData);
+        if (responseData["status"] == 0) break;
         Map<String, dynamic> tableChanges = responseData["data"];
         for (String table in tables) {
           if (!tableChanges.containsKey(table)) continue;
-          changesAvailable = true;
           List<dynamic> changesMap = tableChanges[table];
+          if (changesMap.isEmpty) {
+            continue;
+          }
+          changesAvailable = true;
           for (Map<String, dynamic> changeMap in changesMap) {
             Map<String, dynamic> map = changeMap;
             if (table == Tables.items.string) {
@@ -408,7 +408,6 @@ class SyncUtils {
             String rowId = map["id"];
             int deleteTask = int.parse(map.remove("deleted").toString());
             if (deleteTask > 0) {
-              // file already been deleted from server
               if (table == Tables.files.string) {
                 await ModelFile.deletedFromServer(rowId);
               } else if (table == Tables.items.string) {

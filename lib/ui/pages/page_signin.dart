@@ -321,7 +321,7 @@ class _PageSigninState extends State<PageSignin> {
             size: 48, color: Theme.of(context).colorScheme.primary),
         const SizedBox(height: 24),
         Text(
-          'Welcome Back',
+          'Welcome',
           textAlign: TextAlign.center,
           style: Theme.of(context)
               .textTheme

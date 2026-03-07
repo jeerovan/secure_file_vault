@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/model_item.dart';
 import '../storage/storage_secure.dart';
+import '../storage/storage_sqlite.dart';
 import '../utils/enums.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -145,6 +146,9 @@ class AppSetupState extends ChangeNotifier {
     await ModelSetting.delete(AppString.simulateTesting.string);
     await ModelSetting.delete(AppString.signedIn.string);
     await _prefs.delete(key: 'selected_plan');
+    final dbHelper = StorageSqlite.instance;
+    await dbHelper.clear("items");
+    await dbHelper.clear("files");
     _selectedPlan = null;
     _currentStep = SetupStep.signin;
     notifyListeners();
