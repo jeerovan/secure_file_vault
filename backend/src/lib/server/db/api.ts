@@ -1,6 +1,98 @@
-import { db } from '$lib/server/db'; // your drizzle db instance
-import { userData, file, item, part } from '$lib/server/db/schema';
-import { eq, and, ne, gte } from 'drizzle-orm';
+import { json, error } from '@sveltejs/kit';
+import { db } from '$lib/server/db';
+import { user, userDevice, userData, file, item, part, backblaze } from '$lib/server/db/schema';
+import { eq, and, ne, gte, count } from 'drizzle-orm';
+
+export async function getKeys(userId: string) {
+	return db
+		.select({
+			id: user[1],
+			cipher: user[5],
+			nonce: user[6]
+		})
+		.from(user)
+		.where(eq(user[1], userId))
+		.get();
+}
+export async function addKey(userId: string, email: string, cipher: string, nonce: string) {
+	return await db.insert(user).values({
+		1: userId,
+		4: email,
+		5: cipher,
+		6: nonce
+	});
+}
+export async function getUserDevices(userId: string) {
+	return db
+		.select({
+			id: userDevice[1],
+			lastAt: userDevice[3],
+			title: userDevice[5],
+			type: userDevice[6],
+			active: userDevice[8]
+		})
+		.from(userDevice)
+		.where(eq(userDevice[4], userId))
+		.get();
+}
+
+export async function addUpdateDevice(
+	userId: string,
+	tableId: string,
+	title: string,
+	type: number,
+	notificationId: string,
+	active: number
+) {
+	// Check if the device already exists for this user
+	const deviceRow = db.select().from(userDevice).where(eq(userDevice[1], tableId)).get();
+
+	if (deviceRow) {
+		// Device exists: update column with received values
+		//  update the last active timestamp
+		await db
+			.update(userDevice)
+			.set({
+				5: title ?? deviceRow[5],
+				6: type ?? deviceRow[6],
+				7: notificationId ?? deviceRow[7],
+				8: active ?? deviceRow[8]
+			})
+			.where(eq(userDevice[1], tableId));
+
+		return json({ status: 1, data: 'Device updated successfully' });
+	} else {
+		// Device doesn't exist: fetch current active devices count
+		const result = db
+			.select({ count: count() })
+			.from(userDevice)
+			.where(and(eq(userDevice[4], userId), eq(userDevice[8], 1)))
+			.get();
+
+		const activeDevicesCount = result?.count ?? 0;
+
+		if (activeDevicesCount >= 5) {
+			return json({ status: 0, error: 'Max 5 active devices only' });
+		} else {
+			// Require title and type for a new device insertion
+			if (!title || type === undefined) {
+				return json({ status: 0, error: 'Missing required fields for new device: title, type' });
+			}
+
+			// Insert new device with values
+			await db.insert(userDevice).values({
+				1: tableId,
+				4: userId,
+				5: title,
+				6: type,
+				7: notificationId,
+				8: 1
+			});
+
+			return json({ status: 1, data: 'Device added successfully' });
+		}
+	}
+}
 
 export async function fetchChanges(
 	userId: string,
@@ -182,4 +274,70 @@ export async function saveItemChanges(userId: string, deviceId: string, changes:
 			});
 		}
 	}
+}
+
+// --- BACKBLAZE ---
+export async function addB2Account(Id: string, AppId: string, KeyId: string, data: any) {
+	const {
+		authorizationToken,
+		apiInfo: {
+			storageApi: { apiUrl, downloadUrl }
+		}
+	} = data;
+	return await db
+		.insert(backblaze)
+		.values({
+			'1': Id,
+			'4': AppId,
+			'5': KeyId,
+			'6': authorizationToken,
+			'8': apiUrl,
+			'9': downloadUrl
+		})
+		.onConflictDoUpdate({
+			target: backblaze['1'], // The primary key to check for conflicts
+			set: {
+				'3': new Date(),
+				'6': authorizationToken,
+				'8': apiUrl,
+				'9': downloadUrl
+			}
+		});
+}
+
+export async function getB2Account(Id: string) {
+	return db.select().from(backblaze).where(eq(backblaze['1'], Id)).get();
+}
+export async function markB2TokenUpdating(Id: string) {
+	return await db
+		.update(backblaze)
+		.set({ '7': 1 })
+		.where(
+			and(
+				eq(backblaze['1'], Id),
+				eq(backblaze['7'], 0) // Ensure it hasn't been locked by another request in the last millisecond
+			)
+		)
+		.returning();
+}
+export async function markB2TokenUpdated(Id: string) {
+	await db.update(backblaze).set({ '7': 0 }).where(eq(backblaze['1'], Id));
+}
+export async function updateB2Account(Id: string, data: any) {
+	const {
+		authorizationToken,
+		apiInfo: {
+			storageApi: { apiUrl, downloadUrl }
+		}
+	} = data;
+	await db
+		.update(backblaze)
+		.set({
+			'3': new Date(),
+			'6': authorizationToken,
+			'7': 0,
+			'8': apiUrl,
+			'9': downloadUrl
+		})
+		.where(eq(backblaze['1'], Id));
 }

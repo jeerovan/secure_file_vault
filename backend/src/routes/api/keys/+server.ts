@@ -4,6 +4,7 @@ import { requireAuth } from '$lib/server/auth';
 import { db } from '$lib/server/db'; // your drizzle db instance
 import { user } from '$lib/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { addKey, getKeys } from '$lib/server/db/api';
 
 // ---------------------------------------------------
 // GET /api/user-keys
@@ -12,15 +13,7 @@ import { eq } from 'drizzle-orm';
 export const GET: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
 
-	const result = db
-		.select({
-			id: user[1],
-			cipher: user[5],
-			nonce: user[6]
-		})
-		.from(user)
-		.where(eq(user[1], authUser.id))
-		.get();
+	const result = await getKeys(authUser.id);
 
 	if (!result) {
 		return json({ status: 0, error: 'User not found' });
@@ -52,12 +45,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 1 });
 	}
 
-	const result = await db.insert(user).values({
-		1: authUser.id,
-		4: authUser.email,
-		5: cipher,
-		6: nonce
-	});
+	const result = await addKey(authUser.id, authUser.email, cipher, nonce);
 
 	return json({ status: 1, data: result });
 };

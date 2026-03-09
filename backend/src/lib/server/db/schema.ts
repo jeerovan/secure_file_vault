@@ -99,3 +99,19 @@ export const item = sqliteTable('item', {
 	9: text('9').notNull(), // Key Nonce
 	10: integer('10').notNull().default(0) // ClientUpdatedAt
 });
+
+export const backblaze = sqliteTable('backblaze', {
+	1: text('1').primaryKey(), // Account Id / User Id
+	2: integer('2', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date()), // ServerCreatedAt
+	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date())
+		.$onUpdate(() => new Date()), // ServerUpdatedAt
+	4: text('4').notNull(), // AppId
+	5: text('5').notNull(), // AppKey
+	6: text('6').notNull(), // B2 Access Token
+	7: integer('7').notNull().default(0), // Updating (0/1)
+	8: text('8').notNull(), // Api Url
+	9: text('9').notNull() // Storage Url
+});
