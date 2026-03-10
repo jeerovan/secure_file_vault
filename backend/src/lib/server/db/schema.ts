@@ -101,7 +101,7 @@ export const item = sqliteTable('item', {
 });
 
 export const backblaze = sqliteTable('backblaze', {
-	1: text('1').primaryKey(), // Account Id / User Id
+	1: text('1').primaryKey(), // Account Id
 	2: integer('2', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date()), // ServerCreatedAt
@@ -113,5 +113,7 @@ export const backblaze = sqliteTable('backblaze', {
 	6: text('6').notNull(), // B2 Access Token
 	7: integer('7').notNull().default(0), // Updating (0/1)
 	8: text('8').notNull(), // Api Url
-	9: text('9').notNull() // Storage Url
+	9: text('9').notNull(), // Storage Url
+	10: text('10').notNull(), // Bucket Id
+	11: text('11').notNull().unique() // User Id
 });

@@ -277,8 +277,15 @@ export async function saveItemChanges(userId: string, deviceId: string, changes:
 }
 
 // --- BACKBLAZE ---
-export async function addB2Account(Id: string, AppId: string, KeyId: string, data: any) {
+export async function addB2Account(
+	UserId: string,
+	AppId: string,
+	KeyId: string,
+	BucketId: string,
+	data: any
+) {
 	const {
+		accountId,
 		authorizationToken,
 		apiInfo: {
 			storageApi: { apiUrl, downloadUrl }
@@ -287,12 +294,14 @@ export async function addB2Account(Id: string, AppId: string, KeyId: string, dat
 	return await db
 		.insert(backblaze)
 		.values({
-			'1': Id,
+			'1': accountId,
 			'4': AppId,
 			'5': KeyId,
 			'6': authorizationToken,
 			'8': apiUrl,
-			'9': downloadUrl
+			'9': downloadUrl,
+			'10': BucketId,
+			'11': UserId
 		})
 		.onConflictDoUpdate({
 			target: backblaze['1'], // The primary key to check for conflicts

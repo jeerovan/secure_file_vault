@@ -1,3 +1,4 @@
+import { json } from '@sveltejs/kit';
 import {
 	addB2Account,
 	getB2Account,
@@ -6,10 +7,9 @@ import {
 	updateB2Account
 } from './db/api';
 
-const B2_API_URL = 'https://api.backblazeb2.com/b2api/v4';
-
 export async function authorize(appId: string, appKey: string) {
 	let response;
+	const B2_API_URL = 'https://api.backblazeb2.com/b2api/v3';
 	try {
 		const authResponse = await fetch(`${B2_API_URL}/b2_authorize_account`, {
 			headers: { Authorization: `Basic ${btoa(`${appId}:${appKey}`)}` }
@@ -26,8 +26,55 @@ export async function authorize(appId: string, appKey: string) {
 	return response;
 }
 
-export async function addAccount(Id: string, AppId: string, KeyId: string, data: any) {
-	await addB2Account(Id, AppId, KeyId, data);
+export async function addAccount(UserId: string, AppId: string, KeyId: string, data: any) {
+	// Create bucket with config and get bucket it
+	const {
+		accountId,
+		authorizationToken,
+		apiInfo: {
+			storageApi: { apiUrl }
+		}
+	} = data;
+	const endpoint = `${apiUrl}/b2api/v3/b2_create_bucket`;
+	const bucketName = 'FiFe';
+	const payload = {
+		accountId,
+		bucketName,
+		bucketType: 'allPrivate',
+		lifecycleRules: [
+			{
+				daysFromHidingToDeleting: 1,
+				daysFromUploadingToHiding: null,
+				fileNamePrefix: ''
+			}
+		]
+	};
+
+	try {
+		const response = await fetch(endpoint, {
+			method: 'POST',
+			headers: {
+				Authorization: authorizationToken,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(payload)
+		});
+
+		if (!response.ok) {
+			// Backblaze returns detailed error objects
+			const errorData = await response.json();
+			return json({
+				status: 0,
+				error: `Error: ${errorData.message}`
+			});
+		}
+		const { bucketId } = await response.json();
+		await addB2Account(UserId, AppId, KeyId, bucketId, data);
+		return json({ status: 1 });
+	} catch (error) {
+		console.error('Failed to create Backblaze bucket:', error);
+		return json({ status: 0, error: error });
+	}
 }
 
 export async function authenticate(Id: string) {

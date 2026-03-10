@@ -18,10 +18,31 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!app_id || !app_key) {
 		return json({ status: 0, error: 'Missing required fields' });
 	}
-	const data = await authorize(app_id, app_key); // Should be checked on user device
+	const data = await authorize(app_id, app_key); // TODO Should be checked on user device
 	if (data) {
-		await addAccount(authUser.id, app_id, app_key, data);
-		return json({ status: 1 });
+		const {
+			apiInfo: {
+				storageApi: {
+					allowed: { capabilities }
+				}
+			}
+		} = data;
+		const required = [
+			'deleteFiles',
+			'writeBuckets',
+			'readBuckets',
+			'readFiles',
+			'shareFiles',
+			'writeFiles',
+			'listFiles'
+		];
+		const allExists = required.every((item) => capabilities.includes(item));
+		if (allExists) {
+			const result = await addAccount(authUser.id, app_id, app_key, data);
+			return result;
+		} else {
+			return json({ status: 0, error: 'Credentials do not have required capabilities.' });
+		}
 	} else {
 		return json({ status: 0, error: 'Invalid credentials' });
 	}
