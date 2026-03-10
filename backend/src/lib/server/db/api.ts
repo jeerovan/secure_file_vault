@@ -316,8 +316,8 @@ export async function addB2Account(
 		});
 }
 
-export async function getB2Account(Id: string) {
-	return db.select().from(backblaze).where(eq(backblaze['1'], Id)).get();
+export async function getB2Account(UserId: string) {
+	return db.select().from(backblaze).where(eq(backblaze['11'], UserId)).get();
 }
 export async function markB2TokenUpdating(Id: string) {
 	return await db

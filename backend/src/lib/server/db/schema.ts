@@ -111,7 +111,7 @@ export const backblaze = sqliteTable('backblaze', {
 	4: text('4').notNull(), // AppId
 	5: text('5').notNull(), // AppKey
 	6: text('6').notNull(), // B2 Access Token
-	7: integer('7').notNull().default(0), // Updating (0/1)
+	7: integer('7').notNull().default(0), // Token Updating (0/1)
 	8: text('8').notNull(), // Api Url
 	9: text('9').notNull(), // Storage Url
 	10: text('10').notNull(), // Bucket Id
@@ -119,5 +119,6 @@ export const backblaze = sqliteTable('backblaze', {
 	12: integer('12', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date()), // Token Updated At
-	13: integer('13').notNull().default(10) // Bucket size limit, default: 10GB
+	13: integer('13').notNull().default(10), // Bucket size limit, default: 10GB
+	14: integer('14').notNull().default(0) // Size used (Total files size)
 });

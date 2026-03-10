@@ -1,32 +1,19 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { authenticate, deleteFileVersion } from '$lib/server/backblaze';
+import { authenticate, getUploadUrl } from '$lib/server/backblaze';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
-	let body;
 
-	try {
-		body = await request.json();
-	} catch {
-		return json({ status: 0, error: 'Invalid JSON body' });
-	}
-
-	const { file_name, file_id } = body;
-
-	if (!file_name || !file_id) {
-		return json({ status: 0, error: 'Missing required fields' });
-	}
 	const authData = await authenticate(authUser.id);
 	if (!authData) {
 		return json({ status: 0, error: 'No Account Found' });
 	}
-	const result = await deleteFileVersion({
+	const result = await getUploadUrl({
 		apiUrl: authData.apiUrl,
 		authorizationToken: authData.authorizationToken,
-		fileName: file_name,
-		fileId: file_id
+		bucketId: authData.bucketId
 	});
 	return result;
 };
