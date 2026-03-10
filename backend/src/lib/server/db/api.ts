@@ -301,7 +301,8 @@ export async function addB2Account(
 			'8': apiUrl,
 			'9': downloadUrl,
 			'10': BucketId,
-			'11': UserId
+			'11': UserId,
+			'12': new Date()
 		})
 		.onConflictDoUpdate({
 			target: backblaze['1'], // The primary key to check for conflicts
@@ -309,7 +310,8 @@ export async function addB2Account(
 				'3': new Date(),
 				'6': authorizationToken,
 				'8': apiUrl,
-				'9': downloadUrl
+				'9': downloadUrl,
+				'12': new Date()
 			}
 		});
 }
@@ -346,7 +348,8 @@ export async function updateB2Account(Id: string, data: any) {
 			'6': authorizationToken,
 			'7': 0,
 			'8': apiUrl,
-			'9': downloadUrl
+			'9': downloadUrl,
+			'12': new Date()
 		})
 		.where(eq(backblaze['1'], Id));
 }

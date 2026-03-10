@@ -115,5 +115,9 @@ export const backblaze = sqliteTable('backblaze', {
 	8: text('8').notNull(), // Api Url
 	9: text('9').notNull(), // Storage Url
 	10: text('10').notNull(), // Bucket Id
-	11: text('11').notNull().unique() // User Id
+	11: text('11').notNull().unique(), // User Id
+	12: integer('12', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date()), // Token Updated At
+	13: integer('13').notNull().default(10) // Bucket size limit, default: 10GB
 });

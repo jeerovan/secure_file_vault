@@ -88,7 +88,7 @@ export async function authenticate(Id: string) {
 
 	const existingToken = row['6'] || undefined;
 	const isUpdating = row['7'];
-	const updatedAt = row['3'] || new Date(0); // Fallback to 1970 if null
+	const updatedAt = row['12'] || new Date(0); // Fallback to 1970 if null
 	const appId = row['4'];
 	const appKey = row['5'];
 
