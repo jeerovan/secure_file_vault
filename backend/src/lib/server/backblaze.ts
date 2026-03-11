@@ -42,7 +42,11 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		apiUrl,
 		downloadUrl
 	};
-	await addCredentials(userId, accountId, credentials, 'backblaze');
+	let provider = 'backblaze';
+	if (userId == 'fife') {
+		provider = 'fife';
+	}
+	await addCredentials(userId, accountId, credentials, provider);
 	return json({ status: 1 });
 }
 
