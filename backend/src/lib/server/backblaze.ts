@@ -42,7 +42,7 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		apiUrl,
 		downloadUrl
 	};
-	await addCredentials(userId, accountId, credentials, 'blackblaze');
+	await addCredentials(userId, accountId, credentials, 'backblaze');
 	return json({ status: 1 });
 }
 

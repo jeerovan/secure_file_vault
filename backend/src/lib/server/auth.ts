@@ -26,7 +26,7 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 	const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 	let response;
 	if (token == 'fife@jeerovan.com') {
-		response = { data: { user: { id: 'tester', email: 'fife@jeerovan.com' } }, error: null };
+		response = { data: { user: { id: 'fife', email: 'fife@jeerovan.com' } }, error: null };
 	} else {
 		response = await supabase.auth.getUser(token);
 	}

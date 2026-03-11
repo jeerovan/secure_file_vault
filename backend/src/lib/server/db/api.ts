@@ -294,19 +294,19 @@ export async function saveItemChanges(userId: string, deviceId: string, changes:
 export async function addCredentials(
 	userId: string,
 	accountId: string,
-	credentials: any,
+	credentialsData: any,
 	provider: string
 ) {
 	// 1. Check if the entry exists
 	const existingEntry = db.select().from(credentials).where(eq(credentials['1'], accountId)).get();
 
-	if (existingEntry) {
+	if (!existingEntry) {
 		// 2. Insert if it does not exist
 		await db.insert(credentials).values({
 			'1': accountId,
 			'4': userId,
 			'5': provider,
-			'6': credentials
+			'6': credentialsData
 		});
 		if (provider != 'fife') {
 			let priority = 1;
@@ -321,7 +321,7 @@ export async function addCredentials(
 			.update(credentials)
 			.set({
 				'3': new Date(), // Update ServerUpdatedAt
-				'6': credentials
+				'6': credentialsData
 			})
 			.where(eq(credentials['1'], accountId));
 	}
