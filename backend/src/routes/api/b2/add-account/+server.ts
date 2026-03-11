@@ -22,9 +22,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (data) {
 		const {
 			apiInfo: {
-				storageApi: {
-					allowed: { capabilities }
-				}
+				storageApi: { capabilities }
 			}
 		} = data;
 		const required = [

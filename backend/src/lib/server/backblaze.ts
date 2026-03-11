@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
 import {
-	addB2Account,
-	getB2Account,
-	markB2TokenUpdated,
-	markB2TokenUpdating,
-	updateB2Account
+	addCredentials,
+	getCredentials,
+	markCredentialsUpdated,
+	markCredentialsUpdating,
+	updateCredentials
 } from './db/api';
 
 export async function authorize(appId: string, appKey: string) {
@@ -26,60 +26,29 @@ export async function authorize(appId: string, appKey: string) {
 	return response;
 }
 
-export async function addAccount(UserId: string, AppId: string, KeyId: string, data: any) {
-	// Create bucket with config and get bucket it
+export async function addAccount(userId: string, appId: string, appKey: string, data: any) {
 	const {
 		accountId,
 		authorizationToken,
 		apiInfo: {
-			storageApi: { apiUrl }
+			storageApi: { apiUrl, bucketId, downloadUrl }
 		}
 	} = data;
-	const endpoint = `${apiUrl}/b2api/v3/b2_create_bucket`;
-	const bucketName = 'FiFe';
-	const payload = {
-		accountId,
-		bucketName,
-		bucketType: 'allPrivate',
-		lifecycleRules: [
-			{
-				daysFromHidingToDeleting: 1,
-				daysFromUploadingToHiding: null,
-				fileNamePrefix: ''
-			}
-		]
+	const credentials = {
+		appId,
+		appKey,
+		authorizationToken,
+		bucketId,
+		apiUrl,
+		downloadUrl
 	};
-
-	try {
-		const response = await fetch(endpoint, {
-			method: 'POST',
-			headers: {
-				Authorization: authorizationToken,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(payload)
-		});
-
-		if (!response.ok) {
-			// Backblaze returns detailed error objects
-			const errorData = await response.json();
-			return json({
-				status: 0,
-				error: `Error: ${errorData.message}`
-			});
-		}
-		const { bucketId } = await response.json();
-		await addB2Account(UserId, AppId, KeyId, bucketId, data);
-		return json({ status: 1 });
-	} catch (error) {
-		console.error('Failed to create Backblaze bucket:', error);
-		return json({ status: 0, error: error });
-	}
+	await addCredentials(userId, accountId, credentials, 'blackblaze');
+	return json({ status: 1 });
 }
 
-export async function authenticate(UserId: string) {
+export async function authenticate(userId: string) {
 	// 1. Find the row for this Id
-	const row = await getB2Account(UserId);
+	const row = await getCredentials(userId, 'backblaze');
 
 	// Return undefined if the account does not exist
 	if (!row) {
@@ -87,14 +56,25 @@ export async function authenticate(UserId: string) {
 	}
 
 	const accountId = row['1'];
-	const existingToken = row['6'] || undefined;
+	const creds = row['6'] as {
+		appId: string;
+		appKey: string;
+		authorizationToken?: string;
+		bucketId?: string;
+		apiUrl?: string;
+		downloadUrl?: string;
+	};
+
+	const {
+		appId,
+		appKey,
+		authorizationToken: existingToken,
+		bucketId,
+		apiUrl: existingApiUrl,
+		downloadUrl: existingDownloadUrl
+	} = creds;
 	const isUpdating = row['7'];
-	const updatedAt = row['12'] || new Date(0); // Fallback to 1970 if null
-	const appId = row['4'];
-	const appKey = row['5'];
-	const existingApiUrl = row['8'];
-	const existingDownloadUrl = row['9'];
-	const bucketId = row['10'];
+	const updatedAt = row['3'] || new Date(0);
 
 	// Bundle the existing credentials to easily return them
 	const existingData = {
@@ -120,7 +100,7 @@ export async function authenticate(UserId: string) {
 	}
 
 	// 4. Mark as updating (Atomic lock to prevent race conditions)
-	const lockResult = await markB2TokenUpdating(accountId);
+	const lockResult = await markCredentialsUpdating(accountId);
 
 	// If no rows are returned, another process grabbed the lock right before us
 	if (lockResult.length === 0) {
@@ -136,8 +116,15 @@ export async function authenticate(UserId: string) {
 				storageApi: { apiUrl, downloadUrl }
 			}
 		} = data;
-
-		await updateB2Account(accountId, data);
+		const credentials = {
+			appId,
+			appKey,
+			authorizationToken,
+			bucketId,
+			apiUrl,
+			downloadUrl
+		};
+		await updateCredentials(accountId, credentials);
 
 		// Return the newly fetched credentials alongside the existing bucketId
 		return {
@@ -147,7 +134,7 @@ export async function authenticate(UserId: string) {
 			downloadUrl
 		};
 	} else {
-		await markB2TokenUpdated(UserId);
+		await markCredentialsUpdated(accountId);
 		return existingData;
 	}
 }

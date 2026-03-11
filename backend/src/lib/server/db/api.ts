@@ -1,6 +1,15 @@
 import { json, error } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { user, userDevice, userData, file, item, part, backblaze } from '$lib/server/db/schema';
+import {
+	user,
+	userDevice,
+	userData,
+	file,
+	item,
+	part,
+	credentials,
+	storage
+} from '$lib/server/db/schema';
 import { eq, and, ne, gte, count } from 'drizzle-orm';
 
 export async function getKeys(userId: string) {
@@ -15,6 +24,12 @@ export async function getKeys(userId: string) {
 		.get();
 }
 export async function addKey(userId: string, email: string, cipher: string, nonce: string) {
+	// add default fife 5 gb storage for this user
+	const fifeCredentials = await getCredentials('fife', 'backblaze');
+	if (fifeCredentials) {
+		await addStorage(userId, fifeCredentials['1'], 5, 10);
+	}
+
 	return await db.insert(user).values({
 		1: userId,
 		4: email,
@@ -276,80 +291,88 @@ export async function saveItemChanges(userId: string, deviceId: string, changes:
 	}
 }
 
-// --- BACKBLAZE ---
-export async function addB2Account(
-	UserId: string,
-	AppId: string,
-	KeyId: string,
-	BucketId: string,
-	data: any
+export async function addCredentials(
+	userId: string,
+	accountId: string,
+	credentials: any,
+	provider: string
 ) {
-	const {
-		accountId,
-		authorizationToken,
-		apiInfo: {
-			storageApi: { apiUrl, downloadUrl }
-		}
-	} = data;
-	return await db
-		.insert(backblaze)
-		.values({
+	// 1. Check if the entry exists
+	const existingEntry = db.select().from(credentials).where(eq(credentials['1'], accountId)).get();
+
+	if (existingEntry) {
+		// 2. Insert if it does not exist
+		await db.insert(credentials).values({
 			'1': accountId,
-			'4': AppId,
-			'5': KeyId,
-			'6': authorizationToken,
-			'8': apiUrl,
-			'9': downloadUrl,
-			'10': BucketId,
-			'11': UserId,
-			'12': new Date()
-		})
-		.onConflictDoUpdate({
-			target: backblaze['1'], // The primary key to check for conflicts
-			set: {
-				'3': new Date(),
-				'6': authorizationToken,
-				'8': apiUrl,
-				'9': downloadUrl,
-				'12': new Date()
-			}
+			'4': userId,
+			'5': provider,
+			'6': credentials
 		});
+		if (provider != 'fife') {
+			let priority = 1;
+			if (provider == 'cloudflare') {
+				priority = 2;
+			}
+			await addStorage(userId, accountId, 10, priority);
+		}
+	} else {
+		// 3. Update if it exists
+		await db
+			.update(credentials)
+			.set({
+				'3': new Date(), // Update ServerUpdatedAt
+				'6': credentials
+			})
+			.where(eq(credentials['1'], accountId));
+	}
 }
 
-export async function getB2Account(UserId: string) {
-	return db.select().from(backblaze).where(eq(backblaze['11'], UserId)).get();
+export async function getCredentials(userId: string, provider: string) {
+	return db
+		.select()
+		.from(credentials)
+		.where(and(eq(credentials['4'], userId), eq(credentials['5'], provider)))
+		.get();
 }
-export async function markB2TokenUpdating(Id: string) {
+
+export async function markCredentialsUpdating(Id: string) {
 	return await db
-		.update(backblaze)
+		.update(credentials)
 		.set({ '7': 1 })
 		.where(
 			and(
-				eq(backblaze['1'], Id),
-				eq(backblaze['7'], 0) // Ensure it hasn't been locked by another request in the last millisecond
+				eq(credentials['1'], Id),
+				eq(credentials['7'], 0) // Ensure it hasn't been locked by another request in the last millisecond
 			)
 		)
 		.returning();
 }
-export async function markB2TokenUpdated(Id: string) {
-	await db.update(backblaze).set({ '7': 0 }).where(eq(backblaze['1'], Id));
+export async function markCredentialsUpdated(Id: string) {
+	await db.update(credentials).set({ '7': 0 }).where(eq(credentials['1'], Id));
 }
-export async function updateB2Account(Id: string, data: any) {
-	const {
-		authorizationToken,
-		apiInfo: {
-			storageApi: { apiUrl, downloadUrl }
-		}
-	} = data;
+export async function updateCredentials(accountId: string, credentials: any) {
 	await db
-		.update(backblaze)
+		.update(credentials)
 		.set({
 			'3': new Date(),
-			'6': authorizationToken,
-			'7': 0,
-			'8': apiUrl,
-			'9': downloadUrl,
-			'12': new Date()
+			'6': credentials,
+			'7': 0
 		})
-		.where(eq(backblaze['1'], Id));
+		.where(eq(credentials['1'], accountId));
+}
+
+// This should be called when a new user is added
+// and when user adds a storage account
+export async function addStorage(
+	userId: string,
+	accountId: string, // References credentials['1']
+	storageLimit: number,
+	priority: number = 0
+) {
+	return await db.insert(storage).values({
+		'4': userId,
+		'5': accountId,
+		'6': storageLimit,
+		'8': priority // Optional, defaults to 0 in schema but can be overridden
+	});
 }
