@@ -10,44 +10,56 @@ import {
 	credentials,
 	storage
 } from '$lib/server/db/schema';
-import { eq, and, ne, gte, count, desc, asc, sql } from 'drizzle-orm';
+import { eq, and, ne, gte, count, desc, sql } from 'drizzle-orm';
+import {
+	UserKeys,
+	UserDeviceKeys,
+	UserDataKeys,
+	FileKeys,
+	PartKeys,
+	ItemKeys,
+	CredentialsKeys,
+	StorageKeys
+} from '$lib/server/db/keys';
 
 export async function getKeys(userId: string) {
 	return db
 		.select({
-			id: user[1],
-			cipher: user[5],
-			nonce: user[6]
+			id: user[UserKeys.ID],
+			cipher: user[UserKeys.CIPHER],
+			nonce: user[UserKeys.NONCE]
 		})
 		.from(user)
-		.where(eq(user[1], userId))
+		.where(eq(user[UserKeys.ID], userId))
 		.get();
 }
+
 export async function addKey(userId: string, email: string, cipher: string, nonce: string) {
 	// add default fife 5 gb storage for this user
 	const fifeCredentials = await getCredentials('fife', 'backblaze');
 	if (fifeCredentials) {
-		await addStorage(userId, fifeCredentials['1'], 5368709120, 1);
+		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 1);
 	}
 
 	return await db.insert(user).values({
-		1: userId,
-		4: email,
-		5: cipher,
-		6: nonce
+		[UserKeys.ID]: userId,
+		[UserKeys.EMAIL]: email,
+		[UserKeys.CIPHER]: cipher,
+		[UserKeys.NONCE]: nonce
 	});
 }
+
 export async function getUserDevices(userId: string) {
 	return db
 		.select({
-			id: userDevice[1],
-			lastAt: userDevice[3],
-			title: userDevice[5],
-			type: userDevice[6],
-			active: userDevice[8]
+			id: userDevice[UserDeviceKeys.ID],
+			lastAt: userDevice[UserDeviceKeys.SERVER_UPDATED_AT],
+			title: userDevice[UserDeviceKeys.TITLE],
+			type: userDevice[UserDeviceKeys.DEVICE_TYPE],
+			active: userDevice[UserDeviceKeys.STATUS]
 		})
 		.from(userDevice)
-		.where(eq(userDevice[4], userId))
+		.where(eq(userDevice[UserDeviceKeys.USER_ID], userId))
 		.get();
 }
 
@@ -59,29 +71,35 @@ export async function addUpdateDevice(
 	notificationId: string,
 	active: number
 ) {
-	// Check if the device already exists for this user
-	const deviceRow = db.select().from(userDevice).where(eq(userDevice[1], tableId)).get();
+	const deviceRow = db
+		.select()
+		.from(userDevice)
+		.where(eq(userDevice[UserDeviceKeys.ID], tableId))
+		.get();
 
 	if (deviceRow) {
-		// Device exists: update column with received values
-		//  update the last active timestamp
 		await db
 			.update(userDevice)
 			.set({
-				5: title ?? deviceRow[5],
-				6: type ?? deviceRow[6],
-				7: notificationId ?? deviceRow[7],
-				8: active ?? deviceRow[8]
+				[UserDeviceKeys.TITLE]: title ?? deviceRow[UserDeviceKeys.TITLE],
+				[UserDeviceKeys.DEVICE_TYPE]: type ?? deviceRow[UserDeviceKeys.DEVICE_TYPE],
+				[UserDeviceKeys.NOTIFICATION_ID]:
+					notificationId ?? deviceRow[UserDeviceKeys.NOTIFICATION_ID],
+				[UserDeviceKeys.STATUS]: active ?? deviceRow[UserDeviceKeys.STATUS]
 			})
-			.where(eq(userDevice[1], tableId));
+			.where(eq(userDevice[UserDeviceKeys.ID], tableId));
 
 		return json({ status: 1, data: 'Device updated successfully' });
 	} else {
-		// Device doesn't exist: fetch current active devices count
 		const result = db
 			.select({ count: count() })
 			.from(userDevice)
-			.where(and(eq(userDevice[4], userId), eq(userDevice[8], 1)))
+			.where(
+				and(
+					eq(userDevice[UserDeviceKeys.USER_ID], userId),
+					eq(userDevice[UserDeviceKeys.STATUS], 1)
+				)
+			)
 			.get();
 
 		const activeDevicesCount = result?.count ?? 0;
@@ -89,19 +107,17 @@ export async function addUpdateDevice(
 		if (activeDevicesCount >= 5) {
 			return json({ status: 0, error: 'Max 5 active devices only' });
 		} else {
-			// Require title and type for a new device insertion
 			if (!title || type === undefined) {
 				return json({ status: 0, error: 'Missing required fields for new device: title, type' });
 			}
 
-			// Insert new device with values
 			await db.insert(userDevice).values({
-				1: tableId,
-				4: userId,
-				5: title,
-				6: type,
-				7: notificationId,
-				8: 1
+				[UserDeviceKeys.ID]: tableId,
+				[UserDeviceKeys.USER_ID]: userId,
+				[UserDeviceKeys.TITLE]: title,
+				[UserDeviceKeys.DEVICE_TYPE]: type,
+				[UserDeviceKeys.NOTIFICATION_ID]: notificationId,
+				[UserDeviceKeys.STATUS]: 1
 			});
 
 			return json({ status: 1, data: 'Device added successfully' });
@@ -121,32 +137,55 @@ export async function fetchChanges(
 	const filesTimestamp = new Date(lastFilesTimestamp);
 	const itemsTimestamp = new Date(lastItemsTimestamp);
 	const partsTimestamp = new Date(lastPartsTimestamp);
+
 	const profileRows = db
 		.select()
 		.from(userData)
 		.where(
-			and(eq(userData[1], userId), gte(userData[3], profilesTimestamp), ne(userData[5], deviceId))
+			and(
+				eq(userData[UserDataKeys.ID], userId),
+				gte(userData[UserDataKeys.SERVER_UPDATED_AT], profilesTimestamp),
+				ne(userData[UserDataKeys.DEVICE_ID], deviceId)
+			)
 		)
 		.all();
 
 	const fileRows = db
 		.select()
 		.from(file)
-		.where(and(eq(file[4], userId), gte(file[3], filesTimestamp), ne(file[5], deviceId)))
+		.where(
+			and(
+				eq(file[FileKeys.USER_ID], userId),
+				gte(file[FileKeys.SERVER_UPDATED_AT], filesTimestamp),
+				ne(file[FileKeys.DEVICE_ID], deviceId)
+			)
+		)
 		.limit(300)
 		.all();
 
 	const partRows = db
 		.select()
 		.from(part)
-		.where(and(eq(part[4], userId), gte(part[3], partsTimestamp), ne(part[5], deviceId)))
+		.where(
+			and(
+				eq(part[PartKeys.USER_ID], userId),
+				gte(part[PartKeys.SERVER_UPDATED_AT], partsTimestamp),
+				ne(part[PartKeys.DEVICE_ID], deviceId)
+			)
+		)
 		.limit(300)
 		.all();
 
 	const itemRows = db
 		.select()
 		.from(item)
-		.where(and(eq(item[4], userId), gte(item[3], itemsTimestamp), ne(item[5], deviceId)))
+		.where(
+			and(
+				eq(item[ItemKeys.USER_ID], userId),
+				gte(item[ItemKeys.SERVER_UPDATED_AT], itemsTimestamp),
+				ne(item[ItemKeys.DEVICE_ID], deviceId)
+			)
+		)
 		.limit(300)
 		.all();
 
@@ -159,51 +198,46 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 		const tableKey = userId + '_' + fileHash;
 		const incomingUpdatedAt = change['updated_at'] || 0;
 
-		// 1. Check if row exists with tableKey
 		const existingRow = await db
-			.select({ clientUpdatedAt: file['14'] })
+			.select({ clientUpdatedAt: file[FileKeys.CLIENT_UPDATED_AT] })
 			.from(file)
-			.where(eq(file['1'], tableKey))
-			.get(); // .get() fetches a single row or undefined in Drizzle SQLite
+			.where(eq(file[FileKeys.ID], tableKey))
+			.get();
 
 		if (existingRow) {
-			// 2. If exist, check value of column '14' (client updated at)
 			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
-				// 3. If incoming updated_at is more recent, update the row
 				await db
 					.update(file)
 					.set({
-						'5': deviceId, // Updating deviceId to the latest modifier
-						'6': change['item_count'] ?? 0,
-						'7': change['parts'] ?? 1,
-						'8': change['parts_uploaded'] ?? 0,
-						'9': change['uploaded_at'] ?? 0,
-						'10': change['uploaded_to'] ?? 0,
-						'11': change['remote_id'] ?? null,
-						'12': change['access_token'] ?? null,
-						'13': change['token_expiry'] ?? 0,
-						'14': incomingUpdatedAt,
-						'15': change['deleted']
+						[FileKeys.DEVICE_ID]: deviceId,
+						[FileKeys.ITEMS_COUNT]: change['item_count'] ?? 0,
+						[FileKeys.PARTS]: change['parts'] ?? 1,
+						[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
+						[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
+						[FileKeys.PROVIDER]: change['uploaded_to'] ?? 0,
+						[FileKeys.REMOTE_FILE_ID]: change['remote_id'] ?? null,
+						[FileKeys.FILE_ACCESS_TOKEN]: change['access_token'] ?? null,
+						[FileKeys.TOKEN_EXPIRY]: change['token_expiry'] ?? 0,
+						[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
+						[FileKeys.DELETED]: change['deleted']
 					})
-					.where(eq(file['1'], tableKey));
+					.where(eq(file[FileKeys.ID], tableKey));
 			}
-			// 4. Else ignore (do nothing)
 		} else {
-			// 5. If it does not exist, insert a new row
 			await db.insert(file).values({
-				'1': tableKey,
-				'4': userId,
-				'5': deviceId,
-				'6': change['item_count'] ?? 0,
-				'7': change['parts'] ?? 1,
-				'8': change['parts_uploaded'] ?? 0,
-				'9': change['uploaded_at'] ?? 0,
-				'10': change['uploaded_to'] ?? 0,
-				'11': change['remote_id'] ?? null,
-				'12': change['access_token'] ?? null,
-				'13': change['token_expiry'] ?? 0,
-				'14': incomingUpdatedAt,
-				'15': change['deleted']
+				[FileKeys.ID]: tableKey,
+				[FileKeys.USER_ID]: userId,
+				[FileKeys.DEVICE_ID]: deviceId,
+				[FileKeys.ITEMS_COUNT]: change['item_count'] ?? 0,
+				[FileKeys.PARTS]: change['parts'] ?? 1,
+				[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
+				[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
+				[FileKeys.PROVIDER]: change['uploaded_to'] ?? 0,
+				[FileKeys.REMOTE_FILE_ID]: change['remote_id'] ?? null,
+				[FileKeys.FILE_ACCESS_TOKEN]: change['access_token'] ?? null,
+				[FileKeys.TOKEN_EXPIRY]: change['token_expiry'] ?? 0,
+				[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
+				[FileKeys.DELETED]: change['deleted']
 			});
 		}
 	}
@@ -216,9 +250,9 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 		const incomingUpdatedAt = change['updated_at'] || 0;
 
 		const existingRow = await db
-			.select({ clientUpdatedAt: part['11'] })
+			.select({ clientUpdatedAt: part[PartKeys.CLIENT_UPDATED_AT] })
 			.from(part)
-			.where(eq(part['1'], tableKey))
+			.where(eq(part[PartKeys.ID], tableKey))
 			.get();
 
 		if (existingRow) {
@@ -226,25 +260,25 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 				await db
 					.update(part)
 					.set({
-						'5': deviceId,
-						'7': change['state'] ?? 0,
-						'11': incomingUpdatedAt,
-						'12': change['deleted']
+						[PartKeys.DEVICE_ID]: deviceId,
+						[PartKeys.STATE]: change['state'] ?? 0,
+						[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
+						[PartKeys.DELETED]: change['deleted']
 					})
-					.where(eq(part['1'], tableKey));
+					.where(eq(part[PartKeys.ID], tableKey));
 			}
 		} else {
 			await db.insert(part).values({
-				'1': tableKey,
-				'4': userId,
-				'5': deviceId,
-				'6': change['size'] ?? 0,
-				'7': change['state'] ?? 1,
-				'8': change['cipher'] ?? null,
-				'9': change['nonce'] ?? null,
-				'10': change['sha1'] ?? null,
-				'11': incomingUpdatedAt,
-				'12': change['deleted']
+				[PartKeys.ID]: tableKey,
+				[PartKeys.USER_ID]: userId,
+				[PartKeys.DEVICE_ID]: deviceId,
+				[PartKeys.PART_SIZE]: change['size'] ?? 0,
+				[PartKeys.STATE]: change['state'] ?? 1,
+				[PartKeys.CIPHER]: change['cipher'] ?? null,
+				[PartKeys.NONCE]: change['nonce'] ?? null,
+				[PartKeys.SHA1]: change['sha1'] ?? null,
+				[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
+				[PartKeys.DELETED]: change['deleted']
 			});
 		}
 	}
@@ -257,9 +291,9 @@ export async function saveItemChanges(userId: string, deviceId: string, changes:
 		const incomingUpdatedAt = change['updated_at'] || 0;
 
 		const existingRow = await db
-			.select({ clientUpdatedAt: item['10'] })
+			.select({ clientUpdatedAt: item[ItemKeys.CLIENT_UPDATED_AT] })
 			.from(item)
-			.where(eq(item['1'], tableKey))
+			.where(eq(item[ItemKeys.ID], tableKey))
 			.get();
 
 		if (existingRow) {
@@ -267,25 +301,25 @@ export async function saveItemChanges(userId: string, deviceId: string, changes:
 				await db
 					.update(item)
 					.set({
-						'5': deviceId,
-						'6': change['text_cipher'],
-						'7': change['text_nonce'],
-						'8': change['key_cipher'],
-						'9': change['key_nonce'],
-						'10': incomingUpdatedAt
+						[ItemKeys.DEVICE_ID]: deviceId,
+						[ItemKeys.TEXT_CIPHER]: change['text_cipher'],
+						[ItemKeys.TEXT_NONCE]: change['text_nonce'],
+						[ItemKeys.KEY_CIPHER]: change['key_cipher'],
+						[ItemKeys.KEY_NONCE]: change['key_nonce'],
+						[ItemKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt
 					})
-					.where(eq(item['1'], tableKey));
+					.where(eq(item[ItemKeys.ID], tableKey));
 			}
 		} else {
 			await db.insert(item).values({
-				'1': tableKey,
-				'4': userId,
-				'5': deviceId,
-				'6': change['text_cipher'],
-				'7': change['text_nonce'],
-				'8': change['key_cipher'],
-				'9': change['key_nonce'],
-				'10': incomingUpdatedAt
+				[ItemKeys.ID]: tableKey,
+				[ItemKeys.USER_ID]: userId,
+				[ItemKeys.DEVICE_ID]: deviceId,
+				[ItemKeys.TEXT_CIPHER]: change['text_cipher'],
+				[ItemKeys.TEXT_NONCE]: change['text_nonce'],
+				[ItemKeys.KEY_CIPHER]: change['key_cipher'],
+				[ItemKeys.KEY_NONCE]: change['key_nonce'],
+				[ItemKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt
 			});
 		}
 	}
@@ -297,17 +331,20 @@ export async function addCredentials(
 	credentialsData: any,
 	provider: string
 ) {
-	// 1. Check if the entry exists
-	const existingEntry = db.select().from(credentials).where(eq(credentials['1'], accountId)).get();
+	const existingEntry = db
+		.select()
+		.from(credentials)
+		.where(eq(credentials[CredentialsKeys.ID], accountId))
+		.get();
 
 	if (!existingEntry) {
-		// 2. Insert if it does not exist
 		await db.insert(credentials).values({
-			'1': accountId,
-			'4': userId,
-			'5': provider,
-			'6': credentialsData
+			[CredentialsKeys.ID]: accountId,
+			[CredentialsKeys.OWNER_ID]: userId,
+			[CredentialsKeys.PROVIDER]: provider,
+			[CredentialsKeys.CREDENTIALS]: credentialsData
 		});
+
 		if (provider != 'fife') {
 			let priority = 10;
 			if (provider == 'cloudflare') {
@@ -316,14 +353,13 @@ export async function addCredentials(
 			await addStorage(userId, accountId, 10737418240, priority);
 		}
 	} else {
-		// 3. Update if it exists
 		await db
 			.update(credentials)
 			.set({
-				'3': new Date(), // Update ServerUpdatedAt
-				'6': credentialsData
+				[CredentialsKeys.SERVER_UPDATED_AT]: new Date(),
+				[CredentialsKeys.CREDENTIALS]: credentialsData
 			})
-			.where(eq(credentials['1'], accountId));
+			.where(eq(credentials[CredentialsKeys.ID], accountId));
 	}
 }
 
@@ -331,74 +367,70 @@ export async function getCredentials(userId: string, provider: string) {
 	return db
 		.select()
 		.from(credentials)
-		.where(and(eq(credentials['4'], userId), eq(credentials['5'], provider)))
+		.where(
+			and(
+				eq(credentials[CredentialsKeys.OWNER_ID], userId),
+				eq(credentials[CredentialsKeys.PROVIDER], provider)
+			)
+		)
 		.get();
 }
 
 export async function markCredentialsUpdating(Id: string) {
 	return await db
 		.update(credentials)
-		.set({ '7': 1 })
+		.set({ [CredentialsKeys.UPDATING]: 1 })
 		.where(
-			and(
-				eq(credentials['1'], Id),
-				eq(credentials['7'], 0) // Ensure it hasn't been locked by another request in the last millisecond
-			)
+			and(eq(credentials[CredentialsKeys.ID], Id), eq(credentials[CredentialsKeys.UPDATING], 0))
 		)
 		.returning();
 }
+
 export async function markCredentialsUpdated(Id: string) {
-	await db.update(credentials).set({ '7': 0 }).where(eq(credentials['1'], Id));
+	await db
+		.update(credentials)
+		.set({ [CredentialsKeys.UPDATING]: 0 })
+		.where(eq(credentials[CredentialsKeys.ID], Id));
 }
-export async function updateCredentials(accountId: string, credentials: any) {
+
+export async function updateCredentials(accountId: string, creds: any) {
 	await db
 		.update(credentials)
 		.set({
-			'3': new Date(),
-			'6': credentials,
-			'7': 0
+			[CredentialsKeys.SERVER_UPDATED_AT]: new Date(),
+			[CredentialsKeys.CREDENTIALS]: creds,
+			[CredentialsKeys.UPDATING]: 0
 		})
-		.where(eq(credentials['1'], accountId));
+		.where(eq(credentials[CredentialsKeys.ID], accountId));
 }
 
-// This should be called when a new user is added
-// and when user adds a storage account
 export async function addStorage(
 	userId: string,
-	accountId: string, // References credentials['1']
+	accountId: string,
 	storageLimit: number,
 	priority: number = 0
 ) {
 	return await db.insert(storage).values({
-		'4': userId,
-		'5': accountId,
-		'6': storageLimit,
-		'8': priority // Optional, defaults to 0 in schema but can be overridden
+		[StorageKeys.USER_ID]: userId,
+		[StorageKeys.CREDENTIALS_ID]: accountId,
+		[StorageKeys.LIMIT_BYTES]: storageLimit,
+		[StorageKeys.PRIORITY]: priority
 	});
 }
 
-/**
- * Finds the highest priority storage with enough space for the file.
- *
- * @param userId - The ID of the user (column 4)
- * @param fileSizeBytes - The size of the incoming file in bytes
- */
 export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
-	// Convert bytes to MB (using 1024 * 1024 for binary Megabytes)
-	const fileSizeMB = fileSizeBytes / (1024 * 1024);
-
 	const availableStorage = await db
 		.select()
 		.from(storage)
 		.where(
 			and(
-				eq(storage['4'], userId),
-				// Available MB = (Limit in GB * 1024) - Used in MB
-				sql`(${storage['6']} * 1024) - ${storage['7']} >= ${fileSizeMB}`
+				eq(storage[StorageKeys.USER_ID], userId),
+				sql`${storage[StorageKeys.LIMIT_BYTES]} - ${storage[StorageKeys.USED_BYTES]} >= ${fileSizeBytes}`
 			)
 		)
-		.orderBy(desc(storage['8']))
-		.limit(1);
+		.orderBy(desc(storage[StorageKeys.PRIORITY]))
+		.limit(1)
+		.get();
 
-	return availableStorage[0]; // May be undefined
+	return availableStorage;
 }

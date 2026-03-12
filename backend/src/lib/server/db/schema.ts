@@ -1,133 +1,151 @@
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import {
+	UserKeys,
+	UserDataKeys,
+	UserDeviceKeys,
+	FileKeys,
+	PartKeys,
+	ItemKeys,
+	CredentialsKeys,
+	StorageKeys
+} from './keys';
 
 export const user = sqliteTable('user', {
-	1: text('1').primaryKey(), // Supabase user id
-	2: integer('2', { mode: 'timestamp' })
+	[UserKeys.ID]: text(UserKeys.ID).primaryKey(), // Supabase user id
+	[UserKeys.SERVER_CREATED_AT]: integer(UserKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
 		.notNull()
-		.$defaultFn(() => new Date()), // ServerCreatedAt
-	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date()),
+	[UserKeys.SERVER_UPDATED_AT]: integer(UserKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
 		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').notNull().unique(), // Email
-	5: text('5').notNull(), // Cipher
-	6: text('6').notNull() // Nonce
+		.$onUpdate(() => new Date()),
+	[UserKeys.EMAIL]: text(UserKeys.EMAIL).notNull().unique(),
+	[UserKeys.CIPHER]: text(UserKeys.CIPHER).notNull(),
+	[UserKeys.NONCE]: text(UserKeys.NONCE).notNull()
 });
 
 export const userData = sqliteTable('user_data', {
-	1: text('1').primaryKey(), // Supabase user id
-	2: integer('2', { mode: 'timestamp' })
+	[UserDataKeys.ID]: text(UserDataKeys.ID).primaryKey(), // Supabase user id
+	[UserDataKeys.SERVER_CREATED_AT]: integer(UserDataKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
 		.notNull()
-		.$defaultFn(() => new Date()), // ServerCreatedAt
-	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date()),
+	[UserDataKeys.SERVER_UPDATED_AT]: integer(UserDataKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
 		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').unique(), // User Name
-	5: text('5').notNull(), // Device Id
-	6: integer('6').notNull().default(0), // Plan Type: Free/Paid, Default: Free
-	7: text('7'), // Profile Image
-	8: integer('8', { mode: 'timestamp' }) // Plan expires at. Can be null for free plan
+		.$onUpdate(() => new Date()),
+	[UserDataKeys.USER_NAME]: text(UserDataKeys.USER_NAME).unique(),
+	[UserDataKeys.DEVICE_ID]: text(UserDataKeys.DEVICE_ID).notNull(),
+	[UserDataKeys.PLAN_TYPE]: integer(UserDataKeys.PLAN_TYPE).notNull().default(0), // Plan Type: Free/Paid, Default: Free
+	[UserDataKeys.PROFILE_IMAGE]: text(UserDataKeys.PROFILE_IMAGE),
+	[UserDataKeys.PLAN_EXPIRES_AT]: integer(UserDataKeys.PLAN_EXPIRES_AT, { mode: 'timestamp' }) // Plan expires at. Can be null for free plan
 });
 
 export const userDevice = sqliteTable('user_device', {
-	1: text('1').primaryKey(), // UserId_DeviceId
-	2: integer('2', { mode: 'timestamp' })
+	[UserDeviceKeys.ID]: text(UserDeviceKeys.ID).primaryKey(), // UserId_DeviceId
+	[UserDeviceKeys.SERVER_CREATED_AT]: integer(UserDeviceKeys.SERVER_CREATED_AT, {
+		mode: 'timestamp'
+	})
 		.notNull()
-		.$defaultFn(() => new Date()), // ServerCreatedAt
-	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date()),
+	[UserDeviceKeys.SERVER_UPDATED_AT]: integer(UserDeviceKeys.SERVER_UPDATED_AT, {
+		mode: 'timestamp'
+	})
 		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').notNull(), // User Id
-	5: text('5').notNull(), // Title
-	6: integer('6').notNull().default(0), // Device Type -> 1:Android/2:iOS/3:MacOS/4:Windows/5:Linux
-	7: text('7'), // Notification Id (FCM ID)
-	8: integer('8').default(1) // Status -> 1:Active/0:Inactive
+		.$onUpdate(() => new Date()),
+	[UserDeviceKeys.USER_ID]: text(UserDeviceKeys.USER_ID).notNull(),
+	[UserDeviceKeys.TITLE]: text(UserDeviceKeys.TITLE).notNull(),
+	[UserDeviceKeys.DEVICE_TYPE]: integer(UserDeviceKeys.DEVICE_TYPE).notNull().default(0), // Device Type -> 1:Android/2:iOS/3:MacOS/4:Windows/5:Linux
+	[UserDeviceKeys.NOTIFICATION_ID]: text(UserDeviceKeys.NOTIFICATION_ID), // Notification Id (FCM ID)
+	[UserDeviceKeys.STATUS]: integer(UserDeviceKeys.STATUS).default(1) // Status -> 1:Active/0:Inactive
 });
 
 export const file = sqliteTable('file', {
-	1: text('1').primaryKey(), // UserId_FileHash
-	2: integer('2', { mode: 'timestamp' })
+	[FileKeys.ID]: text(FileKeys.ID).primaryKey(), // UserId_FileHash
+	[FileKeys.SERVER_CREATED_AT]: integer(FileKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
 		.notNull()
-		.$defaultFn(() => new Date()), // ServerCreatedAt
-	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date()),
+	[FileKeys.SERVER_UPDATED_AT]: integer(FileKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
 		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').notNull(), // User Id
-	5: text('5').notNull(), // Device Id
-	6: integer('6').notNull().default(0), // Items Count
-	7: integer('7').notNull().default(0), // Parts
-	8: integer('8').notNull().default(0), // Parts Uploaded
-	9: integer('9').notNull().default(0), // Uploaded At
-	10: integer('10').default(0), // Provider: FiFe, Backblaze, Cloudflare etc.
-	11: text('11'), // Remote File Id
-	12: text('12'), // File Access Token
-	13: integer('13').notNull().default(0), // Token Expiry
-	14: integer('14').notNull().default(0), // ClientUpdatedAt
-	15: integer('15').notNull().default(0) // Deleted
+		.$onUpdate(() => new Date()),
+	[FileKeys.USER_ID]: text(FileKeys.USER_ID).notNull(),
+	[FileKeys.DEVICE_ID]: text(FileKeys.DEVICE_ID).notNull(),
+	[FileKeys.ITEMS_COUNT]: integer(FileKeys.ITEMS_COUNT).notNull().default(0),
+	[FileKeys.PARTS]: integer(FileKeys.PARTS).notNull().default(0),
+	[FileKeys.PARTS_UPLOADED]: integer(FileKeys.PARTS_UPLOADED).notNull().default(0),
+	[FileKeys.UPLOADED_AT]: integer(FileKeys.UPLOADED_AT).notNull().default(0),
+	[FileKeys.PROVIDER]: integer(FileKeys.PROVIDER).default(0), // Provider: FiFe, Backblaze, Cloudflare etc.
+	[FileKeys.REMOTE_FILE_ID]: text(FileKeys.REMOTE_FILE_ID),
+	[FileKeys.FILE_ACCESS_TOKEN]: text(FileKeys.FILE_ACCESS_TOKEN),
+	[FileKeys.TOKEN_EXPIRY]: integer(FileKeys.TOKEN_EXPIRY).notNull().default(0),
+	[FileKeys.CLIENT_UPDATED_AT]: integer(FileKeys.CLIENT_UPDATED_AT).notNull().default(0),
+	[FileKeys.DELETED]: integer(FileKeys.DELETED).notNull().default(0)
 });
 
 export const part = sqliteTable('part', {
-	1: text('1').primaryKey(), // UserId_FileHash_PartNumber
-	2: integer('2', { mode: 'timestamp' })
+	[PartKeys.ID]: text(PartKeys.ID).primaryKey(), // UserId_FileHash_PartNumber
+	[PartKeys.SERVER_CREATED_AT]: integer(PartKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
 		.notNull()
-		.$defaultFn(() => new Date()), // ServerCreatedAt
-	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date()),
+	[PartKeys.SERVER_UPDATED_AT]: integer(PartKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
 		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').notNull(), // UserId
-	5: text('5').notNull(), // Device Id
-	6: integer('6').notNull(), // Part Size
-	7: integer('7').notNull().default(0), // State
-	8: text('8'), // Cipher
-	9: text('9'), // Nonce
-	10: text('10'), // Sha1
-	11: integer('11').notNull().default(0), // ClientUpdatedAt
-	12: integer('12').notNull().default(0) // Deleted
+		.$onUpdate(() => new Date()),
+	[PartKeys.USER_ID]: text(PartKeys.USER_ID).notNull(),
+	[PartKeys.DEVICE_ID]: text(PartKeys.DEVICE_ID).notNull(),
+	[PartKeys.PART_SIZE]: integer(PartKeys.PART_SIZE).notNull(),
+	[PartKeys.STATE]: integer(PartKeys.STATE).notNull().default(0),
+	[PartKeys.CIPHER]: text(PartKeys.CIPHER),
+	[PartKeys.NONCE]: text(PartKeys.NONCE),
+	[PartKeys.SHA1]: text(PartKeys.SHA1),
+	[PartKeys.CLIENT_UPDATED_AT]: integer(PartKeys.CLIENT_UPDATED_AT).notNull().default(0),
+	[PartKeys.DELETED]: integer(PartKeys.DELETED).notNull().default(0)
 });
 
 export const item = sqliteTable('item', {
-	1: text('1').primaryKey(), // UserId_UUID
-	2: integer('2', { mode: 'timestamp' })
+	[ItemKeys.ID]: text(ItemKeys.ID).primaryKey(), // UserId_UUID
+	[ItemKeys.SERVER_CREATED_AT]: integer(ItemKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
 		.notNull()
-		.$defaultFn(() => new Date()), // ServerCreatedAt
-	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date()),
+	[ItemKeys.SERVER_UPDATED_AT]: integer(ItemKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
 		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').notNull(), // UserId
-	5: text('5').notNull(), // Device Id
-	6: text('6').notNull(), // Text Cipher
-	7: text('7').notNull(), // Text Nonce
-	8: text('8').notNull(), // Key Cipher
-	9: text('9').notNull(), // Key Nonce
-	10: integer('10').notNull().default(0) // ClientUpdatedAt
+		.$onUpdate(() => new Date()),
+	[ItemKeys.USER_ID]: text(ItemKeys.USER_ID).notNull(),
+	[ItemKeys.DEVICE_ID]: text(ItemKeys.DEVICE_ID).notNull(),
+	[ItemKeys.TEXT_CIPHER]: text(ItemKeys.TEXT_CIPHER).notNull(),
+	[ItemKeys.TEXT_NONCE]: text(ItemKeys.TEXT_NONCE).notNull(),
+	[ItemKeys.KEY_CIPHER]: text(ItemKeys.KEY_CIPHER).notNull(),
+	[ItemKeys.KEY_NONCE]: text(ItemKeys.KEY_NONCE).notNull(),
+	[ItemKeys.CLIENT_UPDATED_AT]: integer(ItemKeys.CLIENT_UPDATED_AT).notNull().default(0)
 });
 
 export const credentials = sqliteTable('credentials', {
-	1: text('1').primaryKey(), // Provider Account Id
-	2: integer('2', { mode: 'timestamp' })
+	[CredentialsKeys.ID]: text(CredentialsKeys.ID).primaryKey(), // Provider Account Id
+	[CredentialsKeys.SERVER_CREATED_AT]: integer(CredentialsKeys.SERVER_CREATED_AT, {
+		mode: 'timestamp'
+	})
 		.notNull()
-		.$defaultFn(() => new Date()), // ServerCreatedAt
-	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date()),
+	[CredentialsKeys.SERVER_UPDATED_AT]: integer(CredentialsKeys.SERVER_UPDATED_AT, {
+		mode: 'timestamp'
+	})
 		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').notNull(), // Either a user ID, or 'fife'
-	5: text('5').notNull(), // Provider: 'fife', 'backblaze', 'cloudflare'
-	6: text('6', { mode: 'json' }).notNull(), // credentials
-	7: integer('7').notNull().default(0) // Updating (0/1)
+		.$onUpdate(() => new Date()),
+	[CredentialsKeys.OWNER_ID]: text(CredentialsKeys.OWNER_ID).notNull(), // Either a user ID, or 'fife'
+	[CredentialsKeys.PROVIDER]: text(CredentialsKeys.PROVIDER).notNull(), // Provider: 'fife', 'backblaze', 'cloudflare'
+	[CredentialsKeys.CREDENTIALS]: text(CredentialsKeys.CREDENTIALS, { mode: 'json' }).notNull(),
+	[CredentialsKeys.UPDATING]: integer(CredentialsKeys.UPDATING).notNull().default(0)
 });
 
 export const storage = sqliteTable('storage', {
-	1: text('1')
+	[StorageKeys.ID]: text(StorageKeys.ID)
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	2: integer('2', { mode: 'timestamp' })
+	[StorageKeys.SERVER_CREATED_AT]: integer(StorageKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
 		.notNull()
-		.$defaultFn(() => new Date()), // ServerCreatedAt
-	3: integer('3', { mode: 'timestamp' })
+		.$defaultFn(() => new Date()),
+	[StorageKeys.SERVER_UPDATED_AT]: integer(StorageKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
 		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()), // ServerUpdatedAt
-	4: text('4').notNull(), // User ID
-	5: text('5').notNull(), // References credentials.id
-	6: integer('6').notNull(), // storage limit bytes
-	7: integer('7').default(0).notNull(), // storage used bytes
-	8: integer('8').notNull().default(0) // Priority
+		.$onUpdate(() => new Date()),
+	[StorageKeys.USER_ID]: text(StorageKeys.USER_ID).notNull(),
+	[StorageKeys.CREDENTIALS_ID]: text(StorageKeys.CREDENTIALS_ID).notNull(),
+	[StorageKeys.LIMIT_BYTES]: integer(StorageKeys.LIMIT_BYTES).notNull(),
+	[StorageKeys.USED_BYTES]: integer(StorageKeys.USED_BYTES).default(0).notNull(),
+	[StorageKeys.PRIORITY]: integer(StorageKeys.PRIORITY).notNull().default(0)
 });
