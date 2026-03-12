@@ -27,7 +27,7 @@ export async function addKey(userId: string, email: string, cipher: string, nonc
 	// add default fife 5 gb storage for this user
 	const fifeCredentials = await getCredentials('fife', 'backblaze');
 	if (fifeCredentials) {
-		await addStorage(userId, fifeCredentials['1'], 5, 1);
+		await addStorage(userId, fifeCredentials['1'], 5368709120, 1);
 	}
 
 	return await db.insert(user).values({
@@ -313,7 +313,7 @@ export async function addCredentials(
 			if (provider == 'cloudflare') {
 				priority = 9;
 			}
-			await addStorage(userId, accountId, 10, priority);
+			await addStorage(userId, accountId, 10737418240, priority);
 		}
 	} else {
 		// 3. Update if it exists

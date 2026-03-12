@@ -127,7 +127,7 @@ export const storage = sqliteTable('storage', {
 		.$onUpdate(() => new Date()), // ServerUpdatedAt
 	4: text('4').notNull(), // User ID
 	5: text('5').notNull(), // References credentials.id
-	6: integer('6').notNull(), // storage limit in GB
-	7: integer('7').default(0).notNull(), // storage used in MB
+	6: integer('6').notNull(), // storage limit bytes
+	7: integer('7').default(0).notNull(), // storage used bytes
 	8: integer('8').notNull().default(0) // Priority
 });
