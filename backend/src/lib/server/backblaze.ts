@@ -63,10 +63,10 @@ export async function authenticate(userId: string) {
 	const creds = row['6'] as {
 		appId: string;
 		appKey: string;
-		authorizationToken?: string;
-		bucketId?: string;
-		apiUrl?: string;
-		downloadUrl?: string;
+		authorizationToken: string;
+		bucketId: string;
+		apiUrl: string;
+		downloadUrl: string;
 	};
 
 	const {

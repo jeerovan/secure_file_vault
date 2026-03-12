@@ -10,7 +10,7 @@ import {
 	credentials,
 	storage
 } from '$lib/server/db/schema';
-import { eq, and, ne, gte, count } from 'drizzle-orm';
+import { eq, and, ne, gte, count, desc, asc, sql } from 'drizzle-orm';
 
 export async function getKeys(userId: string) {
 	return db
@@ -27,7 +27,7 @@ export async function addKey(userId: string, email: string, cipher: string, nonc
 	// add default fife 5 gb storage for this user
 	const fifeCredentials = await getCredentials('fife', 'backblaze');
 	if (fifeCredentials) {
-		await addStorage(userId, fifeCredentials['1'], 5, 10);
+		await addStorage(userId, fifeCredentials['1'], 5, 1);
 	}
 
 	return await db.insert(user).values({
@@ -309,9 +309,9 @@ export async function addCredentials(
 			'6': credentialsData
 		});
 		if (provider != 'fife') {
-			let priority = 1;
+			let priority = 10;
 			if (provider == 'cloudflare') {
-				priority = 2;
+				priority = 9;
 			}
 			await addStorage(userId, accountId, 10, priority);
 		}
@@ -375,4 +375,30 @@ export async function addStorage(
 		'6': storageLimit,
 		'8': priority // Optional, defaults to 0 in schema but can be overridden
 	});
+}
+
+/**
+ * Finds the highest priority storage with enough space for the file.
+ *
+ * @param userId - The ID of the user (column 4)
+ * @param fileSizeBytes - The size of the incoming file in bytes
+ */
+export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
+	// Convert bytes to MB (using 1024 * 1024 for binary Megabytes)
+	const fileSizeMB = fileSizeBytes / (1024 * 1024);
+
+	const availableStorage = await db
+		.select()
+		.from(storage)
+		.where(
+			and(
+				eq(storage['4'], userId),
+				// Available MB = (Limit in GB * 1024) - Used in MB
+				sql`(${storage['6']} * 1024) - ${storage['7']} >= ${fileSizeMB}`
+			)
+		)
+		.orderBy(desc(storage['8']))
+		.limit(1);
+
+	return availableStorage[0]; // May be undefined
 }
