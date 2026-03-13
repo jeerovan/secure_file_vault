@@ -7,6 +7,7 @@ import {
 	saveItemChanges,
 	savePartChanges
 } from '$lib/server/db/api';
+import { ErrorCode } from '$lib/server/db/keys';
 
 // ---------------------------------------------------
 // GET /api/user-device
@@ -56,7 +57,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const userId = authUser.id;
 	const deviceId = authUser.did;
 	if (!deviceId) {
-		return json({ status: 0, error: 'Missing required fields: deviceId' });
+		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 	}
 
 	try {

@@ -6,6 +6,7 @@ import {
 	markCredentialsUpdating,
 	updateCredentials
 } from './db/api';
+import { StorageProvider } from './db/keys';
 
 export async function authorize(appId: string, appKey: string) {
 	let response;
@@ -42,9 +43,9 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		apiUrl,
 		downloadUrl
 	};
-	let provider = 'backblaze';
+	let provider = StorageProvider.BACKBLAZE;
 	if (userId == 'fife') {
-		provider = 'fife';
+		provider = StorageProvider.FIFE;
 	}
 	await addCredentials(userId, accountId, credentials, provider);
 	return json({ status: 1 });
@@ -52,7 +53,7 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 
 export async function authenticate(userId: string) {
 	// 1. Find the row for this Id
-	const row = await getCredentials(userId, 'backblaze');
+	const row = await getCredentials(userId, StorageProvider.BACKBLAZE);
 
 	// Return undefined if the account does not exist
 	if (!row) {

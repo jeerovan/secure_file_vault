@@ -19,7 +19,9 @@ import {
 	PartKeys,
 	ItemKeys,
 	CredentialsKeys,
-	StorageKeys
+	StorageKeys,
+	ErrorCode,
+	StorageProvider
 } from '$lib/server/db/keys';
 
 export async function getKeys(userId: string) {
@@ -36,7 +38,7 @@ export async function getKeys(userId: string) {
 
 export async function addKey(userId: string, email: string, cipher: string, nonce: string) {
 	// add default fife 5 gb storage for this user
-	const fifeCredentials = await getCredentials('fife', 'backblaze');
+	const fifeCredentials = await getCredentials('fife', StorageProvider.BACKBLAZE);
 	if (fifeCredentials) {
 		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 1);
 	}
@@ -89,7 +91,7 @@ export async function addUpdateDevice(
 			})
 			.where(eq(userDevice[UserDeviceKeys.ID], tableId));
 
-		return json({ status: 1, data: 'Device updated successfully' });
+		return json({ status: 1 });
 	} else {
 		const result = db
 			.select({ count: count() })
@@ -105,10 +107,10 @@ export async function addUpdateDevice(
 		const activeDevicesCount = result?.count ?? 0;
 
 		if (activeDevicesCount >= 5) {
-			return json({ status: 0, error: 'Max 5 active devices only' });
+			return json({ status: 0, error: ErrorCode.DEVICE_LIMIT_REACHED });
 		} else {
 			if (!title || type === undefined) {
-				return json({ status: 0, error: 'Missing required fields for new device: title, type' });
+				return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 			}
 
 			await db.insert(userDevice).values({
@@ -120,7 +122,7 @@ export async function addUpdateDevice(
 				[UserDeviceKeys.STATUS]: 1
 			});
 
-			return json({ status: 1, data: 'Device added successfully' });
+			return json({ status: 1 });
 		}
 	}
 }
@@ -329,7 +331,7 @@ export async function addCredentials(
 	userId: string,
 	accountId: string,
 	credentialsData: any,
-	provider: string
+	provider: number
 ) {
 	const existingEntry = db
 		.select()
@@ -345,9 +347,9 @@ export async function addCredentials(
 			[CredentialsKeys.CREDENTIALS]: credentialsData
 		});
 
-		if (provider != 'fife') {
+		if (provider != StorageProvider.FIFE) {
 			let priority = 10;
-			if (provider == 'cloudflare') {
+			if (provider == StorageProvider.CLOUDFLARE) {
 				priority = 9;
 			}
 			await addStorage(userId, accountId, 10737418240, priority);
@@ -363,7 +365,7 @@ export async function addCredentials(
 	}
 }
 
-export async function getCredentials(userId: string, provider: string) {
+export async function getCredentials(userId: string, provider: number) {
 	return db
 		.select()
 		.from(credentials)
@@ -419,7 +421,7 @@ export async function addStorage(
 }
 
 export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
-	const availableStorage = await db
+	const availableStorage = db
 		.select()
 		.from(storage)
 		.where(

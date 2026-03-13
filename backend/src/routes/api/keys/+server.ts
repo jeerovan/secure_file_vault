@@ -1,9 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { db } from '$lib/server/db'; // your drizzle db instance
-import { user } from '$lib/server/db/schema';
-import { eq } from 'drizzle-orm';
+import { ErrorCode } from '$lib/server/db/keys';
 import { addKey, getKeys } from '$lib/server/db/api';
 
 // ---------------------------------------------------
@@ -16,7 +14,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	const result = await getKeys(authUser.id);
 
 	if (!result) {
-		return json({ status: 0, error: 'User not found' });
+		return json({ status: 0, error: ErrorCode.NO_USER });
 	}
 
 	return json({ status: 1, data: result });
@@ -32,13 +30,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, error: 'Invalid JSON body' });
+		return json({ status: 0, error: ErrorCode.INVALID_JSON });
 	}
 
 	const { cipher, nonce } = body;
 
 	if (!cipher || !nonce) {
-		return json({ status: 0, error: 'Missing required fields: cipher, nonce' });
+		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 	}
 
 	if (authUser.email === 'fife@jeerovan.com') {

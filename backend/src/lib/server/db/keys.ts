@@ -95,3 +95,19 @@ export const StorageKeys = {
 	USED_BYTES: '7',
 	PRIORITY: '8'
 } as const;
+
+export const ErrorCode = {
+	NO_USER: 1,
+	INVALID_JSON: 2,
+	MISSING_FIELDS: 3,
+	NO_STORAGE: 4,
+	INVALID_CREDENTIALS: 5,
+	CREDENTIALS_INCAPABLE: 6,
+	DEVICE_LIMIT_REACHED: 7
+} as const;
+
+export const StorageProvider = {
+	FIFE: 1,
+	BACKBLAZE: 2,
+	CLOUDFLARE: 3
+};

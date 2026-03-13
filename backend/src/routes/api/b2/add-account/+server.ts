@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
 import { authorize, addAccount } from '$lib/server/backblaze';
+import { ErrorCode } from '$lib/server/db/keys';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
@@ -10,13 +11,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, error: 'Invalid JSON body' });
+		return json({ status: 0, error: ErrorCode.INVALID_JSON });
 	}
 
 	const { app_id, app_key } = body;
 
 	if (!app_id || !app_key) {
-		return json({ status: 0, error: 'Missing required fields' });
+		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 	}
 	const data = await authorize(app_id, app_key); // TODO Should be checked on user device
 	if (data) {
@@ -39,9 +40,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			const result = await addAccount(authUser.id, app_id, app_key, data);
 			return result;
 		} else {
-			return json({ status: 0, error: 'Credentials do not have required capabilities.' });
+			return json({ status: 0, error: ErrorCode.CREDENTIALS_INCAPABLE });
 		}
 	} else {
-		return json({ status: 0, error: 'Invalid credentials' });
+		return json({ status: 0, error: ErrorCode.INVALID_CREDENTIALS });
 	}
 };

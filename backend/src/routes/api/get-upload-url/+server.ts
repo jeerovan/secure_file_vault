@@ -1,7 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { authenticate, startLargeFile } from '$lib/server/backblaze';
+
+import { getOptimalStorage } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -14,21 +15,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, error: ErrorCode.INVALID_JSON });
 	}
 
-	const { file_path } = body;
+	const { file_hash, file_size } = body;
 
-	if (!file_path) {
+	if (!file_hash || !file_size) {
 		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 	}
-	const authData = await authenticate(authUser.id);
-	if (!authData) {
-		return json({ status: 0, error: ErrorCode.NO_USER });
+
+	const storage = await getOptimalStorage(authUser.id, file_size);
+	if (storage) {
+		return json({ status: 1 });
+	} else {
+		return json({ status: 0, error: ErrorCode.NO_STORAGE });
 	}
-	const result = await startLargeFile({
-		apiUrl: authData.apiUrl,
-		authorizationToken: authData.authorizationToken,
-		bucketId: authData.bucketId,
-		fileName: file_path,
-		contentType: 'application/octet-stream'
-	});
-	return result;
 };

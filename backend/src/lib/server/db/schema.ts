@@ -128,7 +128,7 @@ export const credentials = sqliteTable('credentials', {
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date()),
 	[CredentialsKeys.OWNER_ID]: text(CredentialsKeys.OWNER_ID).notNull(), // Either a user ID, or 'fife'
-	[CredentialsKeys.PROVIDER]: text(CredentialsKeys.PROVIDER).notNull(), // Provider: 'fife', 'backblaze', 'cloudflare'
+	[CredentialsKeys.PROVIDER]: integer(CredentialsKeys.PROVIDER).notNull(), // Provider: 'fife', 'backblaze', 'cloudflare'
 	[CredentialsKeys.CREDENTIALS]: text(CredentialsKeys.CREDENTIALS, { mode: 'json' }).notNull(),
 	[CredentialsKeys.UPDATING]: integer(CredentialsKeys.UPDATING).notNull().default(0)
 });
