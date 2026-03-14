@@ -2,11 +2,13 @@ import { json } from '@sveltejs/kit';
 import {
 	addCredentials,
 	getCredentials,
+	getCredentialsById,
+	getStorageById,
 	markCredentialsUpdated,
 	markCredentialsUpdating,
 	updateCredentials
 } from './db/api';
-import { StorageProvider } from './db/keys';
+import { CredentialsKeys, StorageKeys, StorageProvider } from './db/keys';
 
 export async function authorize(appId: string, appKey: string) {
 	let response;
@@ -51,96 +53,100 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 	return json({ status: 1 });
 }
 
-export async function authenticate(userId: string) {
-	// 1. Find the row for this Id
-	const row = await getCredentials(userId, StorageProvider.BACKBLAZE);
+export async function authenticate(userId: string, storageId: string) {
+	const storage = await getStorageById(storageId);
+	if (storage && storage[StorageKeys.USER_ID] == userId) {
+		const credential = await getCredentialsById(storage[StorageKeys.CREDENTIALS_ID]);
 
-	// Return undefined if the account does not exist
-	if (!row) {
-		return undefined;
-	}
+		if (!credential) {
+			return undefined;
+		}
 
-	const accountId = row['1'];
-	const creds = row['6'] as {
-		appId: string;
-		appKey: string;
-		authorizationToken: string;
-		bucketId: string;
-		apiUrl: string;
-		downloadUrl: string;
-	};
+		const accountId = credential[CredentialsKeys.ID];
+		const creds = credential[CredentialsKeys.CREDENTIALS] as {
+			appId: string;
+			appKey: string;
+			authorizationToken: string;
+			bucketId: string;
+			apiUrl: string;
+			downloadUrl: string;
+		};
 
-	const {
-		appId,
-		appKey,
-		authorizationToken: existingToken,
-		bucketId,
-		apiUrl: existingApiUrl,
-		downloadUrl: existingDownloadUrl
-	} = creds;
-	const isUpdating = row['7'];
-	const updatedAt = row['3'] || new Date(0);
-
-	// Bundle the existing credentials to easily return them
-	const existingData = {
-		authorizationToken: existingToken,
-		bucketId,
-		apiUrl: existingApiUrl,
-		downloadUrl: existingDownloadUrl
-	};
-
-	// 2. If another process is currently updating, return the old data immediately
-	if (isUpdating === 1) {
-		return existingData;
-	}
-
-	// 3. Check if we actually need to update
-	// Token lasts 24 hours, but we refresh after 20 hours
-	const now = new Date();
-	const diffHours = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
-
-	// If token exists and was updated less than 20 hours ago, return it
-	if (existingToken && diffHours < 20) {
-		return existingData;
-	}
-
-	// 4. Mark as updating (Atomic lock to prevent race conditions)
-	const lockResult = await markCredentialsUpdating(accountId);
-
-	// If no rows are returned, another process grabbed the lock right before us
-	if (lockResult.length === 0) {
-		return existingData;
-	}
-
-	// 5. Authenticate with B2
-	const data = await authorize(appId, appKey);
-	if (data) {
 		const {
-			authorizationToken,
-			apiInfo: {
-				storageApi: { apiUrl, downloadUrl }
-			}
-		} = data;
-		const credentials = {
 			appId,
 			appKey,
-			authorizationToken,
+			authorizationToken: existingToken,
 			bucketId,
-			apiUrl,
-			downloadUrl
-		};
-		await updateCredentials(accountId, credentials);
+			apiUrl: existingApiUrl,
+			downloadUrl: existingDownloadUrl
+		} = creds;
+		const isUpdating = credential[CredentialsKeys.UPDATING];
+		const updatedAt = credential[CredentialsKeys.SERVER_UPDATED_AT] || new Date(0);
 
-		// Return the newly fetched credentials alongside the existing bucketId
-		return {
-			authorizationToken,
+		// Bundle the existing credentials to easily return them
+		const existingData = {
+			authorizationToken: existingToken,
 			bucketId,
-			apiUrl,
-			downloadUrl
+			apiUrl: existingApiUrl,
+			downloadUrl: existingDownloadUrl
 		};
+
+		// 2. If another process is currently updating, return the old data immediately
+		if (isUpdating === 1) {
+			return existingData;
+		}
+
+		// 3. Check if we actually need to update
+		// Token lasts 24 hours, but we refresh after 20 hours
+		const now = new Date();
+		const diffHours = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
+
+		// If token exists and was updated less than 20 hours ago, return it
+		if (existingToken && diffHours < 20) {
+			return existingData;
+		}
+
+		// 4. Mark as updating (Atomic lock to prevent race conditions)
+		const lockResult = await markCredentialsUpdating(accountId);
+
+		// If no rows are returned, another process grabbed the lock right before us
+		if (lockResult.length === 0) {
+			return existingData;
+		}
+
+		// 5. Authenticate with B2
+		const data = await authorize(appId, appKey);
+		if (data) {
+			const {
+				authorizationToken,
+				apiInfo: {
+					storageApi: { apiUrl, downloadUrl }
+				}
+			} = data;
+			const credentials = {
+				appId,
+				appKey,
+				authorizationToken,
+				bucketId,
+				apiUrl,
+				downloadUrl
+			};
+			await updateCredentials(accountId, credentials);
+
+			// Return the newly fetched credentials alongside the existing bucketId
+			return {
+				authorizationToken,
+				bucketId,
+				apiUrl,
+				downloadUrl
+			};
+		} else {
+			await markCredentialsUpdated(accountId);
+			return existingData;
+		}
 	} else {
-		await markCredentialsUpdated(accountId);
-		return existingData;
+		// TODO user should be flagged here
+		return undefined;
 	}
 }
 

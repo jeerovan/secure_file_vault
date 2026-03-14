@@ -73,6 +73,7 @@ export const file = sqliteTable('file', {
 	[FileKeys.PARTS_UPLOADED]: integer(FileKeys.PARTS_UPLOADED).notNull().default(0),
 	[FileKeys.UPLOADED_AT]: integer(FileKeys.UPLOADED_AT).notNull().default(0),
 	[FileKeys.PROVIDER]: integer(FileKeys.PROVIDER).default(0), // Provider: FiFe, Backblaze, Cloudflare etc.
+	[FileKeys.STORAGE_ID]: text(FileKeys.STORAGE_ID), // Storage
 	[FileKeys.REMOTE_FILE_ID]: text(FileKeys.REMOTE_FILE_ID),
 	[FileKeys.FILE_ACCESS_TOKEN]: text(FileKeys.FILE_ACCESS_TOKEN),
 	[FileKeys.TOKEN_EXPIRY]: integer(FileKeys.TOKEN_EXPIRY).notNull().default(0),

@@ -44,7 +44,8 @@ export const FileKeys = {
 	FILE_ACCESS_TOKEN: '12',
 	TOKEN_EXPIRY: '13',
 	CLIENT_UPDATED_AT: '14',
-	DELETED: '15'
+	DELETED: '15',
+	STORAGE_ID: '16'
 } as const;
 
 export const PartKeys = {

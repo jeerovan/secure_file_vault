@@ -14,12 +14,12 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, error: ErrorCode.INVALID_JSON });
 	}
 
-	const { file_id } = body;
+	const { file_id, storage_id } = body;
 
 	if (!file_id) {
 		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 	}
-	const authData = await authenticate(authUser.id);
+	const authData = await authenticate(authUser.id, storage_id);
 	if (!authData) {
 		return json({ status: 0, error: ErrorCode.NO_USER });
 	}

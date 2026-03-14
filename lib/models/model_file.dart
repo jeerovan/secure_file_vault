@@ -10,6 +10,8 @@ class ModelFile {
   int parts;
   int partsUploaded;
   int uploadedAt;
+  String? storageId;
+  int provider;
   String? remoteId;
   String? accessToken;
   int tokenExpiry;
@@ -21,6 +23,8 @@ class ModelFile {
     required this.parts,
     required this.partsUploaded,
     required this.uploadedAt,
+    this.storageId,
+    this.provider = 0,
     this.remoteId,
     this.accessToken,
     required this.tokenExpiry,
@@ -34,6 +38,8 @@ class ModelFile {
       'parts': parts,
       'parts_uploaded': partsUploaded,
       'uploaded_at': uploadedAt,
+      'storage_id': storageId,
+      'provider': provider,
       'remote_id': remoteId,
       'access_token': accessToken,
       'token_expiry': tokenExpiry,
@@ -49,6 +55,8 @@ class ModelFile {
       parts: getValueFromMap(map, "parts", defaultValue: 0),
       partsUploaded: getValueFromMap(map, "parts_uploaded", defaultValue: 0),
       uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
+      storageId: getValueFromMap(map, "storage_id", defaultValue: null),
+      provider: getValueFromMap(map, "provider", defaultValue: 0),
       remoteId: getValueFromMap(map, "remote_id", defaultValue: null),
       accessToken: getValueFromMap(map, "access_token", defaultValue: null),
       tokenExpiry: getValueFromMap(map, "token_expiry", defaultValue: 0),

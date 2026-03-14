@@ -203,7 +203,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 		const tableKey = userId + '_' + fileHash;
 		const incomingUpdatedAt = change['updated_at'] || 0;
 
-		const existingRow = await db
+		const existingRow = db
 			.select({ clientUpdatedAt: file[FileKeys.CLIENT_UPDATED_AT] })
 			.from(file)
 			.where(eq(file[FileKeys.ID], tableKey))
@@ -219,7 +219,8 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 						[FileKeys.PARTS]: change['parts'] ?? 1,
 						[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
 						[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
-						[FileKeys.PROVIDER]: change['uploaded_to'] ?? 0,
+						[FileKeys.PROVIDER]: change['provider'] ?? 0,
+						[FileKeys.STORAGE_ID]: change['storage_id'] ?? null,
 						[FileKeys.REMOTE_FILE_ID]: change['remote_id'] ?? null,
 						[FileKeys.FILE_ACCESS_TOKEN]: change['access_token'] ?? null,
 						[FileKeys.TOKEN_EXPIRY]: change['token_expiry'] ?? 0,
@@ -237,7 +238,8 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				[FileKeys.PARTS]: change['parts'] ?? 1,
 				[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
 				[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
-				[FileKeys.PROVIDER]: change['uploaded_to'] ?? 0,
+				[FileKeys.STORAGE_ID]: change['storage_id'] ?? null,
+				[FileKeys.PROVIDER]: change['provider'] ?? 0,
 				[FileKeys.REMOTE_FILE_ID]: change['remote_id'] ?? null,
 				[FileKeys.FILE_ACCESS_TOKEN]: change['access_token'] ?? null,
 				[FileKeys.TOKEN_EXPIRY]: change['token_expiry'] ?? 0,
@@ -425,7 +427,9 @@ export async function addStorage(
 		[StorageKeys.PRIORITY]: priority
 	});
 }
-
+export async function getStorageById(id: string) {
+	return db.select().from(storage).where(eq(storage[StorageKeys.ID], id)).get();
+}
 export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
 	// Subquery to sum the size of all pending files for a specific storage provider
 	// COALESCE is used to return 0 instead of NULL if there are no pending files
