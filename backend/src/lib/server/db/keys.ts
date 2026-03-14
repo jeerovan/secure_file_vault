@@ -96,6 +96,16 @@ export const StorageKeys = {
 	PRIORITY: '8'
 } as const;
 
+export const TempStorageKeys = {
+	ID: '1',
+	SERVER_CREATED_AT: '2',
+	SERVER_UPDATED_AT: '3',
+	USER_ID: '4',
+	STORAGE_ID: '5',
+	SIZE: '6',
+	PROVIDER: '7'
+} as const;
+
 export const ErrorCode = {
 	NO_USER: 1,
 	INVALID_JSON: 2,

@@ -8,7 +8,8 @@ import {
 	item,
 	part,
 	credentials,
-	storage
+	storage,
+	tempStorage
 } from '$lib/server/db/schema';
 import { eq, and, ne, gte, count, desc, sql } from 'drizzle-orm';
 import {
@@ -21,8 +22,10 @@ import {
 	CredentialsKeys,
 	StorageKeys,
 	ErrorCode,
-	StorageProvider
+	StorageProvider,
+	TempStorageKeys
 } from '$lib/server/db/keys';
+import { table } from 'console';
 
 export async function getKeys(userId: string) {
 	return db
@@ -377,6 +380,9 @@ export async function getCredentials(userId: string, provider: number) {
 		)
 		.get();
 }
+export async function getCredentialsById(id: string) {
+	return db.select().from(credentials).where(eq(credentials[CredentialsKeys.ID], id)).get();
+}
 
 export async function markCredentialsUpdating(Id: string) {
 	return await db
@@ -421,13 +427,22 @@ export async function addStorage(
 }
 
 export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
+	// Subquery to sum the size of all pending files for a specific storage provider
+	// COALESCE is used to return 0 instead of NULL if there are no pending files
+	const pendingReservedBytes = sql`(
+        SELECT COALESCE(SUM(${tempStorage[TempStorageKeys.SIZE]}), 0) 
+        FROM ${tempStorage} 
+        WHERE ${tempStorage[TempStorageKeys.STORAGE_ID]} = ${storage[StorageKeys.ID]}
+    )`;
+
 	const availableStorage = db
 		.select()
 		.from(storage)
 		.where(
 			and(
 				eq(storage[StorageKeys.USER_ID], userId),
-				sql`${storage[StorageKeys.LIMIT_BYTES]} - ${storage[StorageKeys.USED_BYTES]} >= ${fileSizeBytes}`
+				// Available space = Limit - Used - Pending Reserved >= Requested Size
+				sql`${storage[StorageKeys.LIMIT_BYTES]} - ${storage[StorageKeys.USED_BYTES]} - ${pendingReservedBytes} >= ${fileSizeBytes}`
 			)
 		)
 		.orderBy(desc(storage[StorageKeys.PRIORITY]))
@@ -435,4 +450,25 @@ export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
 		.get();
 
 	return availableStorage;
+}
+
+export async function getTempStorage(userId: string, file_hash: string) {
+	const tableId = userId + '_' + file_hash;
+	return db.select().from(tempStorage).where(eq(tempStorage[TempStorageKeys.ID], tableId)).get();
+}
+export async function addTempStorage(
+	userId: string,
+	file_hash: string,
+	storageId: string,
+	size: number,
+	provider: number
+) {
+	const tableId = userId + '_' + file_hash;
+	await db.insert(tempStorage).values({
+		[TempStorageKeys.ID]: tableId,
+		[TempStorageKeys.USER_ID]: userId,
+		[TempStorageKeys.STORAGE_ID]: storageId,
+		[TempStorageKeys.SIZE]: size,
+		[TempStorageKeys.PROVIDER]: provider
+	});
 }

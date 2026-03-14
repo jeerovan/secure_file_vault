@@ -7,7 +7,8 @@ import {
 	PartKeys,
 	ItemKeys,
 	CredentialsKeys,
-	StorageKeys
+	StorageKeys,
+	TempStorageKeys
 } from './keys';
 
 export const user = sqliteTable('user', {
@@ -148,4 +149,22 @@ export const storage = sqliteTable('storage', {
 	[StorageKeys.LIMIT_BYTES]: integer(StorageKeys.LIMIT_BYTES).notNull(),
 	[StorageKeys.USED_BYTES]: integer(StorageKeys.USED_BYTES).default(0).notNull(),
 	[StorageKeys.PRIORITY]: integer(StorageKeys.PRIORITY).notNull().default(0)
+});
+
+export const tempStorage = sqliteTable('temp_storage', {
+	[TempStorageKeys.ID]: text(TempStorageKeys.ID).primaryKey(), // UserId_FileHash
+	[TempStorageKeys.SERVER_CREATED_AT]: integer(TempStorageKeys.SERVER_CREATED_AT, {
+		mode: 'timestamp'
+	})
+		.notNull()
+		.$defaultFn(() => new Date()),
+	[TempStorageKeys.SERVER_UPDATED_AT]: integer(TempStorageKeys.SERVER_UPDATED_AT, {
+		mode: 'timestamp'
+	})
+		.$defaultFn(() => new Date())
+		.$onUpdate(() => new Date()),
+	[TempStorageKeys.USER_ID]: text(TempStorageKeys.USER_ID).notNull(),
+	[TempStorageKeys.STORAGE_ID]: text(TempStorageKeys.STORAGE_ID),
+	[TempStorageKeys.SIZE]: integer(TempStorageKeys.SIZE).notNull(),
+	[TempStorageKeys.PROVIDER]: integer(TempStorageKeys.PROVIDER).notNull()
 });
