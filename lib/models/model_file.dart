@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../utils/utils_sync.dart';
 
 import '../utils/common.dart';
@@ -12,9 +14,7 @@ class ModelFile {
   int uploadedAt;
   String? storageId;
   int provider;
-  String? remoteId;
-  String? accessToken;
-  int tokenExpiry;
+  Map<String, dynamic>? accessData;
   int updatedAt;
 
   ModelFile({
@@ -23,11 +23,9 @@ class ModelFile {
     required this.parts,
     required this.partsUploaded,
     required this.uploadedAt,
-    this.storageId,
     this.provider = 0,
-    this.remoteId,
-    this.accessToken,
-    required this.tokenExpiry,
+    this.storageId,
+    this.accessData,
     required this.updatedAt,
   });
 
@@ -40,15 +38,14 @@ class ModelFile {
       'uploaded_at': uploadedAt,
       'storage_id': storageId,
       'provider': provider,
-      'remote_id': remoteId,
-      'access_token': accessToken,
-      'token_expiry': tokenExpiry,
+      'access_data': accessData is String ? accessData : jsonEncode(accessData),
       'updated_at': updatedAt
     };
   }
 
   static Future<ModelFile> fromMap(Map<String, dynamic> map) async {
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final accessData = map["access_data"];
     return ModelFile(
       id: map["id"],
       itemCount: getValueFromMap(map, "item_count", defaultValue: 1),
@@ -57,9 +54,7 @@ class ModelFile {
       uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
       storageId: getValueFromMap(map, "storage_id", defaultValue: null),
       provider: getValueFromMap(map, "provider", defaultValue: 0),
-      remoteId: getValueFromMap(map, "remote_id", defaultValue: null),
-      accessToken: getValueFromMap(map, "access_token", defaultValue: null),
-      tokenExpiry: getValueFromMap(map, "token_expiry", defaultValue: 0),
+      accessData: accessData is String ? jsonDecode(accessData) : accessData,
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }

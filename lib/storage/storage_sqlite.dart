@@ -128,11 +128,9 @@ class StorageSqlite {
         parts INTEGER DEFAULT 1,
         parts_uploaded INTEGER DEFAULT 0,
         uploaded_at INTEGER DEFAULT 0,
-        storage_id TEXT,
         provider INTEGER DEFAULT 0,
-        remote_id TEXT,
-        access_token TEXT,
-        token_expiry INTEGER DEFAULT 0,
+        storage_id TEXT,
+        access_data TEXT,
         updated_at INTEGER
       )
     ''');

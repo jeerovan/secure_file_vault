@@ -40,12 +40,10 @@ export const FileKeys = {
 	PARTS_UPLOADED: '8',
 	UPLOADED_AT: '9',
 	PROVIDER: '10',
-	REMOTE_FILE_ID: '11',
-	FILE_ACCESS_TOKEN: '12',
-	TOKEN_EXPIRY: '13',
-	CLIENT_UPDATED_AT: '14',
-	DELETED: '15',
-	STORAGE_ID: '16'
+	STORAGE_ID: '11',
+	ACCESS_DATA: '12',
+	CLIENT_UPDATED_AT: '13',
+	DELETED: '14'
 } as const;
 
 export const PartKeys = {

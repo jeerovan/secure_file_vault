@@ -221,9 +221,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 						[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
 						[FileKeys.PROVIDER]: change['provider'] ?? 0,
 						[FileKeys.STORAGE_ID]: change['storage_id'] ?? null,
-						[FileKeys.REMOTE_FILE_ID]: change['remote_id'] ?? null,
-						[FileKeys.FILE_ACCESS_TOKEN]: change['access_token'] ?? null,
-						[FileKeys.TOKEN_EXPIRY]: change['token_expiry'] ?? 0,
+						[FileKeys.ACCESS_DATA]: change['access_data'] ?? null,
 						[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 						[FileKeys.DELETED]: change['deleted']
 					})
@@ -240,9 +238,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
 				[FileKeys.STORAGE_ID]: change['storage_id'] ?? null,
 				[FileKeys.PROVIDER]: change['provider'] ?? 0,
-				[FileKeys.REMOTE_FILE_ID]: change['remote_id'] ?? null,
-				[FileKeys.FILE_ACCESS_TOKEN]: change['access_token'] ?? null,
-				[FileKeys.TOKEN_EXPIRY]: change['token_expiry'] ?? 0,
+				[FileKeys.ACCESS_DATA]: change['access_data'] ?? null,
 				[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 				[FileKeys.DELETED]: change['deleted']
 			});
