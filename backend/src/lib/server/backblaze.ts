@@ -240,6 +240,20 @@ export async function getUploadPartUrl(params: GetUploadPartUrlParams) {
 }
 
 // --- 5. b2_finish_large_file ---
+export interface CancelLargeFileParams extends B2BaseParams {
+	fileId: string;
+}
+
+/**
+ * Cancels a large file upload .
+ */
+export async function cancelLargeFile(params: CancelLargeFileParams) {
+	return b2Fetch('b2_cancel_large_file', params, {
+		fileId: params.fileId
+	});
+}
+
+// --- 5. b2_finish_large_file ---
 export interface FinishLargeFileParams extends B2BaseParams {
 	fileId: string;
 	partSha1Array: string[]; // Array of SHA1 hashes of the uploaded parts in order

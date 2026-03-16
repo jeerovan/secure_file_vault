@@ -287,8 +287,7 @@ class SyncUtils {
         Tables.items.string,
         Tables.parts.string
       ]) {
-        List<ModelChange> changes =
-            await ModelChange.fetch300MapPushForTable(table);
+        List<ModelChange> changes = await ModelChange.fetchForTable(table);
         List<Map<String, dynamic>> changeMaps = [];
         for (ModelChange change in changes) {
           changeMaps.add(change.changedData);
@@ -534,40 +533,9 @@ class SyncUtils {
     logger.info("Push Files");
     bool hasPendingUploads = false;
     if (simulateTesting()) return hasPendingUploads;
-    SupabaseClient supabaseClient = Supabase.instance.client;
-    // push uploaded files state to supabase if left due to network failures
-    // where uploadedAt > 0 but still exists,
-    List<ModelFile> completedUploads = await ModelFile.pendingForPush();
-    for (ModelFile completedUpload in completedUploads) {
-      String fileId = completedUpload.id;
-      try {
-        // update if the the current uploadedAt on server is earlier than this uploadedAt
-        logger.info("pushFiles|$fileId|syncing completed upload");
-        await supabaseClient
-            .from("files")
-            .update({
-              "uploaded_at": completedUpload.uploadedAt,
-              "parts_uploaded": completedUpload.partsUploaded,
-              "b2_id": completedUpload.remoteId,
-            })
-            .eq("id", fileId)
-            .lt("uploaded_at", completedUpload.uploadedAt);
-
-        String changeId = ""; // TODO get changeId
-        ModelChange? change = await ModelChange.get(changeId);
-        await completedUpload
-            .delete(); // deletes the encrypted file in temp dir
-        // upgrade changetask
-        await ModelChange.upgradeChangeTask(change!);
-      } catch (e, s) {
-        logger.error("pushFiles", error: e, stackTrace: s);
-      }
-    }
-    logger.info(
-        "pushed Completed Uploads. Spent: ${DateTime.now().toUtc().millisecondsSinceEpoch - startedAt}");
-    //uploading partial pending files
+    //uploading partial/pending files
     // where uploadedAt = 0
-    List<ModelFile> pendingUploads = []; // TODO get files pending for upload
+    List<ModelFile> pendingUploads = await ModelFile.pendingForUpload();
     for (ModelFile pendingFile in pendingUploads) {
       await pushFile(pendingFile);
       hasPendingUploads = true;

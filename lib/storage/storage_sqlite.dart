@@ -212,6 +212,17 @@ class StorageSqlite {
         updated_at INTEGER
       )
     ''');
+    // id : item id
+    // can have entries for any device
+    // transfer type: 1:download / 0:upload
+    await db.execute('''
+      CREATE TABLE transfers (
+        id TEXT PRIMARY KEY,
+        download INTEGER DEFAULT 0,
+        progress INTEGER DEFAULT 0,
+        updated_at INTEGER
+      )
+    ''');
     await db.execute('''
       CREATE TABLE settings (
         id TEXT PRIMARY KEY,

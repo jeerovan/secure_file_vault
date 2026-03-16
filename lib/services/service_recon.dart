@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'package:file_vault_bb/models/model_transfer.dart';
+
 import '../utils/enums.dart';
 
 import '../models/model_file.dart';
@@ -331,13 +333,13 @@ class ReconciliationService {
   ) async {
     final hash = await _computeFileHash(fsPath);
     final hashFile = await ModelFile.get(hash);
+    bool createUploadTask = false;
     if (hashFile == null) {
-      String? mime = await getFileMime(fsPath);
       FileSplitter fileSplitter = FileSplitter(File(fsPath));
       int parts = fileSplitter.partSizes.length;
-      final modelFile = await ModelFile.fromMap(
-          {'id': hash, 'mime': mime ?? "", 'parts': parts});
+      final modelFile = await ModelFile.fromMap({'id': hash, 'parts': parts});
       await modelFile.insert();
+      createUploadTask = true;
     } else {
       await ModelFile.updateItemCount(hash, true);
     }
@@ -351,6 +353,11 @@ class ReconciliationService {
       'scan_state': 1,
     });
     await modelItem.insert();
+    if (createUploadTask) {
+      final transfer =
+          await ModelTransfer.fromMap({'id': modelItem.id, 'download': 0});
+      await transfer.insert();
+    }
     logger.info('  + Created File: ${fsItem.name}');
   }
 

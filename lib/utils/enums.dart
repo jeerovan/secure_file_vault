@@ -12,7 +12,17 @@ enum SetupStep {
   complete,
 }
 
-enum Tables { profiles, items, files, parts, changes, settings, states, logs }
+enum Tables {
+  profiles,
+  items,
+  files,
+  parts,
+  changes,
+  settings,
+  states,
+  logs,
+  transfers
+}
 
 extension TablesExtension on Tables {
   String get string {
@@ -33,6 +43,8 @@ extension TablesExtension on Tables {
         return "states";
       case Tables.logs:
         return "logs";
+      case Tables.transfers:
+        return "transfers";
     }
   }
 }
