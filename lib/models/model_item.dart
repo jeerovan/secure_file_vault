@@ -285,7 +285,7 @@ class ModelItem {
     return result;
   }
 
-  Future<int> delete({bool pushToSync = false}) async {
+  Future<int> delete({bool pushToSync = true}) async {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 1;
     Map<String, dynamic> map = toMap();
@@ -304,7 +304,7 @@ class ModelItem {
   static Future<void> deletedFromServer(String id) async {
     ModelItem? item = await ModelItem.get(id);
     if (item != null) {
-      await item.delete();
+      await item.delete(pushToSync: false);
     }
     //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
   }

@@ -21,7 +21,7 @@ enum Tables {
   settings,
   states,
   logs,
-  transfers
+  itemTasks
 }
 
 extension TablesExtension on Tables {
@@ -43,8 +43,8 @@ extension TablesExtension on Tables {
         return "states";
       case Tables.logs:
         return "logs";
-      case Tables.transfers:
-        return "transfers";
+      case Tables.itemTasks:
+        return "item_tasks";
     }
   }
 }
@@ -393,6 +393,21 @@ extension StorageProviderExtension on StorageProvider {
       case StorageProvider.backblaze:
         return 2;
       case StorageProvider.cloudflare:
+        return 3;
+    }
+  }
+}
+
+enum ItemTask { upload, download, delete }
+
+extension ItemTaskExtension on ItemTask {
+  int get value {
+    switch (this) {
+      case ItemTask.upload:
+        return 1;
+      case ItemTask.download:
+        return 2;
+      case ItemTask.delete:
         return 3;
     }
   }

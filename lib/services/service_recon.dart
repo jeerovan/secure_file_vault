@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
-import 'package:file_vault_bb/models/model_transfer.dart';
+import 'package:file_vault_bb/models/model_item_task.dart';
 
 import '../utils/enums.dart';
 
@@ -39,7 +39,6 @@ class ReconciliationService {
     // first delete all files if they are not uploaded yet
     for (final dbChild in remainingDbItems) {
       if (!dbChild.isFolder) {
-        // TODO check upload status before deletion
         await _handleDeletion(dbChild);
       }
     }
@@ -313,12 +312,15 @@ class ReconciliationService {
 
     // decrement reference count for old file
     await ModelFile.updateItemCount(dbItem.fileId!, false);
-    String? mime = await getFileMime(fsPath);
     FileSplitter fileSplitter = FileSplitter(File(fsPath));
     int parts = fileSplitter.partSizes.length;
-    final modelFile = await ModelFile.fromMap(
-        {'id': newHash, 'mime': mime ?? "", 'parts': parts});
+    final modelFile = await ModelFile.fromMap({'id': newHash, 'parts': parts});
     await modelFile.insert();
+    // create new upload task
+    ModelItemTask task =
+        await ModelItemTask.fromMap({'id': dbItem.id, 'task': 1});
+    await task.insert();
+    // update item
     dbItem.fileId = newHash;
     dbItem.size = fsItem.size!;
     await dbItem.update(["file_id", "size"]);
@@ -354,9 +356,9 @@ class ReconciliationService {
     });
     await modelItem.insert();
     if (createUploadTask) {
-      final transfer =
-          await ModelTransfer.fromMap({'id': modelItem.id, 'download': 0});
-      await transfer.insert();
+      ModelItemTask task =
+          await ModelItemTask.fromMap({'id': modelItem.id, 'task': 1});
+      await task.insert();
     }
     logger.info('  + Created File: ${fsItem.name}');
   }
@@ -384,16 +386,24 @@ class ReconciliationService {
         rootItemId: rootItemId, dbParentId: itemId, fsPath: fsPath);
   }
 
-  Future<void> _handleDeletion(ModelItem dbItem) async {
-    if (dbItem.isFolder) {
-      await dbItem.delete();
-      logger.info('  - Deleted Folder: ${dbItem.name}');
+  Future<void> _handleDeletion(ModelItem item) async {
+    if (item.isFolder) {
+      await item.delete();
+      logger.info('  - Deleted Folder: ${item.name}');
     } else {
-      if (dbItem.fileId != null) {
-        await ModelFile.updateItemCount(dbItem.fileId!, false);
+      if (item.fileId != null) {
+        ModelFile? modelFile = await ModelFile.get(item.fileId!);
+        if (modelFile != null) {
+          if (modelFile.uploadedAt == 0) {
+            // if not already uploaded
+            // add item delete task
+            ModelItemTask task =
+                await ModelItemTask.fromMap({'id': item.id, 'task': 3});
+            await task.insert();
+          }
+        }
       }
-      await dbItem.delete();
-      logger.info('  - Deleted File: ${dbItem.name}');
+      logger.info('  - Deleted File: ${item.name}');
     }
   }
 

@@ -212,12 +212,12 @@ class StorageSqlite {
         updated_at INTEGER
       )
     ''');
-    // id : item_id-part_number
-    // download: 0 means upload, 1 means download
+    // id : item_id
+    // task: 1(Upload), 2(Download), 3(Delete)
     await db.execute('''
-      CREATE TABLE transfers (
+      CREATE TABLE item_tasks (
         id TEXT PRIMARY KEY,
-        download INTEGER DEFAULT 0,
+        task INTEGER DEFAULT 0,
         progress INTEGER DEFAULT 0,
         updated_at INTEGER
       )

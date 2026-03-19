@@ -142,9 +142,9 @@ class ModelFile {
     return result;
   }
 
-  Future<int> delete({bool pushToSync = false}) async {
+  Future<int> delete({bool pushToSync = true}) async {
     final dbHelper = StorageSqlite.instance;
-    int deleteTask = 2;
+    int deleteTask = 1;
     Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete(Tables.files.string, id);
     //TODO parts should be deleted also
@@ -162,7 +162,7 @@ class ModelFile {
   static Future<void> deletedFromServer(String id) async {
     ModelFile? item = await ModelFile.get(id);
     if (item != null) {
-      await item.delete();
+      await item.delete(pushToSync: false);
     }
     // TODO delete parts also
     //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));

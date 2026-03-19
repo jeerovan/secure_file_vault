@@ -5,7 +5,7 @@ import 'package:crypto/crypto.dart';
 import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_part.dart';
-import 'package:file_vault_bb/models/model_transfer.dart';
+import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -20,34 +20,33 @@ import 'package:sodium_libs/sodium_libs_sumo.dart';
 import '../services/service_logger.dart';
 import 'utils_crypto.dart';
 
-class UploadManager {
+class TaskManager {
   // 1. Singleton implementation
-  static final UploadManager _instance = UploadManager._internal();
+  static final TaskManager _instance = TaskManager._internal();
   static final logger = AppLogger(prefixes: [
-    "Uploader",
+    "Tasker",
   ]);
-  factory UploadManager() {
+  factory TaskManager() {
     return _instance;
   }
 
-  UploadManager._internal();
+  TaskManager._internal();
 
   // State trackers
   bool _isDispatching = false;
-  bool _isBackgroundMode = false;
+  bool _inBackground = false;
   DateTime _startTime = DateTime.now();
 
-  // Stores active uploads with an identifiable parameter (Upload ID)
-  final Set<String> _activeUploadProcesses = {};
+  // Stores active uploads with an identifiable parameter (Task ID)
+  final Set<String> _activeTaskIds = {};
 
   /// Static function "init" to start the process
-  static void init({bool isBackground = false}) {
-    if (_instance._activeUploadProcesses.isNotEmpty ||
-        _instance._isDispatching) {
+  static void init({bool inBackground = false}) {
+    if (_instance._activeTaskIds.isNotEmpty || _instance._isDispatching) {
       return;
     }
     _instance.setStartTime();
-    _instance.start(isBackground);
+    _instance.start(inBackground);
   }
 
   void setStartTime() async {
@@ -60,31 +59,31 @@ class UploadManager {
     if (_isDispatching) return;
 
     _isDispatching = true;
-    _isBackgroundMode = isBackground;
+    _inBackground = isBackground;
 
     try {
       bool hasInternet = await InternetConnection().hasInternetAccess;
       if (!hasInternet) return;
 
       // Concurrency limits: 1 for background, 3 for foreground
-      final int maxConcurrentProcesses = _isBackgroundMode ? 1 : 3;
+      final int maxConcurrentProcesses = _inBackground ? 1 : 3;
 
-      while (_activeUploadProcesses.length < maxConcurrentProcesses) {
+      while (_activeTaskIds.length < maxConcurrentProcesses) {
         // Fetches pending upload identifier from another function
-        final String? pendingUploadId =
-            await ModelTransfer.fetchPendingUpload(_activeUploadProcesses);
+        final String? pendingTaskId =
+            await ModelItemTask.fetchPendingTask(_activeTaskIds);
 
-        // Break if no pending uploads are available
-        if (pendingUploadId == null) {
+        // Break if no pending task are available
+        if (pendingTaskId == null) {
           break;
         }
 
-        // Ensure we don't start the same upload twice concurrently
-        if (!_activeUploadProcesses.contains(pendingUploadId)) {
-          _activeUploadProcesses.add(pendingUploadId);
+        // Ensure we don't start the same task twice concurrently
+        if (!_activeTaskIds.contains(pendingTaskId)) {
+          _activeTaskIds.add(pendingTaskId);
 
-          // Initiate upload process without awaiting to allow parallel execution up to the limit
-          dispatchUpload(pendingUploadId);
+          // Initiate task process without awaiting to allow parallel execution up to the limit
+          dispatchTask(pendingTaskId);
         }
       }
     } catch (e) {
@@ -95,60 +94,65 @@ class UploadManager {
     }
   }
 
-  /// Internal processor handling individual uploads
-  Future<void> dispatchUpload(String uploadId) async {
+  /// Internal processor handling individual tasks
+  Future<void> dispatchTask(String taskId) async {
     bool queueNext = true;
     try {
-      bool success = await checkInitUpload(uploadId);
-      queueNext = success;
+      ModelItemTask? itemTask = await ModelItemTask.get(taskId);
+      if (itemTask!.task == ItemTask.upload.value) {
+        await checkInitUpload(itemTask);
+      } else if (itemTask.task == ItemTask.delete.value) {
+        await checkDeleteItemFile(itemTask);
+      }
     } catch (e) {
-      debugPrint('Upload failed for $uploadId: $e');
+      debugPrint('Task failed for $taskId: $e');
     } finally {
       // Remove from active processes using the identifiable parameter
-      _activeUploadProcesses.remove(uploadId);
+      _activeTaskIds.remove(taskId);
 
-      // Tracks upload time when an upload process finishes
-      final Duration uploadDuration = DateTime.now().difference(_startTime);
+      // Tracks task time when an task process finishes
+      final Duration taskDuration = DateTime.now().difference(_startTime);
       debugPrint(
-          'Upload $uploadId finished. Time taken: ${uploadDuration.inSeconds}s');
+          'Task $taskId finished. Time taken: ${taskDuration.inSeconds}s');
 
       // Check background constraint: if took > 1 minute, end without restarting
-      if (_isBackgroundMode) {
-        if (Platform.isIOS && uploadDuration.inMinutes >= 1) {
+      if (_inBackground) {
+        if (Platform.isIOS && taskDuration.inMinutes >= 1) {
           debugPrint(
               'Background process exceeded 1 minute limit. Ending queue.');
           queueNext = false;
-        } else if (Platform.isAndroid && uploadDuration.inMinutes >= 2) {
+        } else if (Platform.isAndroid && taskDuration.inMinutes >= 2) {
           queueNext = false;
         }
       }
-      // Call dispatcher function to enqueue new upload process
-      if (queueNext) start(_isBackgroundMode);
+      // Call dispatcher function to enqueue new task process
+      if (queueNext) start(_inBackground);
     }
   }
 
-  /// Replace with your actual chunked/encrypted cloud upload logic
-  Future<bool> checkInitUpload(String uploadId) async {
-    ModelItem? modelItem = await ModelItem.get(uploadId);
+  Future<void> checkInitUpload(ModelItemTask itemTask) async {
+    ModelItem? modelItem = await ModelItem.get(itemTask.id);
     if (modelItem == null || modelItem.fileId == null) {
-      await ModelTransfer.deleteTransfer(uploadId);
-      return true;
+      await itemTask.delete();
+      return;
     }
     final inFilePath = await ModelItem.getPathForItem(modelItem.id);
     final inFile = File(inFilePath);
     if (!inFile.existsSync()) {
-      await ModelTransfer.deleteTransfer(uploadId);
-      return true;
+      itemTask.task = ItemTask.delete.value;
+      await itemTask.update(["task"]);
+      return;
     }
     ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
     if (modelFile == null) {
-      await ModelTransfer.deleteTransfer(uploadId);
-      return true;
+      itemTask.task = ItemTask.delete.value;
+      await itemTask.update(["task"]);
+      return;
     }
     // check if already uploaded
     if (modelFile.uploadedAt > 0) {
-      await ModelTransfer.deleteTransfer(uploadId);
-      return true;
+      await itemTask.delete();
+      return;
     }
     final api = BackendApi();
     // handle storage providers
@@ -162,7 +166,7 @@ class UploadManager {
           });
       final status = providerResult["status"];
       if (status <= 0) {
-        return true;
+        return;
       } else {
         final providerData = providerResult["data"];
         modelFile.storageId = providerData["storage"];
@@ -172,14 +176,14 @@ class UploadManager {
       }
     }
     if (modelFile.provider == 0) {
-      return true;
+      return;
     }
     if (modelFile.provider == StorageProvider.fife.value ||
         modelFile.provider == StorageProvider.backblaze.value) {
       if (modelFile.parts == modelFile.partsUploaded) {
         // May have failed to verify and update
-        finishMultiPartB2Upload(uploadId, modelFile);
-        return true;
+        finishMultiPartB2Upload(itemTask, modelFile);
+        return;
       }
       if (modelFile.parts > 1) {
         // Check get fileId
@@ -193,7 +197,7 @@ class UploadManager {
               });
           final status = fileIdResult["status"];
           if (status <= 0) {
-            return true;
+            return;
           } else {
             final fileIdData = fileIdResult["data"];
             data["fileId"] = fileIdData["fileId"];
@@ -208,13 +212,13 @@ class UploadManager {
             jsonBody: {"file_id": fileId, "storage_id": modelFile.storageId});
         final status = urlResult["status"];
         if (status <= 0) {
-          return true;
+          return;
         } else {
           final urlData = urlResult["data"];
           final uploadUrl = urlData["uploadUrl"];
           final uploadToken = urlData["authorizationToken"];
-          return await uploadFilePart(uploadId, modelFile.id, uploadUrl,
-              uploadToken, inFilePath, modelFile.partsUploaded + 1, true);
+          await uploadFilePart(itemTask, modelFile.id, uploadUrl, uploadToken,
+              inFilePath, modelFile.partsUploaded + 1, true);
         }
         // get upload part url
       } else {
@@ -224,23 +228,22 @@ class UploadManager {
             jsonBody: {"storage_id": modelFile.storageId});
         final status = urlResult["status"];
         if (status <= 0) {
-          return true;
+          return;
         } else {
           final urlData = urlResult["data"];
           final uploadUrl = urlData["uploadUrl"];
           final uploadToken = urlData["authorizationToken"];
-          return await uploadFilePart(uploadId, modelFile.id, uploadUrl,
-              uploadToken, inFilePath, modelFile.partsUploaded + 1, false);
+          await uploadFilePart(itemTask, modelFile.id, uploadUrl, uploadToken,
+              inFilePath, modelFile.partsUploaded + 1, false);
         }
       }
     } else {
       // TODO handle other providers
     }
-    return true;
   }
 
-  Future<bool> uploadFilePart(
-      String uploadId,
+  Future<void> uploadFilePart(
+      ModelItemTask itemTask,
       String fileHash,
       String uploadUrl,
       String uploadToken,
@@ -279,12 +282,6 @@ class UploadManager {
         };
         ModelPart modelPart = await ModelPart.fromMap(partData);
         await modelPart.insert();
-      } else if (fileEncryptionResult.failureReason!
-          .contains("PathNotFoundException")) {
-        await ModelTransfer.deleteTransfer(uploadId);
-        return true;
-      } else {
-        return true; // Try again
       }
     }
     Uint8List fileBytes = File(fileOutPath).readAsBytesSync();
@@ -325,7 +322,7 @@ class UploadManager {
       if (sha1Hash == uploadedSha1 && contentLength == uploadedContentLength) {
         //update local first
         ModelFile? modelFile = await ModelFile.get(fileHash);
-        if (modelFile == null) return true;
+        if (modelFile == null) return;
         modelFile.partsUploaded = part;
         Map<String, dynamic> currentData = modelFile.data;
         currentData["fileId"] = b2FileId;
@@ -336,25 +333,23 @@ class UploadManager {
           if (modelFile.parts > 1) {
             // multi parts
             // call finish parts upload
-            await finishMultiPartB2Upload(uploadId, modelFile);
+            await finishMultiPartB2Upload(itemTask, modelFile);
           } else {
             // single part
             modelFile.uploadedAt =
                 DateTime.now().toUtc().millisecondsSinceEpoch;
             await modelFile.update(["uploaded_at"]);
-            await ModelTransfer.deleteTransfer(uploadId);
+            await itemTask.delete();
           }
         }
       }
     } else {
       logger.error("pushFilePart|uploadBytes", error: jsonEncode(uploadResult));
     }
-
-    return true;
   }
 
   Future<void> finishMultiPartB2Upload(
-      String uploadId, ModelFile modelFile) async {
+      ModelItemTask itemTask, ModelFile modelFile) async {
     final api = BackendApi();
     Map<String, dynamic> data = modelFile.data;
     String b2FileId = data["fileId"];
@@ -370,7 +365,7 @@ class UploadManager {
     if (status > 0) {
       modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
       await modelFile.update(["uploaded_at"]);
-      await ModelTransfer.deleteTransfer(uploadId);
+      await itemTask.delete();
     }
   }
 
@@ -407,5 +402,57 @@ class UploadManager {
       data["error"] = e.toString();
     }
     return data;
+  }
+
+  Future<void> checkDeleteItemFile(ModelItemTask itemTask) async {
+    ModelItem? modelItem = await ModelItem.get(itemTask.id);
+    if (modelItem == null || modelItem.fileId == null) {
+      await itemTask.delete();
+      return;
+    }
+    ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
+    if (modelFile == null) {
+      await itemTask.delete();
+      return;
+    }
+    if (modelFile.uploadedAt > 0) {
+      await ModelFile.updateItemCount(modelItem.fileId!, false);
+      await modelItem.delete();
+      await itemTask.delete();
+    } else {
+      if (modelFile.provider == StorageProvider.fife.value ||
+          modelFile.provider == StorageProvider.backblaze.value) {
+        if (modelFile.parts == 1) {
+          await modelFile.delete();
+          await modelItem.delete();
+          await itemTask.delete();
+        } else {
+          Map<String, dynamic> data = modelFile.data;
+          if (data.containsKey("fileId")) {
+            // Cancel large file upload
+            String b2FileId = data["fileId"];
+            final api = BackendApi();
+            final cancelResult = await api.post(
+                endpoint: '/b2/cancel-large-file',
+                jsonBody: {
+                  "storage_id": modelFile.storageId,
+                  "file_id": b2FileId
+                });
+            final status = cancelResult["status"];
+            if (status > 0) {
+              await modelFile.delete();
+              await modelItem.delete();
+              await itemTask.delete();
+            }
+          } else {
+            await modelFile.delete();
+            await modelItem.delete();
+            await itemTask.delete();
+          }
+        }
+      } else {
+        // TODO handle for other providers
+      }
+    }
   }
 }

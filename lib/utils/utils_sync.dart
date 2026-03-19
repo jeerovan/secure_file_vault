@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:file_vault_bb/utils/utils_tasks.dart';
 import '../models/model_change.dart';
 import '../models/model_profile.dart';
 import 'package:flutter/foundation.dart';
@@ -107,6 +108,7 @@ class SyncUtils {
         await fetchMapChanges();
         await cleanupFiles();
         await pushMapChanges();
+        TaskManager.init(inBackground: inBackground);
       }
     } catch (e) {
       logger.error("⚠ Sync failed: $e");
