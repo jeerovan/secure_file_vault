@@ -493,7 +493,7 @@ Map<String, String> getMapUrls(double lat, double lng) {
 }
 
 class FontSizeController extends ChangeNotifier {
-  double _scaleFactor = double.parse(ModelSetting.get("fontScale", "1.2"));
+  double _scaleFactor = double.parse(ModelSetting.get("fontScale", "1.0"));
 
   double get scaleFactor => _scaleFactor;
 

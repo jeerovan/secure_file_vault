@@ -41,7 +41,7 @@ export const FileKeys = {
 	UPLOADED_AT: '9',
 	PROVIDER: '10',
 	STORAGE_ID: '11',
-	ACCESS_DATA: '12',
+	JSON: '12',
 	CLIENT_UPDATED_AT: '13',
 	DELETED: '14'
 } as const;
@@ -56,7 +56,7 @@ export const PartKeys = {
 	STATE: '7',
 	CIPHER: '8',
 	NONCE: '9',
-	SHA1: '10',
+	JSON: '10',
 	CLIENT_UPDATED_AT: '11',
 	DELETED: '12'
 } as const;

@@ -66,7 +66,7 @@ class ModelChange {
   }
 
   static Future<List<ModelChange>> fetchForTable(String table,
-      {int singlePushLimit = 300}) async {
+      {int singlePushLimit = 50}) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<dynamic> changeTypes = [

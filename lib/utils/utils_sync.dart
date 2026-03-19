@@ -101,19 +101,12 @@ class SyncUtils {
       bool inBackground, bool manualSync, bool firstFetch) async {
     String mode = inBackground ? "Background" : "Foreground";
     logger.info("$mode|Sync|------------------START----------------");
-    int startedAt = DateTime.now().millisecondsSinceEpoch;
-    bool hasPendingUploads = false;
-    bool hasMoreMapChangesToPush = false;
     try {
       bool removed = await SyncUtils.checkDeviceStatus();
       if (!removed) {
         await fetchMapChanges();
         await cleanupFiles();
         await pushMapChanges();
-        // pushing files is a time consuming task
-        hasPendingUploads = await pushFiles(startedAt, inBackground);
-        // large files over 20 mb should not be fetched automatically
-        await fetchFiles(startedAt, inBackground);
       }
     } catch (e) {
       logger.error("⚠ Sync failed: $e");
@@ -130,10 +123,6 @@ class SyncUtils {
       EventStream().publish(AppEvent(type: EventType.serverFirstFetchEnds));
     }
     logger.info("$mode|Sync|------------------ENDED----------------");
-    if (!inBackground && (hasPendingUploads || hasMoreMapChangesToPush)) {
-      logger.info("$mode|Sync| more tasks.. will continue..");
-      _handleChange(inBackground, manualSync: manualSync);
-    }
   }
 
   // to sync, one must have masterKey with an active plan
@@ -232,30 +221,7 @@ class SyncUtils {
       String table = map["table"];
       String rowId = map['id'];
       String changeId = '$table|$rowId';
-      int updatedAt = map['updated_at'];
       map["deleted"] = deleteTask;
-
-      Map<String, dynamic> changeMap = {};
-      if (table == Tables.items.string) {
-        changeMap.addAll({
-          "id": rowId,
-          "updated_at": updatedAt,
-        });
-        SodiumSumo sodium = await SodiumSumoInit.init();
-        CryptoUtils cryptoUtils = CryptoUtils(sodium);
-
-        String jsonString = jsonEncode(map);
-        Uint8List plainBytes = Uint8List.fromList(utf8.encode(jsonString));
-
-        Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
-        Map<String, dynamic> encryptedDataMap =
-            cryptoUtils.getEncryptedBytesMap(plainBytes, masterKeyBytes);
-        changeMap.addAll(encryptedDataMap);
-      } else {
-        changeMap.addAll(map);
-      }
-
-      String changeData = jsonEncode(changeMap);
 
       SyncChangeTask changeTask = SyncChangeTask.pushMap;
       if (deleteTask == 0) {
@@ -266,8 +232,7 @@ class SyncUtils {
         //TODO handle file being uploaded
       }
       // add/update change if any upload/download exist
-      await ModelChange.addUpdate(
-          changeId, table, changeData, changeTask.value);
+      await ModelChange.addUpdate(changeId, table, map, changeTask.value);
       logger.info("encryptAndPushChange:$table|$changeId|${changeTask.value}");
       await ModelChange.updateTypeState(changeId, SyncState.uploading);
       waitAndSyncChanges();
@@ -278,6 +243,9 @@ class SyncUtils {
     logger.info("Push Map Changes");
     final api = BackendApi();
     bool changesAvailable = true;
+    String? masterKeyBase64 = await getMasterKey();
+    if (masterKeyBase64 == null) return;
+    Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
     while (changesAvailable) {
       changesAvailable = false;
       List<Map<String, dynamic>> tableMaps = [];
@@ -290,7 +258,26 @@ class SyncUtils {
         List<ModelChange> changes = await ModelChange.fetchForTable(table);
         List<Map<String, dynamic>> changeMaps = [];
         for (ModelChange change in changes) {
-          changeMaps.add(change.changedData);
+          Map<String, dynamic> changeData = change.changedData;
+          if (table == Tables.items.string) {
+            Map<String, dynamic> changeMap = {};
+            changeMap.addAll({
+              "id": changeData["id"],
+              "updated_at": changeData["updated_at"],
+            });
+            SodiumSumo sodium = await SodiumSumoInit.init();
+            CryptoUtils cryptoUtils = CryptoUtils(sodium);
+
+            String jsonString = jsonEncode(changeData);
+            Uint8List plainBytes = Uint8List.fromList(utf8.encode(jsonString));
+
+            Map<String, dynamic> encryptedDataMap =
+                cryptoUtils.getEncryptedBytesMap(plainBytes, masterKeyBytes);
+            changeMap.addAll(encryptedDataMap);
+            changeMaps.add(changeMap);
+          } else {
+            changeMaps.add(changeData);
+          }
           tableChanges.add(change);
         }
         if (changeMaps.isNotEmpty) {
@@ -479,7 +466,7 @@ class SyncUtils {
         String filePath = await ModelItem.getPathForItem(modelItem.id);
         File fileOut = File(filePath);
         if (fileOut.existsSync()) {
-          // duplicate note item (may be different groups)
+          // duplicate item
           logger.debug(
               "to be fetched file already exist, may be another group:$changeId");
           await ModelChange.upgradeChangeTask(change);
@@ -527,405 +514,5 @@ class SyncUtils {
       downloadData["error"] = e.toString();
     }
     return downloadData;
-  }
-
-  static Future<bool> pushFiles(int startedAt, bool inBackground) async {
-    logger.info("Push Files");
-    bool hasPendingUploads = false;
-    if (simulateTesting()) return hasPendingUploads;
-    //uploading partial/pending files
-    // where uploadedAt = 0
-    List<ModelFile> pendingUploads = await ModelFile.pendingForUpload();
-    for (ModelFile pendingFile in pendingUploads) {
-      await pushFile(pendingFile);
-      hasPendingUploads = true;
-    }
-    logger.info(
-        "pushed Pending Uploads. Spent: ${DateTime.now().toUtc().millisecondsSinceEpoch - startedAt}");
-    // upload pending files
-    List<ModelChange> changes = await ModelChange.requiresFilePush();
-    for (ModelChange change in changes) {
-      await checkPushFile(change);
-      hasPendingUploads = true;
-    }
-    logger.info(
-        "Created New Uploads. Spent: ${DateTime.now().toUtc().millisecondsSinceEpoch - startedAt}");
-    return hasPendingUploads;
-  }
-
-  static Future<void> checkPushFile(ModelChange change) async {
-    SupabaseClient supabaseClient = Supabase.instance.client;
-    Map<String, dynamic>? dataMap = change.changedData;
-    if (dataMap != null) {
-      List<String> userIdRowId = change.id.split("|");
-      String userId = userIdRowId[0];
-      String? fileIn = getValueFromMap(dataMap, "path", defaultValue: null);
-      if (fileIn != null) {
-        String fileName = path_lib.basename(fileIn);
-        String fileId = '$userId|$fileName';
-        ModelFile? existingModelFile = await ModelFile.get(fileId);
-        if (existingModelFile != null) {
-          logger.info("checkPushFile|modelFile exists");
-          return;
-        }
-        // check server if already uploaded (from another device)
-        try {
-          final serverFiles =
-              await supabaseClient.from("files").select().eq("id", fileId);
-          if (serverFiles.isNotEmpty) {
-            // entry exist
-            Map<String, dynamic> serverFile = serverFiles.first;
-            int uploadedAt = serverFile["uploaded_at"];
-            if (uploadedAt == 0) {
-              // not uploaded
-              // create new entry with server data
-              serverFile["change_id"] = change.id;
-              serverFile["path"] = fileIn;
-              ModelFile modelFile = await ModelFile.fromMap(serverFile);
-              await modelFile.insert();
-              // push file
-              await pushFile(modelFile);
-            } else {
-              // upgrade changetask
-              await ModelChange.upgradeChangeTask(change);
-            }
-          } else {
-            // encrypt file, get keys, update server before updating local
-            Directory tempDir = await getTemporaryDirectory();
-            String fileOut = path_lib.join(tempDir.path, "$fileName.crypt");
-            SodiumSumo sodium = await SodiumSumoInit.init();
-            CryptoUtils cryptoUtils = CryptoUtils(sodium);
-            ExecutionResult fileEncryptionResult =
-                await cryptoUtils.encryptFile(fileIn, fileOut);
-            if (fileEncryptionResult.isSuccess) {
-              // may fail due to low storage
-              String encryptionKeyBase64 =
-                  fileEncryptionResult.getResult()!["key"];
-              Uint8List encryptionKeyBytes = base64Decode(encryptionKeyBase64);
-              String? masterKeyBase64 = await getMasterKey();
-              Uint8List masterKeyBytes = base64Decode(masterKeyBase64!);
-              Map<String, dynamic> encryptionKeyCipher =
-                  cryptoUtils.getFileEncryptionKeyCipher(
-                      encryptionKeyBytes, masterKeyBytes);
-              File encryptedFile = File(fileOut);
-              int fileSize = encryptedFile.lengthSync();
-              FileSplitter fileSplitter = FileSplitter(encryptedFile);
-              int parts = fileSplitter.partSizes.length;
-              String keyNonceBase64 =
-                  encryptionKeyCipher[AppString.keyNonce.string];
-              Map<String, dynamic> fileData = {
-                "id": fileId,
-                "file_name": fileName,
-                AppString.keyCipher.string:
-                    encryptionKeyCipher[AppString.keyCipher.string],
-                AppString.keyNonce.string: keyNonceBase64,
-                "parts": parts,
-                "size": fileSize,
-              };
-              final res = await supabaseClient.functions
-                  .invoke('start_parts_upload', body: fileData);
-              Map<String, dynamic> resData = jsonDecode(res.data);
-              if (resData["file"][AppString.keyNonce.string] !=
-                  keyNonceBase64) {
-                File tempFile = File(fileOut);
-                if (tempFile.existsSync()) tempFile.delete();
-              }
-              fileData[AppString.keyCipher.string] =
-                  resData["file"][AppString.keyCipher.string];
-              fileData[AppString.keyNonce.string] =
-                  resData["file"][AppString.keyNonce.string];
-              fileData["parts"] = resData["file"]["parts"];
-              fileData["size"] = resData["file"]["size"];
-              fileData["b2_id"] = resData["file"]["b2_id"];
-              // if above succeeds, create local entry
-              fileData["change_id"] = change.id;
-              fileData["path"] = fileIn;
-              ModelFile modelFile = await ModelFile.fromMap(fileData);
-              await modelFile.insert();
-              // start actual upload
-              await pushFile(modelFile);
-            } else if (fileEncryptionResult.failureReason!
-                .contains("PathNotFoundException")) {
-              change.deleteWithItem();
-            }
-          }
-        } catch (e, s) {
-          logger.error("PushFile", error: e, stackTrace: s);
-        }
-      } else {
-        logger.error("checkPushFile|fileIn is null");
-      }
-    } else {
-      logger.error("checkPushFile|dataMap is null");
-    }
-  }
-
-  static Future<void> pushFile(ModelFile modelFile) async {
-    SupabaseClient supabaseClient = Supabase.instance.client;
-    List<String> userIdFileName = modelFile.id.split("|");
-    String fileName = userIdFileName[1];
-    try {
-      logger.info("pushFile|checking server entry for: $fileName");
-      final serverFiles =
-          await supabaseClient.from("files").select().eq("id", modelFile.id);
-      if (serverFiles.isNotEmpty) {
-        // entry exist
-        logger.info("pushFile|$fileName exist on server");
-        Map<String, dynamic> serverFile = serverFiles.first;
-        int uploadedAt = serverFile["uploaded_at"];
-        if (uploadedAt == 0) {
-          logger.info("pushFile| $fileName not uploaded");
-          // check and update in case of parts_uploaded mismatch
-          int serverPartsUploaded = serverFile["parts_uploaded"];
-          if (serverPartsUploaded != modelFile.partsUploaded) {
-            logger.info("pushFile|$fileName| partsUploaded mismatch");
-            if (modelFile.partsUploaded > serverPartsUploaded) {
-              // update server only when partsUploaded are less
-              logger.info("pushFile|$fileName|update partsUploaded on server");
-              try {
-                await supabaseClient
-                    .from("files")
-                    .update({"parts_uploaded": modelFile.partsUploaded})
-                    .eq("id", modelFile.id)
-                    .lt("parts_uploaded", modelFile.partsUploaded);
-              } catch (e, s) {
-                logger.error("pushFile", error: e, stackTrace: s);
-              }
-            } else if (modelFile.partsUploaded < serverPartsUploaded) {
-              // being uploaded from another device
-              // update local
-              logger.info("pushFile|$fileName|update partsUploaded locally");
-              modelFile.partsUploaded = serverPartsUploaded;
-              await modelFile.update(["parts_uploaded"]);
-            }
-          }
-          // check update b2_id (should never be inconsistent)
-          if (serverFile["b2_id"] != null && modelFile.remoteId == null) {
-            logger.info("pushFile|$fileName|updating b2id locally from server");
-            modelFile.remoteId = serverFile["b2_id"];
-            await modelFile.update(["b2_id"]);
-          } else if (serverFile["b2_id"] == null &&
-              modelFile.remoteId != null) {
-            logger.info("pushFile|$fileName|update b2id on server");
-            try {
-              await supabaseClient
-                  .from("files")
-                  .update({"b2_id": modelFile.remoteId})
-                  .eq("id", modelFile.id)
-                  .isFilter("b2_id", null);
-            } catch (e, s) {
-              logger.error("pushFile", error: e, stackTrace: s);
-            }
-          }
-          if (modelFile.parts > modelFile.partsUploaded) {
-            logger.info("pushFile|$fileName|Not all parts uploaded");
-            await pushFilePart(modelFile);
-          } else {
-            // all parts uploaded
-            logger.info("pushFile|$fileName|all parts uploaded");
-            if (modelFile.parts > 1) {
-              // finish multi-part upload
-              logger.info("pushFile|$fileName|finish parts upload");
-              List<String> partSha1Array =
-                  await ModelPart.shasForFileId(modelFile.id);
-              final res = await supabaseClient.functions
-                  .invoke('finish_parts_upload', body: {
-                'fileId': modelFile.id,
-                "partSha1Array": partSha1Array
-              }); // will set uploaded_at on server
-              logger.info("FinishPartsUpload:${res.data}");
-              // uploaded_at should be synced locally from server
-            } // single file upload will have uploaded_at > 0 when parts == partsUploaded
-          }
-        } else {
-          String changeId = ""; // TODO get changeid
-          ModelChange? change = await ModelChange.get(changeId);
-          await ModelChange.upgradeChangeTask(change!);
-        }
-      }
-    } catch (e, s) {
-      logger.error("pushFile", error: e, stackTrace: s);
-    }
-  }
-
-  static Future<void> pushFilePart(ModelFile modelFile) async {
-    SodiumSumo sodium = await SodiumSumoInit.init();
-    CryptoUtils cryptoUtils = CryptoUtils(sodium);
-    List<String> userIdFileName = modelFile.id.split("|");
-    String userId = userIdFileName[0];
-    String fileName = userIdFileName[1];
-    logger.info("pushFilePart|$fileName|get bytes to upload");
-    // TODO get file part
-    String filePath = "";
-    String keyCipher = "";
-    String keyNonce = "";
-    File? fileOut = await getCreateEncryptedFileToUpload(
-        filePath, keyCipher, keyNonce, cryptoUtils);
-    if (fileOut == null) {
-      logger.error("pushFilePart:error creating encrypted file");
-    } else {
-      int partNumber = modelFile.partsUploaded + 1;
-      FileSplitter fileSplitter = FileSplitter(fileOut);
-      Uint8List? fileBytes = await fileSplitter.getPart(partNumber);
-      if (fileBytes != null) {
-        SupabaseClient supabaseClient = Supabase.instance.client;
-        int fileSize = fileBytes.length;
-        String sha1Hash = sha1.convert(fileBytes).toString();
-        String uploadUrl = "";
-        Map<String, String> headers = {};
-        try {
-          logger.info("pushFilePart|$fileName|get upload part url");
-          if (modelFile.parts > 1) {
-            final res = await supabaseClient.functions.invoke(
-                'get_upload_part_url',
-                body: {'fileId': modelFile.remoteId});
-            Map<String, dynamic> data = jsonDecode(res.data);
-            uploadUrl = data["url"];
-            String uploadToken = data["token"];
-            headers = {
-              "authorization": uploadToken,
-              "X-Bz-Part-Number": partNumber.toString(),
-              "X-Bz-Content-Sha1": sha1Hash,
-              "Content-Length": fileSize.toString(),
-            };
-            // save sha
-            // ModelPart filePart = ModelPart(
-            //     id: sha1Hash, fileId: modelFile.id, partNumber: partNumber);
-            // await filePart.insert();
-          } else {
-            logger.info("pushFilePart|$fileName|get upload url");
-            final res = await supabaseClient.functions
-                .invoke('get_upload_url', body: {'fileSize': fileSize});
-            Map<String, dynamic> data = jsonDecode(res.data);
-            uploadUrl = data["url"];
-            String uploadToken = data["token"];
-            headers = {
-              "authorization": uploadToken,
-              "X-Bz-Content-Sha1": sha1Hash,
-              "X-Bz-File-Name": '$userId%2F$fileName',
-              "Content-Length": fileSize.toString(),
-              "Content-Type": "application/octet-stream",
-            };
-          }
-          if (uploadUrl.isNotEmpty) {
-            logger.info(
-                "pushFilePart|$fileName|$partNumber| uploading bytes to upload url with headers");
-            Map<String, dynamic> uploadResult = await SyncUtils.uploadFileBytes(
-                bytes: fileBytes, url: uploadUrl, headers: headers);
-            logger.info("UploadedBytes:${jsonEncode(uploadResult)}");
-            // update parts_uploaded
-            if (uploadResult["error"].isEmpty) {
-              logger.info("pushFilePart|$fileName|$partNumber| bytes uploaded");
-              String b2Id = uploadResult["fileId"];
-              //update local first
-              modelFile.partsUploaded = partNumber;
-              List<String> attrs = ["parts_uploaded"];
-              if (modelFile.remoteId == null && b2Id.isNotEmpty) {
-                modelFile.remoteId = b2Id;
-                attrs.add("b2_id");
-              }
-              await modelFile.update(attrs);
-              if (modelFile.parts == modelFile.partsUploaded) {
-                logger.info("pushFilePart|$fileName|all parts uploaded");
-                if (modelFile.parts > 1) {
-                  // multi parts
-                  // call finish parts upload
-                  logger.info("pushFilePart|$fileName|finish multi part");
-                  List<String> partSha1Array =
-                      await ModelPart.shasForFileId(modelFile.id);
-                  await supabaseClient.functions.invoke('finish_parts_upload',
-                      body: {
-                        'fileId': modelFile.id,
-                        "partSha1Array": partSha1Array
-                      });
-                } else {
-                  // single part
-                  modelFile.uploadedAt =
-                      DateTime.now().toUtc().millisecondsSinceEpoch;
-                  await modelFile.update(["uploaded_at"]);
-                }
-              }
-            } else {
-              logger.error("pushFilePart|uploadBytes",
-                  error: jsonEncode(uploadResult));
-            }
-          }
-        } catch (e, s) {
-          logger.error("pushFilePart", error: e, stackTrace: s);
-        }
-      }
-    }
-  }
-
-  static Future<File?> getCreateEncryptedFileToUpload(
-      String fileInPath,
-      String keyCipherBase64,
-      String keyNonceBase64,
-      CryptoUtils cryptoUtils) async {
-    Directory tempDir = await getTemporaryDirectory();
-    String fileName = path_lib.basename(fileInPath);
-    String fileOutPath = path_lib.join(tempDir.path, '$fileName.crypt');
-    File fileOut = File(fileOutPath);
-    File fileIn = File(fileInPath);
-    if (!fileOut.existsSync()) {
-      if (fileIn.existsSync()) {
-        String? masterKeyBase64 = await getMasterKey();
-        Uint8List masterKeyBytes = base64Decode(masterKeyBase64!);
-        Uint8List keyNonceBytes = base64Decode(keyNonceBase64);
-        Uint8List keyCipherBytes = base64Decode(keyCipherBase64);
-        ExecutionResult keyDecryptionResult = cryptoUtils.decryptBytes(
-            cipherBytes: keyCipherBytes,
-            nonce: keyNonceBytes,
-            key: masterKeyBytes);
-        Uint8List fileEncryptionKey =
-            keyDecryptionResult.getResult()![AppString.decrypted.string];
-        ExecutionResult fileEncryptionResult = await cryptoUtils
-            .encryptFile(fileInPath, fileOutPath, key: fileEncryptionKey);
-        if (fileEncryptionResult.isSuccess) {
-          return fileOut;
-        } else {
-          return null;
-        }
-      } else {
-        return null;
-      }
-    } else {
-      return fileOut;
-    }
-  }
-
-  static Future<Map<String, dynamic>> uploadFileBytes({
-    required Uint8List bytes,
-    required String url,
-    required Map<String, String> headers,
-  }) async {
-    Map<String, dynamic> data = {"error": ""};
-    try {
-      // Create multipart request
-      var request = http_lib.Request('POST', Uri.parse(url));
-
-      // Add headers
-      request.headers.addAll(headers);
-
-      request.bodyBytes = bytes;
-
-      // Send request and get response
-      var streamedResponse = await request.send();
-      var response = await http_lib.Response.fromStream(streamedResponse);
-
-      // Check response
-      if (response.statusCode == 200) {
-        data.addAll(jsonDecode(response.body));
-      } else if (response.statusCode == 400) {
-        data["error"] = 'Upload:${response.statusCode.toString()}';
-        data.addAll(jsonDecode(response.body));
-      } else {
-        data["error"] = 'Upload:${response.statusCode.toString()}';
-      }
-    } catch (e, s) {
-      logger.error("Exception", error: e, stackTrace: s);
-      data["error"] = e.toString();
-    }
-    return data;
   }
 }

@@ -75,7 +75,7 @@ export const file = sqliteTable('file', {
 	[FileKeys.UPLOADED_AT]: integer(FileKeys.UPLOADED_AT).notNull().default(0),
 	[FileKeys.PROVIDER]: integer(FileKeys.PROVIDER).default(0), // Provider: FiFe, Backblaze, Cloudflare etc.
 	[FileKeys.STORAGE_ID]: text(FileKeys.STORAGE_ID), // Storage
-	[FileKeys.ACCESS_DATA]: text(FileKeys.ACCESS_DATA, { mode: 'json' }),
+	[FileKeys.JSON]: text(FileKeys.JSON, { mode: 'json' }),
 	[FileKeys.CLIENT_UPDATED_AT]: integer(FileKeys.CLIENT_UPDATED_AT).notNull().default(0),
 	[FileKeys.DELETED]: integer(FileKeys.DELETED).notNull().default(0)
 });
@@ -94,7 +94,7 @@ export const part = sqliteTable('part', {
 	[PartKeys.STATE]: integer(PartKeys.STATE).notNull().default(0),
 	[PartKeys.CIPHER]: text(PartKeys.CIPHER),
 	[PartKeys.NONCE]: text(PartKeys.NONCE),
-	[PartKeys.SHA1]: text(PartKeys.SHA1),
+	[PartKeys.JSON]: text(PartKeys.JSON, { mode: 'json' }),
 	[PartKeys.CLIENT_UPDATED_AT]: integer(PartKeys.CLIENT_UPDATED_AT).notNull().default(0),
 	[PartKeys.DELETED]: integer(PartKeys.DELETED).notNull().default(0)
 });

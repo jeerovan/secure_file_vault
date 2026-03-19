@@ -87,7 +87,7 @@ class CryptoUtils {
   }
 
   Future<ExecutionResult> encryptFile(String fileIn, String fileOut,
-      {Uint8List? key}) async {
+      {Uint8List? key, int? start, int? end}) async {
     ExecutionResult executionResult;
     SecureKey secretKey = key == null
         ? _sodium.crypto.secretStream.keygen()
@@ -96,7 +96,7 @@ class CryptoUtils {
     try {
       await _sodium.crypto.secretStream
           .pushChunked(
-            messageStream: File(fileIn).openRead(),
+            messageStream: File(fileIn).openRead(start, end),
             key: secretKey,
             chunkSize: 4096,
           )
@@ -116,7 +116,8 @@ class CryptoUtils {
   }
 
   Future<ExecutionResult> decryptFile(
-      String fileIn, String fileOut, Uint8List keyBytes) async {
+      String fileIn, String fileOut, Uint8List keyBytes,
+      {FileMode writeMode = FileMode.append}) async {
     ExecutionResult executionResult;
     SecureKey secretKey = SecureKey.fromList(_sodium, keyBytes);
     try {
@@ -127,7 +128,7 @@ class CryptoUtils {
             chunkSize: 4096,
           )
           .pipe(
-            File(fileOut).openWrite(),
+            File(fileOut).openWrite(mode: writeMode),
           );
       executionResult = ExecutionResult.success({});
     } catch (e, s) {

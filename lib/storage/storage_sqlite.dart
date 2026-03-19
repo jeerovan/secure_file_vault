@@ -130,7 +130,7 @@ class StorageSqlite {
         uploaded_at INTEGER DEFAULT 0,
         provider INTEGER DEFAULT 0,
         storage_id TEXT,
-        access_data TEXT,
+        data TEXT,
         updated_at INTEGER
       )
     ''');
@@ -140,7 +140,7 @@ class StorageSqlite {
       CREATE TABLE parts (
         id TEXT PRIMARY KEY,
         file_id TEXT NOT NULL,
-        sha1 TEXT,
+        data TEXT,
         part_number INTEGER NOT NULL,
         size INTEGER DEFAULT 0,
         state INTEGER DEFAULT 0,
@@ -212,9 +212,8 @@ class StorageSqlite {
         updated_at INTEGER
       )
     ''');
-    // id : item id
-    // can have entries for any device
-    // transfer type: 1:download / 0:upload
+    // id : item_id-part_number
+    // download: 0 means upload, 1 means download
     await db.execute('''
       CREATE TABLE transfers (
         id TEXT PRIMARY KEY,

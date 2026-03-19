@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../utils/enums.dart';
 import '../utils/utils_sync.dart';
 
@@ -12,6 +14,7 @@ class ModelPart {
   int state;
   String cipher;
   String nonce;
+  Map<String, dynamic> data;
   int updatedAt;
 
   ModelPart(
@@ -22,6 +25,7 @@ class ModelPart {
       required this.state,
       required this.cipher,
       required this.nonce,
+      required this.data,
       required this.updatedAt});
 
   Map<String, dynamic> toMap() {
@@ -33,20 +37,23 @@ class ModelPart {
       'state': state,
       'cipher': cipher,
       'nonce': nonce,
+      'data': data is String ? data : jsonEncode(data),
       'updated_at': updatedAt,
     };
   }
 
   static Future<ModelPart> fromMap(Map<String, dynamic> map) async {
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final data = getValueFromMap(map, "data", defaultValue: {});
     return ModelPart(
       id: map['id'],
       fileId: map['file_id'],
       partNumber: map["part_number"],
       size: map['size'],
-      state: map['state'],
+      state: getValueFromMap(map, 'state', defaultValue: 0),
       cipher: map["cipher"],
       nonce: map["nonce"],
+      data: data is String ? jsonDecode(data) : data,
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }

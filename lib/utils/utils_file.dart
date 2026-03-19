@@ -66,6 +66,21 @@ class FileSplitter {
 
     return partBytes;
   }
+
+  /// Returns the start (inclusive) and end (exclusive) byte indices for a given part.
+  ({int start, int end}) getStartEndIndexForPart(int partNumber) {
+    int partIndex = partNumber - 1;
+
+    // Calculate start offset by summing previous part sizes
+    int start = partSizes
+        .sublist(0, partIndex)
+        .fold(0, (sum, element) => sum + element);
+
+    // Calculate exclusive end index
+    int end = start + partSizes[partIndex];
+
+    return (start: start, end: end);
+  }
 }
 
 class FileDownloader {

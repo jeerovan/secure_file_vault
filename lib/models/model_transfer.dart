@@ -44,6 +44,39 @@ class ModelTransfer {
     return null;
   }
 
+  static Future<void> deleteTransfer(String id) async {
+    ModelTransfer? transfer = await get(id);
+    if (transfer != null) {
+      transfer.delete();
+    }
+  }
+
+  static Future<String?> fetchPendingUpload(Set<String> activeUploads) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+
+    String query = 'SELECT id FROM transfers WHERE download = 0';
+    List<dynamic> args = [];
+
+    // Dynamically exclude currently running uploadIds (item_id)
+    if (activeUploads.isNotEmpty) {
+      final String placeholders =
+          List.filled(activeUploads.length, '?').join(',');
+      query += ' AND id NOT IN ($placeholders)';
+      args.addAll(activeUploads);
+    }
+
+    // Process oldest created/updated transfers first
+    query += ' ORDER BY updated_at ASC LIMIT 1';
+
+    final List<Map<String, dynamic>> results = await db.rawQuery(query, args);
+
+    if (results.isNotEmpty) {
+      return results.first['id'] as String;
+    }
+    return null;
+  }
+
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();

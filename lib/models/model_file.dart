@@ -14,7 +14,7 @@ class ModelFile {
   int uploadedAt;
   String? storageId;
   int provider;
-  Map<String, dynamic>? accessData;
+  Map<String, dynamic> data;
   int updatedAt;
 
   ModelFile({
@@ -25,7 +25,7 @@ class ModelFile {
     required this.uploadedAt,
     this.provider = 0,
     this.storageId,
-    this.accessData,
+    required this.data,
     required this.updatedAt,
   });
 
@@ -38,14 +38,14 @@ class ModelFile {
       'uploaded_at': uploadedAt,
       'storage_id': storageId,
       'provider': provider,
-      'access_data': accessData is String ? accessData : jsonEncode(accessData),
+      'data': data is String ? data : jsonEncode(data),
       'updated_at': updatedAt
     };
   }
 
   static Future<ModelFile> fromMap(Map<String, dynamic> map) async {
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final accessData = map["access_data"];
+    final data = getValueFromMap(map, "data", defaultValue: {});
     return ModelFile(
       id: map["id"],
       itemCount: getValueFromMap(map, "item_count", defaultValue: 1),
@@ -54,7 +54,7 @@ class ModelFile {
       uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
       storageId: getValueFromMap(map, "storage_id", defaultValue: null),
       provider: getValueFromMap(map, "provider", defaultValue: 0),
-      accessData: accessData is String ? jsonDecode(accessData) : accessData,
+      data: data is String ? jsonDecode(data) : data,
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
   }
