@@ -220,7 +220,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 						[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
 						[FileKeys.PROVIDER]: change['provider'] ?? 0,
 						[FileKeys.STORAGE_ID]: change['storage_id'] ?? null,
-						[FileKeys.JSON]: change['access_data'] ?? null,
+						[FileKeys.JSON]: change['data'] ?? null,
 						[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 						[FileKeys.DELETED]: change['deleted']
 					})
@@ -237,7 +237,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
 				[FileKeys.STORAGE_ID]: change['storage_id'] ?? null,
 				[FileKeys.PROVIDER]: change['provider'] ?? 0,
-				[FileKeys.JSON]: change['access_data'] ?? null,
+				[FileKeys.JSON]: change['data'] ?? null,
 				[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 				[FileKeys.DELETED]: change['deleted']
 			});
@@ -263,7 +263,10 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 					.update(part)
 					.set({
 						[PartKeys.DEVICE_ID]: deviceId,
-						[PartKeys.STATE]: change['state'] ?? 0,
+						[PartKeys.PART_SIZE]: change['size'] ?? 0,
+						[PartKeys.CIPHER]: change['cipher'] ?? null,
+						[PartKeys.NONCE]: change['nonce'] ?? null,
+						[PartKeys.JSON]: change['data'] ?? null,
 						[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 						[PartKeys.DELETED]: change['deleted']
 					})
@@ -275,10 +278,9 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 				[PartKeys.USER_ID]: userId,
 				[PartKeys.DEVICE_ID]: deviceId,
 				[PartKeys.PART_SIZE]: change['size'] ?? 0,
-				[PartKeys.STATE]: change['state'] ?? 1,
 				[PartKeys.CIPHER]: change['cipher'] ?? null,
 				[PartKeys.NONCE]: change['nonce'] ?? null,
-				[PartKeys.JSON]: change['sha1'] ?? null,
+				[PartKeys.JSON]: change['data'] ?? null,
 				[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 				[PartKeys.DELETED]: change['deleted']
 			});

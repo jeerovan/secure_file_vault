@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import '../models/model_change.dart';
@@ -100,7 +99,6 @@ class SyncUtils {
       bool removed = await SyncUtils.checkDeviceStatus();
       if (!removed) {
         await fetchMapChanges();
-        await cleanupFiles();
         await pushMapChanges();
         TaskManager.init(inBackground: inBackground);
       }
@@ -219,18 +217,10 @@ class SyncUtils {
       String changeId = '$table|$rowId';
       map["deleted"] = deleteTask;
 
-      SyncChangeTask changeTask = SyncChangeTask.pushMap;
-      if (deleteTask == 0) {
-        changeTask = ModelChange.getPushChangeTaskType(table, map);
-      } else {
-        changeTask = SyncChangeTask.pushMapDeleteFile;
-        // delete file pending for upload if exist
-        //TODO handle file being uploaded
-      }
-      // add/update change if any upload/download exist
-      await ModelChange.addUpdate(changeId, table, map, changeTask.value);
-      logger.info("encryptAndPushChange:$table|$changeId|${changeTask.value}");
-      await ModelChange.updateTypeState(changeId, SyncState.uploading);
+      ModelChange change = await ModelChange.fromMap(
+          {"id": changeId, "data": map, "table": table});
+      await change.insert();
+      logger.info("encryptAndPushChange:$table|$changeId");
       waitAndSyncChanges();
     }
   }
@@ -254,7 +244,7 @@ class SyncUtils {
         List<ModelChange> changes = await ModelChange.fetchForTable(table);
         List<Map<String, dynamic>> changeMaps = [];
         for (ModelChange change in changes) {
-          Map<String, dynamic> changeData = change.changedData;
+          Map<String, dynamic> changeData = change.data;
           if (table == Tables.items.string) {
             Map<String, dynamic> changeMap = {};
             changeMap.addAll({
@@ -289,40 +279,19 @@ class SyncUtils {
         final response =
             await api.post(endpoint: '/sync', jsonBody: requestData);
         if (response["status"] == 1) {
-          await ModelChange.updateChangeState(tableChanges);
+          for (ModelChange change in tableChanges) {
+            ModelChange? dbChange = await ModelChange.get(change.id);
+            if (dbChange != null) {
+              if (dbChange.updatedAt == change.updatedAt) {
+                await dbChange.delete();
+              }
+            }
+          }
           logger.info("Pushed Map Changes");
         } else {
           changesAvailable = false;
         }
       }
-    }
-  }
-
-  static Future<void> cleanupFiles() async {
-    logger.info("Delete Files");
-    List<ModelChange> changes = await ModelChange.requiresFileDelete();
-    if (changes.isEmpty) return;
-    SupabaseClient supabaseClient = Supabase.instance.client;
-    for (ModelChange change in changes) {
-      await deleteFile(change, supabaseClient);
-    }
-  }
-
-  static Future<void> deleteFile(
-      ModelChange change, SupabaseClient supabaseClient) async {
-    Map<String, dynamic>? map = change.changedData;
-    //TODO fix getting file to delete
-    if (map != null && map.containsKey("name") && map["name"].isNotEmpty) {
-      String fileName = map["name"];
-      try {
-        await supabaseClient.functions
-            .invoke("delete_file", body: {"fileName": fileName});
-        await ModelChange.upgradeChangeTask(change);
-      } catch (e, s) {
-        logger.error("deleteFile", error: e, stackTrace: s);
-      }
-    } else {
-      await ModelChange.upgradeChangeTask(change);
     }
   }
 
@@ -386,7 +355,7 @@ class SyncUtils {
               map = jsonDecode(jsonString);
             }
             //TODO handle changeId/rowId
-            String changeId = changeMap["id"];
+            //String changeId = changeMap["id"];
             String rowId = map["id"];
             int deleteTask = int.parse(map.remove("deleted").toString());
             if (deleteTask > 0) {
@@ -409,18 +378,6 @@ class SyncUtils {
                 ModelItem item = await ModelItem.fromMap(map);
                 await item.upcertFromServer();
               }
-              SyncChangeTask changeType = SyncChangeTask.delete;
-              if (table == Tables.files.string) {
-                changeType = SyncChangeTask.fetchFile;
-              }
-              if (changeType.value > SyncChangeTask.delete.value) {
-                await ModelChange.addUpdate(
-                    changeId, table, "", changeType.value);
-                logger.info(
-                    "fetchChangesForTable|$table|Added change:$table|$changeId|${changeType.value}");
-                await ModelChange.updateTypeState(
-                    changeId, SyncState.downloading);
-              }
             }
           }
         }
@@ -431,7 +388,6 @@ class SyncUtils {
           await ModelState.set(
               AppString.lastChangesFetchedAt.string, fetchedAt);
         }
-        await ModelState.set(AppString.hasValidPlan.string, "yes");
         logger.info("Fetched Map Changes");
       } catch (e, s) {
         logger.error("fetchMapChanges", error: e, stackTrace: s);
@@ -439,6 +395,7 @@ class SyncUtils {
     }
   }
 
+/* 
   static Future<void> fetchFiles(int startedAt, bool inBackground) async {
     List<ModelChange> changes = await ModelChange.requiresFileFetch();
     if (changes.isEmpty) return;
@@ -456,7 +413,7 @@ class SyncUtils {
         continue;
       }
       ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
-      Map<String, dynamic>? data = change.changedData;
+      Map<String, dynamic>? data = change.data;
       if (modelFile != null) {
         String fileName = modelItem.name;
         String filePath = await ModelItem.getPathForItem(modelItem.id);
@@ -494,7 +451,7 @@ class SyncUtils {
     }
     logger.info("Files fetched");
   }
-
+ */
   static Future<Map<String, dynamic>> getDataToDownloadFile(
       String fileName) async {
     SupabaseClient supabase = Supabase.instance.client;

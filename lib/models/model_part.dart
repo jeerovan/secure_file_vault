@@ -8,10 +8,7 @@ import '../storage/storage_sqlite.dart';
 
 class ModelPart {
   String id;
-  String fileId;
-  int partNumber;
   int size;
-  int state;
   String cipher;
   String nonce;
   Map<String, dynamic> data;
@@ -19,10 +16,7 @@ class ModelPart {
 
   ModelPart(
       {required this.id,
-      required this.fileId,
-      required this.partNumber,
       required this.size,
-      required this.state,
       required this.cipher,
       required this.nonce,
       required this.data,
@@ -31,10 +25,7 @@ class ModelPart {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'file_id': fileId,
-      'part_number': partNumber,
       'size': size,
-      'state': state,
       'cipher': cipher,
       'nonce': nonce,
       'data': data is String ? data : jsonEncode(data),
@@ -47,10 +38,7 @@ class ModelPart {
     final data = getValueFromMap(map, "data", defaultValue: "{}");
     return ModelPart(
       id: map['id'],
-      fileId: map['file_id'],
-      partNumber: map["part_number"],
       size: map['size'],
-      state: getValueFromMap(map, 'state', defaultValue: 0),
       cipher: map["cipher"],
       nonce: map["nonce"],
       data: data is String ? jsonDecode(data) : data,
@@ -58,17 +46,18 @@ class ModelPart {
     );
   }
 
-  static Future<List<String>> shasForFileId(String fileId) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
-    List<Map<String, dynamic>> rows = await db.query(Tables.parts.string,
-        columns: ["id"],
-        where: "file_id = ?",
-        whereArgs: [fileId],
-        orderBy: 'part_number ASC');
+  static Future<List<String>> shasForFileId(String fileId, int parts) async {
     List<String> shas = [];
-    for (Map<String, dynamic> row in rows) {
-      shas.add(row["id"]);
+    int part = 1;
+    while (part <= parts) {
+      String tableKey = '${fileId}_part';
+      ModelPart? modelPart = await get(tableKey);
+      if (modelPart != null) {
+        Map<String, dynamic> data = modelPart.data;
+        if (data.containsKey("sha1")) {
+          shas.add(data["sha1"]);
+        }
+      }
     }
     return shas;
   }

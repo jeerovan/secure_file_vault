@@ -31,7 +31,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			status: 1,
 			data: {
 				provider: tempStorage[TempStorageKeys.PROVIDER],
-				storage: tempStorage[TempStorageKeys.STORAGE_ID]
+				storage_id: tempStorage[TempStorageKeys.STORAGE_ID]
 			}
 		});
 	} else {
@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				const provider = credential[CredentialsKeys.PROVIDER];
 				const storageId = storage[StorageKeys.ID];
 				await addTempStorage(authUser.id, file_hash, storageId, file_size, provider);
-				return json({ status: 1, data: { provider, storage: storageId } });
+				return json({ status: 1, data: { provider, storage_id: storageId } });
 			} else {
 				return json({ status: 0, error: ErrorCode.NO_STORAGE });
 			}

@@ -53,12 +53,11 @@ export const PartKeys = {
 	USER_ID: '4',
 	DEVICE_ID: '5',
 	PART_SIZE: '6',
-	STATE: '7',
-	CIPHER: '8',
-	NONCE: '9',
-	JSON: '10',
-	CLIENT_UPDATED_AT: '11',
-	DELETED: '12'
+	CIPHER: '7',
+	NONCE: '8',
+	JSON: '9',
+	CLIENT_UPDATED_AT: '10',
+	DELETED: '11'
 } as const;
 
 export const ItemKeys = {

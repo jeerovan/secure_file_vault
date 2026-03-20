@@ -135,19 +135,14 @@ class StorageSqlite {
       )
     ''');
     // id : FileId_PartNumber
-    //state:
     await db.execute('''
       CREATE TABLE parts (
         id TEXT PRIMARY KEY,
-        file_id TEXT NOT NULL,
-        data TEXT,
-        part_number INTEGER NOT NULL,
         size INTEGER DEFAULT 0,
-        state INTEGER DEFAULT 0,
         cipher TEXT NOT NULL,
         nonce TEXT NOT NULL,
-        updated_at INTEGER,
-        FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
+        data TEXT,
+        updated_at INTEGER
       )
     ''');
     // id: uuid
@@ -155,6 +150,7 @@ class StorageSqlite {
     // name: file, folder , device (will not have path, rootId and parentId)
     // rootId: all folders and files will have item(id) of synced folder
     // size required while reconciliation for quickly find matching files
+    // data: attributes on folers/path
     await db.execute('''
       CREATE TABLE items (
         id TEXT PRIMARY KEY,
@@ -167,6 +163,7 @@ class StorageSqlite {
         file_id TEXT,
         size INTEGER DEFAULT 0,
         archived_at INTEGER,
+        data TEXT,
         updated_at INTEGER,
         FOREIGN KEY (parent_id) REFERENCES items(id) ON DELETE CASCADE,
         FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
@@ -206,9 +203,8 @@ class StorageSqlite {
     await db.execute('''
       CREATE TABLE changes (
         id TEXT PRIMARY KEY,
-        table_name TEXT NOT NULL,
-        changed_data TEXT NOT NULL,
-        change_type INTEGER NOT NULL,
+        table TEXT NOT NULL,
+        data TEXT NOT NULL,
         updated_at INTEGER
       )
     ''');

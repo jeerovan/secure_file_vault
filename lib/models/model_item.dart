@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../utils/utils_sync.dart';
 import 'package:flutter/foundation.dart';
 
@@ -17,6 +19,7 @@ class ModelItem {
   int scanState;
   String? fileId;
   int size;
+  Map<String, dynamic> data;
   int archivedAt;
   int updatedAt;
 
@@ -29,6 +32,7 @@ class ModelItem {
     this.rootId,
     required this.scanState,
     this.fileId,
+    required this.data,
     required this.size,
     required this.archivedAt,
     required this.updatedAt,
@@ -45,6 +49,7 @@ class ModelItem {
       'scan_state': scanState,
       'file_id': fileId,
       'size': size,
+      'data': data is String ? data : jsonEncode(data),
       'archived_at': archivedAt,
       'updated_at': updatedAt
     };
@@ -58,6 +63,7 @@ class ModelItem {
   static Future<ModelItem> fromMap(Map<String, dynamic> map) async {
     Uuid uuid = const Uuid();
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
+    final data = getValueFromMap(map, "data", defaultValue: "{}");
     return ModelItem(
       id: map.containsKey('id') ? map['id'] : uuid.v4(),
       path: getValueFromMap(map, "path", defaultValue: null),
@@ -68,6 +74,7 @@ class ModelItem {
       scanState: getValueFromMap(map, "scan_state", defaultValue: 0),
       fileId: getValueFromMap(map, "file_id", defaultValue: null),
       size: getValueFromMap(map, "size", defaultValue: 0),
+      data: data is String ? jsonDecode(data) : data,
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );

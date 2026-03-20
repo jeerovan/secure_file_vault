@@ -65,9 +65,8 @@ class TaskManager {
       bool hasInternet = await InternetConnection().hasInternetAccess;
       if (!hasInternet) return;
 
-      // Concurrency limits: 1 for background, 3 for foreground
-      final int maxConcurrentProcesses =
-          _inBackground ? 1 : 1; // TODO make it 3 in prod
+      // Concurrency limits
+      final int maxConcurrentProcesses = _inBackground ? 2 : 5;
 
       while (_activeTaskIds.length < maxConcurrentProcesses) {
         // Fetches pending upload identifier from another function
@@ -171,7 +170,7 @@ class TaskManager {
         return false;
       } else {
         final providerData = providerResult["data"];
-        modelFile.storageId = providerData["storage"];
+        modelFile.storageId = providerData["storage_id"];
         modelFile.provider = providerData["provider"];
         List<String> attrs = ["storage_id", "provider"];
         await modelFile.update(attrs);
@@ -277,10 +276,11 @@ class TaskManager {
             .getFileEncryptionKeyCipher(encryptionKeyBytes, masterKeyBytes);
         File encryptedFile = File(fileOutPath);
         int fileSize = encryptedFile.lengthSync();
+        Uint8List fileBytes = File(fileOutPath).readAsBytesSync();
+        String sha1Hash = sha1.convert(fileBytes).toString();
         Map<String, dynamic> partData = {
           "id": fileHashPart,
-          "file_id": fileHash,
-          "part_number": part,
+          "data": {"sha1": sha1Hash},
           "size": fileSize,
           AppString.cipher.string:
               encryptionKeyCipher[AppString.keyCipher.string],
@@ -362,7 +362,8 @@ class TaskManager {
     final api = BackendApi();
     Map<String, dynamic> data = modelFile.data;
     String b2FileId = data["fileId"];
-    List<String> partSha1Array = await ModelPart.shasForFileId(modelFile.id);
+    List<String> partSha1Array =
+        await ModelPart.shasForFileId(modelFile.id, modelFile.parts);
     logger.info("Finish B2 multi part upload: ${modelFile.id}");
     final finishResult =
         await api.post(endpoint: '/b2/finish-parts-upload', jsonBody: {
