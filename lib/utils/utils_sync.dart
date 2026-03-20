@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import '../models/model_change.dart';
 import '../models/model_profile.dart';
@@ -17,15 +16,10 @@ import '../models/model_state.dart';
 import '../models/model_setting.dart';
 import '../services/service_events.dart';
 import '../services/service_logger.dart';
-import '../services/service_notification.dart';
 import '../storage/storage_secure.dart';
 import '../utils/utils_crypto.dart';
-import '../utils/utils_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:path/path.dart' as path_lib;
-import 'package:http/http.dart' as http_lib;
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:synchronized/synchronized.dart';
 

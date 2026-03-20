@@ -66,7 +66,8 @@ class TaskManager {
       if (!hasInternet) return;
 
       // Concurrency limits: 1 for background, 3 for foreground
-      final int maxConcurrentProcesses = _inBackground ? 1 : 3;
+      final int maxConcurrentProcesses =
+          _inBackground ? 1 : 1; // TODO make it 3 in prod
 
       while (_activeTaskIds.length < maxConcurrentProcesses) {
         // Fetches pending upload identifier from another function
@@ -86,8 +87,8 @@ class TaskManager {
           dispatchTask(pendingTaskId);
         }
       }
-    } catch (e) {
-      debugPrint('Error in dispatcher: $e');
+    } catch (e, s) {
+      logger.error('Error in dispatcher', error: e.toString(), stackTrace: s);
     } finally {
       // Release dispatcher lock so finishing processes can re-trigger it
       _isDispatching = false;
@@ -100,25 +101,25 @@ class TaskManager {
     try {
       ModelItemTask? itemTask = await ModelItemTask.get(taskId);
       if (itemTask!.task == ItemTask.upload.value) {
-        await checkInitUpload(itemTask);
+        queueNext = await checkInitUpload(itemTask);
       } else if (itemTask.task == ItemTask.delete.value) {
         await checkDeleteItemFile(itemTask);
       }
-    } catch (e) {
-      debugPrint('Task failed for $taskId: $e');
+    } catch (e, s) {
+      logger.error("Task $taskId failed", error: e.toString(), stackTrace: s);
     } finally {
       // Remove from active processes using the identifiable parameter
       _activeTaskIds.remove(taskId);
 
       // Tracks task time when an task process finishes
       final Duration taskDuration = DateTime.now().difference(_startTime);
-      debugPrint(
+      logger.info(
           'Task $taskId finished. Time taken: ${taskDuration.inSeconds}s');
 
       // Check background constraint: if took > 1 minute, end without restarting
       if (_inBackground) {
         if (Platform.isIOS && taskDuration.inMinutes >= 1) {
-          debugPrint(
+          logger.info(
               'Background process exceeded 1 minute limit. Ending queue.');
           queueNext = false;
         } else if (Platform.isAndroid && taskDuration.inMinutes >= 2) {
@@ -130,29 +131,29 @@ class TaskManager {
     }
   }
 
-  Future<void> checkInitUpload(ModelItemTask itemTask) async {
+  Future<bool> checkInitUpload(ModelItemTask itemTask) async {
     ModelItem? modelItem = await ModelItem.get(itemTask.id);
     if (modelItem == null || modelItem.fileId == null) {
       await itemTask.delete();
-      return;
+      return true;
     }
     final inFilePath = await ModelItem.getPathForItem(modelItem.id);
     final inFile = File(inFilePath);
     if (!inFile.existsSync()) {
       itemTask.task = ItemTask.delete.value;
       await itemTask.update(["task"]);
-      return;
+      return true;
     }
     ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
     if (modelFile == null) {
       itemTask.task = ItemTask.delete.value;
       await itemTask.update(["task"]);
-      return;
+      return true;
     }
     // check if already uploaded
     if (modelFile.uploadedAt > 0) {
       await itemTask.delete();
-      return;
+      return true;
     }
     final api = BackendApi();
     // handle storage providers
@@ -166,7 +167,8 @@ class TaskManager {
           });
       final status = providerResult["status"];
       if (status <= 0) {
-        return;
+        logger.error('Get storage provider: ${jsonEncode(providerResult)}');
+        return false;
       } else {
         final providerData = providerResult["data"];
         modelFile.storageId = providerData["storage"];
@@ -176,14 +178,14 @@ class TaskManager {
       }
     }
     if (modelFile.provider == 0) {
-      return;
+      return true;
     }
     if (modelFile.provider == StorageProvider.fife.value ||
         modelFile.provider == StorageProvider.backblaze.value) {
       if (modelFile.parts == modelFile.partsUploaded) {
         // May have failed to verify and update
         finishMultiPartB2Upload(itemTask, modelFile);
-        return;
+        return true;
       }
       if (modelFile.parts > 1) {
         // Check get fileId
@@ -197,7 +199,8 @@ class TaskManager {
               });
           final status = fileIdResult["status"];
           if (status <= 0) {
-            return;
+            logger.error('Start parts upload: ${jsonEncode(fileIdResult)}');
+            return true;
           } else {
             final fileIdData = fileIdResult["data"];
             data["fileId"] = fileIdData["fileId"];
@@ -212,12 +215,13 @@ class TaskManager {
             jsonBody: {"file_id": fileId, "storage_id": modelFile.storageId});
         final status = urlResult["status"];
         if (status <= 0) {
-          return;
+          logger.error('Get upload part url: ${jsonEncode(urlResult)}');
+          return true;
         } else {
           final urlData = urlResult["data"];
           final uploadUrl = urlData["uploadUrl"];
           final uploadToken = urlData["authorizationToken"];
-          await uploadFilePart(itemTask, modelFile.id, uploadUrl, uploadToken,
+          await uploadB2FilePart(itemTask, modelFile.id, uploadUrl, uploadToken,
               inFilePath, modelFile.partsUploaded + 1, true);
         }
         // get upload part url
@@ -228,21 +232,23 @@ class TaskManager {
             jsonBody: {"storage_id": modelFile.storageId});
         final status = urlResult["status"];
         if (status <= 0) {
-          return;
+          logger.error('Get upload url: ${jsonEncode(urlResult)}');
+          return true;
         } else {
           final urlData = urlResult["data"];
           final uploadUrl = urlData["uploadUrl"];
           final uploadToken = urlData["authorizationToken"];
-          await uploadFilePart(itemTask, modelFile.id, uploadUrl, uploadToken,
+          await uploadB2FilePart(itemTask, modelFile.id, uploadUrl, uploadToken,
               inFilePath, modelFile.partsUploaded + 1, false);
         }
       }
     } else {
       // TODO handle other providers
     }
+    return true;
   }
 
-  Future<void> uploadFilePart(
+  Future<void> uploadB2FilePart(
       ModelItemTask itemTask,
       String fileHash,
       String uploadUrl,
@@ -282,6 +288,9 @@ class TaskManager {
         };
         ModelPart modelPart = await ModelPart.fromMap(partData);
         await modelPart.insert();
+      } else {
+        logger.error("Encryption failed",
+            error: fileEncryptionResult.failureReason);
       }
     }
     Uint8List fileBytes = File(fileOutPath).readAsBytesSync();
@@ -308,7 +317,7 @@ class TaskManager {
 
     logger.info(
         "pushFilePart|$fileHash|$part| uploading bytes to upload url with headers");
-    Map<String, dynamic> uploadResult = await uploadFileBytes(
+    Map<String, dynamic> uploadResult = await uploadB2FileBytes(
         bytes: fileBytes, url: uploadUrl, headers: headers);
     logger.info("UploadedBytes:${jsonEncode(uploadResult)}");
     // update parts_uploaded
@@ -344,7 +353,7 @@ class TaskManager {
         }
       }
     } else {
-      logger.error("pushFilePart|uploadBytes", error: jsonEncode(uploadResult));
+      logger.error("Upload B2 File Part", error: jsonEncode(uploadResult));
     }
   }
 
@@ -354,7 +363,7 @@ class TaskManager {
     Map<String, dynamic> data = modelFile.data;
     String b2FileId = data["fileId"];
     List<String> partSha1Array = await ModelPart.shasForFileId(modelFile.id);
-    logger.info("pushFilePart|${modelFile.id}|finish multi part");
+    logger.info("Finish B2 multi part upload: ${modelFile.id}");
     final finishResult =
         await api.post(endpoint: '/b2/finish-parts-upload', jsonBody: {
       "storage_id": modelFile.storageId,
@@ -366,10 +375,13 @@ class TaskManager {
       modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
       await modelFile.update(["uploaded_at"]);
       await itemTask.delete();
+    } else {
+      logger.error("Finish B2 Multi part upload",
+          error: jsonEncode(finishResult));
     }
   }
 
-  static Future<Map<String, dynamic>> uploadFileBytes({
+  static Future<Map<String, dynamic>> uploadB2FileBytes({
     required Uint8List bytes,
     required String url,
     required Map<String, String> headers,
@@ -398,7 +410,7 @@ class TaskManager {
         data["error"] = 'Upload:${response.statusCode.toString()}';
       }
     } catch (e, s) {
-      logger.error("Exception", error: e, stackTrace: s);
+      logger.error("Upload B2 File Bytes", error: e, stackTrace: s);
       data["error"] = e.toString();
     }
     return data;
@@ -443,6 +455,9 @@ class TaskManager {
               await modelFile.delete();
               await modelItem.delete();
               await itemTask.delete();
+            } else {
+              logger.error("Cancel B2 large file",
+                  error: jsonEncode(cancelResult));
             }
           } else {
             await modelFile.delete();
@@ -451,7 +466,7 @@ class TaskManager {
           }
         }
       } else {
-        // TODO handle for other providers
+        // TODO handle other providers
       }
     }
   }

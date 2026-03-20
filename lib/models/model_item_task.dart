@@ -62,7 +62,7 @@ class ModelItemTask {
     if (activeTasks.isNotEmpty) {
       final String placeholders =
           List.filled(activeTasks.length, '?').join(',');
-      query += ' AND id NOT IN ($placeholders)';
+      query += ' WHERE id NOT IN ($placeholders)';
       args.addAll(activeTasks);
     }
 

@@ -45,7 +45,7 @@ class ModelFile {
 
   static Future<ModelFile> fromMap(Map<String, dynamic> map) async {
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final data = getValueFromMap(map, "data", defaultValue: {});
+    final data = getValueFromMap(map, "data", defaultValue: "{}");
     return ModelFile(
       id: map["id"],
       itemCount: getValueFromMap(map, "item_count", defaultValue: 1),

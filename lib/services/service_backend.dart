@@ -112,7 +112,7 @@ class BackendApi {
         };
       }
     }
-    logger.debug(response.toString());
+    logger.info(response.toString());
     return response;
   }
 
@@ -129,6 +129,7 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
+      logger.info('GET $endpoint ${queryParameters.toString()}');
       final res = await _http
           .get(
             _buildUri(endpoint, queryParameters: queryParameters),
@@ -150,6 +151,7 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
+      logger.info('POST $endpoint ${jsonEncode(jsonBody)}');
       final res = await _http
           .post(
             _buildUri(endpoint),

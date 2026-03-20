@@ -166,13 +166,12 @@ async function b2Fetch(endpoint: string, params: B2BaseParams, payload: any) {
 		},
 		body: JSON.stringify(payload)
 	});
-
 	if (!response.ok) {
 		const error = await response.json();
 		return json({ status: 0, error: error.message || error.code });
 	}
 
-	return json({ status: 1, data: response.json() });
+	return json({ status: 1, data: await response.json() });
 }
 
 // --- 1. b2_get_upload_url ---

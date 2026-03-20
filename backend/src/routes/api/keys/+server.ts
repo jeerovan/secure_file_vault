@@ -39,10 +39,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 	}
 
-	if (authUser.email === 'fife@jeerovan.com') {
-		return json({ status: 1 });
-	}
-
 	const result = await addKey(authUser.id, authUser.email, cipher, nonce);
 
 	return json({ status: 1, data: result });

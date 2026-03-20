@@ -41,11 +41,10 @@ export async function getKeys(userId: string) {
 
 export async function addKey(userId: string, email: string, cipher: string, nonce: string) {
 	// add default fife 5 gb storage for this user
-	const fifeCredentials = await getCredentials('fife', StorageProvider.BACKBLAZE);
+	const fifeCredentials = await getCredentials('fife', StorageProvider.FIFE);
 	if (fifeCredentials) {
 		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 1);
 	}
-
 	return await db.insert(user).values({
 		[UserKeys.ID]: userId,
 		[UserKeys.EMAIL]: email,
@@ -142,7 +141,7 @@ export async function fetchChanges(
 	const filesTimestamp = new Date(lastFilesTimestamp);
 	const itemsTimestamp = new Date(lastItemsTimestamp);
 	const partsTimestamp = new Date(lastPartsTimestamp);
-
+	const rowLimit = 100;
 	const profileRows = db
 		.select()
 		.from(userData)
@@ -165,7 +164,7 @@ export async function fetchChanges(
 				ne(file[FileKeys.DEVICE_ID], deviceId)
 			)
 		)
-		.limit(300)
+		.limit(rowLimit)
 		.all();
 
 	const partRows = db
@@ -178,7 +177,7 @@ export async function fetchChanges(
 				ne(part[PartKeys.DEVICE_ID], deviceId)
 			)
 		)
-		.limit(300)
+		.limit(rowLimit)
 		.all();
 
 	const itemRows = db
@@ -191,7 +190,7 @@ export async function fetchChanges(
 				ne(item[ItemKeys.DEVICE_ID], deviceId)
 			)
 		)
-		.limit(300)
+		.limit(rowLimit)
 		.all();
 
 	return { profileRows, fileRows, partRows, itemRows };

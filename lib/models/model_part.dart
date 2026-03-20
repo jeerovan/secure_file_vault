@@ -44,7 +44,7 @@ class ModelPart {
 
   static Future<ModelPart> fromMap(Map<String, dynamic> map) async {
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
-    final data = getValueFromMap(map, "data", defaultValue: {});
+    final data = getValueFromMap(map, "data", defaultValue: "{}");
     return ModelPart(
       id: map['id'],
       fileId: map['file_id'],
