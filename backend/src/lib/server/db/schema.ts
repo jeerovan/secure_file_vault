@@ -91,7 +91,6 @@ export const part = sqliteTable('part', {
 	[PartKeys.USER_ID]: text(PartKeys.USER_ID).notNull(),
 	[PartKeys.DEVICE_ID]: text(PartKeys.DEVICE_ID).notNull(),
 	[PartKeys.PART_SIZE]: integer(PartKeys.PART_SIZE).notNull(),
-	[PartKeys.STATE]: integer(PartKeys.STATE).notNull().default(0),
 	[PartKeys.CIPHER]: text(PartKeys.CIPHER),
 	[PartKeys.NONCE]: text(PartKeys.NONCE),
 	[PartKeys.JSON]: text(PartKeys.JSON, { mode: 'json' }),

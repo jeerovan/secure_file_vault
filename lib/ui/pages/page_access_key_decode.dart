@@ -34,27 +34,12 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
   @override
   void initState() {
     super.initState();
-    if (simulateTesting()) {
-      simulateKeyInput();
-    }
   }
 
   @override
   void dispose() {
     _textController.dispose();
     super.dispose();
-  }
-
-  Future<void> simulateKeyInput() async {
-    String? accessKeyBase64 =
-        await secureStorage.read(key: AppString.accessKey.string);
-    Uint8List accessKeyBytes = base64Decode(accessKeyBase64!);
-    String accessKeyHex = bytesToHex(accessKeyBytes);
-    if (mounted) {
-      setState(() {
-        _textController.text = bip39.entropyToMnemonic(accessKeyHex);
-      });
-    }
   }
 
   /// Validates input to ensure it contains exactly 24 words

@@ -1,12 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:file_vault_bb/models/model_setting.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:file_vault_bb/utils/utils_sync.dart';
 
-import '../models/model_item.dart';
 import '../storage/storage_secure.dart';
-import '../storage/storage_sqlite.dart';
 import '../utils/enums.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -137,18 +134,7 @@ class AppSetupState extends ChangeNotifier {
 
   // Logout / Reset
   Future<void> logout() async {
-    if (!simulateTesting()) {
-      await Supabase.instance.client.auth.signOut();
-    }
-    await _prefs.delete(key: AppString.deviceId.string);
-    await _prefs.delete(key: AppString.masterKey.string);
-    await _prefs.delete(key: AppString.accessKey.string);
-    await ModelSetting.delete(AppString.simulateTesting.string);
-    await ModelSetting.delete(AppString.signedIn.string);
-    await _prefs.delete(key: 'selected_plan');
-    final dbHelper = StorageSqlite.instance;
-    await dbHelper.clear("items");
-    await dbHelper.clear("files");
+    await SyncUtils.signout();
     _selectedPlan = null;
     _currentStep = SetupStep.signin;
     notifyListeners();

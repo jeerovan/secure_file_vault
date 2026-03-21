@@ -203,7 +203,7 @@ class StorageSqlite {
     await db.execute('''
       CREATE TABLE changes (
         id TEXT PRIMARY KEY,
-        table TEXT NOT NULL,
+        table_name TEXT NOT NULL,
         data TEXT NOT NULL,
         updated_at INTEGER
       )
@@ -281,8 +281,24 @@ class StorageSqlite {
     return await db.query(tableName);
   }
 
-  Future<void> clear(String tableName) async {
+  Future<void> clearTable(String tableName) async {
     final db = await instance.database;
     await db.delete(tableName);
+  }
+
+  Future<void> clearDb() async {
+    List<String> tables = [
+      "files",
+      "parts",
+      "items",
+      "changes",
+      "item_tasks",
+      "settings",
+      "states",
+      "logs"
+    ];
+    for (String table in tables) {
+      clearTable(table);
+    }
   }
 }

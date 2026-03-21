@@ -66,7 +66,7 @@ class TaskManager {
       if (!hasInternet) return;
 
       // Concurrency limits
-      final int maxConcurrentProcesses = _inBackground ? 2 : 5;
+      final int maxConcurrentProcesses = _inBackground ? 1 : 1;
 
       while (_activeTaskIds.length < maxConcurrentProcesses) {
         // Fetches pending upload identifier from another function
@@ -81,7 +81,7 @@ class TaskManager {
         // Ensure we don't start the same task twice concurrently
         if (!_activeTaskIds.contains(pendingTaskId)) {
           _activeTaskIds.add(pendingTaskId);
-
+          logger.info("Starting task: $pendingTaskId");
           // Initiate task process without awaiting to allow parallel execution up to the limit
           dispatchTask(pendingTaskId);
         }
@@ -182,8 +182,9 @@ class TaskManager {
     if (modelFile.provider == StorageProvider.fife.value ||
         modelFile.provider == StorageProvider.backblaze.value) {
       if (modelFile.parts == modelFile.partsUploaded) {
+        logger.info("Check Upload: All parts uploaded: ${modelFile.id}");
         // May have failed to verify and update
-        finishMultiPartB2Upload(itemTask, modelFile);
+        await finishMultiPartB2Upload(itemTask, modelFile);
         return true;
       }
       if (modelFile.parts > 1) {

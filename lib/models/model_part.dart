@@ -50,7 +50,7 @@ class ModelPart {
     List<String> shas = [];
     int part = 1;
     while (part <= parts) {
-      String tableKey = '${fileId}_part';
+      String tableKey = '${fileId}_$part';
       ModelPart? modelPart = await get(tableKey);
       if (modelPart != null) {
         Map<String, dynamic> data = modelPart.data;
@@ -58,6 +58,7 @@ class ModelPart {
           shas.add(data["sha1"]);
         }
       }
+      part++;
     }
     return shas;
   }
@@ -77,7 +78,7 @@ class ModelPart {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert(Tables.parts.string, map);
-    map["table"] = Tables.items.string;
+    map["table"] = Tables.parts.string;
     SyncUtils.logChangeToPush(
       map,
     );

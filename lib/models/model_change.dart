@@ -9,21 +9,21 @@ class ModelChange {
   static AppLogger logger = AppLogger(prefixes: ["ModelChange"]);
 
   String id;
-  String table;
+  String tableName;
   Map<String, dynamic> data;
   int updatedAt;
 
   ModelChange(
       {required this.id,
-      required this.table,
+      required this.tableName,
       required this.data,
       required this.updatedAt});
 
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'table_name': table,
-      'changed_data': data is String ? data : jsonEncode(data),
+      'table_name': tableName,
+      'data': data is String ? data : jsonEncode(data),
       'updated_at': updatedAt
     };
   }
@@ -33,7 +33,7 @@ class ModelChange {
     final changedData = map['data'];
     return ModelChange(
         id: map['id'],
-        table: map['table'],
+        tableName: map['table_name'],
         data: changedData is String ? jsonDecode(changedData) : changedData,
         updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow));
   }
@@ -52,7 +52,7 @@ class ModelChange {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(Tables.changes.string,
-        where: "table = ?", whereArgs: [table], limit: singlePushLimit);
+        where: "table_name = ?", whereArgs: [table], limit: singlePushLimit);
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 

@@ -6,6 +6,7 @@ import '../models/model_change.dart';
 import '../models/model_profile.dart';
 import 'package:flutter/foundation.dart';
 import '../services/service_backend.dart';
+import '../storage/storage_sqlite.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
 import '../models/model_file.dart';
@@ -172,26 +173,16 @@ class SyncUtils {
           }
           await supabase.auth.signOut();
         }
-        await ModelItem.removeAllSyncedFolders();
-        //TODO remove all local media (FiFe folder)
+        if (!simulateTesting()) {
+          await Supabase.instance.client.auth.signOut();
+        }
+        await storage.delete(key: AppString.deviceId.string);
         await storage.delete(key: AppString.masterKey.string);
         await storage.delete(key: AppString.accessKey.string);
-        await ModelState.delete(AppString.planRcId.string);
-        await ModelState.delete(AppString.hasValidPlan.string);
-        await ModelState.delete(AppString.deviceId.string);
-        await ModelState.delete(AppString.deviceRegistered.string);
-        await ModelState.delete(AppString.hasEncryptionKeys.string);
-        await ModelState.delete(AppString.debugCipherData.string);
-        await ModelState.delete(AppString.encryptionKeyType.string);
-        await ModelState.delete(AppString.pushedLocalContentForSync.string);
-        await ModelState.delete(AppString.lastChangesFetchedAt.string);
-        await ModelState.delete(AppString.lastProfilesChangesFetchedAt.string);
-        await ModelState.delete(AppString.lastFilesChangesFetchedAt.string);
-        await ModelState.delete(AppString.lastItemsChangesFetchedAt.string);
-        await ModelState.delete(AppString.lastPartsChangesFetchedAt.string);
-        await ModelState.delete(AppString.dataSeeded.string);
-        await ModelSetting.set(AppString.signedIn.string, "no");
-        await ModelSetting.set(AppString.simulateTesting.string, "no");
+        await storage.delete(key: 'selected_plan');
+        final dbHelper = StorageSqlite.instance;
+        await dbHelper.clearDb();
+        //TODO remove all local media (FiFe folder)
         // Send Signal to update home
         await signalToUpdateHome();
         success = true;
@@ -218,7 +209,7 @@ class SyncUtils {
       map["deleted"] = deleteTask;
 
       ModelChange change = await ModelChange.fromMap(
-          {"id": changeId, "data": map, "table": table});
+          {"id": changeId, "data": map, "table_name": table});
       await change.insert();
       logger.info("encryptAndPushChange:$table|$changeId");
       waitAndSyncChanges();

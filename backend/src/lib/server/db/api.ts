@@ -25,7 +25,6 @@ import {
 	StorageProvider,
 	TempStorageKeys
 } from '$lib/server/db/keys';
-import { table } from 'console';
 
 export async function getKeys(userId: string) {
 	return db
