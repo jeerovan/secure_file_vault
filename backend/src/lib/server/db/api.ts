@@ -206,7 +206,8 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 			.from(file)
 			.where(eq(file[FileKeys.ID], tableKey))
 			.get();
-
+		const storageId = change['storage_id'];
+		const uploadedAt = change['uploaded_at'];
 		if (existingRow) {
 			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
 				await db
@@ -216,9 +217,9 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 						[FileKeys.ITEMS_COUNT]: change['item_count'] ?? 0,
 						[FileKeys.PARTS]: change['parts'] ?? 1,
 						[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
-						[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
+						[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
 						[FileKeys.PROVIDER]: change['provider'] ?? 0,
-						[FileKeys.STORAGE_ID]: change['storage_id'] ?? null,
+						[FileKeys.STORAGE_ID]: storageId ?? null,
 						[FileKeys.JSON]: change['data'] ?? null,
 						[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 						[FileKeys.DELETED]: change['deleted']
@@ -233,13 +234,27 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				[FileKeys.ITEMS_COUNT]: change['item_count'] ?? 0,
 				[FileKeys.PARTS]: change['parts'] ?? 1,
 				[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
-				[FileKeys.UPLOADED_AT]: change['uploaded_at'] ?? 0,
-				[FileKeys.STORAGE_ID]: change['storage_id'] ?? null,
+				[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
+				[FileKeys.STORAGE_ID]: storageId ?? null,
 				[FileKeys.PROVIDER]: change['provider'] ?? 0,
 				[FileKeys.JSON]: change['data'] ?? null,
 				[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 				[FileKeys.DELETED]: change['deleted']
 			});
+		}
+		if (uploadedAt > 0) {
+			const tempRow = db
+				.select({
+					bytes: tempStorage[TempStorageKeys.SIZE],
+					storageId: tempStorage[TempStorageKeys.STORAGE_ID]
+				})
+				.from(tempStorage)
+				.where(eq(tempStorage[TempStorageKeys.ID], tableKey))
+				.get();
+			if (tempRow) {
+				await updateStorageUsedSize(tempRow.storageId, userId, tempRow.bytes, true);
+				await db.delete(tempStorage).where(eq(tempStorage[TempStorageKeys.ID], tableKey));
+			}
 		}
 	}
 }
@@ -450,6 +465,23 @@ export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
 		.get();
 
 	return availableStorage;
+}
+export async function updateStorageUsedSize(
+	storageId: string,
+	userId: string,
+	bytes: number,
+	add: boolean
+) {
+	const newBytes = add
+		? sql`${storage[StorageKeys.USED_BYTES]} + ${bytes}`
+		: sql`${storage[StorageKeys.USED_BYTES]} - ${bytes}`;
+	await db
+		.update(storage)
+		.set({
+			// Atomically add (or subtract) the bytes from the current USED_BYTES
+			[StorageKeys.USED_BYTES]: newBytes
+		})
+		.where(and(eq(storage[StorageKeys.USER_ID], userId), eq(storage[StorageKeys.ID], storageId)));
 }
 
 export async function getTempStorage(userId: string, file_hash: string) {

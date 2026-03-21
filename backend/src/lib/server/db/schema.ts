@@ -163,7 +163,7 @@ export const tempStorage = sqliteTable('temp_storage', {
 		.$defaultFn(() => new Date())
 		.$onUpdate(() => new Date()),
 	[TempStorageKeys.USER_ID]: text(TempStorageKeys.USER_ID).notNull(),
-	[TempStorageKeys.STORAGE_ID]: text(TempStorageKeys.STORAGE_ID),
+	[TempStorageKeys.STORAGE_ID]: text(TempStorageKeys.STORAGE_ID).notNull(),
 	[TempStorageKeys.SIZE]: integer(TempStorageKeys.SIZE).notNull(),
 	[TempStorageKeys.PROVIDER]: integer(TempStorageKeys.PROVIDER).notNull()
 });
