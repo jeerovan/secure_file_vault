@@ -4,10 +4,6 @@ import { requireAuth } from '$lib/server/auth';
 import { ErrorCode } from '$lib/server/db/keys';
 import { addKey, getKeys } from '$lib/server/db/api';
 
-// ---------------------------------------------------
-// GET /api/user-keys
-// Returns keys for the currently authenticated user
-// ---------------------------------------------------
 export const GET: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
 
@@ -20,9 +16,6 @@ export const GET: RequestHandler = async ({ request }) => {
 	return json({ status: 1, data: result });
 };
 
-// ---------------------------------------------------
-// POST /api/user-keys
-// ---------------------------------------------------
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
 

@@ -111,7 +111,8 @@ export const ErrorCode = {
 	NO_STORAGE: 4,
 	INVALID_CREDENTIALS: 5,
 	CREDENTIALS_INCAPABLE: 6,
-	DEVICE_LIMIT_REACHED: 7
+	DEVICE_LIMIT_REACHED: 7,
+	NO_DEVICE: 8
 } as const;
 
 export const StorageProvider = {

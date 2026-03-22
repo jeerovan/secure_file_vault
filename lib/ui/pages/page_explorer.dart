@@ -97,7 +97,7 @@ class _FilePaneState extends State<FilePane> {
       if (rootFife != null) {
         parentChilds.add(rootFife);
       }
-      currentItem = await ModelItem.get(await getDeviceId());
+      currentItem = await ModelItem.get(await getDeviceRoot());
       if (currentItem != null) parentChilds.add(currentItem!);
     }
     if (currentItem == null) return;
@@ -209,9 +209,9 @@ class _FilePaneState extends State<FilePane> {
     String? folderPath = await getSelectFolderWithReadWritePermission();
     if (folderPath != null) {
       String folderName = path.basename(folderPath);
-      String deviceId = await getDeviceId();
+      String deviceRoot = await getDeviceRoot();
       ModelItem syncFolderItem = await ModelItem.fromMap({
-        "parent_id": deviceId,
+        "parent_id": deviceRoot,
         "path": folderPath,
         "name": folderName,
         "is_folder": 1,

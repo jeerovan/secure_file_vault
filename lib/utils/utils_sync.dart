@@ -159,24 +159,26 @@ class SyncUtils {
 
   static Future<bool> signout() async {
     bool success = false;
+    bool hasInternet = await InternetConnection().hasInternetAccess;
+    if (!hasInternet) return false;
     String? userId = getSignedInUserId();
     if (userId != null) {
-      String deviceId = await ModelState.get(AppString.deviceId.string);
+      String deviceId = await getDeviceId();
       SecureStorage storage = SecureStorage();
-      SupabaseClient supabase = Supabase.instance.client;
       try {
-        if (simulateTesting()) {
-          null;
-        } else {
-          if (deviceId.isNotEmpty) {
-            // remove device from server
+        if (deviceId.isNotEmpty) {
+          final api = BackendApi();
+          final response = await api
+              .post(endpoint: '/signout', jsonBody: {"device_id": deviceId});
+          if (response["status"] == 0) {
+            return false;
           }
-          await supabase.auth.signOut();
+        } else {
+          return false;
         }
         if (!simulateTesting()) {
           await Supabase.instance.client.auth.signOut();
         }
-        await storage.delete(key: AppString.deviceId.string);
         await storage.delete(key: AppString.masterKey.string);
         await storage.delete(key: AppString.accessKey.string);
         await storage.delete(key: 'selected_plan');

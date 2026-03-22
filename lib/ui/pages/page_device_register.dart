@@ -2,8 +2,10 @@ import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../models/model_item.dart';
+import '../../models/model_setting.dart';
 import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
 import '../../utils/common.dart';
@@ -38,7 +40,8 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
       _isLoading = true;
       _errorMessage = null;
     });
-    String deviceId = await getDeviceId();
+    Uuid uuid = Uuid();
+    String deviceId = uuid.v4();
     String deviceName = await getDeviceName();
     int deviceType = await getDeviceType();
     final result = await api.post(endpoint: '/devices', jsonBody: {
@@ -57,7 +60,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
         "parent_id": "fife",
       });
       await deviceItem.insert();
-      await storage.write(key: AppString.deviceId.string, value: deviceId);
+      await ModelSetting.set(AppString.deviceId.string, deviceId);
       if (mounted) {
         await context.read<AppSetupState>().deviceRegistered();
       }

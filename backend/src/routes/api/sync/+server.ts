@@ -9,10 +9,6 @@ import {
 } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
 
-// ---------------------------------------------------
-// GET /api/user-device
-// Returns devices for the currently authenticated user
-// ---------------------------------------------------
 export const GET: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
 	const deviceId = authUser.did;
@@ -49,9 +45,6 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	});
 };
 
-// ---------------------------------------------------
-// POST /api/user-device
-// ---------------------------------------------------
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
 	const userId = authUser.id;

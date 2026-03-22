@@ -54,8 +54,8 @@ class AppSetupState extends ChangeNotifier {
     }
 
     // Check device registration
-    String? deviceId = await _prefs.read(key: AppString.deviceId.string);
-    if (deviceId == null) {
+    String deviceId = await getDeviceId();
+    if (deviceId.isEmpty) {
       logger.info("Registration");
       _currentStep = SetupStep.registerDevice;
       notifyListeners();
@@ -134,10 +134,12 @@ class AppSetupState extends ChangeNotifier {
 
   // Logout / Reset
   Future<void> logout() async {
-    await SyncUtils.signout();
-    _selectedPlan = null;
-    _currentStep = SetupStep.signin;
-    notifyListeners();
+    bool signedOut = await SyncUtils.signout();
+    if (signedOut) {
+      _selectedPlan = null;
+      _currentStep = SetupStep.signin;
+      notifyListeners();
+    }
   }
 
   // Force recheck (useful after app resumes from background)

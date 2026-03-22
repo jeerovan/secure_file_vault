@@ -128,6 +128,19 @@ export async function addUpdateDevice(
 	}
 }
 
+export async function removeDevice(tableId: string) {
+	const device = await db
+		.select()
+		.from(userDevice)
+		.where(eq(userDevice[UserDeviceKeys.ID], tableId));
+	if (device) {
+		await db.delete(userDevice).where(eq(userDevice[UserDeviceKeys.ID], tableId));
+		return json({ status: 1 });
+	} else {
+		return json({ status: 0, error: ErrorCode.NO_DEVICE });
+	}
+}
+
 export async function fetchChanges(
 	userId: string,
 	deviceId: string,

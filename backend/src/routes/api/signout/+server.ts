@@ -2,16 +2,8 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
 
-import { addUpdateDevice, getUserDevices } from '$lib/server/db/api';
+import { removeDevice } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
-
-export const GET: RequestHandler = async ({ request }) => {
-	const authUser = await requireAuth(request);
-
-	const result = await getUserDevices(authUser.id);
-
-	return json({ status: 1, data: result });
-};
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
@@ -23,7 +15,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, error: ErrorCode.INVALID_JSON });
 	}
 
-	const { device_id, title, type, notificationId, active } = body;
+	const { device_id } = body;
 
 	if (!device_id) {
 		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
@@ -31,5 +23,5 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const tableId = authUser.id + '_' + device_id;
 
-	return await addUpdateDevice(authUser.id, tableId, title, type, notificationId, active);
+	return await removeDevice(tableId);
 };

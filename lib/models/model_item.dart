@@ -194,11 +194,11 @@ class ModelItem {
   }
 
   static Future<void> removeAllSyncedFolders() async {
-    final deviceId = await getDeviceId();
+    final deviceRoot = await getDeviceRoot();
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     await db.delete(Tables.items.string,
-        where: "path != ? AND parent_id = ?", whereArgs: [null, deviceId]);
+        where: "path != ? AND parent_id = ?", whereArgs: [null, deviceRoot]);
   }
 
   static Future<List<ModelItem>> searchItem(String term) async {

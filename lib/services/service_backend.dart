@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
@@ -76,9 +77,8 @@ class BackendApi {
       if (!withAuth) 'Authorization': 'Bearer ${getSignedInEmailId()}',
     };
     if (extra != null) h.addAll(extra);
-    final storage = SecureStorage();
-    final deviceId = await storage.read(key: AppString.deviceId.string);
-    if (deviceId != null) {
+    final deviceId = await getDeviceId();
+    if (deviceId.isNotEmpty) {
       h.addAll({'device_id': deviceId});
     }
     return h;

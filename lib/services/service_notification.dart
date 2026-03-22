@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../utils/enums.dart';
 import '../models/model_state.dart';
@@ -63,7 +64,7 @@ class NotificationService {
   Future<void> _saveFcmToken(String token) async {
     logger.info("Received FCM Token:$token");
     await ModelState.set(AppString.fcmId.string, token);
-    String deviceId = await ModelState.get(AppString.deviceId.string);
+    String deviceId = await getDeviceId();
     if (deviceId.isNotEmpty) {
       try {
         SupabaseClient supabase = Supabase.instance.client;

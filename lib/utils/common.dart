@@ -682,7 +682,7 @@ Future<int> getDeviceType() async {
   }
 }
 
-Future<String> getDeviceId() async {
+Future<String> getDeviceRoot() async {
   final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
   String stringForHash = "Unknown";
   if (Platform.isAndroid) {
@@ -704,6 +704,10 @@ Future<String> getDeviceId() async {
     stringForHash = '${linuxInfo.machineId}';
   }
   return getHashOfString(stringForHash);
+}
+
+Future<String> getDeviceId() async {
+  return ModelSetting.get(AppString.deviceId.string)!;
 }
 
 // storage permission
