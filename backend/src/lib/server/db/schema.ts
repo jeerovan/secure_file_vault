@@ -10,16 +10,15 @@ import {
 	StorageKeys,
 	TempStorageKeys
 } from './keys';
-import { json } from 'stream/consumers';
 
 export const user = sqliteTable('user', {
 	[UserKeys.ID]: text(UserKeys.ID).primaryKey(), // Supabase user id
-	[UserKeys.SERVER_CREATED_AT]: integer(UserKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
+	[UserKeys.SERVER_CREATED_AT]: integer(UserKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[UserKeys.SERVER_UPDATED_AT]: integer(UserKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[UserKeys.SERVER_UPDATED_AT]: integer(UserKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[UserKeys.EMAIL]: text(UserKeys.EMAIL).notNull().unique(),
 	[UserKeys.CIPHER]: text(UserKeys.CIPHER).notNull(),
 	[UserKeys.NONCE]: text(UserKeys.NONCE).notNull()
@@ -27,31 +26,27 @@ export const user = sqliteTable('user', {
 
 export const userData = sqliteTable('user_data', {
 	[UserDataKeys.ID]: text(UserDataKeys.ID).primaryKey(), // Supabase user id
-	[UserDataKeys.SERVER_CREATED_AT]: integer(UserDataKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
+	[UserDataKeys.SERVER_CREATED_AT]: integer(UserDataKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[UserDataKeys.SERVER_UPDATED_AT]: integer(UserDataKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[UserDataKeys.SERVER_UPDATED_AT]: integer(UserDataKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[UserDataKeys.USER_NAME]: text(UserDataKeys.USER_NAME).unique(),
 	[UserDataKeys.DEVICE_ID]: text(UserDataKeys.DEVICE_ID).notNull(),
 	[UserDataKeys.PROFILE_IMAGE]: text(UserDataKeys.PROFILE_IMAGE),
 	[UserDataKeys.PLAN_TYPE]: integer(UserDataKeys.PLAN_TYPE).notNull().default(0), // Plan Type: Free/Paid, Default: Free
-	[UserDataKeys.PLAN_EXPIRES_AT]: integer(UserDataKeys.PLAN_EXPIRES_AT, { mode: 'timestamp' }) // Plan expires at. Can be null for free plan
+	[UserDataKeys.PLAN_EXPIRES_AT]: integer(UserDataKeys.PLAN_EXPIRES_AT) // Plan expires at. Can be null for free plan
 });
 
 export const userDevice = sqliteTable('user_device', {
 	[UserDeviceKeys.ID]: text(UserDeviceKeys.ID).primaryKey(), // UserId_DeviceId
-	[UserDeviceKeys.SERVER_CREATED_AT]: integer(UserDeviceKeys.SERVER_CREATED_AT, {
-		mode: 'timestamp'
-	})
+	[UserDeviceKeys.SERVER_CREATED_AT]: integer(UserDeviceKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[UserDeviceKeys.SERVER_UPDATED_AT]: integer(UserDeviceKeys.SERVER_UPDATED_AT, {
-		mode: 'timestamp'
-	})
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[UserDeviceKeys.SERVER_UPDATED_AT]: integer(UserDeviceKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[UserDeviceKeys.USER_ID]: text(UserDeviceKeys.USER_ID).notNull(),
 	[UserDeviceKeys.TITLE]: text(UserDeviceKeys.TITLE).notNull(),
 	[UserDeviceKeys.DEVICE_TYPE]: integer(UserDeviceKeys.DEVICE_TYPE).notNull().default(0), // Device Type -> 1:Android/2:iOS/3:MacOS/4:Windows/5:Linux
@@ -61,12 +56,12 @@ export const userDevice = sqliteTable('user_device', {
 
 export const file = sqliteTable('file', {
 	[FileKeys.ID]: text(FileKeys.ID).primaryKey(), // UserId_FileHash
-	[FileKeys.SERVER_CREATED_AT]: integer(FileKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
+	[FileKeys.SERVER_CREATED_AT]: integer(FileKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[FileKeys.SERVER_UPDATED_AT]: integer(FileKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[FileKeys.SERVER_UPDATED_AT]: integer(FileKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[FileKeys.USER_ID]: text(FileKeys.USER_ID).notNull(),
 	[FileKeys.DEVICE_ID]: text(FileKeys.DEVICE_ID).notNull(),
 	[FileKeys.ITEMS_COUNT]: integer(FileKeys.ITEMS_COUNT).notNull().default(0),
@@ -82,12 +77,12 @@ export const file = sqliteTable('file', {
 
 export const part = sqliteTable('part', {
 	[PartKeys.ID]: text(PartKeys.ID).primaryKey(), // UserId_FileHash_PartNumber
-	[PartKeys.SERVER_CREATED_AT]: integer(PartKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
+	[PartKeys.SERVER_CREATED_AT]: integer(PartKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[PartKeys.SERVER_UPDATED_AT]: integer(PartKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[PartKeys.SERVER_UPDATED_AT]: integer(PartKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[PartKeys.USER_ID]: text(PartKeys.USER_ID).notNull(),
 	[PartKeys.DEVICE_ID]: text(PartKeys.DEVICE_ID).notNull(),
 	[PartKeys.PART_SIZE]: integer(PartKeys.PART_SIZE).notNull(),
@@ -100,12 +95,12 @@ export const part = sqliteTable('part', {
 
 export const item = sqliteTable('item', {
 	[ItemKeys.ID]: text(ItemKeys.ID).primaryKey(), // UserId_UUID
-	[ItemKeys.SERVER_CREATED_AT]: integer(ItemKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
+	[ItemKeys.SERVER_CREATED_AT]: integer(ItemKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[ItemKeys.SERVER_UPDATED_AT]: integer(ItemKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[ItemKeys.SERVER_UPDATED_AT]: integer(ItemKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[ItemKeys.USER_ID]: text(ItemKeys.USER_ID).notNull(),
 	[ItemKeys.DEVICE_ID]: text(ItemKeys.DEVICE_ID).notNull(),
 	[ItemKeys.TEXT_CIPHER]: text(ItemKeys.TEXT_CIPHER).notNull(),
@@ -117,16 +112,12 @@ export const item = sqliteTable('item', {
 
 export const credentials = sqliteTable('credentials', {
 	[CredentialsKeys.ID]: text(CredentialsKeys.ID).primaryKey(), // Provider Account Id
-	[CredentialsKeys.SERVER_CREATED_AT]: integer(CredentialsKeys.SERVER_CREATED_AT, {
-		mode: 'timestamp'
-	})
+	[CredentialsKeys.SERVER_CREATED_AT]: integer(CredentialsKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[CredentialsKeys.SERVER_UPDATED_AT]: integer(CredentialsKeys.SERVER_UPDATED_AT, {
-		mode: 'timestamp'
-	})
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[CredentialsKeys.SERVER_UPDATED_AT]: integer(CredentialsKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[CredentialsKeys.OWNER_ID]: text(CredentialsKeys.OWNER_ID).notNull(), // Either a user ID, or 'fife'
 	[CredentialsKeys.PROVIDER]: integer(CredentialsKeys.PROVIDER).notNull(), // Provider: 'fife', 'backblaze', 'cloudflare'
 	[CredentialsKeys.CREDENTIALS]: text(CredentialsKeys.CREDENTIALS, { mode: 'json' }).notNull(),
@@ -137,12 +128,12 @@ export const storage = sqliteTable('storage', {
 	[StorageKeys.ID]: text(StorageKeys.ID)
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	[StorageKeys.SERVER_CREATED_AT]: integer(StorageKeys.SERVER_CREATED_AT, { mode: 'timestamp' })
+	[StorageKeys.SERVER_CREATED_AT]: integer(StorageKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[StorageKeys.SERVER_UPDATED_AT]: integer(StorageKeys.SERVER_UPDATED_AT, { mode: 'timestamp' })
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[StorageKeys.SERVER_UPDATED_AT]: integer(StorageKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[StorageKeys.USER_ID]: text(StorageKeys.USER_ID).notNull(),
 	[StorageKeys.CREDENTIALS_ID]: text(StorageKeys.CREDENTIALS_ID).notNull(),
 	[StorageKeys.LIMIT_BYTES]: integer(StorageKeys.LIMIT_BYTES).notNull(),
@@ -152,16 +143,12 @@ export const storage = sqliteTable('storage', {
 
 export const tempStorage = sqliteTable('temp_storage', {
 	[TempStorageKeys.ID]: text(TempStorageKeys.ID).primaryKey(), // UserId_FileHash
-	[TempStorageKeys.SERVER_CREATED_AT]: integer(TempStorageKeys.SERVER_CREATED_AT, {
-		mode: 'timestamp'
-	})
+	[TempStorageKeys.SERVER_CREATED_AT]: integer(TempStorageKeys.SERVER_CREATED_AT)
 		.notNull()
-		.$defaultFn(() => new Date()),
-	[TempStorageKeys.SERVER_UPDATED_AT]: integer(TempStorageKeys.SERVER_UPDATED_AT, {
-		mode: 'timestamp'
-	})
-		.$defaultFn(() => new Date())
-		.$onUpdate(() => new Date()),
+		.$defaultFn(() => Date.now()),
+	[TempStorageKeys.SERVER_UPDATED_AT]: integer(TempStorageKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
 	[TempStorageKeys.USER_ID]: text(TempStorageKeys.USER_ID).notNull(),
 	[TempStorageKeys.STORAGE_ID]: text(TempStorageKeys.STORAGE_ID).notNull(),
 	[TempStorageKeys.SIZE]: integer(TempStorageKeys.SIZE).notNull(),

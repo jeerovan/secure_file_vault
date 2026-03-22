@@ -11,7 +11,7 @@ import {
 	storage,
 	tempStorage
 } from '$lib/server/db/schema';
-import { eq, and, ne, gte, count, desc, sql } from 'drizzle-orm';
+import { eq, and, ne, gt, count, desc, sql } from 'drizzle-orm';
 import {
 	UserKeys,
 	UserDeviceKeys,
@@ -144,15 +144,11 @@ export async function removeDevice(tableId: string) {
 export async function fetchChanges(
 	userId: string,
 	deviceId: string,
-	lastProfilesTimestamp: number,
-	lastFilesTimestamp: number,
-	lastItemsTimestamp: number,
-	lastPartsTimestamp: number
+	lastProfilesTS: number,
+	lastFilesTS: number,
+	lastItemsTS: number,
+	lastPartsTS: number
 ) {
-	const profilesTimestamp = new Date(lastProfilesTimestamp);
-	const filesTimestamp = new Date(lastFilesTimestamp);
-	const itemsTimestamp = new Date(lastItemsTimestamp);
-	const partsTimestamp = new Date(lastPartsTimestamp);
 	const rowLimit = 100;
 	const profileRows = db
 		.select()
@@ -160,7 +156,7 @@ export async function fetchChanges(
 		.where(
 			and(
 				eq(userData[UserDataKeys.ID], userId),
-				gte(userData[UserDataKeys.SERVER_UPDATED_AT], profilesTimestamp),
+				gt(userData[UserDataKeys.SERVER_UPDATED_AT], lastProfilesTS),
 				ne(userData[UserDataKeys.DEVICE_ID], deviceId)
 			)
 		)
@@ -172,7 +168,7 @@ export async function fetchChanges(
 		.where(
 			and(
 				eq(file[FileKeys.USER_ID], userId),
-				gte(file[FileKeys.SERVER_UPDATED_AT], filesTimestamp),
+				gt(file[FileKeys.SERVER_UPDATED_AT], lastFilesTS),
 				ne(file[FileKeys.DEVICE_ID], deviceId)
 			)
 		)
@@ -185,7 +181,7 @@ export async function fetchChanges(
 		.where(
 			and(
 				eq(part[PartKeys.USER_ID], userId),
-				gte(part[PartKeys.SERVER_UPDATED_AT], partsTimestamp),
+				gt(part[PartKeys.SERVER_UPDATED_AT], lastPartsTS),
 				ne(part[PartKeys.DEVICE_ID], deviceId)
 			)
 		)
@@ -198,7 +194,7 @@ export async function fetchChanges(
 		.where(
 			and(
 				eq(item[ItemKeys.USER_ID], userId),
-				gte(item[ItemKeys.SERVER_UPDATED_AT], itemsTimestamp),
+				gt(item[ItemKeys.SERVER_UPDATED_AT], lastItemsTS),
 				ne(item[ItemKeys.DEVICE_ID], deviceId)
 			)
 		)
@@ -387,7 +383,7 @@ export async function addCredentials(
 		await db
 			.update(credentials)
 			.set({
-				[CredentialsKeys.SERVER_UPDATED_AT]: new Date(),
+				[CredentialsKeys.SERVER_UPDATED_AT]: Date.now(),
 				[CredentialsKeys.CREDENTIALS]: credentialsData
 			})
 			.where(eq(credentials[CredentialsKeys.ID], accountId));
@@ -431,7 +427,7 @@ export async function updateCredentials(accountId: string, creds: any) {
 	await db
 		.update(credentials)
 		.set({
-			[CredentialsKeys.SERVER_UPDATED_AT]: new Date(),
+			[CredentialsKeys.SERVER_UPDATED_AT]: Date.now(),
 			[CredentialsKeys.CREDENTIALS]: creds,
 			[CredentialsKeys.UPDATING]: 0
 		})

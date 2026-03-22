@@ -81,7 +81,7 @@ export async function authenticate(userId: string, storageId: string) {
 			downloadUrl: existingDownloadUrl
 		} = creds;
 		const isUpdating = credential[CredentialsKeys.UPDATING];
-		const updatedAt = credential[CredentialsKeys.SERVER_UPDATED_AT] || new Date(0);
+		const updatedAt = credential[CredentialsKeys.SERVER_UPDATED_AT] || Date.now();
 
 		// Bundle the existing credentials to easily return them
 		const existingData = {
@@ -98,8 +98,8 @@ export async function authenticate(userId: string, storageId: string) {
 
 		// 3. Check if we actually need to update
 		// Token lasts 24 hours, but we refresh after 20 hours
-		const now = new Date();
-		const diffHours = (now.getTime() - updatedAt.getTime()) / (1000 * 60 * 60);
+		const now = Date.now();
+		const diffHours = (now - updatedAt) / (1000 * 60 * 60);
 
 		// If token exists and was updated less than 20 hours ago, return it
 		if (existingToken && diffHours < 20) {

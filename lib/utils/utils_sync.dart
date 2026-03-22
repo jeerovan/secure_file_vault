@@ -338,7 +338,7 @@ class SyncUtils {
           for (Map<String, dynamic> changeMap in changesMap) {
             Map<String, dynamic> map = {};
             if (table == Tables.items.string) {
-              int itemTS = int.parse(changeMap["3"]);
+              int itemTS = int.parse(changeMap["3"].toString());
               map[AppString.textCipher.string] = changeMap["6"];
               map[AppString.textNonce.string] = changeMap["7"];
               map[AppString.keyCipher.string] = changeMap["8"];
@@ -348,7 +348,7 @@ class SyncUtils {
               if (decryptedBytes == null) continue;
               String jsonString = utf8.decode(decryptedBytes);
               Map<String, dynamic> itemMap = jsonDecode(jsonString);
-              int deleteTask = int.parse(itemMap["deleted"]);
+              int deleteTask = int.parse(itemMap["deleted"].toString());
               if (deleteTask > 0) {
                 String itemId = itemMap["id"];
                 await ModelItem.deletedFromServer(itemId);
@@ -361,17 +361,17 @@ class SyncUtils {
               }
             } else if (table == Tables.files.string) {
               String fileHash = changeMap["1"].split("_")[1];
-              int fileTS = int.parse(changeMap["3"]);
+              int fileTS = int.parse(changeMap["3"].toString());
               map["id"] = fileHash;
-              map["item_count"] = int.parse(changeMap["6"]);
-              map["parts"] = int.parse(changeMap["7"]);
-              map["parts_uploaded"] = int.parse(changeMap["8"]);
-              map["uploaded_at"] = int.parse(changeMap["9"]);
-              map["provider"] = int.parse(changeMap["10"]);
+              map["item_count"] = int.parse(changeMap["6"].toString());
+              map["parts"] = int.parse(changeMap["7"].toString());
+              map["parts_uploaded"] = int.parse(changeMap["8"].toString());
+              map["uploaded_at"] = int.parse(changeMap["9"].toString());
+              map["provider"] = int.parse(changeMap["10"].toString());
               map["storage_id"] = changeMap["11"];
               map["data"] = changeMap["12"];
-              map["updated_at"] = int.parse(changeMap["13"]);
-              int deleteTask = int.parse(changeMap["14"]);
+              map["updated_at"] = int.parse(changeMap["13"].toString());
+              int deleteTask = int.parse(changeMap["14"].toString());
               if (deleteTask > 0) {
                 await ModelFile.deletedFromServer(fileHash);
               } else {
@@ -382,16 +382,16 @@ class SyncUtils {
                 lastFileTS = fileTS;
               }
             } else if (table == Tables.parts.string) {
-              int partTS = int.parse(changeMap["3"]);
+              int partTS = int.parse(changeMap["3"].toString());
               List<String> userIdPartId = changeMap["1"].split("_");
               String partId = userIdPartId.skip(1).join('_');
               map["id"] = partId;
-              map["size"] = int.parse(changeMap["6"]);
+              map["size"] = int.parse(changeMap["6"].toString());
               map["cipher"] = changeMap["7"];
               map["nonce"] = changeMap["8"];
               map["data"] = changeMap["9"];
-              map["uploaded_at"] = int.parse(changeMap["10"]);
-              int deleteTask = int.parse(changeMap["11"]);
+              map["uploaded_at"] = int.parse(changeMap["10"].toString());
+              int deleteTask = int.parse(changeMap["11"].toString());
               if (deleteTask > 0) {
                 await ModelPart.deletedFromServer(partId);
               } else {

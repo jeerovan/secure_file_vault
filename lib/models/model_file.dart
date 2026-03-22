@@ -68,7 +68,6 @@ class ModelFile {
       file.itemCount = file.itemCount - 1;
     }
     await file.update(["item_count"]);
-    // TODO if count is zero, add for deletion
   }
 
   static Future<List<ModelFile>> pendingForUpload() async {
@@ -137,8 +136,6 @@ class ModelFile {
         result = 0;
       }
     }
-    // signal item update
-    //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
     return result;
   }
 
@@ -147,7 +144,6 @@ class ModelFile {
     int deleteTask = 1;
     Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete(Tables.files.string, id);
-    //TODO parts should be deleted also
     if (pushToSync) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
       map["table"] = Tables.files.string;
@@ -164,6 +160,5 @@ class ModelFile {
     if (item != null) {
       await item.delete(pushToSync: false);
     }
-    //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
   }
 }

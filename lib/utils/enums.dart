@@ -218,13 +218,13 @@ extension AppStringExtension on AppString {
       case AppString.lastChangeTS:
         return "last_changes_fetched_at";
       case AppString.lastProfileTS:
-        return "last_profiles_changes_fetched_at";
+        return "last_profile_ts";
       case AppString.lastFileTS:
-        return "last_files_changes_fetched_at";
+        return "last_file_ts";
       case AppString.lastItemTS:
-        return "last_items_changes_fetched_at";
+        return "last_item_ts";
       case AppString.lastPartTS:
-        return "last_parts_changes_fetched_at";
+        return "last_part_ts";
       case AppString.otpSentTo:
         return "otp_sent_to";
       case AppString.otpSentAt:

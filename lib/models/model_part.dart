@@ -121,8 +121,6 @@ class ModelPart {
         result = 0;
       }
     }
-    // signal item update
-    // EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
     return result;
   }
 

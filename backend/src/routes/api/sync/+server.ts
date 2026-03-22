@@ -13,30 +13,18 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
 	const deviceId = authUser.did;
 	// Fetch query parameters using url.searchParams
-	const lastProfilesTimestamp = parseInt(
-		url.searchParams.get('last_profiles_changes_fetched_at') || '0',
-		10
-	);
-	const lastFilesTimestamp = parseInt(
-		url.searchParams.get('last_files_changes_fetched_at') || '0',
-		10
-	);
-	const lastItemsTimestamp = parseInt(
-		url.searchParams.get('last_items_changes_fetched_at') || '0',
-		10
-	);
-	const lastPartsTimestamp = parseInt(
-		url.searchParams.get('last_parts_changes_fetched_at') || '0',
-		10
-	);
+	const lastProfilesTS = parseInt(url.searchParams.get('last_profile_ts') || '0', 10);
+	const lastFilesTS = parseInt(url.searchParams.get('last_file_ts') || '0', 10);
+	const lastItemsTS = parseInt(url.searchParams.get('last_item_ts') || '0', 10);
+	const lastPartsTS = parseInt(url.searchParams.get('last_part_ts') || '0', 10);
 
 	const { profileRows, fileRows, partRows, itemRows } = await fetchChanges(
 		authUser.id,
 		deviceId,
-		lastProfilesTimestamp,
-		lastFilesTimestamp,
-		lastItemsTimestamp,
-		lastPartsTimestamp
+		lastProfilesTS,
+		lastFilesTS,
+		lastItemsTS,
+		lastPartsTS
 	);
 
 	return json({

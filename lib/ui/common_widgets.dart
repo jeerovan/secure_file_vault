@@ -80,6 +80,7 @@ class AppSetupState extends ChangeNotifier {
     } */
 
     // All setup complete
+    SyncUtils.waitAndSyncChanges();
     _currentStep = SetupStep.complete;
     notifyListeners();
   }

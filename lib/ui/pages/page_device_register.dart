@@ -53,14 +53,15 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     if (status <= 0) {
       _errorMessage = result["error"];
     } else {
+      await ModelSetting.set(AppString.deviceId.string, deviceId);
+      String deviceRoot = await getDeviceRoot();
       ModelItem deviceItem = await ModelItem.fromMap({
-        "id": deviceId,
+        "id": deviceRoot,
         "name": deviceName,
         "is_folder": 1,
         "parent_id": "fife",
       });
       await deviceItem.insert();
-      await ModelSetting.set(AppString.deviceId.string, deviceId);
       if (mounted) {
         await context.read<AppSetupState>().deviceRegistered();
       }

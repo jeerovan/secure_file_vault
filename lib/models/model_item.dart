@@ -277,7 +277,7 @@ class ModelItem {
     List<Map<String, dynamic>> rows =
         await dbHelper.getWithId(Tables.items.string, id);
     if (rows.isEmpty) {
-      result = await insert();
+      result = await dbHelper.insert(Tables.items.string, map);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
