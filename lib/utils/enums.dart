@@ -135,11 +135,11 @@ enum AppString {
   hasEncryptionKeys,
   syncInProgress,
   pushedLocalContentForSync,
-  lastChangesFetchedAt,
-  lastProfilesChangesFetchedAt,
-  lastFilesChangesFetchedAt,
-  lastItemsChangesFetchedAt,
-  lastPartsChangesFetchedAt,
+  lastChangeTS,
+  lastProfileTS,
+  lastFileTS,
+  lastItemTS,
+  lastPartTS,
   hideSyncButton,
 
   // Cipher
@@ -215,15 +215,15 @@ extension AppStringExtension on AppString {
         return "installed_at";
       case AppString.deviceId:
         return "device_id";
-      case AppString.lastChangesFetchedAt:
+      case AppString.lastChangeTS:
         return "last_changes_fetched_at";
-      case AppString.lastProfilesChangesFetchedAt:
+      case AppString.lastProfileTS:
         return "last_profiles_changes_fetched_at";
-      case AppString.lastFilesChangesFetchedAt:
+      case AppString.lastFileTS:
         return "last_files_changes_fetched_at";
-      case AppString.lastItemsChangesFetchedAt:
+      case AppString.lastItemTS:
         return "last_items_changes_fetched_at";
-      case AppString.lastPartsChangesFetchedAt:
+      case AppString.lastPartTS:
         return "last_parts_changes_fetched_at";
       case AppString.otpSentTo:
         return "otp_sent_to";

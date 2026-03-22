@@ -64,7 +64,8 @@ class AppLogger {
       stdout.writeln(coloredMessage);
     }
 
-    if (ModelSetting.get(AppString.loggingEnabled.string, "no") == "yes") {
+    if (ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
+        "yes") {
       insertToDb(logMessage);
     }
   }

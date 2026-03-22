@@ -30,7 +30,9 @@ bool canUseVideoPlayer =
 bool isDebugEnabled = kDebugMode;
 
 bool simulateTesting() {
-  return ModelSetting.get(AppString.simulateTesting.string, "no") == "yes";
+  return ModelSetting.get(AppString.simulateTesting.string,
+          defaultValue: "no") ==
+      "yes";
 }
 
 bool revenueCatSupported =
@@ -490,7 +492,8 @@ Map<String, String> getMapUrls(double lat, double lng) {
 }
 
 class FontSizeController extends ChangeNotifier {
-  double _scaleFactor = double.parse(ModelSetting.get("fontScale", "1.0"));
+  double _scaleFactor =
+      double.parse(ModelSetting.get("fontScale", defaultValue: "1.0")!);
 
   double get scaleFactor => _scaleFactor;
 
@@ -503,7 +506,7 @@ class FontSizeController extends ChangeNotifier {
   void increaseFontSize() {
     if (_scaleFactor < 1.8) {
       _scaleFactor += 0.1;
-      ModelSetting.set("fontScale", _scaleFactor);
+      ModelSetting.set("fontScale", _scaleFactor.toString());
       notifyListeners();
     }
   }
@@ -513,7 +516,7 @@ class FontSizeController extends ChangeNotifier {
     if (_scaleFactor > 0.7) {
       // Prevent text from becoming too small
       _scaleFactor -= 0.1;
-      ModelSetting.set("fontScale", _scaleFactor);
+      ModelSetting.set("fontScale", _scaleFactor.toString());
       notifyListeners();
     }
   }
@@ -521,7 +524,7 @@ class FontSizeController extends ChangeNotifier {
   // Reset to default size
   void resetFontSize() {
     _scaleFactor = 1.2;
-    ModelSetting.set("fontScale", _scaleFactor);
+    ModelSetting.set("fontScale", _scaleFactor.toString());
     notifyListeners();
   }
 }
@@ -782,14 +785,17 @@ Future<void> initializeSupabase(
 
 String? getSignedInUserId() {
   if (simulateTesting()) {
-    if (ModelSetting.get(AppString.signedIn.string, "no") == "yes") {
+    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+        "yes") {
       return "tester";
     } else {
       return null;
     }
   }
-  bool supabaseInitialized =
-      ModelSetting.get(AppString.supabaseInitialized.string, "no") == "yes";
+  bool supabaseInitialized = ModelSetting.get(
+          AppString.supabaseInitialized.string,
+          defaultValue: "no") ==
+      "yes";
   if (!supabaseInitialized) {
     AppLogger(prefixes: ["Common"]).error("Supabase not initialized");
     return null;
@@ -807,8 +813,10 @@ String? getSignedInEmailId() {
   if (simulateTesting()) {
     return testEmailId;
   }
-  bool supabaseInitialized =
-      ModelSetting.get(AppString.supabaseInitialized.string, "no") == "yes";
+  bool supabaseInitialized = ModelSetting.get(
+          AppString.supabaseInitialized.string,
+          defaultValue: "no") ==
+      "yes";
   if (!supabaseInitialized) return null;
   SupabaseClient supabaseClient = Supabase.instance.client;
   User? currentUser = supabaseClient.auth.currentUser;

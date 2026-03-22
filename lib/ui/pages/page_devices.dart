@@ -76,8 +76,8 @@ class _PageDevicesState extends State<PageDevices> {
   }
 
   Future<void> showDisableDialog(String deviceId) async {
-    String? thisDeviceId = await ModelState.get(AppString.deviceId.string);
-    if (thisDeviceId != null && deviceId == thisDeviceId && mounted) {
+    String thisDeviceId = await ModelState.get(AppString.deviceId.string);
+    if (thisDeviceId.isNotEmpty && deviceId == thisDeviceId && mounted) {
       displaySnackBar(context,
           message: "Can't remove this device!", seconds: 2);
       return;

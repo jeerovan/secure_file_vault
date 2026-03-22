@@ -103,8 +103,8 @@ class SyncUtils {
         await pushMapChanges();
         TaskManager.init(inBackground: inBackground);
       }
-    } catch (e) {
-      logger.error("⚠ Sync failed: $e");
+    } catch (e, s) {
+      logger.error("⚠ Sync failed", error: e.toString(), stackTrace: s);
     }
     _processTimer?.cancel();
     _processTimer = null;
@@ -161,14 +161,14 @@ class SyncUtils {
     bool success = false;
     String? userId = getSignedInUserId();
     if (userId != null) {
-      String? deviceId = await ModelState.get(AppString.deviceId.string);
+      String deviceId = await ModelState.get(AppString.deviceId.string);
       SecureStorage storage = SecureStorage();
       SupabaseClient supabase = Supabase.instance.client;
       try {
         if (simulateTesting()) {
           null;
         } else {
-          if (deviceId != null) {
+          if (deviceId.isNotEmpty) {
             // remove device from server
           }
           await supabase.auth.signOut();
@@ -305,25 +305,22 @@ class SyncUtils {
     bool changesAvailable = true;
     while (changesAvailable) {
       changesAvailable = false;
-      int lastProfilesFetchedAt = await ModelState.get(
-          AppString.lastProfilesChangesFetchedAt.string,
-          defaultValue: 0);
-      int lastItemsFetchedAt = await ModelState.get(
-          AppString.lastItemsChangesFetchedAt.string,
-          defaultValue: 0);
-      int lastFilesFetchedAt = await ModelState.get(
-          AppString.lastFilesChangesFetchedAt.string,
-          defaultValue: 0);
-      int lastPartsFetchedAt = await ModelState.get(
-          AppString.lastPartsChangesFetchedAt.string,
-          defaultValue: 0);
+      int lastProfileTS = int.parse(await ModelState.get(
+          AppString.lastProfileTS.string,
+          defaultValue: '0'));
+      int lastItemTS = int.parse(
+          await ModelState.get(AppString.lastItemTS.string, defaultValue: '0'));
+      int lastFileTS = int.parse(
+          await ModelState.get(AppString.lastFileTS.string, defaultValue: '0'));
+      int lastPartTS = int.parse(
+          await ModelState.get(AppString.lastPartTS.string, defaultValue: '0'));
       try {
         // fetch clubbed changes
         Map<String, dynamic> requestData = {
-          AppString.lastProfilesChangesFetchedAt.string: lastProfilesFetchedAt,
-          AppString.lastFilesChangesFetchedAt.string: lastFilesFetchedAt,
-          AppString.lastItemsChangesFetchedAt.string: lastItemsFetchedAt,
-          AppString.lastPartsChangesFetchedAt.string: lastPartsFetchedAt
+          AppString.lastProfileTS.string: lastProfileTS,
+          AppString.lastFileTS.string: lastFileTS,
+          AppString.lastItemTS.string: lastItemTS,
+          AppString.lastPartTS.string: lastPartTS
         };
         final responseData =
             await api.get(endpoint: '/sync', queryParameters: requestData);
@@ -337,48 +334,81 @@ class SyncUtils {
           }
           changesAvailable = true;
           for (Map<String, dynamic> changeMap in changesMap) {
-            Map<String, dynamic> map = changeMap;
+            Map<String, dynamic> map = {};
             if (table == Tables.items.string) {
-              Uint8List? decryptedBytes = cryptoUtils.getDecryptedBytesFromMap(
-                  changeMap, masterKeyBytes);
+              int itemTS = int.parse(changeMap["3"]);
+              map[AppString.textCipher.string] = changeMap["6"];
+              map[AppString.textNonce.string] = changeMap["7"];
+              map[AppString.keyCipher.string] = changeMap["8"];
+              map[AppString.keyNonce.string] = changeMap["9"];
+              Uint8List? decryptedBytes =
+                  cryptoUtils.getDecryptedBytesFromMap(map, masterKeyBytes);
               if (decryptedBytes == null) continue;
               String jsonString = utf8.decode(decryptedBytes);
-              map = jsonDecode(jsonString);
-            }
-            //TODO handle changeId/rowId
-            //String changeId = changeMap["id"];
-            String rowId = map["id"];
-            int deleteTask = int.parse(map.remove("deleted").toString());
-            if (deleteTask > 0) {
-              if (table == Tables.files.string) {
-                await ModelFile.deletedFromServer(rowId);
-              } else if (table == Tables.items.string) {
-                await ModelItem.deletedFromServer(rowId);
+              Map<String, dynamic> itemMap = jsonDecode(jsonString);
+              int deleteTask = int.parse(itemMap["deleted"]);
+              if (deleteTask > 0) {
+                String itemId = itemMap["id"];
+                await ModelItem.deletedFromServer(itemId);
+              } else {
+                ModelItem newModelItem = await ModelItem.fromMap(itemMap);
+                await newModelItem.upcertFromServer();
               }
-            } else {
-              if (table == Tables.profiles.string) {
-                ModelProfile newProfile = await ModelProfile.fromMap(map);
-                await newProfile.upcertFromServer();
-              } else if (table == Tables.files.string) {
-                ModelFile newFile = await ModelFile.fromMap(map);
-                await newFile.upcertFromServer();
-              } else if (table == Tables.parts.string) {
-                ModelPart newPart = await ModelPart.fromMap(map);
-                await newPart.upcertFromServer();
-              } else if (table == Tables.items.string) {
-                ModelItem item = await ModelItem.fromMap(map);
-                await item.upcertFromServer();
+              if (itemTS > lastItemTS) {
+                lastItemTS = itemTS;
+              }
+            } else if (table == Tables.files.string) {
+              String fileHash = changeMap["1"].split("_")[1];
+              int fileTS = int.parse(changeMap["3"]);
+              map["id"] = fileHash;
+              map["item_count"] = int.parse(changeMap["6"]);
+              map["parts"] = int.parse(changeMap["7"]);
+              map["parts_uploaded"] = int.parse(changeMap["8"]);
+              map["uploaded_at"] = int.parse(changeMap["9"]);
+              map["provider"] = int.parse(changeMap["10"]);
+              map["storage_id"] = changeMap["11"];
+              map["data"] = changeMap["12"];
+              map["updated_at"] = int.parse(changeMap["13"]);
+              int deleteTask = int.parse(changeMap["14"]);
+              if (deleteTask > 0) {
+                await ModelFile.deletedFromServer(fileHash);
+              } else {
+                ModelFile newModelFile = await ModelFile.fromMap(map);
+                newModelFile.upcertFromServer();
+              }
+              if (fileTS > lastFileTS) {
+                lastFileTS = fileTS;
+              }
+            } else if (table == Tables.parts.string) {
+              int partTS = int.parse(changeMap["3"]);
+              List<String> userIdPartId = changeMap["1"].split("_");
+              String partId = userIdPartId.skip(1).join('_');
+              map["id"] = partId;
+              map["size"] = int.parse(changeMap["6"]);
+              map["cipher"] = changeMap["7"];
+              map["nonce"] = changeMap["8"];
+              map["data"] = changeMap["9"];
+              map["uploaded_at"] = int.parse(changeMap["10"]);
+              int deleteTask = int.parse(changeMap["11"]);
+              if (deleteTask > 0) {
+                await ModelPart.deletedFromServer(partId);
+              } else {
+                ModelPart newModelPart = await ModelPart.fromMap(map);
+                await newModelPart.upcertFromServer();
+              }
+              if (partTS > lastPartTS) {
+                lastPartTS = partTS;
               }
             }
           }
         }
-        // update last fetched at iso time
-        if (changesAvailable) {
-          String fetchedAt =
-              tableChanges[AppString.lastChangesFetchedAt.string];
-          await ModelState.set(
-              AppString.lastChangesFetchedAt.string, fetchedAt);
-        }
+        // update last TSs
+        await ModelState.set(
+            AppString.lastFileTS.string, lastFileTS.toString());
+        await ModelState.set(
+            AppString.lastPartTS.string, lastPartTS.toString());
+        await ModelState.set(
+            AppString.lastItemTS.string, lastItemTS.toString());
         logger.info("Fetched Map Changes");
       } catch (e, s) {
         logger.error("fetchMapChanges", error: e, stackTrace: s);

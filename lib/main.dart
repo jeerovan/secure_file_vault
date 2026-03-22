@@ -63,7 +63,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     // Load the theme from saved preferences
-    String? savedTheme = ModelSetting.get("theme", null);
+    String? savedTheme = ModelSetting.get("theme");
     switch (savedTheme) {
       case "light":
         _themeMode = ThemeMode.light;

@@ -3,15 +3,15 @@ import '../utils/enums.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelSetting {
-  static Map<String, dynamic> settingJson = {};
+  static Map<String, String> settingJson = {};
 
-  static Future<void> set(String key, dynamic value) async {
+  static Future<void> set(String key, String value) async {
     settingJson[key] = value;
     final dbHelper = StorageSqlite.instance;
     await dbHelper.insert(Tables.settings.string, {'id': key, 'value': value});
   }
 
-  static dynamic get(String key, dynamic defaultValue) {
+  static String? get(String key, {String defaultValue = ""}) {
     return settingJson.containsKey(key) ? settingJson[key] : defaultValue;
   }
 

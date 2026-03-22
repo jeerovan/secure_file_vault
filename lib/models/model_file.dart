@@ -164,7 +164,6 @@ class ModelFile {
     if (item != null) {
       await item.delete(pushToSync: false);
     }
-    // TODO delete parts also
     //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
   }
 }

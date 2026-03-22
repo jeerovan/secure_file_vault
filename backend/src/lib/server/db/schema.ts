@@ -35,8 +35,8 @@ export const userData = sqliteTable('user_data', {
 		.$onUpdate(() => new Date()),
 	[UserDataKeys.USER_NAME]: text(UserDataKeys.USER_NAME).unique(),
 	[UserDataKeys.DEVICE_ID]: text(UserDataKeys.DEVICE_ID).notNull(),
-	[UserDataKeys.PLAN_TYPE]: integer(UserDataKeys.PLAN_TYPE).notNull().default(0), // Plan Type: Free/Paid, Default: Free
 	[UserDataKeys.PROFILE_IMAGE]: text(UserDataKeys.PROFILE_IMAGE),
+	[UserDataKeys.PLAN_TYPE]: integer(UserDataKeys.PLAN_TYPE).notNull().default(0), // Plan Type: Free/Paid, Default: Free
 	[UserDataKeys.PLAN_EXPIRES_AT]: integer(UserDataKeys.PLAN_EXPIRES_AT, { mode: 'timestamp' }) // Plan expires at. Can be null for free plan
 });
 

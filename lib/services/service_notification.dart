@@ -63,8 +63,8 @@ class NotificationService {
   Future<void> _saveFcmToken(String token) async {
     logger.info("Received FCM Token:$token");
     await ModelState.set(AppString.fcmId.string, token);
-    String? deviceId = await ModelState.get(AppString.deviceId.string);
-    if (deviceId != null) {
+    String deviceId = await ModelState.get(AppString.deviceId.string);
+    if (deviceId.isNotEmpty) {
       try {
         SupabaseClient supabase = Supabase.instance.client;
         await supabase.functions
