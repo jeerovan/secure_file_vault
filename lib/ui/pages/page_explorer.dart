@@ -1,15 +1,12 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:synchronized/extension.dart';
 import '../../models/model_item.dart';
 import '../../services/service_logger.dart';
 import '../../services/service_recon.dart';
-import '../../ui/common_widgets.dart';
 import '../../utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path_lib;
-import 'package:provider/provider.dart';
 
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -78,18 +75,27 @@ class FilePane extends StatefulWidget {
 
 class _FilePaneState extends State<FilePane> {
   final AppLogger logger = AppLogger(prefixes: ["Explorer"]);
-
+  final ScrollController _breadcrumbController = ScrollController();
   List<ModelItem> _items = [];
   ModelItem? currentItem;
   bool _isLoading = false;
   bool _isLocalPath = false;
   bool _isDeviceRoot = false;
   List<ModelItem> parentChilds = [];
+  // Multi-select state
+  bool _isMultiSelectMode = false;
+  final Set<String> _selectedItemIds = {};
 
   @override
   void initState() {
     super.initState();
     _loadFiles();
+  }
+
+  @override
+  void dispose() {
+    _breadcrumbController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFiles() async {
@@ -126,6 +132,11 @@ class _FilePaneState extends State<FilePane> {
   }
 
   void _navigateTo(ModelItem item) {
+    if (_isMultiSelectMode) {
+      _toggleSelection(item);
+      return;
+    }
+
     if (item.isFolder) {
       currentItem = item;
       _loadFiles();
@@ -146,40 +157,134 @@ class _FilePaneState extends State<FilePane> {
     }
   }
 
-  void _onLongPress(ModelItem folder) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(folder.name),
-        content: Text(folder.isFolder
-            ? 'Disable backup for this folder?'
-            : 'Enable backup for this folder?'),
+  void _onLongPress(ModelItem item) {
+    if (!_isMultiSelectMode) {
+      setState(() {
+        _isMultiSelectMode = true;
+        _selectedItemIds.add(item.id);
+      });
+    }
+  }
+
+  void _toggleSelection(ModelItem item) {
+    setState(() {
+      if (_selectedItemIds.contains(item.id)) {
+        _selectedItemIds.remove(item.id);
+        if (_selectedItemIds.isEmpty) {
+          _isMultiSelectMode = false; // Exit mode if nothing is selected
+        }
+      } else {
+        _selectedItemIds.add(item.id);
+      }
+    });
+  }
+
+  void _cancelMultiSelect() {
+    setState(() {
+      _isMultiSelectMode = false;
+      _selectedItemIds.clear();
+    });
+  }
+
+  Future<void> trashItems() async {
+    logger.log('Archiving/Trashing ${_selectedItemIds.length} items');
+    // TODO: Implement your trash/archive logic here utilizing _selectedItemIds
+
+    _cancelMultiSelect();
+    _loadFiles(); // Refresh view
+  }
+
+  Future<void> downloadItems() async {
+    logger.log('Downloading ${_selectedItemIds.length} items');
+    // TODO: Implement your download logic here utilizing _selectedItemIds
+
+    _cancelMultiSelect();
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
+
+    if (_isMultiSelectMode) {
+      return AppBar(
+        leading: IconButton(
+          icon: const Icon(LucideIcons.x),
+          onPressed: _cancelMultiSelect,
+        ),
+        title: Text('${_selectedItemIds.length} Selected'),
+        backgroundColor: surfaceColor,
         actions: [
-          TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(folder.isFolder ? 'Disable' : 'Enable'),
+          IconButton(
+            icon: const Icon(LucideIcons.download),
+            tooltip: 'Download',
+            onPressed: downloadItems,
+          ),
+          IconButton(
+            icon: const Icon(LucideIcons.trash2),
+            tooltip: 'Archive',
+            onPressed: trashItems,
           ),
         ],
-      ),
+      );
+    }
+
+    // Default AppBar
+    return AppBar(
+      leading: currentItem?.id != 'fife'
+          ? IconButton(
+              icon: const Icon(LucideIcons.arrowLeft), onPressed: _navigateBack)
+          : null,
+      title: _buildBreadcrumb(),
+      backgroundColor: surfaceColor,
+      actions: [
+        if (_isLocalPath)
+          IconButton(
+              icon: const Icon(LucideIcons.refreshCw),
+              onPressed: _syncRootFolders),
+        if (_isDeviceRoot)
+          IconButton(
+              icon: const Icon(LucideIcons.plus), onPressed: addSyncFolder),
+        PopupMenuButton<int>(
+          icon: const Icon(LucideIcons.moreVertical),
+          onSelected: (value) {
+            switch (value) {
+              case 0:
+                // context.read<AppSetupState>().logout();
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem<int>(
+              value: 0,
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.logOut, color: Colors.grey),
+                  const SizedBox(width: 16),
+                  const Text('Signout'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildBreadcrumb() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_breadcrumbController.hasClients) {
+        _breadcrumbController.animateTo(
+          _breadcrumbController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
     List<Widget> breadcrumbWidgets = [];
-    String cumulativePath = '/';
 
     for (int i = 0; i < parentChilds.length; i++) {
       ModelItem item = parentChilds[i];
       final part = item.name;
       final isLast = i == parentChilds.length - 1;
-      final path = (i == 0) ? '/' : '$cumulativePath$part/';
-
-      if (i > 0) cumulativePath += '$part/';
 
       breadcrumbWidgets.add(
         InkWell(
@@ -188,8 +293,9 @@ class _FilePaneState extends State<FilePane> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
             child: Text(
-              part.isEmpty ? 'Home' : part,
+              part,
               style: TextStyle(
+                fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
                 color: isLast
                     ? Theme.of(context).colorScheme.onSurface
                     : Theme.of(context).colorScheme.onSurface.withAlpha(140),
@@ -207,9 +313,16 @@ class _FilePaneState extends State<FilePane> {
       }
     }
 
+    breadcrumbWidgets.add(const SizedBox(width: 16));
+
     return SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(children: breadcrumbWidgets));
+      controller: _breadcrumbController,
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: breadcrumbWidgets,
+      ),
+    );
   }
 
   Future<void> _addSyncFolder(String folderPath) async {
@@ -272,48 +385,7 @@ class _FilePaneState extends State<FilePane> {
                   ? const Center(child: Text('This folder is empty.'))
                   : _buildFileView(),
         ),
-        AppBar(
-          leading: currentItem?.id != 'fife'
-              ? IconButton(
-                  icon: const Icon(Icons.arrow_back), onPressed: _navigateBack)
-              : null,
-          title: _buildBreadcrumb(),
-          backgroundColor:
-              Theme.of(context).colorScheme.surfaceContainerHighest,
-          actions: [
-            if (_isLocalPath)
-              IconButton(icon: Icon(Icons.sync), onPressed: _syncRootFolders),
-            if (_isDeviceRoot)
-              IconButton(icon: Icon(Icons.add), onPressed: addSyncFolder),
-            PopupMenuButton<int>(
-              icon: Stack(
-                children: [
-                  const Icon(LucideIcons.moreVertical),
-                ],
-              ),
-              onSelected: (value) {
-                switch (value) {
-                  case 0:
-                    context.read<AppSetupState>().logout();
-                    break;
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem<int>(
-                  value: 0,
-                  child: Row(
-                    children: [
-                      Icon(LucideIcons.logOut, color: Colors.grey),
-                      Container(width: 8),
-                      const SizedBox(width: 5),
-                      const Text('Signout'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        _buildAppBar()
       ],
     );
   }
@@ -324,11 +396,14 @@ class _FilePaneState extends State<FilePane> {
       itemCount: _items.length,
       itemBuilder: (context, index) {
         final item = _items[index];
+        final isSelected = _selectedItemIds.contains(item.id);
         return _FileListItem(
           key: Key(item.id),
           item: item,
+          isMultiSelectMode: _isMultiSelectMode,
+          isSelected: isSelected,
           onTap: () => _navigateTo(item),
-          onLongPress: item.isFolder ? () => _onLongPress(item) : null,
+          onLongPress: () => _onLongPress(item),
         );
       },
     );
@@ -374,8 +449,9 @@ Future<String?> getSelectFolderWithReadWritePermission() async {
       } else {
         return null;
       }
-    } on FileSystemException catch (e) {
-      // TODO Permission denied or access error
+    } on FileSystemException catch (e, s) {
+      AppLogger(prefixes: ["GetFolderWithPermission"])
+          .error("Permission denied or access error", error: e, stackTrace: s);
       return null;
     }
   }
@@ -393,14 +469,18 @@ Future<bool> _isAndroid13OrAbove() async {
 
 class _FileListItem extends StatefulWidget {
   final ModelItem item;
+  final bool isMultiSelectMode;
+  final bool isSelected;
   final VoidCallback onTap;
-  final VoidCallback? onLongPress;
+  final VoidCallback onLongPress;
 
   const _FileListItem({
     super.key,
     required this.item,
+    required this.isMultiSelectMode,
+    required this.isSelected,
     required this.onTap,
-    this.onLongPress,
+    required this.onLongPress,
   });
 
   @override
@@ -414,15 +494,15 @@ class _FileListItemState extends State<_FileListItem> {
   @override
   void initState() {
     super.initState();
-    if (!widget.item.isFolder) _loadStatuses();
+    if (!widget.item.isFolder) _checkFileStates();
   }
 
   @override
   void didUpdateWidget(covariant _FileListItem oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Re-fetch only if the item instance actually changes
-    if (oldWidget.item != widget.item && !widget.item.isFolder) {
-      _loadStatuses();
+    // Re-check statuses if the underlying item changes (e.g., during recycling in ListView)
+    if (oldWidget.item.id != widget.item.id && !widget.item.isFolder) {
+      _checkFileStates();
     }
   }
 
@@ -434,13 +514,7 @@ class _FileListItemState extends State<_FileListItem> {
     return true;
   }
 
-  Future<void> _loadStatuses() async {
-    // Reset state to null (loading) if refreshing
-    setState(() {
-      _isLocal = null;
-      _isUploaded = null;
-    });
-
+  Future<void> _checkFileStates() async {
     // Run both async tasks concurrently for optimal performance
     final results = await Future.wait([
       fileExistsLocally(widget.item),
@@ -460,67 +534,125 @@ class _FileListItemState extends State<_FileListItem> {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: widget.onTap,
-      onLongPress: widget.onLongPress,
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-      leading: SizedBox(
-        width: 32,
-        height: 32,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Align(
-              alignment: Alignment.center,
-              child: Icon(
-                widget.item.isFolder
-                    ? Icons.folder
-                    : Icons.insert_drive_file_outlined,
-                size: 28,
-                color: widget.item.isFolder
-                    ? Colors.amber.shade400
-                    : Theme.of(context).iconTheme.color,
-              ),
-            ),
+    final theme = Theme.of(context);
 
-            // Local Existence Indicator (Grey while loading, then Red/Green)
-            if (!widget.item.isFolder)
-              Positioned(
-                bottom: -2,
-                right: -2,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: _isLocal == null
-                        ? Colors.grey.shade400 // Loading state
-                        : (_isLocal! ? Colors.green : Colors.red),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).scaffoldBackgroundColor,
-                      width: 2,
-                    ),
-                  ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onTap,
+        onLongPress: widget.onLongPress,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+          child: Row(
+            children: [
+              // 1. Multi-Select Circular Checkbox
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                child: SizedBox(
+                  width: 18,
+                  child: widget.isMultiSelectMode
+                      ? Row(
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: widget.isSelected
+                                    ? Colors.grey.shade600
+                                    : Colors.transparent,
+                                border: Border.all(
+                                  color: widget.isSelected
+                                      ? Colors.grey.shade600
+                                      : theme.colorScheme.outline,
+                                  width: 2,
+                                ),
+                              ),
+                              child: null,
+                            ),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ),
-          ],
+
+              // 2. File / Folder Icon
+              SizedBox(
+                width: 32,
+                height: 32,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Icon(
+                          widget.item.isFolder
+                              ? LucideIcons.folder
+                              : LucideIcons.file,
+                          size: 28,
+                          color: widget.item.isFolder
+                              ? theme.colorScheme.primary.withAlpha(150)
+                              : theme.colorScheme.secondary.withAlpha(150)),
+                    ),
+
+                    // Local Existence Indicator (Grey while loading, then Red/Green)
+                    if (!widget.item.isFolder)
+                      Positioned(
+                        bottom: -2,
+                        right: -2,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: _isLocal == null
+                                ? Colors.grey.shade400 // Loading state
+                                : (_isLocal! ? Colors.green : Colors.red),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Theme.of(context).scaffoldBackgroundColor,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // 3. File Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.item.name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurface,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              // 4. State Indicators (Cloud / Local)
+              if (!widget.item.isFolder) _buildTrailingIndicator()
+            ],
+          ),
         ),
       ),
-      title: Text(
-        widget.item.name,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w500),
-      ),
-      // Cloud Uploaded Indicator
-      trailing: widget.item.isFolder ? null : _buildTrailingIndicator(),
     );
   }
 
-  Widget? _buildTrailingIndicator() {
-    if (widget.item.isFolder) return null;
-
+  Widget _buildTrailingIndicator() {
     if (_isUploaded == null) {
       // Show a subtle, tiny loading spinner while checking cloud status
       return const SizedBox(
@@ -533,11 +665,11 @@ class _FileListItemState extends State<_FileListItem> {
     if (_isUploaded!) {
       return Icon(
         Icons.check,
-        size: 20,
-        color: Theme.of(context).colorScheme.primary,
+        size: 16,
+        color: Theme.of(context).colorScheme.primary.withAlpha(150),
       );
     }
 
-    return null;
+    return SizedBox.shrink();
   }
 }

@@ -29,7 +29,7 @@ class ModelItemTask {
     return ModelItemTask(
         id: map['id'],
         task: map['task'],
-        progress: getValueFromMap(map, "progress", defaultValue: 0),
+        progress: getValueFromMap(map, "progress", defaultValue: 10),
         updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow));
   }
 
