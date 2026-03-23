@@ -8,7 +8,7 @@ import '../../services/service_recon.dart';
 import '../../ui/common_widgets.dart';
 import '../../utils/common.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart' as path;
+import 'package:path/path.dart' as path_lib;
 import 'package:provider/provider.dart';
 
 import 'dart:io';
@@ -212,24 +212,51 @@ class _FilePaneState extends State<FilePane> {
         child: Row(children: breadcrumbWidgets));
   }
 
+  Future<void> _addSyncFolder(String folderPath) async {
+    String folderName = path_lib.basename(folderPath);
+    String deviceRoot = await getDeviceRoot();
+    ModelItem syncFolderItem = await ModelItem.fromMap({
+      "parent_id": deviceRoot,
+      "path": folderPath,
+      "name": folderName,
+      "is_folder": 1,
+    });
+    await syncFolderItem.insert();
+    final reconService = ReconciliationService();
+    await reconService.reconcile(syncFolderItem.id);
+    _loadFiles();
+  }
+
+  void addFolderConfirm(String folderPath) {
+    String folderName = path_lib.basename(folderPath);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Add folder"),
+        content: Text(folderName),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _addSyncFolder(folderPath);
+            },
+            child: Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> addSyncFolder() async {
     String? folderPath = await getSelectFolderWithReadWritePermission();
     if (folderPath != null) {
       bool folderPathExists =
           await ModelItem.pathExistsForThisDevice(folderPath);
       if (!folderPathExists) {
-        String folderName = path.basename(folderPath);
-        String deviceRoot = await getDeviceRoot();
-        ModelItem syncFolderItem = await ModelItem.fromMap({
-          "parent_id": deviceRoot,
-          "path": folderPath,
-          "name": folderName,
-          "is_folder": 1,
-        });
-        await syncFolderItem.insert();
-        final reconService = ReconciliationService();
-        await reconService.reconcile(syncFolderItem.id);
-        _loadFiles();
+        addFolderConfirm(folderPath);
       }
     }
   }
