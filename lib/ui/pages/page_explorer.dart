@@ -320,6 +320,7 @@ class _FilePaneState extends State<FilePane> {
 
   Widget _buildFileView() {
     return ListView.builder(
+      reverse: true,
       itemCount: _items.length,
       itemBuilder: (context, index) {
         final item = _items[index];
