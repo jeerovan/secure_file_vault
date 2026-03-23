@@ -65,8 +65,6 @@ class _PageExplorerState extends State<PageExplorer> {
 
 // --- File Pane Widget ---
 
-enum ViewType { list, grid }
-
 class FilePane extends StatefulWidget {
   final Function(ModelItem item, ModelItem destination) onItemDrop;
 
@@ -81,7 +79,6 @@ class _FilePaneState extends State<FilePane> {
 
   List<ModelItem> _items = [];
   ModelItem? currentItem;
-  ViewType _viewType = ViewType.list;
   bool _isLoading = false;
   List<ModelItem> parentChilds = [];
 
@@ -249,13 +246,6 @@ class _FilePaneState extends State<FilePane> {
               onPressed: () async =>
                   {await context.read<AppSetupState>().logout()},
             ),
-            IconButton(
-              icon: Icon(_viewType == ViewType.list
-                  ? Icons.grid_view
-                  : Icons.view_list),
-              onPressed: () => setState(() => _viewType =
-                  _viewType == ViewType.list ? ViewType.grid : ViewType.list),
-            ),
           ],
         ),
       ],
@@ -263,37 +253,17 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Widget _buildFileView() {
-    if (_viewType == ViewType.grid) {
-      return GridView.builder(
-        padding: const EdgeInsets.all(8),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 150,
-            childAspectRatio: 0.9,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8),
-        itemCount: _items.length,
-        itemBuilder: (context, index) {
-          final item = _items[index];
-          return _FileGridItem(
-              item: item,
-              onTap: () => _navigateTo(item),
-              onLongPress: item.isFolder ? () => _onLongPress(item) : null,
-              onDrop: widget.onItemDrop);
-        },
-      );
-    } else {
-      return ListView.builder(
-        itemCount: _items.length,
-        itemBuilder: (context, index) {
-          final item = _items[index];
-          return _FileListItem(
-              item: item,
-              onTap: () => _navigateTo(item),
-              onLongPress: item.isFolder ? () => _onLongPress(item) : null,
-              onDrop: widget.onItemDrop);
-        },
-      );
-    }
+    return ListView.builder(
+      itemCount: _items.length,
+      itemBuilder: (context, index) {
+        final item = _items[index];
+        return _FileListItem(
+          item: item,
+          onTap: () => _navigateTo(item),
+          onLongPress: item.isFolder ? () => _onLongPress(item) : null,
+        );
+      },
+    );
   }
 }
 
@@ -337,7 +307,7 @@ Future<String?> getSelectFolderWithReadWritePermission() async {
         return null;
       }
     } on FileSystemException catch (e) {
-      // Permission denied or access error
+      // TODO Permission denied or access error
       return null;
     }
   }
@@ -353,135 +323,153 @@ Future<bool> _isAndroid13OrAbove() async {
   return false;
 }
 
-// --- UI Widgets for Items (with updated DragTarget) ---
-
-class _FileListItem extends StatelessWidget {
+class _FileListItem extends StatefulWidget {
   final ModelItem item;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  final Function(ModelItem item, ModelItem destination) onDrop;
 
-  const _FileListItem(
-      {required this.item,
-      required this.onTap,
-      this.onLongPress,
-      required this.onDrop});
+  const _FileListItem({
+    super.key,
+    required this.item,
+    required this.onTap,
+    this.onLongPress,
+  });
 
-  Widget _buildItem() {
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: ListTile(
-        leading: Icon(
-            item.isFolder ? Icons.folder : Icons.insert_drive_file_outlined),
-        title: Text(item.name, overflow: TextOverflow.ellipsis),
-        trailing: item.isFolder
-            ? Icon(Icons.cloud_done,
-                color: Colors.tealAccent.shade400, size: 20)
-            : null,
-      ),
-    );
+  @override
+  State<_FileListItem> createState() => _FileListItemState();
+}
+
+class _FileListItemState extends State<_FileListItem> {
+  bool? _isLocal;
+  bool? _isUploaded;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.item.isFolder) _loadStatuses();
+  }
+
+  @override
+  void didUpdateWidget(covariant _FileListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Re-fetch only if the item instance actually changes
+    if (oldWidget.item != widget.item && !widget.item.isFolder) {
+      _loadStatuses();
+    }
+  }
+
+  Future<bool> fileExistsLocally(ModelItem item) async {
+    return true;
+  }
+
+  Future<bool> fileUploadedToCloud(ModelItem item) async {
+    return true;
+  }
+
+  Future<void> _loadStatuses() async {
+    // Reset state to null (loading) if refreshing
+    setState(() {
+      _isLocal = null;
+      _isUploaded = null;
+    });
+
+    // Run both async tasks concurrently for optimal performance
+    final results = await Future.wait([
+      fileExistsLocally(widget.item),
+      widget.item.isFolder
+          ? Future.value(false)
+          : fileUploadedToCloud(widget.item),
+    ]);
+
+    // Always check if the widget is still in the tree before calling setState
+    if (!mounted) return;
+
+    setState(() {
+      _isLocal = results[0];
+      _isUploaded = results[1];
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final draggableItem = LongPressDraggable<ModelItem>(
-      data: item,
-      feedback: Opacity(
-          opacity: 0.7,
-          child: Card(
-              child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 250),
-                  child: _buildItem()))),
-      child: _buildItem(),
-    );
-
-    if (item.isFolder) {
-      return DragTarget<ModelItem>(
-        builder: (context, candidateData, rejectedData) => draggableItem,
-        onWillAcceptWithDetails: (details) => details.data.id != item.id,
-        onAcceptWithDetails: (details) => onDrop(details.data, item),
-      );
-    }
-    return draggableItem;
-  }
-}
-
-class _FileGridItem extends StatelessWidget {
-  final ModelItem item;
-  final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-  final Function(ModelItem item, ModelItem destination) onDrop;
-
-  const _FileGridItem(
-      {required this.item,
-      required this.onTap,
-      this.onLongPress,
-      required this.onDrop});
-
-  Widget _buildItem(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      borderRadius: BorderRadius.circular(12),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
+    return ListTile(
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+      leading: SizedBox(
+        width: 32,
+        height: 32,
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  item.isFolder
-                      ? Icons.folder
-                      : Icons.insert_drive_file_outlined,
-                  size: 48,
-                  color: item.isFolder
-                      ? Colors.amber.shade600
-                      : Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Text(item.name,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall),
-                ),
-              ],
+            Align(
+              alignment: Alignment.center,
+              child: Icon(
+                widget.item.isFolder
+                    ? Icons.folder
+                    : Icons.insert_drive_file_outlined,
+                size: 28,
+                color: widget.item.isFolder
+                    ? Colors.amber.shade400
+                    : Theme.of(context).iconTheme.color,
+              ),
             ),
-            if (item.isFolder)
+
+            // Local Existence Indicator (Grey while loading, then Red/Green)
+            if (!widget.item.isFolder)
               Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Icon(Icons.cloud_done,
-                      color: Colors.tealAccent.shade400, size: 16)),
+                bottom: -2,
+                right: -2,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: _isLocal == null
+                        ? Colors.grey.shade400 // Loading state
+                        : (_isLocal! ? Colors.green : Colors.red),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      width: 2,
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
+      title: Text(
+        widget.item.name,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      // Cloud Uploaded Indicator
+      trailing: widget.item.isFolder ? null : _buildTrailingIndicator(),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final draggableItem = LongPressDraggable<ModelItem>(
-      data: item,
-      feedback: Transform.scale(
-          scale: 1.1,
-          child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 140, maxHeight: 120),
-              child: Opacity(opacity: 0.7, child: _buildItem(context)))),
-      child: _buildItem(context),
-    );
+  Widget? _buildTrailingIndicator() {
+    if (widget.item.isFolder) return null;
 
-    if (item.isFolder) {
-      return DragTarget<ModelItem>(
-        builder: (context, candidateData, rejectedData) => draggableItem,
-        onWillAcceptWithDetails: (details) => details.data.id != item.id,
-        onAcceptWithDetails: (details) => onDrop(details.data, item),
+    if (_isUploaded == null) {
+      // Show a subtle, tiny loading spinner while checking cloud status
+      return const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2),
       );
     }
-    return draggableItem;
+
+    if (_isUploaded!) {
+      return Icon(
+        Icons.check,
+        size: 20,
+        color: Theme.of(context).colorScheme.primary,
+      );
+    }
+
+    return null;
   }
 }
