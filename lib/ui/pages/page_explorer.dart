@@ -1,5 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:synchronized/extension.dart';
 import '../../models/model_item.dart';
 import '../../services/service_logger.dart';
 import '../../services/service_recon.dart';
@@ -80,6 +82,8 @@ class _FilePaneState extends State<FilePane> {
   List<ModelItem> _items = [];
   ModelItem? currentItem;
   bool _isLoading = false;
+  bool _isLocalPath = false;
+  bool _isDeviceRoot = false;
   List<ModelItem> parentChilds = [];
 
   @override
@@ -100,6 +104,9 @@ class _FilePaneState extends State<FilePane> {
     if (currentItem == null) return;
     setState(() => _isLoading = true);
     final items = await ModelItem.getAllInFolder(currentItem);
+    _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
+    String deviceRootHash = await getDeviceRoot();
+    _isDeviceRoot = currentItem?.id == deviceRootHash;
     if (mounted) {
       setState(() {
         _items = items;
@@ -108,10 +115,13 @@ class _FilePaneState extends State<FilePane> {
     }
   }
 
-  Future<void> _syncRootFolder() async {
-    final reconService = ReconciliationService();
-    await reconService.reconcile(currentItem!.id);
+  Future<void> _syncRootFolders() async {
+    List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
+    for (ModelItem syncFolder in syncFolders) {
+      await ReconciliationService().reconcile(syncFolder.id);
+    }
     _loadFiles();
+    // Issue server sync irrespective of items change
     SyncUtils.waitAndSyncChanges();
   }
 
@@ -205,16 +215,22 @@ class _FilePaneState extends State<FilePane> {
   Future<void> addSyncFolder() async {
     String? folderPath = await getSelectFolderWithReadWritePermission();
     if (folderPath != null) {
-      String folderName = path.basename(folderPath);
-      String deviceRoot = await getDeviceRoot();
-      ModelItem syncFolderItem = await ModelItem.fromMap({
-        "parent_id": deviceRoot,
-        "path": folderPath,
-        "name": folderName,
-        "is_folder": 1,
-      });
-      await syncFolderItem.insert();
-      _loadFiles();
+      bool folderPathExists =
+          await ModelItem.pathExistsForThisDevice(folderPath);
+      if (!folderPathExists) {
+        String folderName = path.basename(folderPath);
+        String deviceRoot = await getDeviceRoot();
+        ModelItem syncFolderItem = await ModelItem.fromMap({
+          "parent_id": deviceRoot,
+          "path": folderPath,
+          "name": folderName,
+          "is_folder": 1,
+        });
+        await syncFolderItem.insert();
+        final reconService = ReconciliationService();
+        await reconService.reconcile(syncFolderItem.id);
+        _loadFiles();
+      }
     }
   }
 
@@ -238,13 +254,36 @@ class _FilePaneState extends State<FilePane> {
           backgroundColor:
               Theme.of(context).colorScheme.surfaceContainerHighest,
           actions: [
-            if (currentItem?.path != null)
-              IconButton(icon: Icon(Icons.sync), onPressed: _syncRootFolder),
-            IconButton(icon: Icon(Icons.add), onPressed: addSyncFolder),
-            IconButton(
-              icon: Icon(Icons.logout),
-              onPressed: () async =>
-                  {await context.read<AppSetupState>().logout()},
+            if (_isLocalPath)
+              IconButton(icon: Icon(Icons.sync), onPressed: _syncRootFolders),
+            if (_isDeviceRoot)
+              IconButton(icon: Icon(Icons.add), onPressed: addSyncFolder),
+            PopupMenuButton<int>(
+              icon: Stack(
+                children: [
+                  const Icon(LucideIcons.moreVertical),
+                ],
+              ),
+              onSelected: (value) {
+                switch (value) {
+                  case 0:
+                    context.read<AppSetupState>().logout();
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<int>(
+                  value: 0,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.logOut, color: Colors.grey),
+                      Container(width: 8),
+                      const SizedBox(width: 5),
+                      const Text('Signout'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -258,6 +297,7 @@ class _FilePaneState extends State<FilePane> {
       itemBuilder: (context, index) {
         final item = _items[index];
         return _FileListItem(
+          key: Key(item.id),
           item: item,
           onTap: () => _navigateTo(item),
           onLongPress: item.isFolder ? () => _onLongPress(item) : null,

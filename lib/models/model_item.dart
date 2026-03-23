@@ -169,6 +169,7 @@ class ModelItem {
 
   static Future<String> getPathForItem(String id) async {
     ModelItem? item = await get(id);
+    if (item == null) return "";
     List<String> pathParts = [];
     while (item?.path == null) {
       pathParts.add(item!.name);
@@ -177,6 +178,33 @@ class ModelItem {
     String path = item!.path!;
     String pathItems = path_lib.joinAll(pathParts.reversed);
     return path_lib.join(path, pathItems);
+  }
+
+  static Future<bool> isLocalPath(String id) async {
+    String deviceRootPathHash = await getDeviceRoot();
+    if (id == 'fife') return false;
+    ModelItem? item = await get(id);
+    if (item == null) return false;
+    while (item?.parentId != 'fife') {
+      if (item == null) break;
+      item = await get(item.parentId!);
+    }
+    if (item != null && item.id == deviceRootPathHash) {
+      return true;
+    }
+    return false;
+  }
+
+  static Future<bool> pathExistsForThisDevice(String path) async {
+    String deviceRootPathHash = await getDeviceRoot();
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows = await db.query(
+      Tables.items.string,
+      where: "path = ? AND parent_id = ?",
+      whereArgs: [path, deviceRootPathHash],
+    );
+    return rows.isNotEmpty;
   }
 
   static Future<void> resetScanState(String rootItemId) async {
@@ -199,6 +227,15 @@ class ModelItem {
     final db = await dbHelper.database;
     await db.delete(Tables.items.string,
         where: "path != ? AND parent_id = ?", whereArgs: [null, deviceRoot]);
+  }
+
+  static Future<List<ModelItem>> getAllSyncedFolders() async {
+    final deviceRoot = await getDeviceRoot();
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows = await db.query(Tables.items.string,
+        where: "parent_id = ?", whereArgs: [deviceRoot]);
+    return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
   static Future<List<ModelItem>> searchItem(String term) async {

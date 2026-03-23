@@ -79,9 +79,15 @@ class SyncUtils {
         String mode = inBackground ? "Background" : "Foreground";
         logger.info("sync request from:$mode");
         bool canSync = await SyncUtils.canSync();
-        if (!canSync) return;
+        if (!canSync) {
+          logger.info("Can not sync");
+          return;
+        }
         bool hasInternet = await InternetConnection().hasInternetAccess;
-        if (!hasInternet) return;
+        if (!hasInternet) {
+          logger.info("No internet");
+          return;
+        }
         await _performSyncOperations(inBackground, manualSync, firstFetch);
       } catch (e, stack) {
         logger.error("Sync failed", error: e, stackTrace: stack);
