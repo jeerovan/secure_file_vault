@@ -122,7 +122,8 @@ class ReconciliationService {
 
           if (movedDbItem != null) {
             // --- MOVE DETECTED ---
-            String dbItemPath = await ModelItem.getPathForItem(movedDbItem.id);
+            String dbItemPath =
+                await ModelItem.getPathForLocalItem(movedDbItem.id);
             movedDbItem.name = fsChild.name;
             movedDbItem.parentId = dbParentId;
             movedDbItem.scanState = ScanState.modified.value;
@@ -189,7 +190,7 @@ class ReconciliationService {
     }
 
     if (bestMatch != null && bestScore > jaccardSimilarityThreshold) {
-      String directoryPath = await ModelItem.getPathForItem(bestMatch.id);
+      String directoryPath = await ModelItem.getPathForLocalItem(bestMatch.id);
       bool directoryExist = await directoryExistAtPath(directoryPath);
       if (!directoryExist) {
         return bestMatch;
@@ -212,7 +213,7 @@ class ReconciliationService {
     // match hash to confirm
     for (final candidate in dbCandidatesMatchingSize) {
       if (candidate.fileId == hash) {
-        String filePath = await ModelItem.getPathForItem(candidate.id);
+        String filePath = await ModelItem.getPathForLocalItem(candidate.id);
         bool fileExist = await fileExistAtPath(filePath);
         if (!fileExist) return candidate;
       }

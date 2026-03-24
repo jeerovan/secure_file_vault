@@ -493,7 +493,7 @@ Map<String, String> getMapUrls(double lat, double lng) {
 
 class FontSizeController extends ChangeNotifier {
   double _scaleFactor =
-      double.parse(ModelSetting.get("fontScale", defaultValue: "1.0")!);
+      double.parse(ModelSetting.get("fontScale", defaultValue: "1.0"));
 
   double get scaleFactor => _scaleFactor;
 
@@ -682,32 +682,39 @@ Future<int> getDeviceType() async {
   }
 }
 
-Future<String> getDeviceRoot() async {
-  final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-  String stringForHash = "Unknown";
-  if (Platform.isAndroid) {
-    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-    stringForHash =
-        '${androidInfo.manufacturer}${androidInfo.model}${androidInfo.device}${androidInfo.hardware}';
-  } else if (Platform.isIOS) {
-    IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-    stringForHash =
-        '${iosInfo.identifierForVendor}${iosInfo.utsname.machine}${iosInfo.model}';
-  } else if (Platform.isMacOS) {
-    MacOsDeviceInfo macInfo = await deviceInfo.macOsInfo;
-    stringForHash = '${macInfo.systemGUID}';
-  } else if (Platform.isWindows) {
-    WindowsDeviceInfo winInfo = await deviceInfo.windowsInfo;
-    stringForHash = '${winInfo.productId}${winInfo.deviceId}';
-  } else if (Platform.isLinux) {
-    LinuxDeviceInfo linuxInfo = await deviceInfo.linuxInfo;
-    stringForHash = '${linuxInfo.machineId}';
+Future<String> getDeviceHash() async {
+  String savedHash = ModelSetting.get(AppString.deviceHash.string);
+  if (savedHash.isNotEmpty) {
+    return savedHash;
+  } else {
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    String stringForHash = "Unknown";
+    if (Platform.isAndroid) {
+      AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      stringForHash =
+          '${androidInfo.manufacturer}${androidInfo.model}${androidInfo.device}${androidInfo.hardware}';
+    } else if (Platform.isIOS) {
+      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+      stringForHash =
+          '${iosInfo.identifierForVendor}${iosInfo.utsname.machine}${iosInfo.model}';
+    } else if (Platform.isMacOS) {
+      MacOsDeviceInfo macInfo = await deviceInfo.macOsInfo;
+      stringForHash = '${macInfo.systemGUID}';
+    } else if (Platform.isWindows) {
+      WindowsDeviceInfo winInfo = await deviceInfo.windowsInfo;
+      stringForHash = '${winInfo.productId}${winInfo.deviceId}';
+    } else if (Platform.isLinux) {
+      LinuxDeviceInfo linuxInfo = await deviceInfo.linuxInfo;
+      stringForHash = '${linuxInfo.machineId}';
+    }
+    String deviceHash = await getHashOfString(stringForHash);
+    await ModelSetting.set(AppString.deviceHash.string, deviceHash);
+    return deviceHash;
   }
-  return getHashOfString(stringForHash);
 }
 
 Future<String> getDeviceId() async {
-  return ModelSetting.get(AppString.deviceId.string)!;
+  return ModelSetting.get(AppString.deviceId.string);
 }
 
 // storage permission

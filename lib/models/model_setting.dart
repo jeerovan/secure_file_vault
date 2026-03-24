@@ -11,8 +11,17 @@ class ModelSetting {
     await dbHelper.insert(Tables.settings.string, {'id': key, 'value': value});
   }
 
-  static String? get(String key, {String defaultValue = ""}) {
-    return settingJson.containsKey(key) ? settingJson[key] : defaultValue;
+  static String get(String key, {String defaultValue = ""}) {
+    if (settingJson.containsKey(key)) {
+      String? value = settingJson[key];
+      if (value == null) {
+        return defaultValue;
+      } else {
+        return value;
+      }
+    } else {
+      return defaultValue;
+    }
   }
 
   static Future<void> delete(String key) async {

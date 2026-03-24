@@ -81,14 +81,14 @@ class _FilePaneState extends State<FilePane> {
       if (rootFife != null) {
         parentChilds.add(rootFife);
       }
-      currentItem = await ModelItem.get(await getDeviceRoot());
+      currentItem = await ModelItem.get(await getDeviceHash());
       if (currentItem != null) parentChilds.add(currentItem!);
     }
     if (currentItem == null) return;
     setState(() => _isLoading = true);
     final items = await ModelItem.getAllInFolder(currentItem);
     _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
-    String deviceRootHash = await getDeviceRoot();
+    String deviceRootHash = await getDeviceHash();
     _isDeviceRoot = currentItem?.id == deviceRootHash;
     if (mounted) {
       setState(() {
@@ -304,7 +304,7 @@ class _FilePaneState extends State<FilePane> {
 
   Future<void> _addSyncFolder(String folderPath) async {
     String folderName = path_lib.basename(folderPath);
-    String deviceRoot = await getDeviceRoot();
+    String deviceRoot = await getDeviceHash();
     ModelItem syncFolderItem = await ModelItem.fromMap({
       "parent_id": deviceRoot,
       "path": folderPath,
@@ -343,8 +343,7 @@ class _FilePaneState extends State<FilePane> {
   Future<void> addSyncFolder() async {
     String? folderPath = await getSelectFolderWithReadWritePermission();
     if (folderPath != null) {
-      bool folderPathExists =
-          await ModelItem.pathExistsForThisDevice(folderPath);
+      bool folderPathExists = await ModelItem.syncFolderExists(folderPath);
       if (!folderPathExists) {
         addFolderConfirm(folderPath);
       }
@@ -467,6 +466,7 @@ class _FileListItem extends StatefulWidget {
 class _FileListItemState extends State<_FileListItem> {
   bool? _isLocal;
   bool? _isUploaded;
+  AppLogger logger = AppLogger(prefixes: ["FileListItem"]);
 
   @override
   void initState() {
@@ -484,7 +484,9 @@ class _FileListItemState extends State<_FileListItem> {
   }
 
   Future<bool> fileExistsLocally(ModelItem item) async {
-    return true;
+    String path = await ModelItem.getPathForItem(item.id);
+    AppLogger(prefixes: ["FileListItem"]).debug(path);
+    return await File(path).exists();
   }
 
   Future<bool> fileUploadedToCloud(ModelItem item) async {

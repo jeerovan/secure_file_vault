@@ -136,7 +136,7 @@ class TaskManager {
       await itemTask.delete();
       return true;
     }
-    final inFilePath = await ModelItem.getPathForItem(modelItem.id);
+    final inFilePath = await ModelItem.getPathForLocalItem(modelItem.id);
     final inFile = File(inFilePath);
     if (!inFile.existsSync()) {
       itemTask.task = ItemTask.delete.value;
