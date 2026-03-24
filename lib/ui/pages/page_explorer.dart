@@ -1,6 +1,7 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../models/model_file.dart';
 import '../../models/model_item.dart';
 import '../../services/service_logger.dart';
 import '../../services/service_recon.dart';
@@ -26,36 +27,12 @@ class PageExplorer extends StatefulWidget {
 }
 
 class _PageExplorerState extends State<PageExplorer> {
-  static const double _dualPaneBreakpoint = 800.0;
-
-  void _onItemDropped(ModelItem item, ModelItem destination) {
-    setState(() {
-      //TODO handle move item
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          if (constraints.maxWidth > _dualPaneBreakpoint) {
-            return Row(
-              children: [
-                Expanded(
-                    child: FilePane(
-                        key: const ValueKey('pane1'),
-                        onItemDrop: _onItemDropped)),
-                const VerticalDivider(width: 1, thickness: 1),
-                Expanded(
-                    child: FilePane(
-                        key: const ValueKey('pane2'),
-                        onItemDrop: _onItemDropped)),
-              ],
-            );
-          } else {
-            return FilePane(onItemDrop: _onItemDropped);
-          }
+          return FilePane();
         },
       ),
     );
@@ -65,9 +42,9 @@ class _PageExplorerState extends State<PageExplorer> {
 // --- File Pane Widget ---
 
 class FilePane extends StatefulWidget {
-  final Function(ModelItem item, ModelItem destination) onItemDrop;
-
-  const FilePane({super.key, required this.onItemDrop});
+  const FilePane({
+    super.key,
+  });
 
   @override
   State<FilePane> createState() => _FilePaneState();
@@ -511,7 +488,11 @@ class _FileListItemState extends State<_FileListItem> {
   }
 
   Future<bool> fileUploadedToCloud(ModelItem item) async {
-    return true;
+    ModelFile? modelFile = await ModelFile.get(item.fileId!);
+    if (modelFile != null) {
+      return modelFile.uploadedAt > 0;
+    }
+    return false;
   }
 
   Future<void> _checkFileStates() async {
