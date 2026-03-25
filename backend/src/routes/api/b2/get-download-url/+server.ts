@@ -14,15 +14,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, error: ErrorCode.INVALID_JSON });
 	}
 
-	const { file_path, storage_id } = body;
+	const { file_hash, storage_id } = body;
 
-	if (!file_path) {
+	if (!file_hash) {
 		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 	}
 	const authData = await authenticate(authUser.id, storage_id);
 	if (!authData) {
 		return json({ status: 0, error: ErrorCode.NO_USER });
 	}
+	const file_path = `${authUser.id}/${file_hash}`;
 	const result = await getDownloadAuthorization({
 		apiUrl: authData.apiUrl,
 		authorizationToken: authData.authorizationToken,

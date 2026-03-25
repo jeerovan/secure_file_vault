@@ -2,19 +2,24 @@ import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dio/dio.dart';
+import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 
 class FileSplitter {
-  final File file;
+  final File? file;
   final int fileSize;
-  late List<int> partSizes; // Store calculated part sizes
+  late final List<int> partSizes; // Made final for immutability
 
-  FileSplitter(
-    this.file,
-  ) : fileSize = file.lengthSync() {
+  /// Creates a FileSplitter.
+  ///
+  /// You must provide either [file] or [fileSize].
+  /// If [file] is provided, its size is read synchronously and overrides [fileSize].
+  FileSplitter({this.file, int? fileSize})
+      : assert(file != null || fileSize != null,
+            'Either file or fileSize must be provided.'),
+        fileSize = file != null ? file.lengthSync() : fileSize! {
     partSizes = _calculatePartSizes(); // Precompute part sizes
   }
 
@@ -49,15 +54,23 @@ class FileSplitter {
 
   /// Fetches a specific part of the file as bytes
   Future<Uint8List?> getPart(int partNumber) async {
+    if (file == null) {
+      throw StateError('Cannot read file part: File object was not provided.');
+    }
+
     int partIndex = partNumber - 1;
     if (partIndex < 0 || partIndex >= partSizes.length) {
       return null;
     }
 
-    RandomAccessFile raf = await file.open(mode: FileMode.read);
-    int offset = partSizes
-        .sublist(0, partIndex)
-        .fold(0, (sum, element) => sum + element);
+    RandomAccessFile raf = await file!.open(mode: FileMode.read);
+
+    // Optimized: No longer creates a sublist in memory
+    int offset = 0;
+    for (int i = 0; i < partIndex; i++) {
+      offset += partSizes[i];
+    }
+
     int partSize = partSizes[partIndex];
 
     await raf.setPosition(offset); // Seek to the correct position
@@ -71,105 +84,91 @@ class FileSplitter {
   ({int start, int end}) getStartEndIndexForPart(int partNumber) {
     int partIndex = partNumber - 1;
 
-    // Calculate start offset by summing previous part sizes
-    int start = partSizes
-        .sublist(0, partIndex)
-        .fold(0, (sum, element) => sum + element);
+    // Optimized: No longer creates a sublist in memory
+    int start = 0;
+    for (int i = 0; i < partIndex; i++) {
+      start += partSizes[i];
+    }
 
     // Calculate exclusive end index
     int end = start + partSizes[partIndex];
 
     return (start: start, end: end);
   }
+
+  /// Returns the number of parts required to cover a given size in bytes.
+  int getPartsInSize(int sizeBytes) {
+    if (sizeBytes <= 0) return 0;
+    if (sizeBytes >= fileSize) return partSizes.length;
+
+    int accumulatedSize = 0;
+    int partsCount = 0;
+
+    for (int size in partSizes) {
+      accumulatedSize += size;
+      partsCount++;
+      if (accumulatedSize >= sizeBytes) {
+        break;
+      }
+    }
+
+    return partsCount;
+  }
 }
 
-class FileDownloader {
-  final Dio _dio = Dio();
+typedef ProgressCallback = void Function(int received, int total);
 
-  Future<bool> downloadFile({
-    required String url,
-    required String fileName,
-    Function(int, int)? onProgress,
-  }) async {
-    try {
-      // 1. Check Permissions
-      final hasPermission = await _requestPermission();
-      if (!hasPermission) {
-        print("Permission denied");
-        return false;
-      }
+/// Downloads a file as a stream directly to an [IOSink] to prevent memory overuse.
+Future<bool> downloadFileStream({
+  required String url,
+  required Map<String, String>? headers,
+  required IOSink fileOut,
+  required ProgressCallback onProgress,
+}) async {
+  final client = HttpClient();
+  AppLogger logger = AppLogger(prefixes: ["Downloader"]);
+  bool success = false;
+  try {
+    // 1. Initialize the GET request
+    final request = await client.getUrl(Uri.parse(url));
 
-      // 2. Get the correct download path
-      final savePath = await _getSavePath(fileName);
-      if (savePath == null) return false;
-
-      print("Downloading to: $savePath");
-
-      // 3. Download
-      await _dio.download(
-        url,
-        savePath,
-        onReceiveProgress: onProgress,
-      );
-
-      print("Download completed: $savePath");
-      return true;
-    } catch (e) {
-      print("Download failed: $e");
-      return false;
+    // 2. Attach any provided headers (e.g., Auth tokens, custom Cloud sync headers)
+    if (headers != null) {
+      headers.forEach((key, value) {
+        request.headers.add(key, value);
+      });
     }
-  }
 
-  Future<bool> _requestPermission() async {
-    if (Platform.isAndroid) {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
-      // On Android 13+ (SDK 33), WRITE_EXTERNAL_STORAGE is deprecated.
-      // Apps can write to the Downloads folder without explicit permission
-      // if using standard file APIs to create new files.
-      if (androidInfo.version.sdkInt >= 33) {
-        return true;
+    // 3. Execute the request
+    final response = await request.close();
+
+    // 4. Ensure the request was successful
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      // Note: contentLength will be -1 if the server doesn't send a Content-Length header
+      final total = response.contentLength;
+      int received = 0;
+
+      // 5. Stream the response directly into the IOSink chunk by chunk
+      await for (final List<int> chunk in response) {
+        fileOut.add(chunk);
+        received += chunk.length;
+        logger.info('$received of $total');
+        // Trigger the callback for your UI's progress bar
+        onProgress(received, total);
       }
-
-      final status = await Permission.storage.request();
-      return status.isGranted;
+      success = true;
+    } else {
+      throw HttpException(
+          'Download failed with status: ${response.statusCode}');
     }
-    // iOS/Desktop usually don't need explicit storage permission
-    // to write to their own container/downloads.
-    return true;
+  } catch (e) {
+    // Handle or rethrow custom exceptions for your sync engine
+    rethrow;
+  } finally {
+    // 6. Guarantee cleanup of network and file resources
+    client.close(force: true);
+    await fileOut.flush();
+    await fileOut.close();
   }
-
-  Future<String?> _getSavePath(String fileName) async {
-    Directory? directory;
-
-    try {
-      if (Platform.isAndroid) {
-        // Direct approach for Android to ensure it goes to the public Downloads folder
-        // path_provider sometimes returns internal app storage on Android
-        directory = Directory('/storage/emulated/0/Download');
-
-        // Fallback if the hardcoded path doesn't exist (unlikely on standard phones)
-        if (!await directory.exists()) {
-          directory = await getExternalStorageDirectory();
-        }
-      } else if (Platform.isIOS) {
-        // On iOS, we save to ApplicationDocumentsDirectory.
-        // With UIFileSharingEnabled in Info.plist, this is visible in the "Files" app.
-        directory = await getApplicationDocumentsDirectory();
-      } else {
-        // Desktop (Windows/Mac/Linux)
-        directory = await getDownloadsDirectory();
-      }
-
-      if (directory != null) {
-        // Ensure the directory exists (helpful for desktop)
-        if (!await directory.exists()) {
-          await directory.create(recursive: true);
-        }
-        return "${directory.path}/$fileName";
-      }
-    } catch (e) {
-      print("Error getting path: $e");
-    }
-    return null;
-  }
+  return success;
 }

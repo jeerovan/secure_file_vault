@@ -44,6 +44,14 @@ class ModelItemTask {
     return null;
   }
 
+  static Future<void> addTask(String id, int task) async {
+    ModelItemTask? task = await get(id);
+    if (task == null) {
+      ModelItemTask newTask = await fromMap({"id": id, "task": task});
+      await newTask.insert();
+    }
+  }
+
   static Future<void> deleteTask(String id) async {
     ModelItemTask? task = await get(id);
     if (task != null) {

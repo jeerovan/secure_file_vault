@@ -1,8 +1,10 @@
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../models/model_file.dart';
 import '../../models/model_item.dart';
+import '../../models/model_item_task.dart';
 import '../../services/service_logger.dart';
 import '../../services/service_recon.dart';
 import '../../utils/common.dart';
@@ -173,8 +175,14 @@ class _FilePaneState extends State<FilePane> {
 
   Future<void> downloadItems() async {
     logger.log('Downloading ${_selectedItemIds.length} items');
-    // TODO: Implement your download logic here utilizing _selectedItemIds
-
+    for (String id in _selectedItemIds) {
+      ModelItem? item = await ModelItem.get(id);
+      if (item == null || item.isFolder) continue;
+      String path = await ModelItem.getPathForItem(id);
+      if (!File(path).existsSync()) {
+        await ModelItemTask.addTask(id, ItemTask.download.value);
+      }
+    }
     _cancelMultiSelect();
   }
 
@@ -485,7 +493,6 @@ class _FileListItemState extends State<_FileListItem> {
 
   Future<bool> fileExistsLocally(ModelItem item) async {
     String path = await ModelItem.getPathForItem(item.id);
-    AppLogger(prefixes: ["FileListItem"]).debug(path);
     return await File(path).exists();
   }
 

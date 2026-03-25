@@ -19,13 +19,31 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!app_id || !app_key) {
 		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
 	}
-	const data = await authorize(app_id, app_key); // TODO Should be checked on user device
+	const { error, data } = await authorize(app_id, app_key); // TODO Should be checked on user device also
+	if (error) {
+		return json({ status: 0, error });
+	}
 	if (data) {
 		const {
 			apiInfo: {
-				storageApi: { capabilities }
+				storageApi: {
+					allowed: { buckets, capabilities, namePrefix }
+				}
 			}
 		} = data;
+		if (buckets == null || buckets.length == 0) {
+			return json({ status: 0, error: ErrorCode.NO_BUCKETS });
+		} else if (buckets.length > 1) {
+			return json({ status: 0, error: ErrorCode.MULTIPLE_BUCKETS });
+		} else {
+			const { id, name } = buckets[0];
+			if (id == null || name == null) {
+				return json({ status: 0, error: ErrorCode.BUCKET_INFO });
+			}
+		}
+		if (namePrefix != null) {
+			return json({ status: 0, error: ErrorCode.NAMEPREFIX_EXIST });
+		}
 		const required = [
 			'deleteFiles',
 			'writeBuckets',

@@ -422,6 +422,16 @@ Future<String> getDbStoragePath() async {
   return dbDirPath;
 }
 
+Future<Directory> getAppTempDirectory() async {
+  Directory directory = await getApplicationDocumentsDirectory();
+  String appTempPath = path_lib.joinAll([directory.path, "FiFe", "Temp"]);
+  Directory tempDir = Directory(appTempPath);
+  if (!tempDir.existsSync()) {
+    await tempDir.create(recursive: true);
+  }
+  return tempDir;
+}
+
 Future<bool> directoryExistAtPath(String path) async {
   Directory dir = Directory(path);
   return await dir.exists();
@@ -798,7 +808,7 @@ String? getSignedInUserId() {
   if (simulateTesting()) {
     if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
         "yes") {
-      return "tester";
+      return "fife";
     } else {
       return null;
     }

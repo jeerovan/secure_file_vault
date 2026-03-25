@@ -91,7 +91,8 @@ export const StorageKeys = {
 	CREDENTIALS_ID: '5',
 	LIMIT_BYTES: '6',
 	USED_BYTES: '7',
-	PRIORITY: '8'
+	PRIORITY: '8',
+	JSON: '9'
 } as const;
 
 export const TempStorageKeys = {
@@ -112,7 +113,11 @@ export const ErrorCode = {
 	INVALID_CREDENTIALS: 5,
 	CREDENTIALS_INCAPABLE: 6,
 	DEVICE_LIMIT_REACHED: 7,
-	NO_DEVICE: 8
+	NO_DEVICE: 8,
+	NO_BUCKETS: 9,
+	MULTIPLE_BUCKETS: 10,
+	NAMEPREFIX_EXIST: 11,
+	BUCKET_INFO: 12
 } as const;
 
 export const StorageProvider = {

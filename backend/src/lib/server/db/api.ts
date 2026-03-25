@@ -42,7 +42,7 @@ export async function addKey(userId: string, email: string, cipher: string, nonc
 	// add default fife 5 gb storage for this user
 	const fifeCredentials = await getCredentials('fife', StorageProvider.FIFE);
 	if (fifeCredentials) {
-		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 1);
+		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 1, {});
 	}
 	return await db.insert(user).values({
 		[UserKeys.ID]: userId,
@@ -377,7 +377,7 @@ export async function addCredentials(
 			if (provider == StorageProvider.CLOUDFLARE) {
 				priority = 9;
 			}
-			await addStorage(userId, accountId, 10737418240, priority);
+			await addStorage(userId, accountId, 10737418240, priority, {});
 		}
 	} else {
 		await db
@@ -438,13 +438,15 @@ export async function addStorage(
 	userId: string,
 	accountId: string,
 	storageLimit: number,
-	priority: number = 0
+	priority: number = 0,
+	json: {}
 ) {
 	return await db.insert(storage).values({
 		[StorageKeys.USER_ID]: userId,
 		[StorageKeys.CREDENTIALS_ID]: accountId,
 		[StorageKeys.LIMIT_BYTES]: storageLimit,
-		[StorageKeys.PRIORITY]: priority
+		[StorageKeys.PRIORITY]: priority,
+		[StorageKeys.JSON]: json
 	});
 }
 export async function getStorageById(id: string) {

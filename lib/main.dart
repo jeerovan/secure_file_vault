@@ -145,14 +145,6 @@ class AppNavigator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    bool isLargeScreen = false;
-    if (isDebugEnabled) {
-      isLargeScreen = MediaQuery.of(context).size.width > 600;
-    } else {
-      isLargeScreen =
-          Platform.isWindows || Platform.isMacOS || Platform.isLinux;
-    }
-
     return Consumer<AppSetupState>(
       builder: (context, setupState, child) {
         switch (setupState.currentStep) {

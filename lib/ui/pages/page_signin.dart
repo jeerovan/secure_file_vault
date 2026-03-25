@@ -38,7 +38,7 @@ class _PageSigninState extends State<PageSignin> {
   bool errorSendingOtp = false;
   bool errorVerifyingOtp = false;
   bool signedIn = false;
-  String email = ModelSetting.get(AppString.otpSentTo.string)!;
+  String email = ModelSetting.get(AppString.otpSentTo.string);
 
   @override
   void initState() {
@@ -58,7 +58,7 @@ class _PageSigninState extends State<PageSignin> {
     if (supabase.auth.currentSession == null) {
       logger.info("Not signed in");
       int sentOtpAt = int.parse(
-          ModelSetting.get(AppString.otpSentAt.string, defaultValue: "0")!);
+          ModelSetting.get(AppString.otpSentAt.string, defaultValue: "0"));
       int nowUtc = DateTime.now().toUtc().millisecondsSinceEpoch;
 
       // 15 minutes (900000 ms) expiry check
@@ -130,7 +130,7 @@ class _PageSigninState extends State<PageSignin> {
   Future<void> verifyOtp(String text) async {
     if (processing) return;
     final otp = text.trim();
-    final String savedEmail = ModelSetting.get(AppString.otpSentTo.string)!;
+    final String savedEmail = ModelSetting.get(AppString.otpSentTo.string);
 
     if (savedEmail.isEmpty || otp.isEmpty) return;
 

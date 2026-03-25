@@ -138,7 +138,8 @@ export const storage = sqliteTable('storage', {
 	[StorageKeys.CREDENTIALS_ID]: text(StorageKeys.CREDENTIALS_ID).notNull(),
 	[StorageKeys.LIMIT_BYTES]: integer(StorageKeys.LIMIT_BYTES).notNull(),
 	[StorageKeys.USED_BYTES]: integer(StorageKeys.USED_BYTES).default(0).notNull(),
-	[StorageKeys.PRIORITY]: integer(StorageKeys.PRIORITY).notNull().default(0)
+	[StorageKeys.PRIORITY]: integer(StorageKeys.PRIORITY).notNull().default(0),
+	[StorageKeys.JSON]: text(StorageKeys.JSON, { mode: 'json' }).notNull()
 });
 
 export const tempStorage = sqliteTable('temp_storage', {

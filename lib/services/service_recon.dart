@@ -313,7 +313,7 @@ class ReconciliationService {
 
     // decrement reference count for old file
     await ModelFile.updateItemCount(dbItem.fileId!, false);
-    FileSplitter fileSplitter = FileSplitter(File(fsPath));
+    FileSplitter fileSplitter = FileSplitter(file: File(fsPath));
     int parts = fileSplitter.partSizes.length;
     final modelFile = await ModelFile.fromMap({'id': newHash, 'parts': parts});
     await modelFile.insert();
@@ -338,7 +338,7 @@ class ReconciliationService {
     final hashFile = await ModelFile.get(hash);
     bool createUploadTask = false;
     if (hashFile == null) {
-      FileSplitter fileSplitter = FileSplitter(File(fsPath));
+      FileSplitter fileSplitter = FileSplitter(file: File(fsPath));
       int parts = fileSplitter.partSizes.length;
       final modelFile = await ModelFile.fromMap({'id': hash, 'parts': parts});
       await modelFile.insert();
@@ -357,9 +357,7 @@ class ReconciliationService {
     });
     await modelItem.insert();
     if (createUploadTask) {
-      ModelItemTask task =
-          await ModelItemTask.fromMap({'id': modelItem.id, 'task': 1});
-      await task.insert();
+      await ModelItemTask.addTask(modelItem.id, ItemTask.upload.value);
     }
     logger.info('  + Created File: ${fsItem.name}');
   }

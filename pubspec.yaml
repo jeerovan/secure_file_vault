@@ -60,7 +60,6 @@ dependencies:
   lucide_icons: ^0.257.0
   bip39: ^1.0.6
   share_plus: ^12.0.1
-  dio: ^5.9.0
   internet_connection_checker_plus: ^2.9.1+2
   synchronized: ^3.4.0
 

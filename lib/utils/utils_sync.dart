@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import '../models/model_change.dart';
-import '../models/model_profile.dart';
 import 'package:flutter/foundation.dart';
 import '../services/service_backend.dart';
 import '../storage/storage_sqlite.dart';
@@ -13,7 +12,6 @@ import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../models/model_part.dart';
 import '../models/model_state.dart';
-import '../models/model_setting.dart';
 import '../services/service_events.dart';
 import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';

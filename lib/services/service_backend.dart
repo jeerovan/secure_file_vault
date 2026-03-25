@@ -2,14 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
-import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../utils/enums.dart';
 
 class AppEnv {
   static const String apiBaseUrl = String.fromEnvironment(

@@ -11,22 +11,28 @@ import {
 import { CredentialsKeys, StorageKeys, StorageProvider } from './db/keys';
 
 export async function authorize(appId: string, appKey: string) {
-	let response;
-	const B2_API_URL = 'https://api.backblazeb2.com/b2api/v3';
+	let data;
+	let error;
+	const B2_API_URL = 'https://api.backblazeb2.com/b2api/v4';
 	try {
 		const authResponse = await fetch(`${B2_API_URL}/b2_authorize_account`, {
 			headers: { Authorization: `Basic ${btoa(`${appId}:${appKey}`)}` }
 		});
 
 		if (!authResponse.ok) {
-			console.error('B2 Authentication failed:', authResponse.status, authResponse.statusText);
+			const errorData = await authResponse.json();
+			error = `${errorData.code}:${errorData.message}`;
+		} else {
+			data = await authResponse.json();
 		}
-
-		response = await authResponse.json();
-	} catch (error) {
-		console.error('Error fetching B2 token:', error);
+	} catch (e) {
+		if (e instanceof Error) {
+			error = e.message;
+		} else {
+			error = e;
+		}
 	}
-	return response;
+	return { error, data };
 }
 
 export async function addAccount(userId: string, appId: string, appKey: string, data: any) {
@@ -34,7 +40,13 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		accountId,
 		authorizationToken,
 		apiInfo: {
-			storageApi: { apiUrl, bucketId, downloadUrl }
+			storageApi: {
+				apiUrl,
+				downloadUrl,
+				allowed: {
+					buckets: [{ id: bucketId, name: bucketName }]
+				}
+			}
 		}
 	} = data;
 	const credentials = {
@@ -42,6 +54,7 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		appKey,
 		authorizationToken,
 		bucketId,
+		bucketName,
 		apiUrl,
 		downloadUrl
 	};
@@ -115,8 +128,10 @@ export async function authenticate(userId: string, storageId: string) {
 		}
 
 		// 5. Authenticate with B2
-		const data = await authorize(appId, appKey);
-		if (data) {
+		const { error, data } = await authorize(appId, appKey);
+		if (error) {
+			return undefined;
+		} else if (data) {
 			const {
 				authorizationToken,
 				apiInfo: {

@@ -159,7 +159,6 @@ class CryptoUtils {
           await response.stream.forEach((chunk) => fileInSink.add(chunk));
           await fileInSink.close();
           // decrypt file
-          String mimeDirectory = data["mime"].split("/").first;
           String fileOutPath = "removed_getFile";
           await checkAndCreateDirectory(fileOutPath);
           String keyCipherBase64 = serverData[AppString.key.string];

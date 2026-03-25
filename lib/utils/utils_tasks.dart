@@ -99,10 +99,12 @@ class TaskManager {
     bool queueNext = true;
     try {
       ModelItemTask? itemTask = await ModelItemTask.get(taskId);
-      if (itemTask!.task == ItemTask.upload.value) {
-        queueNext = await checkInitUpload(itemTask);
+      if (itemTask!.task == ItemTask.download.value) {
+        await checkInitDownload(itemTask);
       } else if (itemTask.task == ItemTask.delete.value) {
         await checkDeleteItemFile(itemTask);
+      } else if (itemTask.task == ItemTask.upload.value) {
+        queueNext = await checkInitUpload(itemTask);
       }
     } catch (e, s) {
       logger.error("Task $taskId failed", error: e.toString(), stackTrace: s);
@@ -260,7 +262,7 @@ class TaskManager {
     Directory tempDir = await getTemporaryDirectory();
     String fileOutPath = path_lib.join(tempDir.path, "$fileHashPart.crypt");
     if (!File(fileOutPath).existsSync()) {
-      FileSplitter fileSplitter = FileSplitter(File(inFilePath));
+      FileSplitter fileSplitter = FileSplitter(file: File(inFilePath));
       final range = fileSplitter.getStartEndIndexForPart(part);
       SodiumSumo sodium = await SodiumSumoInit.init();
       CryptoUtils cryptoUtils = CryptoUtils(sodium);
@@ -471,5 +473,78 @@ class TaskManager {
         // TODO handle other providers
       }
     }
+  }
+
+  Future<void> checkInitDownload(ModelItemTask itemTask) async {
+    ModelItem? modelItem = await ModelItem.get(itemTask.id);
+    if (modelItem == null || modelItem.fileId == null) {
+      await itemTask.delete();
+      return;
+    }
+    ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
+    if (modelFile == null) {
+      await itemTask.delete();
+      return;
+    }
+    int size = modelItem.size;
+    int parts = modelFile.parts;
+    String name = modelItem.name;
+    Directory tempStorage = await getAppTempDirectory();
+    String filePath = path_lib.join(tempStorage.path, name);
+    int partsHave = 0;
+    FileSplitter fileSplitter = FileSplitter(fileSize: size);
+    if (File(filePath).existsSync()) {
+      partsHave = fileSplitter.getPartsInSize(File(filePath).lengthSync());
+    }
+    // TODO can we have partsHave == parts
+    int partToDownload = partsHave + 1;
+    int provider = modelFile.provider;
+    if (provider == StorageProvider.fife.value ||
+        provider == StorageProvider.backblaze.value) {
+      // check if download authorization exists and valid
+      Map<String, dynamic> data = modelFile.data;
+      String downloadToken = "";
+      if (data.containsKey("expires")) {
+        int expires = int.parse(
+            getValueFromMap(data, "expires", defaultValue: 10).toString());
+        int secondsNow =
+            (DateTime.now().toUtc().millisecondsSinceEpoch / 1000).toInt();
+        if (secondsNow > expires) {
+          downloadToken = await getUpdateB2DownloadToken(modelFile);
+        } else {
+          downloadToken =
+              getValueFromMap(data, "download_token", defaultValue: "");
+        }
+      } else {
+        downloadToken = await getUpdateB2DownloadToken(modelFile);
+      }
+      if (downloadToken.isNotEmpty) {}
+    }
+  }
+
+  static Future<String> getUpdateB2DownloadToken(ModelFile modelFile) async {
+    final api = BackendApi();
+    final downloadResult = await api.post(
+        endpoint: '/b2/get-download-url',
+        jsonBody: {
+          "storage_id": modelFile.storageId,
+          "file_hash": modelFile.id
+        });
+    final status = downloadResult["status"];
+    String downloadToken = "";
+    if (status > 0) {
+      final downloadData = downloadResult["data"];
+      downloadToken = downloadData["authorizationToken"];
+      Map<String, dynamic> data = modelFile.data;
+      data["download_token"] = downloadToken;
+      data["expires"] =
+          (DateTime.now().toUtc().millisecondsSinceEpoch / 1000).toInt() +
+              604800;
+      modelFile.data = data;
+      await modelFile.update(["data"]);
+    } else {
+      logger.error("B2 get download url", error: jsonEncode(downloadResult));
+    }
+    return downloadToken;
   }
 }
