@@ -54,7 +54,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
       final status = result["status"];
       if (status <= 0) {
         if (mounted) {
-          displaySnackBar(context, message: result["error"], seconds: 2);
+          displaySnackBar(context, message: result["message"], seconds: 2);
         }
       } else {
         String masterKeyBase64 = privateKeys[AppString.masterKey.string];

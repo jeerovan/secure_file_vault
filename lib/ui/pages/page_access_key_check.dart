@@ -40,7 +40,7 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
     final response = await api.get(endpoint: '/keys');
     final status = response["status"];
     if (status == -1) {
-      _errorMessage = response["error"];
+      _errorMessage = response["message"];
     } else if (status == 1) {
       final data = response["data"];
       if (data.containsKey("cipher") && data.containsKey("nonce")) {

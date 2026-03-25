@@ -33,10 +33,10 @@ export const userData = sqliteTable('user_data', {
 		.$defaultFn(() => Date.now())
 		.$onUpdate(() => Date.now()),
 	[UserDataKeys.USER_NAME]: text(UserDataKeys.USER_NAME).unique(),
-	[UserDataKeys.DEVICE_ID]: text(UserDataKeys.DEVICE_ID).notNull(),
+	[UserDataKeys.DEVICE_ID]: text(UserDataKeys.DEVICE_ID).notNull(), // Made changes by
 	[UserDataKeys.PROFILE_IMAGE]: text(UserDataKeys.PROFILE_IMAGE),
-	[UserDataKeys.PLAN_TYPE]: integer(UserDataKeys.PLAN_TYPE).notNull().default(0), // Plan Type: Free/Paid, Default: Free
-	[UserDataKeys.PLAN_EXPIRES_AT]: integer(UserDataKeys.PLAN_EXPIRES_AT) // Plan expires at. Can be null for free plan
+	[UserDataKeys.RC_ID]: text(UserDataKeys.RC_ID), // Revenue cat id
+	[UserDataKeys.PLAN_EXPIRES_AT]: integer(UserDataKeys.PLAN_EXPIRES_AT).default(0) // Plan expires at
 });
 
 export const userDevice = sqliteTable('user_device', {
@@ -139,7 +139,8 @@ export const storage = sqliteTable('storage', {
 	[StorageKeys.LIMIT_BYTES]: integer(StorageKeys.LIMIT_BYTES).notNull(),
 	[StorageKeys.USED_BYTES]: integer(StorageKeys.USED_BYTES).default(0).notNull(),
 	[StorageKeys.PRIORITY]: integer(StorageKeys.PRIORITY).notNull().default(0),
-	[StorageKeys.JSON]: text(StorageKeys.JSON, { mode: 'json' }).notNull()
+	[StorageKeys.JSON]: text(StorageKeys.JSON, { mode: 'json' }).notNull(),
+	[StorageKeys.LIMIT_FREE_BYTES]: integer(StorageKeys.LIMIT_FREE_BYTES).notNull()
 });
 
 export const tempStorage = sqliteTable('temp_storage', {

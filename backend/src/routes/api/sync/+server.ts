@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const userId = authUser.id;
 	const deviceId = authUser.did;
 	if (!deviceId) {
-		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
+		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
 	try {
@@ -59,7 +59,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		}
 	} catch (e) {
-		return json({ status: 0, error: e });
+		return json({ status: 0, message: e });
 	}
 
 	return json({ status: 1 });

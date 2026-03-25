@@ -142,7 +142,7 @@ class SyncUtils {
       final response = await api.get(endpoint: '/devices');
       final status = response["status"];
       if (status == -1) {
-        logger.error("checkDeviceStatus", error: response["error"]);
+        logger.error("checkDeviceStatus", error: response["message"]);
       } else if (status == 1) {
         final data = response["data"];
         removed = data["active"] == 0;

@@ -11,17 +11,17 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, error: ErrorCode.INVALID_JSON });
+		return json({ status: 0, message: ErrorCode.INVALID_JSON });
 	}
 
 	const { file_name, file_id, storage_id } = body;
 
 	if (!file_name || !file_id || !storage_id) {
-		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
+		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	const authData = await authenticate(authUser.id, storage_id);
 	if (!authData) {
-		return json({ status: 0, error: ErrorCode.NO_USER });
+		return json({ status: 0, message: ErrorCode.NO_USER });
 	}
 	const result = await deleteFileVersion({
 		apiUrl: authData.apiUrl,

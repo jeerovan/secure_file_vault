@@ -17,13 +17,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, error: ErrorCode.INVALID_JSON });
+		return json({ status: 0, message: ErrorCode.INVALID_JSON });
 	}
 
 	const { file_hash, file_size } = body;
 
 	if (!file_hash || !file_size) {
-		return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
+		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	const tempStorage = await getTempStorage(authUser.id, file_hash);
 	if (tempStorage) {
@@ -45,10 +45,10 @@ export const POST: RequestHandler = async ({ request }) => {
 				await addTempStorage(authUser.id, file_hash, storageId, file_size, provider);
 				return json({ status: 1, data: { provider, storage_id: storageId } });
 			} else {
-				return json({ status: 0, error: ErrorCode.NO_STORAGE });
+				return json({ status: 0, message: ErrorCode.NO_STORAGE });
 			}
 		} else {
-			return json({ status: 0, error: ErrorCode.NO_STORAGE });
+			return json({ status: 0, message: ErrorCode.NO_STORAGE });
 		}
 	}
 };

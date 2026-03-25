@@ -12,7 +12,7 @@ import { CredentialsKeys, StorageKeys, StorageProvider } from './db/keys';
 
 export async function authorize(appId: string, appKey: string) {
 	let data;
-	let error;
+	let message;
 	const B2_API_URL = 'https://api.backblazeb2.com/b2api/v4';
 	try {
 		const authResponse = await fetch(`${B2_API_URL}/b2_authorize_account`, {
@@ -21,18 +21,18 @@ export async function authorize(appId: string, appKey: string) {
 
 		if (!authResponse.ok) {
 			const errorData = await authResponse.json();
-			error = `${errorData.code}:${errorData.message}`;
+			message = `${errorData.code}:${errorData.message}`;
 		} else {
 			data = await authResponse.json();
 		}
 	} catch (e) {
 		if (e instanceof Error) {
-			error = e.message;
+			message = e.message;
 		} else {
-			error = e;
+			message = e;
 		}
 	}
-	return { error, data };
+	return { message, data };
 }
 
 export async function addAccount(userId: string, appId: string, appKey: string, data: any) {
@@ -81,6 +81,7 @@ export async function authenticate(userId: string, storageId: string) {
 			appKey: string;
 			authorizationToken: string;
 			bucketId: string;
+			bucketName: string;
 			apiUrl: string;
 			downloadUrl: string;
 		};
@@ -90,6 +91,7 @@ export async function authenticate(userId: string, storageId: string) {
 			appKey,
 			authorizationToken: existingToken,
 			bucketId,
+			bucketName,
 			apiUrl: existingApiUrl,
 			downloadUrl: existingDownloadUrl
 		} = creds;
@@ -100,6 +102,7 @@ export async function authenticate(userId: string, storageId: string) {
 		const existingData = {
 			authorizationToken: existingToken,
 			bucketId,
+			bucketName,
 			apiUrl: existingApiUrl,
 			downloadUrl: existingDownloadUrl
 		};
@@ -128,8 +131,8 @@ export async function authenticate(userId: string, storageId: string) {
 		}
 
 		// 5. Authenticate with B2
-		const { error, data } = await authorize(appId, appKey);
-		if (error) {
+		const { message, data } = await authorize(appId, appKey);
+		if (message) {
 			return undefined;
 		} else if (data) {
 			const {
@@ -143,6 +146,7 @@ export async function authenticate(userId: string, storageId: string) {
 				appKey,
 				authorizationToken,
 				bucketId,
+				bucketName,
 				apiUrl,
 				downloadUrl
 			};
@@ -152,6 +156,7 @@ export async function authenticate(userId: string, storageId: string) {
 			return {
 				authorizationToken,
 				bucketId,
+				bucketName,
 				apiUrl,
 				downloadUrl
 			};
@@ -183,7 +188,7 @@ async function b2Fetch(endpoint: string, params: B2BaseParams, payload: any) {
 	});
 	if (!response.ok) {
 		const error = await response.json();
-		return json({ status: 0, error: error.message || error.code });
+		return json({ status: 0, message: error.message || error.code });
 	}
 
 	return json({ status: 1, data: await response.json() });

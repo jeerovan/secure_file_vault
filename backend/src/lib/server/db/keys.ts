@@ -13,7 +13,7 @@ export const UserDataKeys = {
 	SERVER_UPDATED_AT: '3',
 	USER_NAME: '4',
 	DEVICE_ID: '5',
-	PLAN_TYPE: '6',
+	RC_ID: '6',
 	PROFILE_IMAGE: '7',
 	PLAN_EXPIRES_AT: '8'
 } as const;
@@ -92,7 +92,8 @@ export const StorageKeys = {
 	LIMIT_BYTES: '6',
 	USED_BYTES: '7',
 	PRIORITY: '8',
-	JSON: '9'
+	JSON: '9',
+	LIMIT_FREE_BYTES: '10'
 } as const;
 
 export const TempStorageKeys = {

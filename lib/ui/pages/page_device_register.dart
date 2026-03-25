@@ -51,7 +51,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     });
     final status = result["status"];
     if (status <= 0) {
-      _errorMessage = result["error"];
+      _errorMessage = result["message"];
     } else {
       await ModelSetting.set(AppString.deviceId.string, deviceId);
       String deviceRoot = await getDeviceHash();

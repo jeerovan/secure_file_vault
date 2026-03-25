@@ -42,7 +42,7 @@ export async function addKey(userId: string, email: string, cipher: string, nonc
 	// add default fife 5 gb storage for this user
 	const fifeCredentials = await getCredentials('fife', StorageProvider.FIFE);
 	if (fifeCredentials) {
-		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 1, {});
+		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 5368709120, 1, {});
 	}
 	return await db.insert(user).values({
 		[UserKeys.ID]: userId,
@@ -108,10 +108,10 @@ export async function addUpdateDevice(
 		const activeDevicesCount = result?.count ?? 0;
 
 		if (activeDevicesCount >= 5) {
-			return json({ status: 0, error: ErrorCode.DEVICE_LIMIT_REACHED });
+			return json({ status: 0, message: ErrorCode.DEVICE_LIMIT_REACHED });
 		} else {
 			if (!title || type === undefined) {
-				return json({ status: 0, error: ErrorCode.MISSING_FIELDS });
+				return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
 			}
 
 			await db.insert(userDevice).values({
@@ -137,7 +137,7 @@ export async function removeDevice(tableId: string) {
 		await db.delete(userDevice).where(eq(userDevice[UserDeviceKeys.ID], tableId));
 		return json({ status: 1 });
 	} else {
-		return json({ status: 0, error: ErrorCode.NO_DEVICE });
+		return json({ status: 0, message: ErrorCode.NO_DEVICE });
 	}
 }
 
@@ -374,10 +374,11 @@ export async function addCredentials(
 
 		if (provider != StorageProvider.FIFE) {
 			let priority = 10;
+			let storageLimit = 10737418240;
 			if (provider == StorageProvider.CLOUDFLARE) {
 				priority = 9;
 			}
-			await addStorage(userId, accountId, 10737418240, priority, {});
+			await addStorage(userId, accountId, storageLimit, storageLimit, priority, {});
 		}
 	} else {
 		await db
@@ -438,6 +439,7 @@ export async function addStorage(
 	userId: string,
 	accountId: string,
 	storageLimit: number,
+	freeStorageLimit: number,
 	priority: number = 0,
 	json: {}
 ) {
@@ -446,7 +448,8 @@ export async function addStorage(
 		[StorageKeys.CREDENTIALS_ID]: accountId,
 		[StorageKeys.LIMIT_BYTES]: storageLimit,
 		[StorageKeys.PRIORITY]: priority,
-		[StorageKeys.JSON]: json
+		[StorageKeys.JSON]: json,
+		[StorageKeys.LIMIT_FREE_BYTES]: freeStorageLimit
 	});
 }
 export async function getStorageById(id: string) {
