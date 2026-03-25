@@ -44,12 +44,19 @@ export async function addKey(userId: string, email: string, cipher: string, nonc
 	if (fifeCredentials) {
 		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 5368709120, 1, {});
 	}
+	await db
+		.insert(userData)
+		.values({ [UserDataKeys.ID]: userId, [UserDataKeys.DEVICE_ID]: 'Server' });
 	return await db.insert(user).values({
 		[UserKeys.ID]: userId,
 		[UserKeys.EMAIL]: email,
 		[UserKeys.CIPHER]: cipher,
 		[UserKeys.NONCE]: nonce
 	});
+}
+
+export async function getUserData(userId: string) {
+	return db.select().from(userData).where(eq(userData[UserDataKeys.ID], userId)).get();
 }
 
 export async function getUserDevices(userId: string) {
@@ -456,6 +463,14 @@ export async function getStorageById(id: string) {
 	return db.select().from(storage).where(eq(storage[StorageKeys.ID], id)).get();
 }
 export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
+	// Get User Plan
+	const planData = await getUserData(userId);
+	let planExpiresAt = 0;
+	if (planData) {
+		planExpiresAt = planData[UserDataKeys.PLAN_EXPIRES_AT];
+	}
+	const hasPlan = planExpiresAt > Date.now();
+	const storageKey = hasPlan ? StorageKeys.LIMIT_BYTES : StorageKeys.LIMIT_FREE_BYTES;
 	// Subquery to sum the size of all pending files for a specific storage provider
 	// COALESCE is used to return 0 instead of NULL if there are no pending files
 	const pendingReservedBytes = sql`(
@@ -471,7 +486,7 @@ export async function getOptimalStorage(userId: string, fileSizeBytes: number) {
 			and(
 				eq(storage[StorageKeys.USER_ID], userId),
 				// Available space = Limit - Used - Pending Reserved >= Requested Size
-				sql`${storage[StorageKeys.LIMIT_BYTES]} - ${storage[StorageKeys.USED_BYTES]} - ${pendingReservedBytes} >= ${fileSizeBytes}`
+				sql`${storage[storageKey]} - ${storage[StorageKeys.USED_BYTES]} - ${pendingReservedBytes} >= ${fileSizeBytes}`
 			)
 		)
 		.orderBy(desc(storage[StorageKeys.PRIORITY]))

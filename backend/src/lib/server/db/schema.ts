@@ -36,7 +36,7 @@ export const userData = sqliteTable('user_data', {
 	[UserDataKeys.DEVICE_ID]: text(UserDataKeys.DEVICE_ID).notNull(), // Made changes by
 	[UserDataKeys.PROFILE_IMAGE]: text(UserDataKeys.PROFILE_IMAGE),
 	[UserDataKeys.RC_ID]: text(UserDataKeys.RC_ID), // Revenue cat id
-	[UserDataKeys.PLAN_EXPIRES_AT]: integer(UserDataKeys.PLAN_EXPIRES_AT).default(0) // Plan expires at
+	[UserDataKeys.PLAN_EXPIRES_AT]: integer(UserDataKeys.PLAN_EXPIRES_AT).notNull().default(0) // Plan expires at
 });
 
 export const userDevice = sqliteTable('user_device', {
