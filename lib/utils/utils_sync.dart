@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import '../models/model_change.dart';
 import 'package:flutter/foundation.dart';
@@ -405,6 +406,15 @@ class SyncUtils {
               if (partTS > lastPartTS) {
                 lastPartTS = partTS;
               }
+            } else if (table == Tables.profiles.string) {
+              int profileTS = int.parse(changeMap["3"].toString());
+              String profileId = changeMap["1"];
+              map["username"] = changeMap["4"];
+              map["image"] = changeMap["7"];
+              await ModelProfile.upcertFromServer(profileId, map);
+              if (profileTS > lastProfileTS) {
+                lastProfileTS = profileTS;
+              }
             }
           }
         }
@@ -415,6 +425,8 @@ class SyncUtils {
             AppString.lastPartTS.string, lastPartTS.toString());
         await ModelState.set(
             AppString.lastItemTS.string, lastItemTS.toString());
+        await ModelState.set(
+            AppString.lastProfileTS.string, lastProfileTS.toString());
         logger.info("Fetched Map Changes");
       } catch (e, s) {
         logger.error("fetchMapChanges", error: e, stackTrace: s);

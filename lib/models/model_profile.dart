@@ -87,25 +87,10 @@ class ModelProfile {
     return updated;
   }
 
-  Future<int> upcertFromServer() async {
-    int result;
+  static Future<int> upcertFromServer(
+      String id, Map<String, dynamic> map) async {
     final dbHelper = StorageSqlite.instance;
-    Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows =
-        await dbHelper.getWithId(Tables.profiles.string, id);
-    if (rows.isEmpty) {
-      result = await dbHelper.insert(Tables.profiles.string, map);
-    } else {
-      int existingUpdatedAt = rows[0]["updated_at"];
-      int incomingUpdatedAt = map["updated_at"];
-      if (incomingUpdatedAt > existingUpdatedAt) {
-        map.remove("email");
-        result = await dbHelper.update(Tables.profiles.string, map, id);
-      } else {
-        result = 0;
-      }
-    }
-    return result;
+    return await dbHelper.update(Tables.profiles.string, map, id);
   }
 
   Future<int> delete() async {

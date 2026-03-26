@@ -44,10 +44,10 @@ class ModelItemTask {
     return null;
   }
 
-  static Future<void> addTask(String id, int task) async {
+  static Future<void> addTask(String id, int taskType) async {
     ModelItemTask? task = await get(id);
     if (task == null) {
-      ModelItemTask newTask = await fromMap({"id": id, "task": task});
+      ModelItemTask newTask = await fromMap({"id": id, "task": taskType});
       await newTask.insert();
     }
   }

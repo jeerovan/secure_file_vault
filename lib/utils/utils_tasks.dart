@@ -436,7 +436,12 @@ class TaskManager {
       await modelItem.delete();
       await itemTask.delete();
     } else {
-      if (modelFile.provider == StorageProvider.fife.value ||
+      if (modelFile.provider == StorageProvider.none.value) {
+        await modelFile.delete();
+        await modelItem.delete();
+        await itemTask.delete();
+        return;
+      } else if (modelFile.provider == StorageProvider.fife.value ||
           modelFile.provider == StorageProvider.backblaze.value) {
         if (modelFile.parts == 1) {
           await modelFile.delete();

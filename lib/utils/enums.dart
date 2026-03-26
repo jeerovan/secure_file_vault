@@ -285,11 +285,13 @@ extension ScanStateExtension on ScanState {
   }
 }
 
-enum StorageProvider { fife, backblaze, cloudflare }
+enum StorageProvider { none, fife, backblaze, cloudflare }
 
 extension StorageProviderExtension on StorageProvider {
   int get value {
     switch (this) {
+      case StorageProvider.none:
+        return 0;
       case StorageProvider.fife:
         return 1;
       case StorageProvider.backblaze:

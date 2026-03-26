@@ -2,6 +2,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../../models/model_file.dart';
 import '../../models/model_item.dart';
 import '../../models/model_item_task.dart';
@@ -14,6 +15,8 @@ import 'package:path/path.dart' as path_lib;
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+import '../common_widgets.dart';
 
 class PageExplorer extends StatefulWidget {
   final ThemeMode themeMode;
@@ -186,6 +189,10 @@ class _FilePaneState extends State<FilePane> {
     _cancelMultiSelect();
   }
 
+  Future<void> signout() async {
+    context.read<AppSetupState>().logout();
+  }
+
   PreferredSizeWidget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -233,7 +240,7 @@ class _FilePaneState extends State<FilePane> {
           onSelected: (value) {
             switch (value) {
               case 0:
-                // context.read<AppSetupState>().logout();
+                signout();
                 break;
             }
           },

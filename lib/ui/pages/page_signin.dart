@@ -1,3 +1,4 @@
+import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -168,6 +169,11 @@ class _PageSigninState extends State<PageSignin> {
         await ModelSetting.delete(AppString.otpSentTo.string);
         await ModelSetting.delete(AppString.otpSentAt.string);
         await ModelSetting.set(AppString.signedIn.string, "yes");
+
+        String? userId = getSignedInUserId();
+        ModelProfile profile =
+            await ModelProfile.fromMap({"id": userId, "email": savedEmail});
+        await profile.insert();
 
         ModelItem deviceItem = await ModelItem.fromMap({
           "id": "fife",

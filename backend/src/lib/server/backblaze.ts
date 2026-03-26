@@ -45,7 +45,8 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 				downloadUrl,
 				allowed: {
 					buckets: [{ id: bucketId, name: bucketName }]
-				}
+				},
+				s3ApiUrl
 			}
 		}
 	} = data;
@@ -56,7 +57,8 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		bucketId,
 		bucketName,
 		apiUrl,
-		downloadUrl
+		downloadUrl,
+		s3ApiUrl
 	};
 	let provider = StorageProvider.BACKBLAZE;
 	if (userId == 'fife') {
@@ -84,6 +86,7 @@ export async function authenticate(userId: string, storageId: string) {
 			bucketName: string;
 			apiUrl: string;
 			downloadUrl: string;
+			s3ApiUrl: string;
 		};
 
 		const {
@@ -93,18 +96,22 @@ export async function authenticate(userId: string, storageId: string) {
 			bucketId,
 			bucketName,
 			apiUrl: existingApiUrl,
-			downloadUrl: existingDownloadUrl
+			downloadUrl: existingDownloadUrl,
+			s3ApiUrl: existingS3ApiUrl
 		} = creds;
 		const isUpdating = credential[CredentialsKeys.UPDATING];
 		const updatedAt = credential[CredentialsKeys.SERVER_UPDATED_AT] || Date.now();
 
 		// Bundle the existing credentials to easily return them
 		const existingData = {
+			appId,
+			appKey,
 			authorizationToken: existingToken,
 			bucketId,
 			bucketName,
 			apiUrl: existingApiUrl,
-			downloadUrl: existingDownloadUrl
+			downloadUrl: existingDownloadUrl,
+			s3ApiUrl: existingS3ApiUrl
 		};
 
 		// 2. If another process is currently updating, return the old data immediately
@@ -138,7 +145,7 @@ export async function authenticate(userId: string, storageId: string) {
 			const {
 				authorizationToken,
 				apiInfo: {
-					storageApi: { apiUrl, downloadUrl }
+					storageApi: { apiUrl, downloadUrl, s3ApiUrl }
 				}
 			} = data;
 			const credentials = {
@@ -148,17 +155,21 @@ export async function authenticate(userId: string, storageId: string) {
 				bucketId,
 				bucketName,
 				apiUrl,
-				downloadUrl
+				downloadUrl,
+				s3ApiUrl
 			};
 			await updateCredentials(accountId, credentials);
 
 			// Return the newly fetched credentials alongside the existing bucketId
 			return {
+				appId,
+				appKey,
 				authorizationToken,
 				bucketId,
 				bucketName,
 				apiUrl,
-				downloadUrl
+				downloadUrl,
+				s3ApiUrl
 			};
 		} else {
 			await markCredentialsUpdated(accountId);
