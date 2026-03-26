@@ -579,28 +579,23 @@ class _FileListItemState extends State<_FileListItem> {
 
               // 2. File / Folder Icon
               SizedBox(
-                width: 32,
-                height: 32,
+                width: 30,
+                height: 30,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Align(
-                      alignment: Alignment.center,
-                      child: Icon(
-                          widget.item.isFolder
-                              ? LucideIcons.folder
-                              : LucideIcons.file,
-                          size: 28,
-                          color: widget.item.isFolder
-                              ? theme.colorScheme.primary.withAlpha(150)
-                              : theme.colorScheme.secondary.withAlpha(150)),
-                    ),
+                    if (widget.item.isFolder)
+                      Align(
+                        alignment: Alignment.center,
+                        child: Icon(LucideIcons.folder,
+                            size: 28,
+                            color: theme.colorScheme.primary.withAlpha(150)),
+                      ),
 
                     // Local Existence Indicator (Grey while loading, then Red/Green)
                     if (!widget.item.isFolder)
-                      Positioned(
-                        bottom: -2,
-                        right: -2,
+                      Align(
+                        alignment: Alignment.center,
                         child: Container(
                           width: 12,
                           height: 12,
@@ -624,21 +619,41 @@ class _FileListItemState extends State<_FileListItem> {
 
               // 3. File Details
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    widget.item.name,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      color: theme.colorScheme.onSurface,
+                      height:
+                          1.2, // Tighter line height for better vertical rhythm in lists
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  // Only display if it is a file
+                  if (!widget.item.isFolder) ...[
+                    const SizedBox(
+                        height:
+                            2), // Subtle spacing separates title from metadata
                     Text(
-                      widget.item.name,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: theme.colorScheme.onSurface,
+                      readableFileSizeFromBytes(widget.item.size),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        // onSurfaceVariant provides the perfect professional muted contrast
+                        // against the onSurface title color
+                        color: theme.colorScheme.onSurfaceVariant,
+                        letterSpacing:
+                            0.1, // Enhances readability for small alphanumeric text
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-              ),
+                ],
+              )),
 
               const SizedBox(width: 8),
 
