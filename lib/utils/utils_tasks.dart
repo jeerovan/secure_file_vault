@@ -214,14 +214,15 @@ class TaskManager {
       bool multipart) async {
     String fileHashPart = '${fileHash}_$part';
     Directory tempDir = await getTemporaryDirectory();
-    String fileOutPath = path_lib.join(tempDir.path, "$fileHashPart.crypt");
-    if (!File(fileOutPath).existsSync()) {
+    String encryptedFilePath =
+        path_lib.join(tempDir.path, "$fileHashPart.crypt");
+    if (!File(encryptedFilePath).existsSync()) {
       FileSplitter fileSplitter = FileSplitter(file: File(inFilePath));
       final range = fileSplitter.getStartEndIndexForPart(part);
       SodiumSumo sodium = await SodiumSumoInit.init();
       CryptoUtils cryptoUtils = CryptoUtils(sodium);
       ExecutionResult fileEncryptionResult = await cryptoUtils.encryptFile(
-          inFilePath, fileOutPath,
+          inFilePath, encryptedFilePath,
           start: range.start, end: range.end);
       if (fileEncryptionResult.isSuccess) {
         // may fail due to low storage
@@ -231,9 +232,9 @@ class TaskManager {
         Uint8List masterKeyBytes = base64Decode(masterKeyBase64!);
         Map<String, dynamic> encryptionKeyCipher = cryptoUtils
             .getFileEncryptionKeyCipher(encryptionKeyBytes, masterKeyBytes);
-        File encryptedFile = File(fileOutPath);
+        File encryptedFile = File(encryptedFilePath);
         int fileSize = encryptedFile.lengthSync();
-        Uint8List fileBytes = File(fileOutPath).readAsBytesSync();
+        Uint8List fileBytes = File(encryptedFilePath).readAsBytesSync();
         String sha1Hash = sha1.convert(fileBytes).toString();
         Map<String, dynamic> partData = {
           "id": fileHashPart,
@@ -251,7 +252,7 @@ class TaskManager {
         return false;
       }
     }
-    Uint8List fileBytes = File(fileOutPath).readAsBytesSync();
+    Uint8List fileBytes = File(encryptedFilePath).readAsBytesSync();
     String sha1Hash = sha1.convert(fileBytes).toString();
     int contentLength = fileBytes.length;
     String? userId = getSignedInUserId();
@@ -302,6 +303,11 @@ class TaskManager {
       }
     } else {
       logger.error("Upload B2 File Part", error: jsonEncode(uploadResult));
+    }
+    try {
+      File(encryptedFilePath).delete();
+    } catch (e) {
+      // could not delete temp file
     }
     return true;
   }
@@ -453,6 +459,11 @@ class TaskManager {
             }
           } else {
             logger.error("$name:$partToDownload: length or sha1 did not match");
+          }
+          try {
+            tempFile.delete();
+          } catch (e) {
+            // could not delete temp file
           }
         }
       }
