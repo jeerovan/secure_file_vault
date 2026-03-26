@@ -123,7 +123,7 @@ Future<bool> downloadFileStream({
   required String url,
   required Map<String, String>? headers,
   required IOSink fileOut,
-  required ProgressCallback onProgress,
+  required ProgressCallback? onProgress,
 }) async {
   final client = HttpClient();
   AppLogger logger = AppLogger(prefixes: ["Downloader"]);
@@ -154,16 +154,14 @@ Future<bool> downloadFileStream({
         received += chunk.length;
         logger.info('$received of $total');
         // Trigger the callback for your UI's progress bar
-        onProgress(received, total);
+        if (onProgress != null) {
+          onProgress(received, total);
+        }
       }
       success = true;
-    } else {
-      throw HttpException(
-          'Download failed with status: ${response.statusCode}');
     }
-  } catch (e) {
-    // Handle or rethrow custom exceptions for your sync engine
-    rethrow;
+  } catch (e, s) {
+    logger.error("Failed", error: e.toString(), stackTrace: s);
   } finally {
     // 6. Guarantee cleanup of network and file resources
     client.close(force: true);

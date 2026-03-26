@@ -16,16 +16,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ status: 0, message: ErrorCode.INVALID_JSON });
 	}
 
-	const { file_hash, storage_id } = body;
+	const { file_id, storage_id } = body;
 
-	if (!file_hash) {
+	if (!file_id) {
 		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	const authData = await authenticate(authUser.id, storage_id);
 	if (!authData) {
 		return json({ status: 0, message: ErrorCode.NO_USER });
 	}
-	const file_path = `${authUser.id}/${file_hash}`;
+	const file_path = `${authUser.id}/${file_id}`;
 	const s3Endpoint = authData.s3ApiUrl;
 	const region = extractRegion(s3Endpoint);
 	const s3Client = new S3Client({

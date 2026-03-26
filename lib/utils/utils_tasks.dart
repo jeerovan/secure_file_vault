@@ -357,47 +357,17 @@ class TaskManager {
       await modelItem.delete();
       await itemTask.delete();
     } else {
-      if (modelFile.provider == StorageProvider.none.value) {
-        await modelFile.delete();
-        await modelItem.delete();
-        await itemTask.delete();
-        return;
-      } else if (modelFile.provider == StorageProvider.fife.value ||
-          modelFile.provider == StorageProvider.backblaze.value) {
-        if (modelFile.parts == 1) {
-          await modelFile.delete();
-          await modelItem.delete();
-          await itemTask.delete();
-        } else {
-          Map<String, dynamic> data = modelFile.data;
-          if (data.containsKey("fileId")) {
-            // Cancel large file upload
-            String b2FileId = data["fileId"];
-            final api = BackendApi();
-            final cancelResult = await api.post(
-                endpoint: '/b2/cancel-large-file',
-                jsonBody: {
-                  "storage_id": modelFile.storageId,
-                  "file_id": b2FileId
-                });
-            final status = cancelResult["status"];
-            if (status > 0) {
-              await modelFile.delete();
-              await modelItem.delete();
-              await itemTask.delete();
-            } else {
-              logger.error("Cancel B2 large file",
-                  error: jsonEncode(cancelResult));
-            }
-          } else {
-            await modelFile.delete();
-            await modelItem.delete();
-            await itemTask.delete();
-          }
+      int parts = modelFile.parts;
+      while (parts > 0) {
+        ModelPart? modelPart = await ModelPart.get('${modelFile.id}_$parts');
+        if (modelPart != null) {
+          await modelPart.delete();
         }
-      } else {
-        // TODO handle other providers
+        parts = parts - 1;
       }
+      await modelFile.delete();
+      await modelItem.delete();
+      await itemTask.delete();
     }
   }
 
@@ -422,55 +392,88 @@ class TaskManager {
     if (File(filePath).existsSync()) {
       partsHave = fileSplitter.getPartsInSize(File(filePath).lengthSync());
     }
-    // TODO can we have partsHave == parts
+    if (partsHave == parts) {
+      String finalFilePath = await ModelItem.getPathForItem(modelItem.id);
+      await File(filePath).rename(finalFilePath);
+      await itemTask.delete();
+      return;
+    }
     int partToDownload = partsHave + 1;
     int provider = modelFile.provider;
+    String fileHashPart = '${modelFile.id}_$partToDownload';
+    ModelPart? modelPart = await ModelPart.get(fileHashPart);
+    if (modelPart == null) return;
     if (provider == StorageProvider.fife.value ||
         provider == StorageProvider.backblaze.value) {
-      // check if download authorization exists and valid
-      Map<String, dynamic> data = modelFile.data;
-      String downloadToken = "";
-      if (data.containsKey("expires")) {
-        int expires = int.parse(
-            getValueFromMap(data, "expires", defaultValue: 10).toString());
-        int secondsNow =
-            (DateTime.now().toUtc().millisecondsSinceEpoch / 1000).toInt();
-        if (secondsNow > expires) {
-          downloadToken = await getUpdateB2DownloadToken(modelFile);
-        } else {
-          downloadToken =
-              getValueFromMap(data, "download_token", defaultValue: "");
+      String downloadUrl = await getB2DownloadUrl(modelFile, partToDownload);
+      if (downloadUrl.isNotEmpty) {
+        logger.info("$name:$partToDownload: fetched download url");
+        Directory tempDir = await getTemporaryDirectory();
+        String tempFilePath = "${tempDir.path}/$fileHashPart";
+        File tempFile = File(tempFilePath);
+        IOSink fileSink = tempFile.openWrite();
+        bool downloaded = await downloadFileStream(
+            url: downloadUrl,
+            headers: null,
+            fileOut: fileSink,
+            onProgress: null);
+        if (downloaded) {
+          logger.info("$name:$partToDownload: Downloaded");
+          // match sha1 hash
+          Map<String, dynamic> partData = modelPart.data;
+          Uint8List fileBytes = File(tempFilePath).readAsBytesSync();
+          String sha1Hash = sha1.convert(fileBytes).toString();
+          int contentLength = fileBytes.length;
+          if (modelPart.size == contentLength && sha1Hash == partData["sha1"]) {
+            String keyCipherBase64 = modelPart.cipher;
+            String keyNonceBase64 = modelPart.nonce;
+            SodiumSumo sodium = await SodiumSumoInit.init();
+            CryptoUtils cryptoUtils = CryptoUtils(sodium);
+            String? masterKeyBase64 = await getMasterKey();
+            Uint8List? fileEncryptionKeyBytes =
+                cryptoUtils.getFileEncryptionKeyBytes(
+                    keyCipherBase64, keyNonceBase64, masterKeyBase64!);
+            if (fileEncryptionKeyBytes != null) {
+              ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
+                  tempFilePath, filePath, fileEncryptionKeyBytes);
+              if (decryptionResult.isSuccess) {
+                logger.info("$name:$partToDownload:Fetched & decrypted");
+                if (partToDownload == parts) {
+                  String finalFilePath =
+                      await ModelItem.getPathForItem(modelItem.id);
+                  await File(filePath).rename(finalFilePath);
+                  await itemTask.delete();
+                }
+              } else {
+                String error = decryptionResult.failureReason ?? "";
+                logger.error(
+                    "$name:$partToDownload:Fetched but decryption failed",
+                    error: error);
+              }
+            }
+          } else {
+            logger.error("$name:$partToDownload: length or sha1 did not match");
+          }
         }
-      } else {
-        downloadToken = await getUpdateB2DownloadToken(modelFile);
       }
-      if (downloadToken.isNotEmpty) {}
     }
   }
 
-  static Future<String> getUpdateB2DownloadToken(ModelFile modelFile) async {
+  static Future<String> getB2DownloadUrl(ModelFile modelFile, int part) async {
     final api = BackendApi();
     final downloadResult = await api.post(
         endpoint: '/b2/get-download-url',
         jsonBody: {
           "storage_id": modelFile.storageId,
-          "file_hash": modelFile.id
+          "file_id": '${modelFile.id}_$part'
         });
     final status = downloadResult["status"];
-    String downloadToken = "";
+    String downloadUrl = "";
     if (status > 0) {
-      final downloadData = downloadResult["data"];
-      downloadToken = downloadData["authorizationToken"];
-      Map<String, dynamic> data = modelFile.data;
-      data["download_token"] = downloadToken;
-      data["expires"] =
-          (DateTime.now().toUtc().millisecondsSinceEpoch / 1000).toInt() +
-              604800;
-      modelFile.data = data;
-      await modelFile.update(["data"]);
+      downloadUrl = downloadResult["data"];
     } else {
       logger.error("B2 get download url", error: jsonEncode(downloadResult));
     }
-    return downloadToken;
+    return downloadUrl;
   }
 }

@@ -16,6 +16,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../utils/utils_tasks.dart';
 import '../common_widgets.dart';
 
 class PageExplorer extends StatefulWidget {
@@ -184,6 +185,7 @@ class _FilePaneState extends State<FilePane> {
       String path = await ModelItem.getPathForItem(id);
       if (!File(path).existsSync()) {
         await ModelItemTask.addTask(id, ItemTask.download.value);
+        TaskManager.init(inBackground: false);
       }
     }
     _cancelMultiSelect();
