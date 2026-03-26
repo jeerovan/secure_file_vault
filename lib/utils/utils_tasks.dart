@@ -43,6 +43,7 @@ class TaskManager {
   /// Static function "init" to start the process
   static void init({bool inBackground = false}) {
     if (_instance._activeTaskIds.isNotEmpty || _instance._isDispatching) {
+      logger.info("Already running.");
       return;
     }
     _instance.setStartTime();
@@ -183,66 +184,19 @@ class TaskManager {
     }
     if (modelFile.provider == StorageProvider.fife.value ||
         modelFile.provider == StorageProvider.backblaze.value) {
-      if (modelFile.parts == modelFile.partsUploaded) {
-        logger.info("Check Upload: All parts uploaded: ${modelFile.id}");
-        // May have failed to verify and update
-        await finishMultiPartB2Upload(itemTask, modelFile);
+      final urlResult = await api.post(
+          endpoint: '/b2/get-upload-url',
+          jsonBody: {"storage_id": modelFile.storageId});
+      final status = urlResult["status"];
+      if (status <= 0) {
+        logger.error('Get upload url: ${jsonEncode(urlResult)}');
         return true;
-      }
-      if (modelFile.parts > 1) {
-        // Check get fileId
-        Map<String, dynamic> data = modelFile.data;
-        if (!data.containsKey("fileId")) {
-          final fileIdResult = await api.post(
-              endpoint: '/b2/start-parts-upload',
-              jsonBody: {
-                "file_hash": modelFile.id,
-                "storage_id": modelFile.storageId
-              });
-          final status = fileIdResult["status"];
-          if (status <= 0) {
-            logger.error('Start parts upload: ${jsonEncode(fileIdResult)}');
-            return true;
-          } else {
-            final fileIdData = fileIdResult["data"];
-            data["fileId"] = fileIdData["fileId"];
-            modelFile.data = data;
-            List<String> attrs = ["data"];
-            await modelFile.update(attrs);
-          }
-        }
-        String fileId = data["fileId"];
-        final urlResult = await api.post(
-            endpoint: '/b2/get-upload-part-url',
-            jsonBody: {"file_id": fileId, "storage_id": modelFile.storageId});
-        final status = urlResult["status"];
-        if (status <= 0) {
-          logger.error('Get upload part url: ${jsonEncode(urlResult)}');
-          return true;
-        } else {
-          final urlData = urlResult["data"];
-          final uploadUrl = urlData["uploadUrl"];
-          final uploadToken = urlData["authorizationToken"];
-          await uploadB2FilePart(itemTask, modelFile.id, uploadUrl, uploadToken,
-              inFilePath, modelFile.partsUploaded + 1, true);
-        }
-        // get upload part url
       } else {
-        // get upload part url
-        final urlResult = await api.post(
-            endpoint: '/b2/get-upload-url',
-            jsonBody: {"storage_id": modelFile.storageId});
-        final status = urlResult["status"];
-        if (status <= 0) {
-          logger.error('Get upload url: ${jsonEncode(urlResult)}');
-          return true;
-        } else {
-          final urlData = urlResult["data"];
-          final uploadUrl = urlData["uploadUrl"];
-          final uploadToken = urlData["authorizationToken"];
-          await uploadB2FilePart(itemTask, modelFile.id, uploadUrl, uploadToken,
-              inFilePath, modelFile.partsUploaded + 1, false);
-        }
+        final urlData = urlResult["data"];
+        final uploadUrl = urlData["uploadUrl"];
+        final uploadToken = urlData["authorizationToken"];
+        return await uploadB2FilePart(itemTask, modelFile.id, uploadUrl,
+            uploadToken, inFilePath, modelFile.partsUploaded + 1, false);
       }
     } else {
       // TODO handle other providers
@@ -250,7 +204,7 @@ class TaskManager {
     return true;
   }
 
-  Future<void> uploadB2FilePart(
+  Future<bool> uploadB2FilePart(
       ModelItemTask itemTask,
       String fileHash,
       String uploadUrl,
@@ -294,29 +248,20 @@ class TaskManager {
       } else {
         logger.error("Encryption failed",
             error: fileEncryptionResult.failureReason);
+        return false;
       }
     }
     Uint8List fileBytes = File(fileOutPath).readAsBytesSync();
     String sha1Hash = sha1.convert(fileBytes).toString();
-    Map<String, String> headers = {};
     int contentLength = fileBytes.length;
-    if (multipart) {
-      headers = {
-        "authorization": uploadToken,
-        "X-Bz-Part-Number": part.toString(),
-        "X-Bz-Content-Sha1": sha1Hash,
-        "Content-Length": contentLength.toString(),
-      };
-    } else {
-      String? userId = getSignedInUserId();
-      headers = {
-        "authorization": uploadToken,
-        "X-Bz-Content-Sha1": sha1Hash,
-        "X-Bz-File-Name": '$userId%2F$fileHash',
-        "Content-Length": contentLength.toString(),
-        "Content-Type": "application/octet-stream",
-      };
-    }
+    String? userId = getSignedInUserId();
+    Map<String, String> headers = {
+      "authorization": uploadToken,
+      "X-Bz-Content-Sha1": sha1Hash,
+      "X-Bz-File-Name": '$userId%2F$fileHashPart',
+      "Content-Length": contentLength.toString(),
+      "Content-Type": "application/octet-stream",
+    };
 
     logger.info(
         "pushFilePart|$fileHash|$part| uploading bytes to upload url with headers");
@@ -329,60 +274,36 @@ class TaskManager {
       // verify uploaded content length and sha1hash
       int uploadedContentLength = uploadResult["contentLength"];
       String uploadedSha1 = uploadResult["contentSha1"];
-      String b2FileId =
-          uploadResult["fileId"]; // available for both parts and single uploads
+      String b2FileId = uploadResult["fileId"];
       if (sha1Hash == uploadedSha1 && contentLength == uploadedContentLength) {
-        //update local first
+        //update
         ModelFile? modelFile = await ModelFile.get(fileHash);
-        if (modelFile == null) return;
+        ModelPart? modelPart = await ModelPart.get(fileHashPart);
+        if (modelFile == null || modelPart == null) {
+          logger.error("PushFilePart", error: "file or part missing");
+          return true;
+        }
         modelFile.partsUploaded = part;
-        Map<String, dynamic> currentData = modelFile.data;
-        currentData["fileId"] = b2FileId;
-        List<String> attrs = ["parts_uploaded", "data"];
-        await modelFile.update(attrs);
+        List<String> fileAttrs = ["parts_uploaded"];
+
+        Map<String, dynamic> partData = modelPart.data;
+        partData["fileId"] = b2FileId;
+        modelPart.data = partData;
+        List<String> partAttrs = ["data"];
+        await modelPart.update(partAttrs);
+
         if (modelFile.parts == modelFile.partsUploaded) {
           logger.info("pushFilePart|$fileHash|all parts uploaded");
-          if (modelFile.parts > 1) {
-            // multi parts
-            // call finish parts upload
-            await finishMultiPartB2Upload(itemTask, modelFile);
-          } else {
-            // single part
-            modelFile.uploadedAt =
-                DateTime.now().toUtc().millisecondsSinceEpoch;
-            await modelFile.update(["uploaded_at"]);
-            await itemTask.delete();
-          }
+          modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
+          fileAttrs.add("uploaded_at");
+          await itemTask.delete();
         }
+        await modelFile.update(fileAttrs);
       }
     } else {
       logger.error("Upload B2 File Part", error: jsonEncode(uploadResult));
     }
-  }
-
-  Future<void> finishMultiPartB2Upload(
-      ModelItemTask itemTask, ModelFile modelFile) async {
-    final api = BackendApi();
-    Map<String, dynamic> data = modelFile.data;
-    String b2FileId = data["fileId"];
-    List<String> partSha1Array =
-        await ModelPart.shasForFileId(modelFile.id, modelFile.parts);
-    logger.info("Finish B2 multi part upload: ${modelFile.id}");
-    final finishResult =
-        await api.post(endpoint: '/b2/finish-parts-upload', jsonBody: {
-      "storage_id": modelFile.storageId,
-      "file_id": b2FileId,
-      "part_array": partSha1Array
-    });
-    final status = finishResult["status"];
-    if (status > 0) {
-      modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
-      await modelFile.update(["uploaded_at"]);
-      await itemTask.delete();
-    } else {
-      logger.error("Finish B2 Multi part upload",
-          error: jsonEncode(finishResult));
-    }
+    return true;
   }
 
   static Future<Map<String, dynamic>> uploadB2FileBytes({
