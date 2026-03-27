@@ -21,6 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 	const { message, data } = await authorize(app_id, app_key); // TODO Should be checked on user device also
 	if (message) {
+		// TODO flag user with attempt count
 		return json({ status: 0, message });
 	}
 	if (data) {

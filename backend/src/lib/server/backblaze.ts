@@ -3,6 +3,7 @@ import {
 	addCredentials,
 	getCredentials,
 	getCredentialsById,
+	getCredentialsByStorageId,
 	getStorageById,
 	markCredentialsUpdated,
 	markCredentialsUpdating,
@@ -69,115 +70,110 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 }
 
 export async function authenticate(userId: string, storageId: string) {
-	const storage = await getStorageById(storageId);
-	if (storage && storage[StorageKeys.USER_ID] == userId) {
-		const credential = await getCredentialsById(storage[StorageKeys.CREDENTIALS_ID]);
+	const credential = await getCredentialsByStorageId(userId, storageId);
 
-		if (!credential) {
-			return undefined;
-		}
-
-		const accountId = credential[CredentialsKeys.ID];
-		const creds = credential[CredentialsKeys.CREDENTIALS] as {
-			appId: string;
-			appKey: string;
-			authorizationToken: string;
-			bucketId: string;
-			bucketName: string;
-			apiUrl: string;
-			downloadUrl: string;
-			s3ApiUrl: string;
-		};
-
-		const {
-			appId,
-			appKey,
-			authorizationToken: existingToken,
-			bucketId,
-			bucketName,
-			apiUrl: existingApiUrl,
-			downloadUrl: existingDownloadUrl,
-			s3ApiUrl: existingS3ApiUrl
-		} = creds;
-		const isUpdating = credential[CredentialsKeys.UPDATING];
-		const updatedAt = credential[CredentialsKeys.SERVER_UPDATED_AT] || Date.now();
-
-		// Bundle the existing credentials to easily return them
-		const existingData = {
-			appId,
-			appKey,
-			authorizationToken: existingToken,
-			bucketId,
-			bucketName,
-			apiUrl: existingApiUrl,
-			downloadUrl: existingDownloadUrl,
-			s3ApiUrl: existingS3ApiUrl
-		};
-
-		// 2. If another process is currently updating, return the old data immediately
-		if (isUpdating === 1) {
-			return existingData;
-		}
-
-		// 3. Check if we actually need to update
-		// Token lasts 24 hours, but we refresh after 20 hours
-		const now = Date.now();
-		const diffHours = (now - updatedAt) / (1000 * 60 * 60);
-
-		// If token exists and was updated less than 20 hours ago, return it
-		if (existingToken && diffHours < 20) {
-			return existingData;
-		}
-
-		// 4. Mark as updating (Atomic lock to prevent race conditions)
-		const lockResult = await markCredentialsUpdating(accountId);
-
-		// If no rows are returned, another process grabbed the lock right before us
-		if (lockResult.length === 0) {
-			return existingData;
-		}
-
-		// 5. Authenticate with B2
-		const { message, data } = await authorize(appId, appKey);
-		if (message) {
-			return undefined;
-		} else if (data) {
-			const {
-				authorizationToken,
-				apiInfo: {
-					storageApi: { apiUrl, downloadUrl, s3ApiUrl }
-				}
-			} = data;
-			const credentials = {
-				appId,
-				appKey,
-				authorizationToken,
-				bucketId,
-				bucketName,
-				apiUrl,
-				downloadUrl,
-				s3ApiUrl
-			};
-			await updateCredentials(accountId, credentials);
-
-			// Return the newly fetched credentials alongside the existing bucketId
-			return {
-				appId,
-				appKey,
-				authorizationToken,
-				bucketId,
-				bucketName,
-				apiUrl,
-				downloadUrl,
-				s3ApiUrl
-			};
-		} else {
-			await markCredentialsUpdated(accountId);
-			return existingData;
-		}
-	} else {
+	if (!credential) {
 		// TODO user should be flagged here
 		return undefined;
+	}
+
+	const accountId = credential[CredentialsKeys.ID];
+	const creds = credential[CredentialsKeys.CREDENTIALS] as {
+		appId: string;
+		appKey: string;
+		authorizationToken: string;
+		bucketId: string;
+		bucketName: string;
+		apiUrl: string;
+		downloadUrl: string;
+		s3ApiUrl: string;
+	};
+
+	const {
+		appId,
+		appKey,
+		authorizationToken: existingToken,
+		bucketId,
+		bucketName,
+		apiUrl: existingApiUrl,
+		downloadUrl: existingDownloadUrl,
+		s3ApiUrl: existingS3ApiUrl
+	} = creds;
+	const isUpdating = credential[CredentialsKeys.UPDATING];
+	const updatedAt = credential[CredentialsKeys.SERVER_UPDATED_AT] || Date.now();
+
+	// Bundle the existing credentials to easily return them
+	const existingData = {
+		appId,
+		appKey,
+		authorizationToken: existingToken,
+		bucketId,
+		bucketName,
+		apiUrl: existingApiUrl,
+		downloadUrl: existingDownloadUrl,
+		s3ApiUrl: existingS3ApiUrl
+	};
+
+	// 2. If another process is currently updating, return the old data immediately
+	if (isUpdating === 1) {
+		return existingData;
+	}
+
+	// 3. Check if we actually need to update
+	// Token lasts 24 hours, but we refresh after 20 hours
+	const now = Date.now();
+	const diffHours = (now - updatedAt) / (1000 * 60 * 60);
+
+	// If token exists and was updated less than 20 hours ago, return it
+	if (existingToken && diffHours < 20) {
+		return existingData;
+	}
+
+	// 4. Mark as updating (Atomic lock to prevent race conditions)
+	const lockResult = await markCredentialsUpdating(accountId);
+
+	// If no rows are returned, another process grabbed the lock right before us
+	if (lockResult.length === 0) {
+		return existingData;
+	}
+
+	// 5. Authenticate with B2
+	const { message, data } = await authorize(appId, appKey);
+	if (message) {
+		return undefined;
+	} else if (data) {
+		const {
+			authorizationToken,
+			apiInfo: {
+				storageApi: { apiUrl, downloadUrl, s3ApiUrl }
+			}
+		} = data;
+		const credentials = {
+			appId,
+			appKey,
+			authorizationToken,
+			bucketId,
+			bucketName,
+			apiUrl,
+			downloadUrl,
+			s3ApiUrl
+		};
+		await updateCredentials(accountId, credentials);
+
+		// Return the newly fetched credentials alongside the existing bucketId
+		return {
+			appId,
+			appKey,
+			authorizationToken,
+			bucketId,
+			bucketName,
+			apiUrl,
+			downloadUrl,
+			s3ApiUrl
+		};
+	} else {
+		await markCredentialsUpdated(accountId);
+		return existingData;
 	}
 }
 
@@ -189,7 +185,7 @@ export interface B2BaseParams {
 
 // Helper to handle the repetitive fetch boilerplate
 async function b2Fetch(endpoint: string, params: B2BaseParams, payload: any) {
-	const response = await fetch(`${params.apiUrl}/b2api/v3/${endpoint}`, {
+	const response = await fetch(`${params.apiUrl}/b2api/v4/${endpoint}`, {
 		method: 'POST',
 		headers: {
 			Authorization: params.authorizationToken,

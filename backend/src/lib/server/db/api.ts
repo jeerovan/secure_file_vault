@@ -413,6 +413,14 @@ export async function getCredentials(userId: string, provider: number) {
 export async function getCredentialsById(id: string) {
 	return db.select().from(credentials).where(eq(credentials[CredentialsKeys.ID], id)).get();
 }
+export async function getCredentialsByStorageId(userId: string, storageId: string) {
+	const storage = await getStorageById(storageId);
+	if (storage && storage[StorageKeys.USER_ID] == userId) {
+		return await getCredentialsById(storage[StorageKeys.CREDENTIALS_ID]);
+	} else {
+		return undefined;
+	}
+}
 
 export async function markCredentialsUpdating(Id: string) {
 	return await db

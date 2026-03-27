@@ -13,7 +13,7 @@ export const UserDataKeys = {
 	SERVER_UPDATED_AT: '3',
 	USER_NAME: '4',
 	DEVICE_ID: '5',
-	RC_ID: '6',
+	PRO_ID: '6',
 	PROFILE_IMAGE: '7',
 	PLAN_EXPIRES_AT: '8'
 } as const;
