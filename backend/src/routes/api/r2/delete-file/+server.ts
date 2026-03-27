@@ -1,10 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { authenticate, getDownloadAuthorization } from '$lib/server/backblaze';
 import { CredentialsKeys, ErrorCode } from '$lib/server/db/keys';
 import { S3Client, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getCredentialsByStorageId } from '$lib/server/db/api';
 
 export const POST: RequestHandler = async ({ request }) => {

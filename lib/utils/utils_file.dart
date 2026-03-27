@@ -3,9 +3,8 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:file_vault_bb/services/service_logger.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_vault_bb/utils/common.dart';
+import 'package:http/http.dart' as http_lib;
 
 class FileSplitter {
   final File? file;
@@ -169,4 +168,62 @@ Future<bool> downloadFileStream({
     await fileOut.close();
   }
   return success;
+}
+
+Future<Map<String, dynamic>> uploadFileBytes({
+  required String method,
+  required Uint8List bytes,
+  required String url,
+  required Map<String, String>? headers,
+}) async {
+  AppLogger logger = AppLogger(prefixes: ["Uploader"]);
+  Map<String, dynamic> data = {"error": ""};
+  try {
+    // Create multipart request
+    var request = http_lib.Request(method, Uri.parse(url));
+
+    // Add headers
+    if (headers != null) {
+      request.headers.addAll(headers);
+    }
+
+    request.bodyBytes = bytes;
+
+    // Send request and get response
+    var streamedResponse = await request.send();
+    var response = await http_lib.Response.fromStream(streamedResponse);
+
+    // Check response
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      // Success Range
+      safeParseJson(response.body, data, logger);
+    } else if (response.statusCode >= 400 && response.statusCode < 500) {
+      // Client Error Range (e.g., 400 Bad Request, 401 Unauthorized, 413 Payload Too Large)
+      data["error"] =
+          'Client Error (${response.statusCode}): ${response.reasonPhrase ?? 'Unknown'}';
+      safeParseJson(response.body, data, logger);
+    } else if (response.statusCode >= 500) {
+      // Server Error Range (e.g., 500 Internal Error, 502 Bad Gateway)
+      data["error"] =
+          'Server Error (${response.statusCode}): Backup service is currently unavailable.';
+      // We generally avoid parsing JSON on 500s as servers often return raw HTML error pages
+    } else {
+      // Unhandled/Unexpected Status Codes
+      data["error"] = 'Unexpected Error: HTTP ${response.statusCode}';
+    }
+  } on SocketException catch (e, s) {
+    // Handle no internet connection / DNS failures
+    logger.error("Upload Failed: No Internet Connection",
+        error: e, stackTrace: s);
+    data["error"] = 'Network Error: Please check your internet connection.';
+  } on FormatException catch (e, s) {
+    // Handle malformed URLs or JSON
+    logger.error("Upload Failed: Format Exception", error: e, stackTrace: s);
+    data["error"] = 'Format Error: Failed to process the request or response.';
+  } catch (e, s) {
+    // Catch-all for unexpected errors
+    logger.error("Upload Failed: Unexpected Error", error: e, stackTrace: s);
+    data["error"] = e.toString();
+  }
+  return data;
 }

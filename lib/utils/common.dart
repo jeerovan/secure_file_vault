@@ -855,3 +855,27 @@ Future<String?> getMasterKey() async {
 }
 
 Future<void> signalToUpdateHome() async {}
+void safeParseJson(
+    String responseBody, Map<String, dynamic> data, AppLogger logger) {
+  if (responseBody.isEmpty) return;
+
+  try {
+    final decoded = jsonDecode(responseBody);
+    if (decoded is Map<String, dynamic>) {
+      data.addAll(decoded);
+    } else {
+      logger.error(
+          "Upload warning: Expected JSON Map but got ${decoded.runtimeType}");
+      data["error"] =
+          data["error"] == "" ? "Invalid response format" : data["error"];
+    }
+  } catch (e, s) {
+    // Server returned a non-JSON body (e.g. Cloudflare HTML block page, Nginx 413 page)
+    logger.error(
+        "JSON Decode Failed. Body snippet: ${responseBody.length > 50 ? responseBody.substring(0, 50) : responseBody}",
+        error: e,
+        stackTrace: s);
+    data["error"] =
+        data["error"] == "" ? "Failed to parse server response" : data["error"];
+  }
+}

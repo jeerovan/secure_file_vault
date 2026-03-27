@@ -27,10 +27,8 @@ async function verifyR2Credentials(
 		const command = new HeadBucketCommand({ Bucket: bucket });
 		await s3Client.send(command);
 
-		console.log('✅ Credentials are valid and bucket is accessible.');
 		return true;
 	} catch (error) {
-		console.error('❌ Verification failed:', error);
 		return false;
 	}
 }

@@ -12,7 +12,6 @@ import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path_lib;
-import 'package:http/http.dart' as http_lib;
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sodium_libs/sodium_libs_sumo.dart';
@@ -182,6 +181,8 @@ class TaskManager {
     if (modelFile.provider == 0) {
       return true;
     }
+    int partToDownload = modelFile.partsUploaded + 1;
+    Map<String, dynamic> uploadInfo = {};
     if (modelFile.provider == StorageProvider.fife.value ||
         modelFile.provider == StorageProvider.backblaze.value) {
       final urlResult = await api.post(
@@ -189,29 +190,38 @@ class TaskManager {
           jsonBody: {"storage_id": modelFile.storageId});
       final status = urlResult["status"];
       if (status <= 0) {
-        logger.error('Get upload url: ${jsonEncode(urlResult)}');
+        logger.error('Get B2 upload url: ${jsonEncode(urlResult)}');
         return true;
       } else {
         final urlData = urlResult["data"];
-        final uploadUrl = urlData["uploadUrl"];
-        final uploadToken = urlData["authorizationToken"];
-        return await uploadB2FilePart(itemTask, modelFile.id, uploadUrl,
-            uploadToken, inFilePath, modelFile.partsUploaded + 1, false);
+        uploadInfo["provider"] = "b2";
+        uploadInfo["url"] = urlData["uploadUrl"];
+        uploadInfo["token"] = urlData["authorizationToken"];
       }
-    } else {
-      // TODO handle other providers
+    } else if (modelFile.provider == StorageProvider.cloudflare.value) {
+      String fileId = '${modelFile.id}_$partToDownload';
+      final urlResult = await api.post(
+          endpoint: '/r2/get-upload-url',
+          jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId});
+      final status = urlResult["status"];
+      if (status <= 0) {
+        logger.error('Get R2 upload url: ${jsonEncode(urlResult)}');
+        return true;
+      } else {
+        uploadInfo["provider"] = "r2";
+        uploadInfo["url"] = urlResult["data"];
+      }
+    }
+    if (uploadInfo.containsKey("provider")) {
+      return await uploadFilePart(itemTask, modelFile.id, uploadInfo,
+          inFilePath, modelFile.partsUploaded + 1);
     }
     return true;
   }
 
-  Future<bool> uploadB2FilePart(
-      ModelItemTask itemTask,
-      String fileHash,
-      String uploadUrl,
-      String uploadToken,
-      String inFilePath,
-      int part,
-      bool multipart) async {
+  Future<bool> uploadFilePart(ModelItemTask itemTask, String fileHash,
+      Map<String, dynamic> uploadInfo, String inFilePath, int part) async {
+    if (!uploadInfo.containsKey("provider")) return true;
     String fileHashPart = '${fileHash}_$part';
     Directory tempDir = await getTemporaryDirectory();
     String encryptedFilePath =
@@ -253,56 +263,65 @@ class TaskManager {
       }
     }
     Uint8List fileBytes = File(encryptedFilePath).readAsBytesSync();
+    Map<String, String> headers = {};
+
     String sha1Hash = sha1.convert(fileBytes).toString();
     int contentLength = fileBytes.length;
-    String? userId = getSignedInUserId();
-    Map<String, String> headers = {
-      "authorization": uploadToken,
-      "X-Bz-Content-Sha1": sha1Hash,
-      "X-Bz-File-Name": '$userId%2F$fileHashPart',
-      "Content-Length": contentLength.toString(),
-      "Content-Type": "application/octet-stream",
-    };
-
+    String method = 'POST';
+    if (uploadInfo["provider"] == "b2") {
+      String? userId = getSignedInUserId();
+      headers = {
+        "authorization": uploadInfo["token"],
+        "X-Bz-Content-Sha1": sha1Hash,
+        "X-Bz-File-Name": '$userId%2F$fileHashPart',
+        "Content-Length": contentLength.toString(),
+        "Content-Type": "application/octet-stream",
+      };
+    } else if (uploadInfo["provider"] == "r2") {
+      method = 'PUT';
+      headers = {
+        "Content-Length": contentLength.toString(),
+        "Content-Type": "application/octet-stream",
+      };
+    }
+    String uploadUrl = uploadInfo["url"];
     logger.info(
         "pushFilePart|$fileHash|$part| uploading bytes to upload url with headers");
-    Map<String, dynamic> uploadResult = await uploadB2FileBytes(
-        bytes: fileBytes, url: uploadUrl, headers: headers);
+    Map<String, dynamic> uploadResult = await uploadFileBytes(
+        method: method, bytes: fileBytes, url: uploadUrl, headers: headers);
     logger.info("UploadedBytes:${jsonEncode(uploadResult)}");
     // update parts_uploaded
     if (uploadResult["error"].isEmpty) {
       logger.info("pushFilePart|$fileHash|$part| bytes uploaded");
-      // verify uploaded content length and sha1hash
-      int uploadedContentLength = uploadResult["contentLength"];
-      String uploadedSha1 = uploadResult["contentSha1"];
-      String b2FileId = uploadResult["fileId"];
-      if (sha1Hash == uploadedSha1 && contentLength == uploadedContentLength) {
-        //update
-        ModelFile? modelFile = await ModelFile.get(fileHash);
-        ModelPart? modelPart = await ModelPart.get(fileHashPart);
-        if (modelFile == null || modelPart == null) {
-          logger.error("PushFilePart", error: "file or part missing");
-          return true;
-        }
-        modelFile.partsUploaded = part;
-        List<String> fileAttrs = ["parts_uploaded"];
 
+      //update
+      ModelFile? modelFile = await ModelFile.get(fileHash);
+      ModelPart? modelPart = await ModelPart.get(fileHashPart);
+      if (modelFile == null || modelPart == null) {
+        logger.error("PushFilePart", error: "file or part missing");
+        return true;
+      }
+      modelFile.partsUploaded = part;
+      List<String> fileAttrs = ["parts_uploaded"];
+
+      if (uploadResult.containsKey("fileId")) {
+        String b2FileId = uploadResult["fileId"];
         Map<String, dynamic> partData = modelPart.data;
         partData["fileId"] = b2FileId;
         modelPart.data = partData;
         List<String> partAttrs = ["data"];
         await modelPart.update(partAttrs);
-
-        if (modelFile.parts == modelFile.partsUploaded) {
-          logger.info("pushFilePart|$fileHash|all parts uploaded");
-          modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
-          fileAttrs.add("uploaded_at");
-          await itemTask.delete();
-        }
-        await modelFile.update(fileAttrs);
       }
+
+      if (modelFile.parts == modelFile.partsUploaded) {
+        logger.info("pushFilePart|$fileHash|all parts uploaded");
+        modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
+        fileAttrs.add("uploaded_at");
+        await itemTask.delete();
+      }
+      await modelFile.update(fileAttrs);
     } else {
-      logger.error("Upload B2 File Part", error: jsonEncode(uploadResult));
+      logger.error("Upload File Part", error: jsonEncode(uploadResult));
     }
     try {
       File(encryptedFilePath).delete();
@@ -310,41 +329,6 @@ class TaskManager {
       // could not delete temp file
     }
     return true;
-  }
-
-  static Future<Map<String, dynamic>> uploadB2FileBytes({
-    required Uint8List bytes,
-    required String url,
-    required Map<String, String> headers,
-  }) async {
-    Map<String, dynamic> data = {"error": ""};
-    try {
-      // Create multipart request
-      var request = http_lib.Request('POST', Uri.parse(url));
-
-      // Add headers
-      request.headers.addAll(headers);
-
-      request.bodyBytes = bytes;
-
-      // Send request and get response
-      var streamedResponse = await request.send();
-      var response = await http_lib.Response.fromStream(streamedResponse);
-
-      // Check response
-      if (response.statusCode == 200) {
-        data.addAll(jsonDecode(response.body));
-      } else if (response.statusCode == 400) {
-        data["error"] = 'Upload:${response.statusCode.toString()}';
-        data.addAll(jsonDecode(response.body));
-      } else {
-        data["error"] = 'Upload:${response.statusCode.toString()}';
-      }
-    } catch (e, s) {
-      logger.error("Upload B2 File Bytes", error: e, stackTrace: s);
-      data["error"] = e.toString();
-    }
-    return data;
   }
 
   Future<void> checkDeleteItemFile(ModelItemTask itemTask) async {
@@ -409,71 +393,70 @@ class TaskManager {
     String fileHashPart = '${modelFile.id}_$partToDownload';
     ModelPart? modelPart = await ModelPart.get(fileHashPart);
     if (modelPart == null) return;
+    String downloadUrl = "";
     if (provider == StorageProvider.fife.value ||
         provider == StorageProvider.backblaze.value) {
-      String downloadUrl = await getB2DownloadUrl(modelFile, partToDownload);
-      if (downloadUrl.isNotEmpty) {
-        logger.info("$name:$partToDownload: fetched download url");
-        Directory tempDir = await getTemporaryDirectory();
-        String tempFilePath = "${tempDir.path}/$fileHashPart";
-        File tempFile = File(tempFilePath);
-        IOSink fileSink = tempFile.openWrite();
-        bool downloaded = await downloadFileStream(
-            url: downloadUrl,
-            headers: null,
-            fileOut: fileSink,
-            onProgress: null);
-        if (downloaded) {
-          logger.info("$name:$partToDownload: Downloaded");
-          // match sha1 hash
-          Map<String, dynamic> partData = modelPart.data;
-          Uint8List fileBytes = File(tempFilePath).readAsBytesSync();
-          String sha1Hash = sha1.convert(fileBytes).toString();
-          int contentLength = fileBytes.length;
-          if (modelPart.size == contentLength && sha1Hash == partData["sha1"]) {
-            String keyCipherBase64 = modelPart.cipher;
-            String keyNonceBase64 = modelPart.nonce;
-            SodiumSumo sodium = await SodiumSumoInit.init();
-            CryptoUtils cryptoUtils = CryptoUtils(sodium);
-            String? masterKeyBase64 = await getMasterKey();
-            Uint8List? fileEncryptionKeyBytes =
-                cryptoUtils.getFileEncryptionKeyBytes(
-                    keyCipherBase64, keyNonceBase64, masterKeyBase64!);
-            if (fileEncryptionKeyBytes != null) {
-              ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
-                  tempFilePath, filePath, fileEncryptionKeyBytes);
-              if (decryptionResult.isSuccess) {
-                logger.info("$name:$partToDownload:Fetched & decrypted");
-                if (partToDownload == parts) {
-                  String finalFilePath =
-                      await ModelItem.getPathForItem(modelItem.id);
-                  await File(filePath).rename(finalFilePath);
-                  await itemTask.delete();
-                }
-              } else {
-                String error = decryptionResult.failureReason ?? "";
-                logger.error(
-                    "$name:$partToDownload:Fetched but decryption failed",
-                    error: error);
+      downloadUrl = await getDownloadUrl("b2", modelFile, partToDownload);
+    } else if (provider == StorageProvider.cloudflare.value) {
+      downloadUrl = await getDownloadUrl("r2", modelFile, partToDownload);
+    }
+    if (downloadUrl.isNotEmpty) {
+      logger.info("$name:$partToDownload: fetched download url");
+      Directory tempDir = await getTemporaryDirectory();
+      String tempFilePath = "${tempDir.path}/$fileHashPart";
+      File tempFile = File(tempFilePath);
+      IOSink fileSink = tempFile.openWrite();
+      bool downloaded = await downloadFileStream(
+          url: downloadUrl, headers: null, fileOut: fileSink, onProgress: null);
+      if (downloaded) {
+        logger.info("$name:$partToDownload: Downloaded");
+        // match length
+        Uint8List fileBytes = File(tempFilePath).readAsBytesSync();
+        int contentLength = fileBytes.length;
+        if (modelPart.size == contentLength) {
+          String keyCipherBase64 = modelPart.cipher;
+          String keyNonceBase64 = modelPart.nonce;
+          SodiumSumo sodium = await SodiumSumoInit.init();
+          CryptoUtils cryptoUtils = CryptoUtils(sodium);
+          String? masterKeyBase64 = await getMasterKey();
+          Uint8List? fileEncryptionKeyBytes =
+              cryptoUtils.getFileEncryptionKeyBytes(
+                  keyCipherBase64, keyNonceBase64, masterKeyBase64!);
+          if (fileEncryptionKeyBytes != null) {
+            ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
+                tempFilePath, filePath, fileEncryptionKeyBytes);
+            if (decryptionResult.isSuccess) {
+              logger.info("$name:$partToDownload:Fetched & decrypted");
+              if (partToDownload == parts) {
+                String finalFilePath =
+                    await ModelItem.getPathForItem(modelItem.id);
+                await File(filePath).rename(finalFilePath);
+                await itemTask.delete();
               }
+            } else {
+              String error = decryptionResult.failureReason ?? "";
+              logger.error(
+                  "$name:$partToDownload:Fetched but decryption failed",
+                  error: error);
             }
-          } else {
-            logger.error("$name:$partToDownload: length or sha1 did not match");
           }
-          try {
-            tempFile.delete();
-          } catch (e) {
-            // could not delete temp file
-          }
+        } else {
+          logger.error("$name:$partToDownload: length did not match");
+        }
+        try {
+          tempFile.delete();
+        } catch (e) {
+          // could not delete temp file
         }
       }
     }
   }
 
-  static Future<String> getB2DownloadUrl(ModelFile modelFile, int part) async {
+  static Future<String> getDownloadUrl(
+      String provider, ModelFile modelFile, int part) async {
     final api = BackendApi();
     final downloadResult = await api.post(
-        endpoint: '/b2/get-download-url',
+        endpoint: '/$provider/get-download-url',
         jsonBody: {
           "storage_id": modelFile.storageId,
           "file_id": '${modelFile.id}_$part'
@@ -483,7 +466,7 @@ class TaskManager {
     if (status > 0) {
       downloadUrl = downloadResult["data"];
     } else {
-      logger.error("B2 get download url", error: jsonEncode(downloadResult));
+      logger.error("Get download url", error: jsonEncode(downloadResult));
     }
     return downloadUrl;
   }
