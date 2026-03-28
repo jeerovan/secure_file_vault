@@ -141,7 +141,7 @@ class SyncUtils {
     final api = BackendApi();
     try {
       final response = await api.get(endpoint: '/devices');
-      final status = response["status"];
+      final status = response["success"];
       if (status == -1) {
         logger.error("checkDeviceStatus", error: response["message"]);
       } else if (status == 1) {
@@ -175,7 +175,7 @@ class SyncUtils {
           final api = BackendApi();
           final response = await api
               .post(endpoint: '/signout', jsonBody: {"device_id": deviceId});
-          if (response["status"] == 0) {
+          if (response["success"] == 0) {
             return false;
           }
         } else {
@@ -276,7 +276,7 @@ class SyncUtils {
         };
         final response =
             await api.post(endpoint: '/sync', jsonBody: requestData);
-        if (response["status"] == 1) {
+        if (response["success"] == 1) {
           for (ModelChange change in tableChanges) {
             ModelChange? dbChange = await ModelChange.get(change.id);
             if (dbChange != null) {
@@ -331,7 +331,7 @@ class SyncUtils {
         };
         final responseData =
             await api.get(endpoint: '/sync', queryParameters: requestData);
-        if (responseData["status"] == 0) break;
+        if (responseData["success"] == 0) break;
         Map<String, dynamic> tableChanges = responseData["data"];
         for (String table in tables) {
           if (!tableChanges.containsKey(table)) continue;

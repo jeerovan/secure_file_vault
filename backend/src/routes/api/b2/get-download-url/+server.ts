@@ -13,17 +13,17 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, message: ErrorCode.INVALID_JSON });
+		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
 	const { file_id, storage_id } = body;
 
 	if (!file_id) {
-		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	const authData = await authenticate(authUser.id, storage_id);
 	if (!authData) {
-		return json({ status: 0, message: ErrorCode.NO_USER });
+		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
 	const file_path = `${authUser.id}/${file_id}`;
 	const s3Endpoint = authData.s3ApiUrl;
@@ -46,7 +46,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		expiresIn: 3600
 	});
 
-	return json({ status: 1, data: presignedUrl });
+	return json({ success: 1, data: presignedUrl });
 };
 
 function extractRegion(url: string): string {

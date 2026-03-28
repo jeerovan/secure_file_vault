@@ -164,7 +164,7 @@ class TaskManager {
             "file_hash": modelFile.id,
             "file_size": inFile.lengthSync()
           });
-      final status = providerResult["status"];
+      final status = providerResult["success"];
       if (status <= 0) {
         logger.error('Get storage provider: ${jsonEncode(providerResult)}');
         return false;
@@ -186,7 +186,7 @@ class TaskManager {
       final urlResult = await api.post(
           endpoint: '/b2/get-upload-url',
           jsonBody: {"storage_id": modelFile.storageId});
-      final status = urlResult["status"];
+      final status = urlResult["success"];
       if (status <= 0) {
         logger.error('Get B2 upload url: ${jsonEncode(urlResult)}');
         return true;
@@ -201,7 +201,7 @@ class TaskManager {
       final urlResult = await api.post(
           endpoint: '/r2/get-upload-url',
           jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId});
-      final status = urlResult["status"];
+      final status = urlResult["success"];
       if (status <= 0) {
         logger.error('Get R2 upload url: ${jsonEncode(urlResult)}');
         return true;
@@ -429,7 +429,7 @@ class TaskManager {
           "storage_id": modelFile.storageId,
           "file_id": '${modelFile.id}_$part'
         });
-    final status = downloadResult["status"];
+    final status = downloadResult["success"];
     String downloadUrl = "";
     if (status > 0) {
       downloadUrl = downloadResult["data"];

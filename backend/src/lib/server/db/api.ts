@@ -224,13 +224,14 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 			.get();
 		const storageId = change['storage_id'];
 		const uploadedAt = change['uploaded_at'];
+		const itemCount = change['item_count'];
 		if (existingRow) {
 			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
 				await db
 					.update(file)
 					.set({
 						[FileKeys.DEVICE_ID]: deviceId,
-						[FileKeys.ITEMS_COUNT]: change['item_count'] ?? 0,
+						[FileKeys.ITEMS_COUNT]: itemCount,
 						[FileKeys.PARTS]: change['parts'] ?? 1,
 						[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
 						[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
@@ -247,7 +248,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				[FileKeys.ID]: tableKey,
 				[FileKeys.USER_ID]: userId,
 				[FileKeys.DEVICE_ID]: deviceId,
-				[FileKeys.ITEMS_COUNT]: change['item_count'] ?? 0,
+				[FileKeys.ITEMS_COUNT]: itemCount,
 				[FileKeys.PARTS]: change['parts'] ?? 1,
 				[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
 				[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
@@ -271,6 +272,9 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				await updateStorageUsedSize(tempRow.storageId, userId, tempRow.bytes, true);
 				await db.delete(tempStorage).where(eq(tempStorage[TempStorageKeys.ID], tableKey));
 			}
+		}
+		if (itemCount == 0) {
+			// Delete file
 		}
 	}
 }
@@ -540,4 +544,14 @@ export async function addTempStorage(
 		[TempStorageKeys.SIZE]: size,
 		[TempStorageKeys.PROVIDER]: provider
 	});
+}
+export async function getFile(userId: string, fileHash: string) {
+	const tableKey = userId + '_' + fileHash;
+	return db.select().from(file).where(eq(file[FileKeys.ID], tableKey)).get();
+}
+export async function getFilePart(tableKey: string) {
+	return db.select().from(part).where(eq(part[PartKeys.ID], tableKey)).get();
+}
+export async function removeFilePart(tableKey: string) {
+	return db.delete(part).where(eq(part[PartKeys.ID], tableKey));
 }

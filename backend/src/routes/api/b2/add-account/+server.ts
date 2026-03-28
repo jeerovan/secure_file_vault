@@ -11,18 +11,18 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, message: ErrorCode.INVALID_JSON });
+		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
 	const { app_id, app_key } = body;
 
 	if (!app_id || !app_key) {
-		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	const { message, data } = await authorize(app_id, app_key); // TODO Should be checked on user device also
 	if (message) {
 		// TODO flag user with attempt count
-		return json({ status: 0, message });
+		return json({ success: 0, message });
 	}
 	if (data) {
 		const {
@@ -33,17 +33,17 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		} = data;
 		if (buckets == null || buckets.length == 0) {
-			return json({ status: 0, message: ErrorCode.NO_BUCKETS });
+			return json({ success: 0, message: ErrorCode.NO_BUCKETS });
 		} else if (buckets.length > 1) {
-			return json({ status: 0, message: ErrorCode.MULTIPLE_BUCKETS });
+			return json({ success: 0, message: ErrorCode.MULTIPLE_BUCKETS });
 		} else {
 			const { id, name } = buckets[0];
 			if (id == null || name == null) {
-				return json({ status: 0, message: ErrorCode.BUCKET_INFO });
+				return json({ success: 0, message: ErrorCode.BUCKET_INFO });
 			}
 		}
 		if (namePrefix != null) {
-			return json({ status: 0, message: ErrorCode.NAMEPREFIX_EXIST });
+			return json({ success: 0, message: ErrorCode.NAMEPREFIX_EXIST });
 		}
 		const required = [
 			'deleteFiles',
@@ -59,9 +59,9 @@ export const POST: RequestHandler = async ({ request }) => {
 			const result = await addAccount(authUser.id, app_id, app_key, data);
 			return result;
 		} else {
-			return json({ status: 0, message: ErrorCode.CREDENTIALS_INCAPABLE });
+			return json({ success: 0, message: ErrorCode.CREDENTIALS_INCAPABLE });
 		}
 	} else {
-		return json({ status: 0, message: ErrorCode.INVALID_CREDENTIALS });
+		return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });
 	}
 };

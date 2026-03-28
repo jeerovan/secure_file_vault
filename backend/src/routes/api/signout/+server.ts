@@ -12,13 +12,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, message: ErrorCode.INVALID_JSON });
+		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
 	const { device_id } = body;
 
 	if (!device_id) {
-		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
 	const tableId = authUser.id + '_' + device_id;

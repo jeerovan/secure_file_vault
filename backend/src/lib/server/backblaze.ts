@@ -66,7 +66,7 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		provider = StorageProvider.FIFE;
 	}
 	await addCredentials(userId, accountId, credentials, provider);
-	return json({ status: 1 });
+	return json({ success: 1 });
 }
 
 export async function authenticate(userId: string, storageId: string) {
@@ -195,10 +195,10 @@ async function b2Fetch(endpoint: string, params: B2BaseParams, payload: any) {
 	});
 	if (!response.ok) {
 		const error = await response.json();
-		return json({ status: 0, message: error.message || error.code });
+		return json({ success: 0, message: error.code });
 	}
 
-	return json({ status: 1, data: await response.json() });
+	return json({ success: 1, data: await response.json() });
 }
 
 // --- 1. b2_get_upload_url ---

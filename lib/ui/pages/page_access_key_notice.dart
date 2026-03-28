@@ -51,7 +51,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
     Map<String, dynamic> serverKeys = keys[AppString.serverKeys.string];
     try {
       final result = await api.post(endpoint: '/keys', jsonBody: serverKeys);
-      final status = result["status"];
+      final status = result["success"];
       if (status <= 0) {
         if (mounted) {
           displaySnackBar(context, message: result["message"], seconds: 2);

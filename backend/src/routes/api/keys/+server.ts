@@ -10,10 +10,10 @@ export const GET: RequestHandler = async ({ request }) => {
 	const result = await getKeys(authUser.id);
 
 	if (!result) {
-		return json({ status: 0, message: ErrorCode.NO_USER });
+		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
 
-	return json({ status: 1, data: result });
+	return json({ success: 1, data: result });
 };
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -23,16 +23,16 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, message: ErrorCode.INVALID_JSON });
+		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
 	const { cipher, nonce } = body;
 
 	if (!cipher || !nonce) {
-		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
 	const result = await addKey(authUser.id, authUser.email, cipher, nonce);
 
-	return json({ status: 1, data: result });
+	return json({ success: 1, data: result });
 };

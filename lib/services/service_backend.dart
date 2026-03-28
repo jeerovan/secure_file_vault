@@ -94,7 +94,7 @@ class BackendApi {
     final code = res.statusCode;
     Map<String, dynamic> response;
     if (code >= 500) {
-      response = {'status': 0, 'message': 'Server Error'};
+      response = {'success': 0, 'message': 'Server Error'};
     } else {
       final decoded = _tryDecodeJson(res.body);
 
@@ -103,7 +103,7 @@ class BackendApi {
         response = map;
       } else {
         response = {
-          'status': 0,
+          'success': 0,
           if (decoded != null) 'message': decoded,
         };
       }
@@ -137,7 +137,7 @@ class BackendApi {
     } catch (e) {
       logger.debug(e.toString());
       if (_isNetworkException(e)) rethrow;
-      return {'status': -1, 'message': 'Unexpected Error'};
+      return {'success': -1, 'message': 'Unexpected Error'};
     }
   }
 
@@ -160,7 +160,7 @@ class BackendApi {
     } catch (e) {
       logger.debug(e.toString());
       if (_isNetworkException(e)) rethrow;
-      return {'status': -1, 'message': 'Unexpected Error'};
+      return {'success': -1, 'message': 'Unexpected Error'};
     }
   }
 

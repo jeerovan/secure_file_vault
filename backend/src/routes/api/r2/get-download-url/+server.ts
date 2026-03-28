@@ -13,17 +13,17 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, message: ErrorCode.INVALID_JSON });
+		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
 	const { file_id, storage_id } = body;
 
 	if (!file_id) {
-		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	const credentials = await getCredentialsByStorageId(authUser.id, storage_id);
 	if (!credentials) {
-		return json({ status: 0, message: ErrorCode.NO_STORAGE });
+		return json({ success: 0, message: ErrorCode.NO_STORAGE });
 	}
 	const credsData = credentials[CredentialsKeys.CREDENTIALS] as {
 		appId: string;
@@ -53,12 +53,12 @@ export const POST: RequestHandler = async ({ request }) => {
 			expiresIn: 3600
 		});
 
-		return json({ status: 1, data: presignedUrl });
+		return json({ success: 1, data: presignedUrl });
 	} catch (e) {
 		let error = e;
 		if (e instanceof Error) {
 			error = e.message;
 		}
-		return json({ status: 0, message: error });
+		return json({ success: 0, message: error });
 	}
 };

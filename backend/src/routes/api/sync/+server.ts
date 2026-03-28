@@ -28,7 +28,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	);
 
 	return json({
-		status: 1,
+		success: 1,
 		data: { files: fileRows, parts: partRows, items: itemRows, profiles: profileRows }
 	});
 };
@@ -38,7 +38,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const userId = authUser.id;
 	const deviceId = authUser.did;
 	if (!deviceId) {
-		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
 	try {
@@ -59,8 +59,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		}
 	} catch (e) {
-		return json({ status: 0, message: e });
+		return json({ success: 0, message: e });
 	}
 
-	return json({ status: 1 });
+	return json({ success: 1 });
 };

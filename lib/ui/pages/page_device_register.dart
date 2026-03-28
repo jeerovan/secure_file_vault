@@ -49,7 +49,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
       "title": deviceName,
       "type": deviceType
     });
-    final status = result["status"];
+    final status = result["success"];
     if (status <= 0) {
       _errorMessage = result["message"];
     } else {

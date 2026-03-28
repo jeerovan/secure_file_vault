@@ -40,13 +40,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	try {
 		body = await request.json();
 	} catch {
-		return json({ status: 0, message: ErrorCode.INVALID_JSON });
+		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
 	const { app_id, app_key, bucket, accountId } = body;
 
 	if (!app_id || !app_key || !bucket || !accountId) {
-		return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	const validData = await verifyR2Credentials(bucket, accountId, app_id, app_key);
 	if (validData) {
@@ -57,9 +57,9 @@ export const POST: RequestHandler = async ({ request }) => {
 		};
 		const provider = StorageProvider.CLOUDFLARE;
 		await addCredentials(authUser.id, accountId, credentials, provider);
-		return json({ status: 1 });
+		return json({ success: 1 });
 	} else {
 		// TODO flag user with attempt count
-		return json({ status: 0, message: ErrorCode.INVALID_CREDENTIALS });
+		return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });
 	}
 };
