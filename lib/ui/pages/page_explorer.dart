@@ -180,7 +180,7 @@ class _FilePaneState extends State<FilePane> {
         }
       }
     } else {
-      // A re-scan on other devices will automatically remove archive_at
+      // A recon scan on other devices will automatically reset archive_at
       for (ModelItem modelItem in _selectedItems) {
         modelItem.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
         await modelItem.update(["archived_at"]);
@@ -326,7 +326,7 @@ class _FilePaneState extends State<FilePane> {
       );
 
       if (!isLast) {
-        breadcrumbWidgets.add(Icon(Icons.chevron_right,
+        breadcrumbWidgets.add(Icon(LucideIcons.chevronRight,
             size: 18,
             color: Theme.of(context).colorScheme.onSurface.withAlpha(100)));
       }
@@ -415,16 +415,128 @@ class _FilePaneState extends State<FilePane> {
       itemBuilder: (context, index) {
         final item = _items[index];
         final isSelected = _selectedItems.contains(item);
-        return _FileListItem(
+
+        return Dismissible(
           key: Key(item.id),
-          item: item,
-          isMultiSelectMode: _isMultiSelectMode,
-          isSelected: isSelected,
-          onTap: () => _navigateTo(item),
-          onLongPress: () => _onLongPress(item),
+          direction: DismissDirection.horizontal,
+          // UX Polish: Subtle background reveals when swiping
+          background: _buildSwipeBackground(Alignment.centerLeft),
+          secondaryBackground: _buildSwipeBackground(Alignment.centerRight),
+          onDismissed: (direction) {
+            _onArchive(item, index);
+          },
+          child: _FileListItem(
+            // Changed key slightly to avoid duplicate key assertion with Dismissible
+            key: ValueKey('${item.id}_list_item'),
+            item: item,
+            isMultiSelectMode: _isMultiSelectMode,
+            isSelected: isSelected,
+            onTap: () => _navigateTo(item),
+            onLongPress: () => _onLongPress(item),
+          ),
         );
       },
     );
+  }
+
+  // Helper for the swipe reveal background
+  Widget _buildSwipeBackground(Alignment alignment) {
+    return Container(
+      alignment: alignment,
+      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      color: Colors.redAccent.withAlpha(30),
+      child: const Icon(LucideIcons.archive, color: Colors.redAccent),
+    );
+  }
+
+  Future<void> _onArchive(ModelItem item, int originalIndex) async {
+    String localPath = await ModelItem.getPathForLocalItem(item.id);
+    if (!File(localPath).existsSync()) {
+      // 1. Remove the item from state
+      setState(() {
+        _items.remove(item);
+        // Ensure it is deselected if it was in multi-select mode
+        _selectedItems.remove(item);
+        item.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
+        item.update(["archived_at"]);
+      });
+      if (!mounted) return;
+      // 2. Clear any existing toasts to prevent queue buildup
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      // 3. Show the custom floating toast
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.only(
+              bottom: 24, left: 16, right: 16), // Floating gap
+          content: Row(
+            children: [
+              // Left Side: Trash Icon with top-right tickmark
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  const Icon(LucideIcons.archive, color: Colors.white),
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.greenAccent,
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: const Icon(
+                        LucideIcons.check,
+                        size: 10,
+                        color: Colors.black, // High contrast against green
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Middle
+              const Expanded(child: SizedBox.shrink()),
+
+              // Right Side: Undo (Recycle) Icon Button
+              IconButton(
+                icon: const Icon(LucideIcons.undo, color: Colors.blueAccent),
+                tooltip: 'Undo',
+                onPressed: () {
+                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  setState(() {
+                    // Re-insert at the exact original index to prevent list jumping
+                    _items.insert(originalIndex, item);
+                    item.archivedAt = 0;
+                    item.update(["archived_at"]);
+                  });
+                },
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.only(
+              bottom: 24, left: 16, right: 16), // Floating gap
+          content: Text(
+            'File exists on this device',
+            style: TextStyle(fontWeight: FontWeight.w500),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
   }
 }
 

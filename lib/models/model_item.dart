@@ -311,7 +311,8 @@ class ModelItem {
   static Future<void> setScanState(String itemId, int state) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
-    await db.update(Tables.items.string, {"scan_state": state},
+    await db.update(
+        Tables.items.string, {"scan_state": state, "archived_at": 0},
         where: "id = ?", whereArgs: [itemId]);
   }
 

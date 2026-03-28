@@ -81,7 +81,6 @@ class ReconciliationService {
       final childPath = path_lib.join(fsPath, fsChild.name);
       if (dbChild != null) {
         // Item with same name exists in DB under the same parent
-        dbChild.scanState = ScanState.exists.value;
         await ModelItem.setScanState(dbChild.id, ScanState.exists.value);
         if (fsChild.isFolder) {
           // Recurse into matched folder
