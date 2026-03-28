@@ -8,8 +8,8 @@ enum SetupStep {
   registerDevice,
   manageDevices,
   storagePermission,
-  /* planSelection, */
-  complete,
+  explorer,
+  archives,
 }
 
 enum Tables {
@@ -302,7 +302,7 @@ extension StorageProviderExtension on StorageProvider {
   }
 }
 
-enum ItemTask { upload, download, delete }
+enum ItemTask { upload, download }
 
 extension ItemTaskExtension on ItemTask {
   int get value {
@@ -311,8 +311,6 @@ extension ItemTaskExtension on ItemTask {
         return 1;
       case ItemTask.download:
         return 2;
-      case ItemTask.delete:
-        return 3;
     }
   }
 }

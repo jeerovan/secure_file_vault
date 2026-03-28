@@ -12,6 +12,9 @@ import 'package:uuid/uuid.dart';
 import '../storage/storage_sqlite.dart';
 import 'package:path/path.dart' as path_lib;
 
+import 'model_file.dart';
+import 'model_part.dart';
+
 class ModelItem {
   String id;
   String? path;
@@ -176,7 +179,7 @@ class ModelItem {
       Tables.items.string,
       where: "archived_at > ?",
       whereArgs: [0],
-      orderBy: 'at DESC',
+      orderBy: 'is_folder DESC',
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
@@ -446,5 +449,41 @@ class ModelItem {
       await item.delete(pushToSync: false);
     }
     //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
+  }
+
+  Future<void> remove() async {
+    if (isFolder) {
+      List<ModelItem> items = await getAllInFolder(this);
+      for (ModelItem item in items) {
+        await item.remove();
+      }
+      delete();
+    } else {
+      if (fileId == null) {
+        await delete();
+      } else {
+        ModelFile? modelFile = await ModelFile.get(fileId!);
+        if (modelFile == null) {
+          await delete();
+        } else {
+          if (modelFile.uploadedAt > 0) {
+            await ModelFile.updateItemCount(fileId!, false);
+            await delete();
+          } else {
+            int parts = modelFile.parts;
+            while (parts > 0) {
+              ModelPart? modelPart =
+                  await ModelPart.get('${modelFile.id}_$parts');
+              if (modelPart != null) {
+                await modelPart.delete();
+              }
+              parts = parts - 1;
+            }
+            await modelFile.delete();
+            await delete();
+          }
+        }
+      }
+    }
   }
 }

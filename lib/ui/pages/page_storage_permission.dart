@@ -52,7 +52,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage> {
       if (status.isGranted) {
         // Permission granted - exit to main app
         if (mounted) {
-          await context.read<AppSetupState>().hasStoragePermission();
+          await context.read<AppSetupState>().showExplorer();
         }
       } else if (status.isPermanentlyDenied) {
         // Show dialog to open settings

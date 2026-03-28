@@ -101,8 +101,6 @@ class TaskManager {
       ModelItemTask? itemTask = await ModelItemTask.get(taskId);
       if (itemTask!.task == ItemTask.download.value) {
         await checkInitDownload(itemTask);
-      } else if (itemTask.task == ItemTask.delete.value) {
-        await checkDeleteItemFile(itemTask);
       } else if (itemTask.task == ItemTask.upload.value) {
         queueNext = await checkInitUpload(itemTask);
       }
@@ -141,14 +139,14 @@ class TaskManager {
     final inFilePath = await ModelItem.getPathForLocalItem(modelItem.id);
     final inFile = File(inFilePath);
     if (!inFile.existsSync()) {
-      itemTask.task = ItemTask.delete.value;
-      await itemTask.update(["task"]);
+      await modelItem.remove();
+      await itemTask.delete();
       return true;
     }
     ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
     if (modelFile == null) {
-      itemTask.task = ItemTask.delete.value;
-      await itemTask.update(["task"]);
+      await modelItem.remove();
+      await itemTask.delete();
       return true;
     }
     // check if already uploaded
@@ -329,36 +327,6 @@ class TaskManager {
       // could not delete temp file
     }
     return true;
-  }
-
-  Future<void> checkDeleteItemFile(ModelItemTask itemTask) async {
-    ModelItem? modelItem = await ModelItem.get(itemTask.id);
-    if (modelItem == null || modelItem.fileId == null) {
-      await itemTask.delete();
-      return;
-    }
-    ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
-    if (modelFile == null) {
-      await itemTask.delete();
-      return;
-    }
-    if (modelFile.uploadedAt > 0) {
-      await ModelFile.updateItemCount(modelItem.fileId!, false);
-      await modelItem.delete();
-      await itemTask.delete();
-    } else {
-      int parts = modelFile.parts;
-      while (parts > 0) {
-        ModelPart? modelPart = await ModelPart.get('${modelFile.id}_$parts');
-        if (modelPart != null) {
-          await modelPart.delete();
-        }
-        parts = parts - 1;
-      }
-      await modelFile.delete();
-      await modelItem.delete();
-      await itemTask.delete();
-    }
   }
 
   Future<void> checkInitDownload(ModelItemTask itemTask) async {

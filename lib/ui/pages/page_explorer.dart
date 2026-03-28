@@ -213,6 +213,10 @@ class _FilePaneState extends State<FilePane> {
     context.read<AppSetupState>().logout();
   }
 
+  Future<void> showArchives() async {
+    context.read<AppSetupState>().showArchives();
+  }
+
   PreferredSizeWidget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -269,6 +273,9 @@ class _FilePaneState extends State<FilePane> {
               case 0:
                 signout();
                 break;
+              case 1:
+                showArchives();
+                break;
             }
           },
           itemBuilder: (context) => [
@@ -279,6 +286,16 @@ class _FilePaneState extends State<FilePane> {
                   const Icon(LucideIcons.logOut, color: Colors.grey),
                   const SizedBox(width: 16),
                   const Text('Signout'),
+                ],
+              ),
+            ),
+            PopupMenuItem<int>(
+              value: 1,
+              child: Row(
+                children: [
+                  const Icon(LucideIcons.archive, color: Colors.grey),
+                  const SizedBox(width: 16),
+                  const Text('Trash'),
                 ],
               ),
             ),

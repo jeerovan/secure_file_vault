@@ -321,8 +321,8 @@ class ReconciliationService {
     final modelFile = await ModelFile.fromMap({'id': newHash, 'parts': parts});
     await modelFile.insert();
     // create new upload task
-    ModelItemTask task =
-        await ModelItemTask.fromMap({'id': dbItem.id, 'task': 1});
+    ModelItemTask task = await ModelItemTask.fromMap(
+        {'id': dbItem.id, 'task': ItemTask.upload.value});
     await task.insert();
     // update item
     dbItem.fileId = newHash;
@@ -400,8 +400,8 @@ class ReconciliationService {
           if (modelFile.uploadedAt == 0) {
             // if not already uploaded
             // add item delete task
-            ModelItemTask task =
-                await ModelItemTask.fromMap({'id': item.id, 'task': 3});
+            ModelItemTask task = await ModelItemTask.fromMap(
+                {'id': item.id, 'task': ItemTask.upload.value});
             await task.insert();
           }
         }

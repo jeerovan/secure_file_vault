@@ -81,7 +81,7 @@ class AppSetupState extends ChangeNotifier {
 
     // All setup complete
     SyncUtils.waitAndSyncChanges();
-    _currentStep = SetupStep.complete;
+    _currentStep = SetupStep.explorer;
     notifyListeners();
   }
 
@@ -118,18 +118,13 @@ class AppSetupState extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Plan selection
-  Future<void> selectPlan(String planId) async {
-    await Future.delayed(const Duration(seconds: 1)); // Simulate API call
-
-    await _prefs.write(key: 'selected_plan', value: planId);
-    _selectedPlan = planId;
-    _currentStep = SetupStep.storagePermission;
+  Future<void> showExplorer() async {
+    _currentStep = SetupStep.explorer;
     notifyListeners();
   }
 
-  Future<void> hasStoragePermission() async {
-    _currentStep = SetupStep.complete;
+  Future<void> showArchives() async {
+    _currentStep = SetupStep.archives;
     notifyListeners();
   }
 
