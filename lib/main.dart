@@ -168,8 +168,6 @@ class AppNavigator extends StatelessWidget {
             return const PageDevices();
           case SetupStep.storagePermission:
             return const StoragePermissionPage();
-          /* case SetupStep.planSelection:
-            return const PlanSelectionScreen(); */
           case SetupStep.complete:
             return PageExplorer(
               themeMode: themeMode,

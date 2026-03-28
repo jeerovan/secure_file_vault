@@ -414,7 +414,7 @@ class _FilePaneState extends State<FilePane> {
       itemCount: _items.length,
       itemBuilder: (context, index) {
         final item = _items[index];
-        final isSelected = _selectedItems.contains(item.id);
+        final isSelected = _selectedItems.contains(item);
         return _FileListItem(
           key: Key(item.id),
           item: item,
