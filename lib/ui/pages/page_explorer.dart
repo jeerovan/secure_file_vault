@@ -67,7 +67,7 @@ class _FilePaneState extends State<FilePane> {
   List<ModelItem> parentChilds = [];
   // Multi-select state
   bool _isMultiSelectMode = false;
-  final Set<String> _selectedItemIds = {};
+  final Set<ModelItem> _selectedItems = {};
 
   @override
   void initState() {
@@ -92,7 +92,7 @@ class _FilePaneState extends State<FilePane> {
     }
     if (currentItem == null) return;
     setState(() => _isLoading = true);
-    final items = await ModelItem.getAllInFolder(currentItem);
+    final items = await ModelItem.getDisplayItems(currentItem);
     _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
     String deviceRootHash = await getDeviceHash();
     _isDeviceRoot = currentItem?.id == deviceRootHash;
@@ -144,20 +144,20 @@ class _FilePaneState extends State<FilePane> {
     if (!_isMultiSelectMode) {
       setState(() {
         _isMultiSelectMode = true;
-        _selectedItemIds.add(item.id);
+        _selectedItems.add(item);
       });
     }
   }
 
   void _toggleSelection(ModelItem item) {
     setState(() {
-      if (_selectedItemIds.contains(item.id)) {
-        _selectedItemIds.remove(item.id);
-        if (_selectedItemIds.isEmpty) {
+      if (_selectedItems.contains(item)) {
+        _selectedItems.remove(item);
+        if (_selectedItems.isEmpty) {
           _isMultiSelectMode = false; // Exit mode if nothing is selected
         }
       } else {
-        _selectedItemIds.add(item.id);
+        _selectedItems.add(item);
       }
     });
   }
@@ -165,31 +165,49 @@ class _FilePaneState extends State<FilePane> {
   void _cancelMultiSelect() {
     setState(() {
       _isMultiSelectMode = false;
-      _selectedItemIds.clear();
+      _selectedItems.clear();
     });
   }
 
   Future<void> trashItems() async {
-    logger.log('Archiving/Trashing ${_selectedItemIds.length} items');
-    // TODO: Implement your trash/archive logic here utilizing _selectedItemIds
-
+    logger.log('Trashing ${_selectedItems.length} items');
+    if (await ModelItem.isLocalPath(currentItem!.id)) {
+      for (ModelItem modelItem in _selectedItems) {
+        String localPath = await ModelItem.getPathForLocalItem(modelItem.id);
+        if (!File(localPath).existsSync()) {
+          modelItem.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
+          await modelItem.update(["archived_at"]);
+        }
+      }
+    } else {
+      // A re-scan on other devices will automatically remove archive_at
+      for (ModelItem modelItem in _selectedItems) {
+        modelItem.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
+        await modelItem.update(["archived_at"]);
+      }
+    }
     _cancelMultiSelect();
     _loadFiles(); // Refresh view
   }
 
   Future<void> downloadItems() async {
-    logger.log('Downloading ${_selectedItemIds.length} items');
-    for (String id in _selectedItemIds) {
-      ModelItem? item = await ModelItem.get(id);
-      if (item == null || item.isFolder) continue;
-      String path = await ModelItem.getPathForItem(id);
+    logger.log('Downloading ${_selectedItems.length} items');
+    bool hasTasks = false;
+    for (ModelItem item in _selectedItems) {
+      if (item.isFolder) continue;
+      String path = await ModelItem.getPathForItem(item.id);
       if (!File(path).existsSync()) {
-        await ModelItemTask.addTask(id, ItemTask.download.value);
-        TaskManager.init(inBackground: false);
+        await ModelItemTask.addTask(item.id, ItemTask.download.value);
+        hasTasks = true;
       }
+    }
+    if (hasTasks) {
+      TaskManager.init(inBackground: false);
     }
     _cancelMultiSelect();
   }
+
+  Future<void> showInfo() async {}
 
   Future<void> signout() async {
     context.read<AppSetupState>().logout();
@@ -204,9 +222,16 @@ class _FilePaneState extends State<FilePane> {
           icon: const Icon(LucideIcons.x),
           onPressed: _cancelMultiSelect,
         ),
-        title: Text('${_selectedItemIds.length} Selected'),
+        title: Text('${_selectedItems.length} Selected'),
         backgroundColor: surfaceColor,
         actions: [
+          // TODO show storage details: file id, storage provider, parts, reference counts
+          if (_selectedItems.length == 1 && !_selectedItems.first.isFolder)
+            IconButton(
+              icon: const Icon(LucideIcons.info),
+              tooltip: 'Info',
+              onPressed: showInfo,
+            ),
           IconButton(
             icon: const Icon(LucideIcons.download),
             tooltip: 'Download',
@@ -389,7 +414,7 @@ class _FilePaneState extends State<FilePane> {
       itemCount: _items.length,
       itemBuilder: (context, index) {
         final item = _items[index];
-        final isSelected = _selectedItemIds.contains(item.id);
+        final isSelected = _selectedItems.contains(item.id);
         return _FileListItem(
           key: Key(item.id),
           item: item,

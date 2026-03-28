@@ -127,7 +127,9 @@ class ReconciliationService {
             movedDbItem.name = fsChild.name;
             movedDbItem.parentId = dbParentId;
             movedDbItem.scanState = ScanState.modified.value;
-            await movedDbItem.update(["name", "parent_id", "scan_state"]);
+            movedDbItem.archivedAt = 0;
+            await movedDbItem
+                .update(["name", "parent_id", "scan_state", "archived_at"]);
             logger.info("  ~ Moved: $dbItemPath to $childPath");
             if (fsChild.isFolder) {
               await _reconcileNode(
@@ -251,7 +253,8 @@ class ReconciliationService {
       matched = true;
       bestMatch.name = fsItem.name;
       bestMatch.scanState = ScanState.modified.value;
-      await bestMatch.update(["name", "scan_state"]);
+      bestMatch.archivedAt = 0;
+      await bestMatch.update(["name", "scan_state", "archived_at"]);
       // Recurse into the now-matched folder
       await _reconcileNode(
         rootItemId: rootItemId,
@@ -297,7 +300,8 @@ class ReconciliationService {
       matched = true;
       matchedDbFile.name = fsFile.name;
       matchedDbFile.scanState = 2;
-      await matchedDbFile.update(["name", "scan_state"]);
+      matchedDbFile.archivedAt = 0;
+      await matchedDbFile.update(["name", "scan_state", "archived_at"]);
     }
     return matched;
   }
@@ -324,7 +328,8 @@ class ReconciliationService {
     // update item
     dbItem.fileId = newHash;
     dbItem.size = fsItem.size!;
-    await dbItem.update(["file_id", "size"]);
+    dbItem.archivedAt = 0;
+    await dbItem.update(["file_id", "size", "archived_at"]);
     logger.info('  ~ Modified: ${fsItem.name}');
   }
 

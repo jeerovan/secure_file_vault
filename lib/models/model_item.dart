@@ -87,11 +87,23 @@ class ModelItem {
     if (item == null) return [];
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
+    List<Map<String, dynamic>> rows = await db.query(
+      Tables.items.string,
+      where: "parent_id = ?",
+      whereArgs: [
+        item.id,
+      ],
+    );
+    return await Future.wait(rows.map((map) => fromMap(map)));
+  }
+
+  static Future<List<ModelItem>> getDisplayItems(ModelItem? item) async {
+    if (item == null) return [];
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(Tables.items.string,
-        where: "parent_id = ?",
-        whereArgs: [
-          item.id,
-        ],
+        where: "parent_id = ? AND archived_at = ?",
+        whereArgs: [item.id, 0],
         orderBy: "is_folder DESC");
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
