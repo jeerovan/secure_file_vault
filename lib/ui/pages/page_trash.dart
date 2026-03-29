@@ -113,6 +113,22 @@ class _FilePaneState extends State<FilePane> {
     _loadFiles();
   }
 
+  Future<void> clearAll() async {
+    setState(() {
+      _isLoading = true;
+    });
+    logger.log('Clear all');
+    for (ModelItem modelItem in _items) {
+      await modelItem.remove();
+    }
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+    _loadFiles();
+  }
+
   Future<void> recoverItems() async {
     logger.log('Recovering ${_selectedItems.length} items');
     for (ModelItem item in _selectedItems) {
@@ -123,6 +139,10 @@ class _FilePaneState extends State<FilePane> {
     _loadFiles();
   }
 
+  Future<void> navigateBack() async {
+    context.read<AppSetupState>().showExplorer();
+  }
+
   PreferredSizeWidget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -130,6 +150,7 @@ class _FilePaneState extends State<FilePane> {
       return AppBar(
         leading: IconButton(
           icon: const Icon(LucideIcons.x),
+          tooltip: 'Cancel',
           onPressed: _cancelMultiSelect,
         ),
         title: Text('${_selectedItems.length} Selected'),
@@ -149,19 +170,19 @@ class _FilePaneState extends State<FilePane> {
       );
     }
 
-    Future<void> navigateBack() async {
-      context.read<AppSetupState>().showExplorer();
-    }
-
     // Default AppBar
     return AppBar(
       leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft), onPressed: navigateBack),
+          icon: const Icon(LucideIcons.arrowLeft),
+          tooltip: 'Back',
+          onPressed: navigateBack),
       title: Text("Trash"),
       backgroundColor: surfaceColor,
       actions: [
         IconButton(
-            icon: const Icon(LucideIcons.trash2), onPressed: deleteItems),
+            icon: const Icon(LucideIcons.trash2),
+            tooltip: 'Empty',
+            onPressed: clearAll),
       ],
     );
   }

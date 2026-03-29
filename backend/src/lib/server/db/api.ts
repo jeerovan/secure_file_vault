@@ -25,6 +25,7 @@ import {
 	StorageProvider,
 	TempStorageKeys
 } from '$lib/server/db/keys';
+import { deleteFileFromStorage } from '../deleteWorker';
 
 export async function getKeys(userId: string) {
 	return db
@@ -274,7 +275,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 			}
 		}
 		if (itemCount == 0) {
-			// Delete file
+			deleteFileFromStorage(userId, fileHash);
 		}
 	}
 }
@@ -552,6 +553,32 @@ export async function getFile(userId: string, fileHash: string) {
 export async function getFilePart(tableKey: string) {
 	return db.select().from(part).where(eq(part[PartKeys.ID], tableKey)).get();
 }
-export async function removeFilePart(tableKey: string) {
-	return db.delete(part).where(eq(part[PartKeys.ID], tableKey));
+export async function resetFilePart(tableKey: string) {
+	return db
+		.update(part)
+		.set({
+			[PartKeys.DEVICE_ID]: 'SERVER',
+			[PartKeys.PART_SIZE]: 0,
+			[PartKeys.CIPHER]: null,
+			[PartKeys.NONCE]: null,
+			[PartKeys.JSON]: {},
+			[PartKeys.CLIENT_UPDATED_AT]: Date.now()
+		})
+		.where(eq(part[PartKeys.ID], tableKey));
+}
+export async function resetFile(userId: string, fileHash: string) {
+	const fileKey = userId + '_' + fileHash;
+	return db
+		.update(file)
+		.set({
+			[FileKeys.DEVICE_ID]: 'SERVER',
+			[FileKeys.PARTS]: 0,
+			[FileKeys.PARTS_UPLOADED]: 0,
+			[FileKeys.UPLOADED_AT]: 0,
+			[FileKeys.PROVIDER]: 0,
+			[FileKeys.STORAGE_ID]: null,
+			[FileKeys.JSON]: {},
+			[FileKeys.CLIENT_UPDATED_AT]: Date.now()
+		})
+		.where(eq(file[FileKeys.ID], fileKey));
 }

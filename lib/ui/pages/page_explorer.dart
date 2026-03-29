@@ -224,6 +224,7 @@ class _FilePaneState extends State<FilePane> {
       return AppBar(
         leading: IconButton(
           icon: const Icon(LucideIcons.x),
+          tooltip: 'Cancel',
           onPressed: _cancelMultiSelect,
         ),
         title: Text('${_selectedItems.length} Selected'),

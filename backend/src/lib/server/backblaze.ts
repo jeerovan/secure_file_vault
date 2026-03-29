@@ -138,10 +138,8 @@ export async function authenticate(userId: string, storageId: string) {
 	}
 
 	// 5. Authenticate with B2
-	const { message, data } = await authorize(appId, appKey);
-	if (message) {
-		return undefined;
-	} else if (data) {
+	const { data } = await authorize(appId, appKey);
+	if (data) {
 		const {
 			authorizationToken,
 			apiInfo: {
