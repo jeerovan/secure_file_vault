@@ -217,7 +217,8 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 		const fileHash = change['id'];
 		const tableKey = userId + '_' + fileHash;
 		const incomingUpdatedAt = change['updated_at'] || 0;
-
+		const changeString = change['data'];
+		const changedData = typeof changeString == 'string' ? JSON.parse(changeString) : changeString;
 		const existingRow = db
 			.select({ clientUpdatedAt: file[FileKeys.CLIENT_UPDATED_AT] })
 			.from(file)
@@ -238,7 +239,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 						[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
 						[FileKeys.PROVIDER]: change['provider'] ?? 0,
 						[FileKeys.STORAGE_ID]: storageId ?? null,
-						[FileKeys.JSON]: change['data'] ?? null,
+						[FileKeys.JSON]: changedData,
 						[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 						[FileKeys.DELETED]: change['deleted']
 					})
@@ -255,7 +256,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
 				[FileKeys.STORAGE_ID]: storageId ?? null,
 				[FileKeys.PROVIDER]: change['provider'] ?? 0,
-				[FileKeys.JSON]: change['data'] ?? null,
+				[FileKeys.JSON]: changedData,
 				[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 				[FileKeys.DELETED]: change['deleted']
 			});
@@ -285,8 +286,9 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 		const partId = change['id'];
 		const tableKey = userId + '_' + partId;
 		const incomingUpdatedAt = change['updated_at'] || 0;
-
-		const existingRow = await db
+		const changeString = change['data'];
+		const changedData = typeof changeString == 'string' ? JSON.parse(changeString) : changeString;
+		const existingRow = db
 			.select({ clientUpdatedAt: part[PartKeys.CLIENT_UPDATED_AT] })
 			.from(part)
 			.where(eq(part[PartKeys.ID], tableKey))
@@ -301,7 +303,7 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 						[PartKeys.PART_SIZE]: change['size'] ?? 0,
 						[PartKeys.CIPHER]: change['cipher'] ?? null,
 						[PartKeys.NONCE]: change['nonce'] ?? null,
-						[PartKeys.JSON]: change['data'] ?? null,
+						[PartKeys.JSON]: changedData,
 						[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 						[PartKeys.DELETED]: change['deleted']
 					})
@@ -315,7 +317,7 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 				[PartKeys.PART_SIZE]: change['size'] ?? 0,
 				[PartKeys.CIPHER]: change['cipher'] ?? null,
 				[PartKeys.NONCE]: change['nonce'] ?? null,
-				[PartKeys.JSON]: change['data'] ?? null,
+				[PartKeys.JSON]: changedData,
 				[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 				[PartKeys.DELETED]: change['deleted']
 			});
@@ -562,7 +564,8 @@ export async function resetFilePart(tableKey: string) {
 			[PartKeys.CIPHER]: null,
 			[PartKeys.NONCE]: null,
 			[PartKeys.JSON]: {},
-			[PartKeys.CLIENT_UPDATED_AT]: Date.now()
+			[PartKeys.CLIENT_UPDATED_AT]: Date.now(),
+			[PartKeys.DELETED]: 1
 		})
 		.where(eq(part[PartKeys.ID], tableKey));
 }
@@ -578,7 +581,8 @@ export async function resetFile(userId: string, fileHash: string) {
 			[FileKeys.PROVIDER]: 0,
 			[FileKeys.STORAGE_ID]: null,
 			[FileKeys.JSON]: {},
-			[FileKeys.CLIENT_UPDATED_AT]: Date.now()
+			[FileKeys.CLIENT_UPDATED_AT]: Date.now(),
+			[FileKeys.DELETED]: 1
 		})
 		.where(eq(file[FileKeys.ID], fileKey));
 }

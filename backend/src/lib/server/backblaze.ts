@@ -193,7 +193,7 @@ async function b2Fetch(endpoint: string, params: B2BaseParams, payload: any) {
 	});
 	if (!response.ok) {
 		const error = await response.json();
-		return json({ success: 0, message: error.code });
+		return json({ success: 0, message: error.code, description: error.message });
 	}
 
 	return json({ success: 1, data: await response.json() });

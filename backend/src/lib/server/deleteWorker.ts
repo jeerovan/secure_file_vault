@@ -12,7 +12,9 @@ import { CredentialsKeys, FileKeys, PartKeys, StorageProvider } from './db/keys'
 
 export async function deleteFileFromStorage(userId: string, fileHash: string) {
 	const fileRow = await getFile(userId, fileHash);
-	if (!fileRow) return;
+	if (!fileRow) {
+		return;
+	}
 	const parts = fileRow[FileKeys.PARTS];
 	const partIds = Array.from({ length: parts }, (_, i) => `${i + 1}`);
 	const provider = fileRow[FileKeys.PROVIDER];
@@ -25,10 +27,11 @@ export async function deleteFileFromStorage(userId: string, fileHash: string) {
 		const partKey = `${userId}_${fileHash}_${partId}`;
 		const filePart = await getFilePart(partKey);
 		const file_name = `${userId}/${fileHash}_${partId}`;
-		if (filePart) {
+		if (filePart && filePart[PartKeys.PART_SIZE] > 0) {
 			if (provider == StorageProvider.FIFE || provider == StorageProvider.BACKBLAZE) {
-				const partData = filePart[PartKeys.JSON] as { fileId: string };
-				const file_id = partData['fileId'];
+				const partData = filePart[PartKeys.JSON];
+				const parsedData = typeof partData === 'string' ? JSON.parse(partData) : partData;
+				const file_id = parsedData.fileId;
 				const authData = await authenticate(userId, storageId);
 				if (!authData) {
 					return;
