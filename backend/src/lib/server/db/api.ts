@@ -215,14 +215,14 @@ export async function fetchChanges(
 export async function saveFileChanges(userId: string, deviceId: string, changes: any[]) {
 	for (const change of changes) {
 		const fileHash = change['id'];
-		const tableKey = userId + '_' + fileHash;
+		const fileKey = userId + '_' + fileHash;
 		const incomingUpdatedAt = change['updated_at'] || 0;
 		const changeString = change['data'];
 		const changedData = typeof changeString == 'string' ? JSON.parse(changeString) : changeString;
 		const existingRow = db
 			.select({ clientUpdatedAt: file[FileKeys.CLIENT_UPDATED_AT] })
 			.from(file)
-			.where(eq(file[FileKeys.ID], tableKey))
+			.where(eq(file[FileKeys.ID], fileKey))
 			.get();
 		const storageId = change['storage_id'];
 		const uploadedAt = change['uploaded_at'];
@@ -242,11 +242,11 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 						[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 						[FileKeys.DELETED]: change['deleted']
 					})
-					.where(eq(file[FileKeys.ID], tableKey));
+					.where(eq(file[FileKeys.ID], fileKey));
 			}
 		} else {
 			await db.insert(file).values({
-				[FileKeys.ID]: tableKey,
+				[FileKeys.ID]: fileKey,
 				[FileKeys.USER_ID]: userId,
 				[FileKeys.DEVICE_ID]: deviceId,
 				[FileKeys.ITEMS_COUNT]: itemCount,
@@ -266,11 +266,10 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 					storageId: tempStorage[TempStorageKeys.STORAGE_ID]
 				})
 				.from(tempStorage)
-				.where(eq(tempStorage[TempStorageKeys.ID], tableKey))
+				.where(eq(tempStorage[TempStorageKeys.ID], fileKey))
 				.get();
 			if (tempRow) {
-				await updateStorageUsedSize(tempRow.storageId, userId, tempRow.bytes, true);
-				await db.delete(tempStorage).where(eq(tempStorage[TempStorageKeys.ID], tableKey));
+				await db.delete(tempStorage).where(eq(tempStorage[TempStorageKeys.ID], fileKey));
 			}
 		}
 		if (itemCount == 0) {
@@ -282,45 +281,58 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 export async function savePartChanges(userId: string, deviceId: string, changes: any[]) {
 	for (const change of changes) {
 		const partId = change['id'];
-		const tableKey = userId + '_' + partId;
+		const partKey = userId + '_' + partId;
 		const incomingUpdatedAt = change['updated_at'] || 0;
 		const changeString = change['data'];
 		const changedData = typeof changeString == 'string' ? JSON.parse(changeString) : changeString;
 		const existingRow = db
 			.select({ clientUpdatedAt: part[PartKeys.CLIENT_UPDATED_AT] })
 			.from(part)
-			.where(eq(part[PartKeys.ID], tableKey))
+			.where(eq(part[PartKeys.ID], partKey))
 			.get();
 		const deleted = change['deleted'];
+		const uploaded = change['uploaded'];
+		const partBytes = change['size'];
 		if (existingRow) {
 			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
 				await db
 					.update(part)
 					.set({
 						[PartKeys.DEVICE_ID]: deviceId,
-						[PartKeys.PART_SIZE]: change['size'] ?? 0,
+						[PartKeys.PART_SIZE]: partBytes,
 						[PartKeys.CIPHER]: change['cipher'] ?? null,
 						[PartKeys.NONCE]: change['nonce'] ?? null,
 						[PartKeys.JSON]: changedData,
 						[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 						[PartKeys.DELETED]: deleted,
-						[PartKeys.UPLOADED]: change['uploaded'] ?? 0
+						[PartKeys.UPLOADED]: uploaded
 					})
-					.where(eq(part[PartKeys.ID], tableKey));
+					.where(eq(part[PartKeys.ID], partKey));
 			}
 		} else {
 			await db.insert(part).values({
-				[PartKeys.ID]: tableKey,
+				[PartKeys.ID]: partKey,
 				[PartKeys.USER_ID]: userId,
 				[PartKeys.DEVICE_ID]: deviceId,
-				[PartKeys.PART_SIZE]: change['size'] ?? 0,
+				[PartKeys.PART_SIZE]: partBytes,
 				[PartKeys.CIPHER]: change['cipher'] ?? null,
 				[PartKeys.NONCE]: change['nonce'] ?? null,
 				[PartKeys.JSON]: changedData,
 				[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 				[PartKeys.DELETED]: deleted,
-				[PartKeys.UPLOADED]: change['uploaded'] ?? 0
+				[PartKeys.UPLOADED]: uploaded
 			});
+		}
+		if (uploaded == 1) {
+			const fileKey = partKey.slice(0, partKey.lastIndexOf('_'));
+			const fileRow = db.select().from(file).where(eq(file[FileKeys.ID], fileKey)).get();
+			if (fileRow) {
+				const storageId = fileRow[FileKeys.STORAGE_ID];
+				if (storageId != null) {
+					await updateStorageUsedSize(storageId, userId, partBytes, true);
+					await updateTempStorageSize(fileKey, partBytes);
+				}
+			}
 		}
 	}
 }
@@ -526,6 +538,23 @@ export async function updateStorageUsedSize(
 			[StorageKeys.USED_BYTES]: newBytes
 		})
 		.where(and(eq(storage[StorageKeys.USER_ID], userId), eq(storage[StorageKeys.ID], storageId)));
+}
+
+export async function updateTempStorageSize(storageKey: string, bytes: number) {
+	const row = db
+		.select()
+		.from(tempStorage)
+		.where(eq(tempStorage[TempStorageKeys.ID], storageKey))
+		.get();
+	const newBytes = sql`MAX(0, ${tempStorage[TempStorageKeys.SIZE]} - ${bytes})`;
+	if (row) {
+		await db
+			.update(tempStorage)
+			.set({
+				[TempStorageKeys.SIZE]: newBytes
+			})
+			.where(eq(tempStorage[TempStorageKeys.ID], storageKey));
+	}
 }
 
 export async function getTempStorage(userId: string, file_hash: string) {
