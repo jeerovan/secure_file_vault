@@ -10,7 +10,6 @@ class ModelFile {
   String id;
   int itemCount;
   int parts;
-  int partsUploaded;
   int uploadedAt;
   String? storageId;
   int provider;
@@ -21,7 +20,6 @@ class ModelFile {
     required this.id,
     required this.itemCount,
     required this.parts,
-    required this.partsUploaded,
     required this.uploadedAt,
     this.provider = 0,
     this.storageId,
@@ -34,7 +32,6 @@ class ModelFile {
       'id': id,
       'item_count': itemCount,
       'parts': parts,
-      'parts_uploaded': partsUploaded,
       'uploaded_at': uploadedAt,
       'storage_id': storageId,
       'provider': provider,
@@ -50,7 +47,6 @@ class ModelFile {
       id: map["id"],
       itemCount: getValueFromMap(map, "item_count", defaultValue: 1),
       parts: getValueFromMap(map, "parts", defaultValue: 0),
-      partsUploaded: getValueFromMap(map, "parts_uploaded", defaultValue: 0),
       uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
       storageId: getValueFromMap(map, "storage_id", defaultValue: null),
       provider: getValueFromMap(map, "provider", defaultValue: 0),
@@ -87,6 +83,11 @@ class ModelFile {
       return await fromMap(map);
     }
     return null;
+  }
+
+  Future<void> updateCount(int count) async {
+    itemCount = count;
+    await update(["item_count"]);
   }
 
   Future<int> insert() async {

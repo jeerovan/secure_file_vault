@@ -37,13 +37,12 @@ export const FileKeys = {
 	DEVICE_ID: '5',
 	ITEMS_COUNT: '6',
 	PARTS: '7',
-	PARTS_UPLOADED: '8',
-	UPLOADED_AT: '9',
-	PROVIDER: '10',
-	STORAGE_ID: '11',
-	JSON: '12',
-	CLIENT_UPDATED_AT: '13',
-	DELETED: '14'
+	UPLOADED_AT: '8',
+	PROVIDER: '9',
+	STORAGE_ID: '10',
+	JSON: '11',
+	CLIENT_UPDATED_AT: '12',
+	DELETED: '13'
 } as const;
 
 export const PartKeys = {
@@ -57,7 +56,8 @@ export const PartKeys = {
 	NONCE: '8',
 	JSON: '9',
 	CLIENT_UPDATED_AT: '10',
-	DELETED: '11'
+	DELETED: '11',
+	UPLOADED: '12'
 } as const;
 
 export const ItemKeys = {

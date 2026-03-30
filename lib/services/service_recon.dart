@@ -213,7 +213,7 @@ class ReconciliationService {
     final hash = await _computeFileHash(fsPath);
     // match hash to confirm
     for (final candidate in dbCandidatesMatchingSize) {
-      if (candidate.fileId == hash) {
+      if (candidate.fileHash == hash) {
         String filePath = await ModelItem.getPathForLocalItem(candidate.id);
         bool fileExist = await fileExistAtPath(filePath);
         if (!fileExist) return candidate;
@@ -288,7 +288,7 @@ class ReconciliationService {
       // Compute hash only when needed
       final currentHash = await _computeFileHash(fsPath);
       for (final candidate in candidates) {
-        if (candidate.fileId == currentHash) {
+        if (candidate.fileHash == currentHash) {
           matchedDbFile = candidate;
           break;
         }
@@ -310,25 +310,25 @@ class ReconciliationService {
   Future<void> _handleModifiedFile(
       ModelItem dbItem, FSItem fsItem, String fsPath, int timestamp) async {
     final newHash = await _computeFileHash(fsPath);
-    if (dbItem.fileId == newHash) {
+    if (dbItem.fileHash == newHash) {
       return; // Only metadata changed, no content change
     }
 
     // decrement reference count for old file
-    await ModelFile.updateItemCount(dbItem.fileId!, false);
-    FileSplitter fileSplitter = FileSplitter(file: File(fsPath));
-    int parts = fileSplitter.partSizes.length;
-    final modelFile = await ModelFile.fromMap({'id': newHash, 'parts': parts});
-    await modelFile.insert();
-    // create new upload task
-    ModelItemTask task = await ModelItemTask.fromMap(
-        {'id': dbItem.id, 'task': ItemTask.upload.value});
-    await task.insert();
+    ModelFile? oldModelFile = await ModelFile.get(dbItem.fileHash!);
+    if (oldModelFile != null) {
+      int currentItemCount =
+          await ModelItem.getItemCountForFileHash(dbItem.fileHash!);
+      await oldModelFile.updateCount(currentItemCount - 1);
+    }
+
     // update item
-    dbItem.fileId = newHash;
+    dbItem.fileHash = newHash;
     dbItem.size = fsItem.size!;
     dbItem.archivedAt = 0;
-    await dbItem.update(["file_id", "size", "archived_at"]);
+    await dbItem.update(["file_hash", "size", "archived_at"]);
+
+    checkCreateUploadTask(dbItem.id, fsPath, newHash);
     logger.info('  ~ Modified: ${fsItem.name}');
   }
 
@@ -339,30 +339,20 @@ class ReconciliationService {
     String fsPath,
   ) async {
     final hash = await _computeFileHash(fsPath);
-    final hashFile = await ModelFile.get(hash);
-    bool createUploadTask = false;
-    if (hashFile == null) {
-      FileSplitter fileSplitter = FileSplitter(file: File(fsPath));
-      int parts = fileSplitter.partSizes.length;
-      final modelFile = await ModelFile.fromMap({'id': hash, 'parts': parts});
-      await modelFile.insert();
-      createUploadTask = true;
-    } else {
-      await ModelFile.updateItemCount(hash, true);
-    }
+
     final modelItem = await ModelItem.fromMap({
       'root_id': rootItemId,
       'parent_id': parentId,
       'is_folder': 0,
       'name': fsItem.name,
-      'file_id': hash,
+      'file_hash': hash,
       'size': fsItem.size,
       'scan_state': 1,
     });
     await modelItem.insert();
-    if (createUploadTask) {
-      await ModelItemTask.addTask(modelItem.id, ItemTask.upload.value);
-    }
+    String itemId = modelItem.id;
+
+    checkCreateUploadTask(itemId, fsPath, hash); // no wait
     logger.info('  + Created File: ${fsItem.name}');
   }
 
@@ -391,22 +381,38 @@ class ReconciliationService {
 
   Future<void> _handleDeletion(ModelItem item) async {
     if (item.isFolder) {
+      // Only empty folders are deleted.
       await item.delete();
       logger.info('  - Deleted Folder: ${item.name}');
     } else {
-      if (item.fileId != null) {
-        ModelFile? modelFile = await ModelFile.get(item.fileId!);
-        if (modelFile != null) {
-          if (modelFile.uploadedAt == 0) {
-            // if not already uploaded
-            // add item delete task
-            ModelItemTask task = await ModelItemTask.fromMap(
-                {'id': item.id, 'task': ItemTask.upload.value});
-            await task.insert();
-          }
-        }
-      }
+      await item.remove();
       logger.info('  - Deleted File: ${item.name}');
+    }
+  }
+
+  // For a newly created item
+  Future<void> checkCreateUploadTask(
+      String newItemId, String fsPath, String hash) async {
+    ModelFile? hashFile = await ModelFile.get(hash);
+    bool createUploadTask = false;
+    if (hashFile == null) {
+      FileSplitter fileSplitter = FileSplitter(file: File(fsPath));
+      int parts = fileSplitter.partSizes.length;
+      final modelFile = await ModelFile.fromMap({'id': hash, 'parts': parts});
+      await modelFile.insert();
+      createUploadTask = true;
+    } else {
+      // update count and check uploadedAt
+      int count = await ModelItem.getItemCountForFileHash(hash);
+      if (hashFile.itemCount != count) {
+        await hashFile.updateCount(count);
+      }
+      if (hashFile.uploadedAt == 0) {
+        createUploadTask = true;
+      }
+    }
+    if (createUploadTask) {
+      await ModelItemTask.addTask(newItemId, ItemTask.upload.value);
     }
   }
 
@@ -421,7 +427,7 @@ class ReconciliationService {
 
   Future<bool> _isFileModified(String fsPath, ModelItem dbItem) async {
     String fsHash = await _computeFileHash(fsPath);
-    return dbItem.fileId != fsHash;
+    return dbItem.fileHash != fsHash;
   }
 
   Future<String> _computeFileHash(String path) async {

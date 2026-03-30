@@ -132,18 +132,19 @@ class TaskManager {
 
   Future<bool> checkInitUpload(ModelItemTask itemTask) async {
     ModelItem? modelItem = await ModelItem.get(itemTask.id);
-    if (modelItem == null || modelItem.fileId == null) {
+    if (modelItem == null || modelItem.fileHash == null) {
       await itemTask.delete();
       return true;
     }
     final inFilePath = await ModelItem.getPathForLocalItem(modelItem.id);
     final inFile = File(inFilePath);
     if (!inFile.existsSync()) {
-      await modelItem.remove();
+      await modelItem
+          .remove(); // Yenna rascalla mind it!! its remove not delete :P
       await itemTask.delete();
       return true;
     }
-    ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
+    ModelFile? modelFile = await ModelFile.get(modelItem.fileHash!);
     if (modelFile == null) {
       await modelItem.remove();
       await itemTask.delete();
@@ -151,6 +152,14 @@ class TaskManager {
     }
     // check if already uploaded
     if (modelFile.uploadedAt > 0) {
+      await itemTask.delete();
+      return true;
+    }
+    int partToUpload = await ModelPart.getPartToUploadForFileHash(
+        modelFile.id, modelFile.parts);
+    if (partToUpload > modelFile.parts) {
+      modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
+      await modelFile.update(["uploaded_at"]);
       await itemTask.delete();
       return true;
     }
@@ -179,7 +188,7 @@ class TaskManager {
     if (modelFile.provider == 0) {
       return true;
     }
-    int partToDownload = modelFile.partsUploaded + 1;
+
     Map<String, dynamic> uploadInfo = {};
     if (modelFile.provider == StorageProvider.fife.value ||
         modelFile.provider == StorageProvider.backblaze.value) {
@@ -197,7 +206,7 @@ class TaskManager {
         uploadInfo["token"] = urlData["authorizationToken"];
       }
     } else if (modelFile.provider == StorageProvider.cloudflare.value) {
-      String fileId = '${modelFile.id}_$partToDownload';
+      String fileId = '${modelFile.id}_$partToUpload';
       final urlResult = await api.post(
           endpoint: '/r2/get-upload-url',
           jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId});
@@ -211,15 +220,14 @@ class TaskManager {
       }
     }
     if (uploadInfo.containsKey("provider")) {
-      return await uploadFilePart(itemTask, modelFile.id, uploadInfo,
-          inFilePath, modelFile.partsUploaded + 1);
+      return await uploadFilePart(
+          itemTask, modelFile.id, uploadInfo, inFilePath, partToUpload);
     }
     return true;
   }
 
   Future<bool> uploadFilePart(ModelItemTask itemTask, String fileHash,
       Map<String, dynamic> uploadInfo, String inFilePath, int part) async {
-    if (!uploadInfo.containsKey("provider")) return true;
     String fileHashPart = '${fileHash}_$part';
     Directory tempDir = await getTemporaryDirectory();
     String encryptedFilePath =
@@ -293,31 +301,22 @@ class TaskManager {
       logger.info("pushFilePart|$fileHash|$part| bytes uploaded");
 
       //update
-      ModelFile? modelFile = await ModelFile.get(fileHash);
       ModelPart? modelPart = await ModelPart.get(fileHashPart);
-      if (modelFile == null || modelPart == null) {
+      if (modelPart == null) {
         logger.error("PushFilePart", error: "file or part missing");
         return true;
       }
-      modelFile.partsUploaded = part;
-      List<String> fileAttrs = ["parts_uploaded"];
+      modelPart.uploaded = 1;
+      List<String> partAttrs = ["uploaded"];
 
       if (uploadResult.containsKey("fileId")) {
         String b2FileId = uploadResult["fileId"];
         Map<String, dynamic> partData = modelPart.data;
         partData["fileId"] = b2FileId;
         modelPart.data = partData;
-        List<String> partAttrs = ["data"];
-        await modelPart.update(partAttrs);
+        partAttrs.add("data");
       }
-
-      if (modelFile.parts == modelFile.partsUploaded) {
-        logger.info("pushFilePart|$fileHash|all parts uploaded");
-        modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
-        fileAttrs.add("uploaded_at");
-        await itemTask.delete();
-      }
-      await modelFile.update(fileAttrs);
+      await modelPart.update(partAttrs);
     } else {
       logger.error("Upload File Part", error: jsonEncode(uploadResult));
     }
@@ -331,11 +330,11 @@ class TaskManager {
 
   Future<void> checkInitDownload(ModelItemTask itemTask) async {
     ModelItem? modelItem = await ModelItem.get(itemTask.id);
-    if (modelItem == null || modelItem.fileId == null) {
+    if (modelItem == null || modelItem.fileHash == null) {
       await itemTask.delete();
       return;
     }
-    ModelFile? modelFile = await ModelFile.get(modelItem.fileId!);
+    ModelFile? modelFile = await ModelFile.get(modelItem.fileHash!);
     if (modelFile == null) {
       await itemTask.delete();
       return;

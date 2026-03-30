@@ -370,13 +370,12 @@ class SyncUtils {
               map["id"] = fileHash;
               map["item_count"] = int.parse(changeMap["6"].toString());
               map["parts"] = int.parse(changeMap["7"].toString());
-              map["parts_uploaded"] = int.parse(changeMap["8"].toString());
-              map["uploaded_at"] = int.parse(changeMap["9"].toString());
-              map["provider"] = int.parse(changeMap["10"].toString());
-              map["storage_id"] = changeMap["11"];
-              map["data"] = changeMap["12"];
-              map["updated_at"] = int.parse(changeMap["13"].toString());
-              int deleteTask = int.parse(changeMap["14"].toString());
+              map["uploaded_at"] = int.parse(changeMap["8"].toString());
+              map["provider"] = int.parse(changeMap["9"].toString());
+              map["storage_id"] = changeMap["10"];
+              map["data"] = changeMap["11"];
+              map["updated_at"] = int.parse(changeMap["12"].toString());
+              int deleteTask = int.parse(changeMap["13"].toString());
               if (deleteTask > 0) {
                 await ModelFile.deletedFromServer(fileHash);
               } else {
@@ -395,8 +394,9 @@ class SyncUtils {
               map["cipher"] = changeMap["7"];
               map["nonce"] = changeMap["8"];
               map["data"] = changeMap["9"];
-              map["uploaded_at"] = int.parse(changeMap["10"].toString());
+              map["updated_at"] = int.parse(changeMap["10"].toString());
               int deleteTask = int.parse(changeMap["11"].toString());
+              map["uploaded"] = int.parse(changeMap["12"].toString());
               if (deleteTask > 0) {
                 await ModelPart.deletedFromServer(partId);
               } else {

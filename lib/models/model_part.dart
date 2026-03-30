@@ -9,6 +9,7 @@ import '../storage/storage_sqlite.dart';
 class ModelPart {
   String id;
   int size;
+  int uploaded;
   String cipher;
   String nonce;
   Map<String, dynamic> data;
@@ -17,6 +18,7 @@ class ModelPart {
   ModelPart(
       {required this.id,
       required this.size,
+      required this.uploaded,
       required this.cipher,
       required this.nonce,
       required this.data,
@@ -26,6 +28,7 @@ class ModelPart {
     return {
       'id': id,
       'size': size,
+      'uploaded': uploaded,
       'cipher': cipher,
       'nonce': nonce,
       'data': data is String ? data : jsonEncode(data),
@@ -39,6 +42,7 @@ class ModelPart {
     return ModelPart(
       id: map['id'],
       size: map['size'],
+      uploaded: getValueFromMap(map, 'uploaded', defaultValue: 0),
       cipher: map["cipher"],
       nonce: map["nonce"],
       data: data is String ? jsonDecode(data) : data,
@@ -61,6 +65,22 @@ class ModelPart {
       part++;
     }
     return shas;
+  }
+
+  static Future<int> getPartToUploadForFileHash(
+      String fileHash, int parts) async {
+    int part = 1;
+    while (part <= parts) {
+      String tableKey = '${fileHash}_$part';
+      ModelPart? modelPart = await get(tableKey);
+      if (modelPart != null) {
+        if (modelPart.uploaded == 0) {
+          break;
+        }
+      }
+      part++;
+    }
+    return part;
   }
 
   static Future<ModelPart?> get(String id) async {

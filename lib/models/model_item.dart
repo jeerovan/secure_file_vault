@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../utils/utils_sync.dart';
 import 'package:flutter/foundation.dart';
@@ -13,7 +14,6 @@ import '../storage/storage_sqlite.dart';
 import 'package:path/path.dart' as path_lib;
 
 import 'model_file.dart';
-import 'model_part.dart';
 
 class ModelItem {
   String id;
@@ -23,7 +23,7 @@ class ModelItem {
   String? parentId;
   String? rootId;
   int scanState;
-  String? fileId;
+  String? fileHash;
   int size;
   Map<String, dynamic> data;
   int archivedAt;
@@ -37,7 +37,7 @@ class ModelItem {
     this.parentId,
     this.rootId,
     required this.scanState,
-    this.fileId,
+    this.fileHash,
     required this.data,
     required this.size,
     required this.archivedAt,
@@ -53,7 +53,7 @@ class ModelItem {
       'parent_id': parentId,
       'root_id': rootId,
       'scan_state': scanState,
-      'file_id': fileId,
+      'file_hash': fileHash,
       'size': size,
       'data': data is String ? data : jsonEncode(data),
       'archived_at': archivedAt,
@@ -78,7 +78,7 @@ class ModelItem {
       parentId: getValueFromMap(map, "parent_id", defaultValue: null),
       rootId: getValueFromMap(map, "root_id", defaultValue: null),
       scanState: getValueFromMap(map, "scan_state", defaultValue: 0),
-      fileId: getValueFromMap(map, "file_id", defaultValue: null),
+      fileHash: getValueFromMap(map, "file_hash", defaultValue: null),
       size: getValueFromMap(map, "size", defaultValue: 0),
       data: data is String ? jsonDecode(data) : data,
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
@@ -154,7 +154,8 @@ class ModelItem {
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.items.string,
-      where: "root_id = ? AND is_folder = ? AND scan_state = ? AND file_id = ?",
+      where:
+          "root_id = ? AND is_folder = ? AND scan_state = ? AND file_hash = ?",
       whereArgs: [itemId, 0, 0, hash],
     );
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -336,6 +337,14 @@ class ModelItem {
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
+  static Future<int> getItemCountForFileHash(String hash) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    List<Map<String, dynamic>> result = await db.query(Tables.items.string,
+        columns: ['COUNT(*)'], where: 'file_hash = ?', whereArgs: [hash]);
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
   static Future<List<ModelItem>> searchItem(String term) async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
@@ -459,29 +468,15 @@ class ModelItem {
       }
       delete();
     } else {
-      if (fileId == null) {
+      if (fileHash == null) {
         await delete();
       } else {
-        ModelFile? modelFile = await ModelFile.get(fileId!);
-        if (modelFile == null) {
-          await delete();
-        } else {
-          if (modelFile.uploadedAt > 0) {
-            await ModelFile.updateItemCount(fileId!, false);
-            await delete();
-          } else {
-            int parts = modelFile.parts;
-            while (parts > 0) {
-              ModelPart? modelPart =
-                  await ModelPart.get('${modelFile.id}_$parts');
-              if (modelPart != null) {
-                await modelPart.delete();
-              }
-              parts = parts - 1;
-            }
-            await modelFile.delete();
-            await delete();
-          }
+        ModelFile? modelFile = await ModelFile.get(fileHash!);
+        await delete();
+        if (modelFile != null) {
+          int count = await ModelItem.getItemCountForFileHash(fileHash!);
+          await modelFile.updateCount(count);
+          // NOTE file is deleted by server when item count becomes 0
         }
       }
     }

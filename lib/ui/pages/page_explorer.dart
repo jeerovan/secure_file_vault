@@ -550,7 +550,7 @@ class _FileListItemState extends State<_FileListItem> {
   }
 
   Future<bool> fileUploadedToCloud(ModelItem item) async {
-    ModelFile? modelFile = await ModelFile.get(item.fileId!);
+    ModelFile? modelFile = await ModelFile.get(item.fileHash!);
     if (modelFile != null) {
       return modelFile.uploadedAt > 0;
     }

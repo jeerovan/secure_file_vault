@@ -139,6 +139,7 @@ class StorageSqlite {
       CREATE TABLE parts (
         id TEXT PRIMARY KEY,
         size INTEGER DEFAULT 0,
+        uploaded INTEGER DEFAULT 0,
         cipher TEXT NOT NULL,
         nonce TEXT NOT NULL,
         data TEXT,
@@ -160,14 +161,15 @@ class StorageSqlite {
         parent_id TEXT,
         root_id TEXT,
         scan_state INTEGER DEFAULT 0,
-        file_id TEXT,
+        file_hash TEXT,
         size INTEGER DEFAULT 0,
         archived_at INTEGER,
         data TEXT,
-        updated_at INTEGER,
-        FOREIGN KEY (parent_id) REFERENCES items(id) ON DELETE CASCADE,
-        FOREIGN KEY (file_id) REFERENCES files(id) ON DELETE CASCADE
+        updated_at INTEGER
       )
+    ''');
+    await db.execute('''
+    CREATE INDEX idx_items_file_hash ON items (file_hash)
     ''');
     await db.execute('''
         CREATE VIRTUAL TABLE items_fts USING fts4(
@@ -209,7 +211,7 @@ class StorageSqlite {
       )
     ''');
     // id : item_id
-    // task: 1(Upload), 2(Download), 3(Delete)
+    // task: 1(Upload), 2(Download)
     await db.execute('''
       CREATE TABLE item_tasks (
         id TEXT PRIMARY KEY,

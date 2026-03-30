@@ -66,7 +66,6 @@ export const file = sqliteTable('file', {
 	[FileKeys.DEVICE_ID]: text(FileKeys.DEVICE_ID).notNull(),
 	[FileKeys.ITEMS_COUNT]: integer(FileKeys.ITEMS_COUNT).notNull().default(0),
 	[FileKeys.PARTS]: integer(FileKeys.PARTS).notNull().default(0),
-	[FileKeys.PARTS_UPLOADED]: integer(FileKeys.PARTS_UPLOADED).notNull().default(0),
 	[FileKeys.UPLOADED_AT]: integer(FileKeys.UPLOADED_AT).notNull().default(0),
 	[FileKeys.PROVIDER]: integer(FileKeys.PROVIDER).default(0), // Provider: FiFe, Backblaze, Cloudflare etc.
 	[FileKeys.STORAGE_ID]: text(FileKeys.STORAGE_ID), // Storage
@@ -90,7 +89,8 @@ export const part = sqliteTable('part', {
 	[PartKeys.NONCE]: text(PartKeys.NONCE),
 	[PartKeys.JSON]: text(PartKeys.JSON, { mode: 'json' }),
 	[PartKeys.CLIENT_UPDATED_AT]: integer(PartKeys.CLIENT_UPDATED_AT).notNull().default(0),
-	[PartKeys.DELETED]: integer(PartKeys.DELETED).notNull().default(0)
+	[PartKeys.DELETED]: integer(PartKeys.DELETED).notNull().default(0),
+	[PartKeys.UPLOADED]: integer(PartKeys.UPLOADED).notNull().default(0)
 });
 
 export const item = sqliteTable('item', {

@@ -100,7 +100,7 @@ export async function addUpdateDevice(
 			})
 			.where(eq(userDevice[UserDeviceKeys.ID], tableId));
 
-		return json({ status: 1 });
+		return json({ success: 1 });
 	} else {
 		const result = db
 			.select({ count: count() })
@@ -116,10 +116,10 @@ export async function addUpdateDevice(
 		const activeDevicesCount = result?.count ?? 0;
 
 		if (activeDevicesCount >= 5) {
-			return json({ status: 0, message: ErrorCode.DEVICE_LIMIT_REACHED });
+			return json({ success: 0, message: ErrorCode.DEVICE_LIMIT_REACHED });
 		} else {
 			if (!title || type === undefined) {
-				return json({ status: 0, message: ErrorCode.MISSING_FIELDS });
+				return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 			}
 
 			await db.insert(userDevice).values({
@@ -131,7 +131,7 @@ export async function addUpdateDevice(
 				[UserDeviceKeys.STATUS]: 1
 			});
 
-			return json({ status: 1 });
+			return json({ success: 1 });
 		}
 	}
 }
@@ -143,9 +143,9 @@ export async function removeDevice(tableId: string) {
 		.where(eq(userDevice[UserDeviceKeys.ID], tableId));
 	if (device) {
 		await db.delete(userDevice).where(eq(userDevice[UserDeviceKeys.ID], tableId));
-		return json({ status: 1 });
+		return json({ success: 1 });
 	} else {
-		return json({ status: 0, message: ErrorCode.NO_DEVICE });
+		return json({ success: 0, message: ErrorCode.NO_DEVICE });
 	}
 }
 
@@ -235,7 +235,6 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 						[FileKeys.DEVICE_ID]: deviceId,
 						[FileKeys.ITEMS_COUNT]: itemCount,
 						[FileKeys.PARTS]: change['parts'] ?? 1,
-						[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
 						[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
 						[FileKeys.PROVIDER]: change['provider'] ?? 0,
 						[FileKeys.STORAGE_ID]: storageId ?? null,
@@ -252,7 +251,6 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				[FileKeys.DEVICE_ID]: deviceId,
 				[FileKeys.ITEMS_COUNT]: itemCount,
 				[FileKeys.PARTS]: change['parts'] ?? 1,
-				[FileKeys.PARTS_UPLOADED]: change['parts_uploaded'] ?? 0,
 				[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
 				[FileKeys.STORAGE_ID]: storageId ?? null,
 				[FileKeys.PROVIDER]: change['provider'] ?? 0,
@@ -293,7 +291,7 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 			.from(part)
 			.where(eq(part[PartKeys.ID], tableKey))
 			.get();
-
+		const deleted = change['deleted'];
 		if (existingRow) {
 			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
 				await db
@@ -305,7 +303,8 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 						[PartKeys.NONCE]: change['nonce'] ?? null,
 						[PartKeys.JSON]: changedData,
 						[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
-						[PartKeys.DELETED]: change['deleted']
+						[PartKeys.DELETED]: deleted,
+						[PartKeys.UPLOADED]: change['uploaded'] ?? 0
 					})
 					.where(eq(part[PartKeys.ID], tableKey));
 			}
@@ -319,7 +318,8 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 				[PartKeys.NONCE]: change['nonce'] ?? null,
 				[PartKeys.JSON]: changedData,
 				[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
-				[PartKeys.DELETED]: change['deleted']
+				[PartKeys.DELETED]: deleted,
+				[PartKeys.UPLOADED]: change['uploaded'] ?? 0
 			});
 		}
 	}
@@ -576,7 +576,6 @@ export async function resetFile(userId: string, fileHash: string) {
 		.set({
 			[FileKeys.DEVICE_ID]: 'SERVER',
 			[FileKeys.PARTS]: 0,
-			[FileKeys.PARTS_UPLOADED]: 0,
 			[FileKeys.UPLOADED_AT]: 0,
 			[FileKeys.PROVIDER]: 0,
 			[FileKeys.STORAGE_ID]: null,

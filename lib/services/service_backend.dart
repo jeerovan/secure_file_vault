@@ -135,8 +135,10 @@ class BackendApi {
           .timeout(timeout);
       return _formatResponse(res);
     } catch (e) {
-      logger.debug(e.toString());
-      if (_isNetworkException(e)) rethrow;
+      logger.error(e.toString());
+      if (_isNetworkException(e)) {
+        return {'success': -1, 'message': 'Network Error'};
+      }
       return {'success': -1, 'message': 'Unexpected Error'};
     }
   }
@@ -158,8 +160,10 @@ class BackendApi {
           .timeout(timeout);
       return _formatResponse(res);
     } catch (e) {
-      logger.debug(e.toString());
-      if (_isNetworkException(e)) rethrow;
+      logger.error(e.toString());
+      if (_isNetworkException(e)) {
+        return {'success': -1, 'message': 'Network Error'};
+      }
       return {'success': -1, 'message': 'Unexpected Error'};
     }
   }
