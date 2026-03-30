@@ -73,10 +73,10 @@ class ModelPart {
     while (part <= parts) {
       String tableKey = '${fileHash}_$part';
       ModelPart? modelPart = await get(tableKey);
-      if (modelPart != null) {
-        if (modelPart.uploaded == 0) {
-          break;
-        }
+      if (modelPart == null) {
+        break;
+      } else if (modelPart.uploaded == 0) {
+        break;
       }
       part++;
     }
