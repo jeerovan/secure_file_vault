@@ -93,7 +93,6 @@ class _FilePaneState extends State<FilePane> {
   Future<void> _handleAppEvents() async {
     final AppEvent? event = EventStream().notifier.value;
     if (event == null) return;
-
     switch (event.type) {
       case EventType.updateItem:
         if (event.key == EventKey.added) {
@@ -101,7 +100,7 @@ class _FilePaneState extends State<FilePane> {
           if (item != null &&
               currentItem != null &&
               item.parentId == currentItem!.id) {
-            final currentItems = _itemsNotifier.value;
+            final currentItems = List<ModelItem>.from(_itemsNotifier.value);
             if (item.isFolder) {
               currentItems.insert(0, item);
             } else {
@@ -111,7 +110,7 @@ class _FilePaneState extends State<FilePane> {
           }
         } else if (event.key == EventKey.removed) {
           final removedId = event.id;
-          final currentItems = _itemsNotifier.value;
+          final currentItems = List<ModelItem>.from(_itemsNotifier.value);
           currentItems.removeWhere((item) => item.id == removedId);
           _itemsNotifier.value = currentItems;
         }

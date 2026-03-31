@@ -403,6 +403,10 @@ class TaskManager {
                     await ModelItem.getPathForItem(modelItem.id);
                 await File(filePath).rename(finalFilePath);
                 await itemTask.delete();
+                EventStream().publish(AppEvent(
+                    type: EventType.updateItem,
+                    id: modelItem.id,
+                    key: EventKey.downloaded));
               }
             } else {
               String error = decryptionResult.failureReason ?? "";

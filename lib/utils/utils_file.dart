@@ -152,7 +152,6 @@ Future<int> downloadFileStream({
       await for (final List<int> chunk in response) {
         fileOut.add(chunk);
         received += chunk.length;
-        logger.info('$received of $total');
         // Trigger the callback for your UI's progress bar
         if (onProgress != null) {
           onProgress(received, total);
