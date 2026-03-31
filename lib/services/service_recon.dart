@@ -385,7 +385,15 @@ class ReconciliationService {
       await item.delete();
       logger.info('  - Deleted Folder: ${item.name}');
     } else {
-      await item.remove();
+      // Do not delete if already uploaded
+      ModelFile? modelFile = await ModelFile.get(item.fileHash!);
+      if (modelFile == null || modelFile.uploadedAt == 0) {
+        // check if not uploading
+        ModelItemTask? uploadTask = await ModelItemTask.get(item.id);
+        if (uploadTask == null) {
+          await item.remove();
+        }
+      }
       logger.info('  - Deleted File: ${item.name}');
     }
   }

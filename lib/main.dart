@@ -160,9 +160,9 @@ class AppNavigator extends StatelessWidget {
               runningOnDesktop: false,
             );
           case SetupStep.decodeAccessKey:
-            return PageAccessKeyDecode(runningOnDesktop: false);
+            return PageAccessKeyDecode();
           case SetupStep.showAccessKey:
-            return const PageAccessKey(runningOnDesktop: false);
+            return const PageAccessKey();
           case SetupStep.registerDevice:
             return PageRegisterDevice();
           case SetupStep.manageDevices:

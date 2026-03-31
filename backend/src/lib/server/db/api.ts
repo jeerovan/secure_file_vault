@@ -286,14 +286,21 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 		const changeString = change['data'];
 		const changedData = typeof changeString == 'string' ? JSON.parse(changeString) : changeString;
 		const existingRow = db
-			.select({ clientUpdatedAt: part[PartKeys.CLIENT_UPDATED_AT] })
+			.select({
+				clientUpdatedAt: part[PartKeys.CLIENT_UPDATED_AT],
+				uploaded: part[PartKeys.UPLOADED]
+			})
 			.from(part)
 			.where(eq(part[PartKeys.ID], partKey))
 			.get();
 		const deleted = change['deleted'];
 		const uploaded = change['uploaded'];
 		const partBytes = change['size'];
+		let updateUsedBytes = uploaded == 1;
 		if (existingRow) {
+			if (existingRow.uploaded == 1) {
+				updateUsedBytes = false;
+			}
 			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
 				await db
 					.update(part)
@@ -323,7 +330,7 @@ export async function savePartChanges(userId: string, deviceId: string, changes:
 				[PartKeys.UPLOADED]: uploaded
 			});
 		}
-		if (uploaded == 1) {
+		if (updateUsedBytes) {
 			const fileKey = partKey.slice(0, partKey.lastIndexOf('_'));
 			const fileRow = db.select().from(file).where(eq(file[FileKeys.ID], fileKey)).get();
 			if (fileRow) {

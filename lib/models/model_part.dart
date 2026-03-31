@@ -67,6 +67,18 @@ class ModelPart {
     return shas;
   }
 
+  static Future<void> deleteAllForFile(String fileId, int parts) async {
+    int part = 1;
+    while (part <= parts) {
+      String tableKey = '${fileId}_$part';
+      ModelPart? modelPart = await get(tableKey);
+      if (modelPart != null) {
+        await modelPart.delete();
+      }
+      part++;
+    }
+  }
+
   static Future<int> getPartToUploadForFileHash(
       String fileHash, int parts) async {
     int part = 1;

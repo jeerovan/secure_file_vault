@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:file_vault_bb/models/model_part.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -455,7 +456,14 @@ class ModelItem {
   static Future<void> deletedFromServer(String id) async {
     ModelItem? item = await ModelItem.get(id);
     if (item != null) {
-      await item.delete(pushToSync: false);
+      if (item.isFolder) {
+        String path = await getPathForItem(id);
+        if (!File(path).existsSync()) {
+          await item.delete(pushToSync: false);
+        }
+      } else {
+        await item.delete(pushToSync: false);
+      }
     }
     //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
   }
@@ -468,17 +476,35 @@ class ModelItem {
       }
       delete();
     } else {
-      if (fileHash == null) {
-        await delete();
-      } else {
-        ModelFile? modelFile = await ModelFile.get(fileHash!);
-        await delete();
-        if (modelFile != null) {
-          int count = await ModelItem.getItemCountForFileHash(fileHash!);
-          await modelFile.updateCount(count);
-          // NOTE file is deleted by server when item count becomes 0
+      String fileId = fileHash!;
+      ModelFile? modelFile = await ModelFile.get(fileId);
+      await delete();
+      if (modelFile != null) {
+        int count = await ModelItem.getItemCountForFileHash(fileId);
+        await modelFile.updateCount(count);
+        if (count == 0) {
+          int parts = modelFile.parts;
+          // Changes saved, delete file
+          await modelFile.delete();
+          // Delete all parts along
+          await ModelPart.deleteAllForFile(fileId, parts);
         }
       }
+    }
+  }
+
+  Future<void> forceRemove() async {
+    String fileId = fileHash!;
+    ModelFile? modelFile = await ModelFile.get(fileId);
+    await delete();
+    if (modelFile != null) {
+      int count = 0;
+      await modelFile.updateCount(count);
+      int parts = modelFile.parts;
+      // Changes saved, delete file
+      await modelFile.delete();
+      // Delete all parts along
+      await ModelPart.deleteAllForFile(fileId, parts);
     }
   }
 }

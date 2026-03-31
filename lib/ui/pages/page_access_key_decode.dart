@@ -15,10 +15,8 @@ import 'package:sodium_libs/sodium_libs_sumo.dart';
 import '../../utils/enums.dart';
 
 class PageAccessKeyDecode extends StatefulWidget {
-  final bool runningOnDesktop;
   final Function(PageType, bool, PageParams)? setShowHidePage;
-  const PageAccessKeyDecode(
-      {super.key, required this.runningOnDesktop, this.setShowHidePage});
+  const PageAccessKeyDecode({super.key, this.setShowHidePage});
 
   @override
   State<PageAccessKeyDecode> createState() => _PageAccessKeyDecodeState();
@@ -143,14 +141,6 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Enable Sync'),
-        leading: widget.runningOnDesktop
-            ? BackButton(
-                onPressed: () {
-                  widget.setShowHidePage!(
-                      PageType.accessKeyInput, false, PageParams());
-                },
-              )
-            : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

@@ -55,17 +55,6 @@ class ModelFile {
     );
   }
 
-  static Future<void> updateItemCount(String fileId, bool added) async {
-    ModelFile? file = await get(fileId);
-    if (file == null) return;
-    if (added) {
-      file.itemCount = file.itemCount + 1;
-    } else {
-      file.itemCount = file.itemCount - 1;
-    }
-    await file.update(["item_count"]);
-  }
-
   static Future<List<ModelFile>> pendingForUpload() async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;

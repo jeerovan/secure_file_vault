@@ -15,11 +15,9 @@ import 'package:bip39/bip39.dart' as bip39;
 import '../../utils/common.dart';
 
 class PageAccessKey extends StatefulWidget {
-  final bool runningOnDesktop;
   final Function(PageType, bool, PageParams)? setShowHidePage;
   const PageAccessKey({
     super.key,
-    required this.runningOnDesktop,
     this.setShowHidePage,
   });
 
@@ -86,14 +84,6 @@ class _PageAccessKeyState extends State<PageAccessKey> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Access Key'),
-        leading: widget.runningOnDesktop
-            ? BackButton(
-                onPressed: () {
-                  widget.setShowHidePage!(
-                      PageType.accessKey, false, PageParams());
-                },
-              )
-            : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

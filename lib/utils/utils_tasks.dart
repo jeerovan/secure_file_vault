@@ -139,8 +139,7 @@ class TaskManager {
     final inFilePath = await ModelItem.getPathForLocalItem(modelItem.id);
     final inFile = File(inFilePath);
     if (!inFile.existsSync()) {
-      await modelItem
-          .remove(); // Yenna rascalla mind it!! its remove not delete :P
+      await modelItem.remove(); //its remove not delete
       await itemTask.delete();
       return true;
     }
@@ -373,9 +372,9 @@ class TaskManager {
       String tempFilePath = "${tempDir.path}/$fileHashPart";
       File tempFile = File(tempFilePath);
       IOSink fileSink = tempFile.openWrite();
-      bool downloaded = await downloadFileStream(
+      int downloadedRequestState = await downloadFileStream(
           url: downloadUrl, headers: null, fileOut: fileSink, onProgress: null);
-      if (downloaded) {
+      if (downloadedRequestState == 1) {
         logger.info("$name:$partToDownload: Downloaded");
         // match length
         Uint8List fileBytes = File(tempFilePath).readAsBytesSync();
@@ -415,6 +414,8 @@ class TaskManager {
         } catch (e) {
           // could not delete temp file
         }
+      } else if (downloadedRequestState == -1) {
+        await modelItem.forceRemove();
       }
     }
   }

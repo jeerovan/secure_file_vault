@@ -119,7 +119,7 @@ class FileSplitter {
 typedef ProgressCallback = void Function(int received, int total);
 
 /// Downloads a file as a stream directly to an [IOSink] to prevent memory overuse.
-Future<bool> downloadFileStream({
+Future<int> downloadFileStream({
   required String url,
   required Map<String, String>? headers,
   required IOSink fileOut,
@@ -127,7 +127,7 @@ Future<bool> downloadFileStream({
 }) async {
   final client = HttpClient();
   AppLogger logger = AppLogger(prefixes: ["Downloader"]);
-  bool success = false;
+  int state = 0;
   try {
     // 1. Initialize the GET request
     final request = await client.getUrl(Uri.parse(url));
@@ -158,7 +158,9 @@ Future<bool> downloadFileStream({
           onProgress(received, total);
         }
       }
-      success = true;
+      state = 1;
+    } else {
+      state = -1;
     }
   } catch (e, s) {
     logger.error("Failed", error: e.toString(), stackTrace: s);
@@ -168,7 +170,7 @@ Future<bool> downloadFileStream({
     await fileOut.flush();
     await fileOut.close();
   }
-  return success;
+  return state;
 }
 
 Future<Map<String, dynamic>> uploadFileBytes({
