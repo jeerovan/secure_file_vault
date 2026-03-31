@@ -331,6 +331,7 @@ class SyncUtils {
               map[AppString.textNonce.string] = changeMap["7"];
               map[AppString.keyCipher.string] = changeMap["8"];
               map[AppString.keyNonce.string] = changeMap["9"];
+              int clientTS = int.parse(changeMap["10"].toString());
               Uint8List? decryptedBytes =
                   cryptoUtils.getDecryptedBytesFromMap(map, masterKeyBytes);
               if (decryptedBytes == null) continue;
@@ -339,7 +340,7 @@ class SyncUtils {
               int deleteTask = int.parse(itemMap["deleted"].toString());
               if (deleteTask > 0) {
                 String itemId = itemMap["id"];
-                await ModelItem.deletedFromServer(itemId);
+                await ModelItem.deletedFromServer(itemId, clientTS);
               } else {
                 ModelItem newModelItem = await ModelItem.fromMap(itemMap);
                 await newModelItem.upcertFromServer();
@@ -350,6 +351,7 @@ class SyncUtils {
             } else if (table == Tables.files.string) {
               String fileHash = changeMap["1"].split("_")[1];
               int fileTS = int.parse(changeMap["3"].toString());
+              int clientTS = int.parse(changeMap["12"].toString());
               map["id"] = fileHash;
               map["item_count"] = int.parse(changeMap["6"].toString());
               map["parts"] = int.parse(changeMap["7"].toString());
@@ -357,10 +359,10 @@ class SyncUtils {
               map["provider"] = int.parse(changeMap["9"].toString());
               map["storage_id"] = changeMap["10"];
               map["data"] = changeMap["11"];
-              map["updated_at"] = int.parse(changeMap["12"].toString());
+              map["updated_at"] = clientTS;
               int deleteTask = int.parse(changeMap["13"].toString());
               if (deleteTask > 0) {
-                await ModelFile.deletedFromServer(fileHash);
+                await ModelFile.deletedFromServer(fileHash, clientTS);
               } else {
                 ModelFile newModelFile = await ModelFile.fromMap(map);
                 newModelFile.upcertFromServer();
@@ -370,6 +372,7 @@ class SyncUtils {
               }
             } else if (table == Tables.parts.string) {
               int partTS = int.parse(changeMap["3"].toString());
+              int clientTS = int.parse(changeMap["10"].toString());
               List<String> userIdPartId = changeMap["1"].split("_");
               String partId = userIdPartId.skip(1).join('_');
               map["id"] = partId;
@@ -377,11 +380,11 @@ class SyncUtils {
               map["cipher"] = changeMap["7"];
               map["nonce"] = changeMap["8"];
               map["data"] = changeMap["9"];
-              map["updated_at"] = int.parse(changeMap["10"].toString());
+              map["updated_at"] = clientTS;
               int deleteTask = int.parse(changeMap["11"].toString());
               map["uploaded"] = int.parse(changeMap["12"].toString());
               if (deleteTask > 0) {
-                await ModelPart.deletedFromServer(partId);
+                await ModelPart.deletedFromServer(partId, clientTS);
               } else {
                 ModelPart newModelPart = await ModelPart.fromMap(map);
                 await newModelPart.upcertFromServer();

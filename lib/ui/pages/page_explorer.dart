@@ -76,12 +76,13 @@ class _FilePaneState extends State<FilePane> {
   @override
   void initState() {
     super.initState();
+    EventStream().notifier.addListener(_handleAppEvents);
     _loadFiles();
   }
 
   @override
   void dispose() {
-    EventStream().notifier.removeListener(_handleAppEvent);
+    EventStream().notifier.removeListener(_handleAppEvents);
     _breadcrumbController.dispose();
     _itemsNotifier.dispose();
     _selectedItemsNotifier.dispose();
@@ -89,12 +90,31 @@ class _FilePaneState extends State<FilePane> {
     super.dispose();
   }
 
-  void _handleAppEvent() {
+  Future<void> _handleAppEvents() async {
     final AppEvent? event = EventStream().notifier.value;
     if (event == null) return;
 
     switch (event.type) {
       case EventType.updateItem:
+        if (event.key == EventKey.added) {
+          ModelItem? item = await ModelItem.get(event.id);
+          if (item != null &&
+              currentItem != null &&
+              item.parentId == currentItem!.id) {
+            final currentItems = _itemsNotifier.value;
+            if (item.isFolder) {
+              currentItems.insert(0, item);
+            } else {
+              currentItems.add(item);
+            }
+            _itemsNotifier.value = currentItems;
+          }
+        } else if (event.key == EventKey.removed) {
+          final removedId = event.id;
+          final currentItems = _itemsNotifier.value;
+          currentItems.removeWhere((item) => item.id == removedId);
+          _itemsNotifier.value = currentItems;
+        }
         break;
     }
   }
@@ -574,7 +594,10 @@ class _FileListItemState extends State<_FileListItem> {
   @override
   void initState() {
     super.initState();
-    if (!widget.item.isFolder) _checkFileStates();
+    if (!widget.item.isFolder) {
+      _checkFileStates();
+    }
+    EventStream().notifier.addListener(_handleItemUpdateEvent);
   }
 
   @override
@@ -583,6 +606,35 @@ class _FileListItemState extends State<_FileListItem> {
     // Re-check statuses if the underlying item changes (e.g., during recycling in ListView)
     if (oldWidget.item.id != widget.item.id && !widget.item.isFolder) {
       _checkFileStates();
+    }
+  }
+
+  @override
+  void dispose() {
+    EventStream().notifier.removeListener(_handleItemUpdateEvent);
+    super.dispose();
+  }
+
+  void _handleItemUpdateEvent() {
+    final AppEvent? event = EventStream().notifier.value;
+    if (event == null) return;
+
+    switch (event.type) {
+      case EventType.updateItem:
+        if (event.key == EventKey.uploaded) {
+          if (event.id == widget.item.id) {
+            setState(() {
+              _isUploaded = true;
+            });
+          }
+        } else if (event.key == EventKey.downloaded) {
+          if (event.id == widget.item.id) {
+            setState(() {
+              _isLocal = true;
+            });
+          }
+        }
+        break;
     }
   }
 

@@ -4,17 +4,31 @@ enum EventType {
   updateItem,
 }
 
+enum EventKey {
+  object,
+  uploadProgress,
+  downloadProgress,
+  added,
+  uploaded,
+  downloaded,
+  removed
+}
+
 class AppEvent {
   final EventType type;
+  final String id;
+  final EventKey key;
   final dynamic value;
 
   AppEvent({
     required this.type,
+    required this.id,
+    required this.key,
     this.value,
   });
 
   @override
-  String toString() => 'AppEvent(type: $type,value: $value)';
+  String toString() => 'AppEvent(type: $type,id: $id, key: $key,value: $value)';
 }
 
 /// A singleton class that provides an event stream using ValueNotifier

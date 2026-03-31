@@ -145,10 +145,11 @@ class ModelFile {
     return deleted;
   }
 
-  static Future<void> deletedFromServer(String id) async {
-    ModelFile? item = await ModelFile.get(id);
-    if (item != null) {
-      await item.delete(pushToSync: false);
+  static Future<void> deletedFromServer(String id, int remoteUpdatedAt) async {
+    ModelFile? file = await ModelFile.get(id);
+    if (file != null) {
+      if (file.updatedAt > remoteUpdatedAt) return;
+      await file.delete(pushToSync: false);
     }
   }
 }

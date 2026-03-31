@@ -424,16 +424,25 @@ class ModelItem {
         await dbHelper.getWithId(Tables.items.string, id);
     if (rows.isEmpty) {
       result = await dbHelper.insert(Tables.items.string, map);
+      EventStream().publish(AppEvent(
+          type: EventType.updateItem,
+          id: id,
+          key: EventKey.added,
+          value: null));
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
         result = await dbHelper.update(Tables.items.string, map, id);
+        EventStream().publish(AppEvent(
+            type: EventType.updateItem,
+            id: id,
+            key: EventKey.object,
+            value: null));
       } else {
         result = 0;
       }
     }
-    EventStream().publish(AppEvent(type: EventType.updateItem, value: id));
     return result;
   }
 
@@ -450,22 +459,31 @@ class ModelItem {
         deleteTask: deleteTask,
       );
     }
+    EventStream().publish(AppEvent(
+        type: EventType.updateItem,
+        id: id,
+        key: EventKey.removed,
+        value: null));
     return deleted;
   }
 
-  static Future<void> deletedFromServer(String id) async {
+  static Future<void> deletedFromServer(String id, int remoteUpdatedAt) async {
     ModelItem? item = await ModelItem.get(id);
     if (item != null) {
+      if (item.updatedAt > remoteUpdatedAt) return;
+      bool delete = false;
       if (item.isFolder) {
         String path = await getPathForItem(id);
         if (!File(path).existsSync()) {
-          await item.delete(pushToSync: false);
+          delete = true;
         }
       } else {
+        delete = true;
+      }
+      if (delete) {
         await item.delete(pushToSync: false);
       }
     }
-    EventStream().publish(AppEvent(type: EventType.updateItem, value: id));
   }
 
   Future<void> remove() async {

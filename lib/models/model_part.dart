@@ -172,9 +172,10 @@ class ModelPart {
     return deleted;
   }
 
-  static Future<void> deletedFromServer(String id) async {
+  static Future<void> deletedFromServer(String id, int remoteUpdatedAt) async {
     ModelPart? part = await ModelPart.get(id);
     if (part != null) {
+      if (part.updatedAt > remoteUpdatedAt) return;
       await part.delete(pushToSync: false);
     }
   }

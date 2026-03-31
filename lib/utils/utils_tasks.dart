@@ -7,6 +7,7 @@ import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
@@ -160,6 +161,10 @@ class TaskManager {
       modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
       await modelFile.update(["uploaded_at"]);
       await itemTask.delete();
+      EventStream().publish(AppEvent(
+          type: EventType.updateItem,
+          id: modelItem.id,
+          key: EventKey.uploaded));
       return true;
     }
     final api = BackendApi();
