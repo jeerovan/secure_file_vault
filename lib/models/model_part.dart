@@ -95,6 +95,21 @@ class ModelPart {
     return part;
   }
 
+  static Future<int> getPartsUploadedForFileHash(
+      String fileHash, int parts) async {
+    int uploaded = 0;
+    int part = 1;
+    while (part <= parts) {
+      String tableKey = '${fileHash}_$part';
+      ModelPart? modelPart = await get(tableKey);
+      if (modelPart != null && modelPart.uploaded == 1) {
+        uploaded++;
+      }
+      part++;
+    }
+    return uploaded;
+  }
+
   static Future<ModelPart?> get(String id) async {
     final dbHelper = StorageSqlite.instance;
     List<Map<String, dynamic>> list =

@@ -300,7 +300,7 @@ class TaskManager {
     Map<String, dynamic> uploadResult = await uploadFileBytes(
         method: method, bytes: fileBytes, url: uploadUrl, headers: headers);
     logger.info("UploadedBytes:${jsonEncode(uploadResult)}");
-    // update parts_uploaded
+    // update uploaded
     if (uploadResult["error"].isEmpty) {
       logger.info("pushFilePart|$fileHash|$part| bytes uploaded");
 
@@ -321,6 +321,20 @@ class TaskManager {
         partAttrs.add("data");
       }
       await modelPart.update(partAttrs);
+      // Broadcast upload progress
+      ModelFile? modelFile = await ModelFile.get(fileHash);
+      if (modelFile != null) {
+        int parts = modelFile.parts;
+        int partsUploaded =
+            await ModelPart.getPartsUploadedForFileHash(fileHash, parts);
+        final double percent = parts > 0 ? (partsUploaded / parts) : 0.0;
+        final double uploaded = percent.clamp(0.0, 1.0);
+        EventStream().publish(AppEvent(
+            type: EventType.updateItem,
+            id: itemTask.id,
+            key: EventKey.uploadProgress,
+            value: uploaded));
+      }
     } else {
       logger.error("Upload File Part", error: jsonEncode(uploadResult));
     }
@@ -407,6 +421,16 @@ class TaskManager {
                     type: EventType.updateItem,
                     id: modelItem.id,
                     key: EventKey.downloaded));
+              } else {
+                // Broadcast download progress
+                final double percent =
+                    parts > 0 ? (partToDownload / parts) : 0.0;
+                final double downloaded = percent.clamp(0.0, 1.0);
+                EventStream().publish(AppEvent(
+                    type: EventType.updateItem,
+                    id: modelItem.id,
+                    key: EventKey.downloadProgress,
+                    value: downloaded));
               }
             } else {
               String error = decryptionResult.failureReason ?? "";

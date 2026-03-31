@@ -299,11 +299,13 @@ extension StorageProviderExtension on StorageProvider {
   }
 }
 
-enum ItemTask { upload, download }
+enum ItemTask { none, upload, download }
 
 extension ItemTaskExtension on ItemTask {
   int get value {
     switch (this) {
+      case ItemTask.none:
+        return 0;
       case ItemTask.upload:
         return 1;
       case ItemTask.download:
