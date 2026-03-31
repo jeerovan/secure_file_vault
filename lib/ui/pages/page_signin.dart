@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/model_item.dart';
-import '../../models/model_state.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_logger.dart';
 import '../../storage/storage_secure.dart';
@@ -144,11 +143,6 @@ class _PageSigninState extends State<PageSignin> {
       Session? session;
 
       if (simulateTesting()) {
-        if (await ModelState.get(AppString.dataSeeded.string,
-                defaultValue: "no") ==
-            "no") {
-          await signalToUpdateHome();
-        }
       } else {
         final AuthResponse response = await supabase.auth.verifyOTP(
           email: savedEmail,

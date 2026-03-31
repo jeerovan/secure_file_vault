@@ -13,7 +13,6 @@ import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../models/model_part.dart';
 import '../models/model_state.dart';
-import '../services/service_events.dart';
 import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import '../utils/utils_crypto.dart';
@@ -43,30 +42,27 @@ class SyncUtils {
   static final String processRunningAt = "sync_running_at";
 
   // Static method to trigger change detection
-  static void waitAndSyncChanges(
-      {bool inBackground = false,
-      bool manualSync = false,
-      bool firstFetch = false}) {
+  static void waitAndSyncChanges({bool inBackground = false}) {
     logger.info("wait and sync");
-    _instance._handleChange(inBackground,
-        manualSync: manualSync, firstFetch: firstFetch);
+    _instance._handleChange(inBackground);
   }
 
-  void _handleChange(bool inBackground,
-      {bool manualSync = false, bool firstFetch = false}) {
+  void _handleChange(
+    bool inBackground,
+  ) {
     _hasPendingChanges = true;
     _debounceTimer?.cancel(); // Cancel any ongoing debounce
     _debounceTimer = Timer(Duration(seconds: 2), () {
       if (_hasPendingChanges) {
         _hasPendingChanges = false;
-        triggerSync(inBackground,
-            manualSync: manualSync, firstFetch: firstFetch);
+        triggerSync(inBackground);
       }
     });
   }
 
-  Future<void> triggerSync(bool inBackground,
-      {bool manualSync = false, bool firstFetch = false}) async {
+  Future<void> triggerSync(
+    bool inBackground,
+  ) async {
     await _lock.synchronized(() async {
       if (_isSyncing) {
         logger.warning("Sync already in progress, skipping.");
@@ -87,7 +83,7 @@ class SyncUtils {
           logger.info("No internet");
           return;
         }
-        await _performSyncOperations(inBackground, manualSync, firstFetch);
+        await _performSyncOperations(inBackground);
       } catch (e, stack) {
         logger.error("Sync failed", error: e, stackTrace: stack);
       } finally {
@@ -97,8 +93,7 @@ class SyncUtils {
     });
   }
 
-  Future<void> _performSyncOperations(
-      bool inBackground, bool manualSync, bool firstFetch) async {
+  Future<void> _performSyncOperations(bool inBackground) async {
     String mode = inBackground ? "Background" : "Foreground";
     logger.info("$mode|Sync|------------------START----------------");
     try {
@@ -113,15 +108,6 @@ class SyncUtils {
     }
     _processTimer?.cancel();
     _processTimer = null;
-    if (manualSync) {
-      // Send Signal to update home
-      await signalToUpdateHome();
-    }
-    if (firstFetch) {
-      // Send Signal to update home
-      await signalToUpdateHome();
-      EventStream().publish(AppEvent(type: EventType.serverFirstFetchEnds));
-    }
     logger.info("$mode|Sync|------------------ENDED----------------");
   }
 
@@ -152,8 +138,6 @@ class SyncUtils {
       if (removed) {
         // signout
         await signout();
-        // Send Signal to update home
-        await signalToUpdateHome();
       }
       logger.info("device Status Checked");
     } catch (e, s) {
@@ -190,8 +174,7 @@ class SyncUtils {
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
         //TODO remove all local media (FiFe folder)
-        // Send Signal to update home
-        await signalToUpdateHome();
+
         success = true;
       } on FunctionException catch (e) {
         Map<String, dynamic> errorMap =

@@ -115,7 +115,6 @@ enum AppString {
   reviewDialogShown,
   deviceRegistered,
   loggingEnabled,
-  dataSeeded,
   simulateTesting,
 
   // Supabase
@@ -184,8 +183,6 @@ extension AppStringExtension on AppString {
         return "simulate_testing";
       case AppString.signedIn:
         return "signed_in";
-      case AppString.dataSeeded:
-        return "data_seeded";
       case AppString.loggingEnabled:
         return "logging_enabled";
       case AppString.planRcId:

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../models/model_file.dart';
 import '../../models/model_item.dart';
 import '../../models/model_item_task.dart';
+import '../../services/service_events.dart';
 import '../../services/service_logger.dart';
 import '../../services/service_recon.dart';
 import '../../utils/common.dart';
@@ -77,8 +78,19 @@ class _FilePaneState extends State<FilePane> {
 
   @override
   void dispose() {
+    EventStream().notifier.removeListener(_handleAppEvent);
     _breadcrumbController.dispose();
     super.dispose();
+  }
+
+  void _handleAppEvent() {
+    final AppEvent? event = EventStream().notifier.value;
+    if (event == null) return;
+
+    switch (event.type) {
+      case EventType.updateItem:
+        break;
+    }
   }
 
   Future<void> _loadFiles() async {
@@ -435,7 +447,7 @@ class _FilePaneState extends State<FilePane> {
         final isSelected = _selectedItems.contains(item);
 
         return _FileListItem(
-          key: Key(item.id),
+          key: ValueKey(item.id),
           item: item,
           isMultiSelectMode: _isMultiSelectMode,
           isSelected: isSelected,

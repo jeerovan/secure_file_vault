@@ -1,10 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 enum EventType {
-  exitSettings,
-  serverFirstFetchStarts,
-  serverFirstFetchEnds,
-  checkPlanStatus,
+  updateItem,
 }
 
 class AppEvent {

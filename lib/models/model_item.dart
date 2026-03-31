@@ -5,6 +5,7 @@ import 'package:file_vault_bb/models/model_part.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../services/service_events.dart';
 import '../utils/utils_sync.dart';
 import 'package:flutter/foundation.dart';
 
@@ -432,8 +433,7 @@ class ModelItem {
         result = 0;
       }
     }
-    // signal item update
-    //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
+    EventStream().publish(AppEvent(type: EventType.updateItem, value: id));
     return result;
   }
 
@@ -465,7 +465,7 @@ class ModelItem {
         await item.delete(pushToSync: false);
       }
     }
-    //EventStream().publish(AppEvent(type: EventType.changedItemId, value: id));
+    EventStream().publish(AppEvent(type: EventType.updateItem, value: id));
   }
 
   Future<void> remove() async {

@@ -800,7 +800,6 @@ Future<void> initializeSupabase(
     Supabase _ = await Supabase.initialize(url: supaUrl, anonKey: supaKey);
     await ModelSetting.set(AppString.supabaseInitialized.string, "yes");
     AppLogger(prefixes: [mode.string]).info("Initialized Supabase");
-    //EventStream().publish(AppEvent(type: EventType.checkPlanStatus));
   }
 }
 
@@ -854,7 +853,6 @@ Future<String?> getMasterKey() async {
   return masterKeyBase64;
 }
 
-Future<void> signalToUpdateHome() async {}
 void safeParseJson(
     String responseBody, Map<String, dynamic> data, AppLogger logger) {
   if (responseBody.isEmpty) return;
