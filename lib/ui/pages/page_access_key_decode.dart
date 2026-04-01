@@ -2,16 +2,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Added for Clipboard
 import 'package:file_picker/file_picker.dart';
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import 'package:sodium_libs/sodium_libs_sumo.dart';
+
 import '../../utils/common.dart';
 import '../../ui/common_widgets.dart';
 import '../../storage/storage_secure.dart';
 import '../../utils/utils_crypto.dart';
-import 'package:provider/provider.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
-
 import '../../utils/enums.dart';
 
 class PageAccessKeyDecode extends StatefulWidget {
@@ -25,9 +26,9 @@ class PageAccessKeyDecode extends StatefulWidget {
 class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
-  String _loadedFileContent = '';
+  final SecureStorage secureStorage = SecureStorage();
+
   bool processing = false;
-  SecureStorage secureStorage = SecureStorage();
 
   @override
   void initState() {
@@ -46,65 +47,78 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
     return words.length == 24;
   }
 
+  /// Pastes content from clipboard directly into the text field
+  Future<void> _pasteFromClipboard() async {
+    final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
+    if (clipboardData?.text != null) {
+      _textController.text = clipboardData!.text!;
+    }
+  }
+
   /// Processes the validated 24 words further
   Future<void> _processWords(String words) async {
-    words = words.trim();
-    setState(() {
-      processing = true;
-    });
-    words = utf8.decode(utf8.encode(words));
-    words = words.trim().replaceAll(RegExp(r'\s+'), ' ');
-    SodiumSumo sodium = await SodiumSumoInit.init();
-    CryptoUtils cryptoUtils = CryptoUtils(sodium);
-    if (!bip39.validateMnemonic(words)) {
-      if (mounted) {
-        showAlertMessage(context, "Error", "Invalid word list");
-        setState(() {
-          processing = false;
-        });
+    setState(() => processing = true);
+
+    try {
+      words = utf8.decode(utf8.encode(words.trim()));
+      words = words.replaceAll(RegExp(r'\s+'), ' ');
+
+      SodiumSumo sodium = await SodiumSumoInit.init();
+      CryptoUtils cryptoUtils = CryptoUtils(sodium);
+
+      if (!bip39.validateMnemonic(words)) {
+        if (mounted) showAlertMessage(context, "Error", "Invalid word list");
+        return;
       }
-      return;
+
+      String accessKeyHex = bip39.mnemonicToEntropy(words);
+      Uint8List accessKeyBytes = hexToBytes(accessKeyHex);
+
+      String masterKeyCipheredBase64 =
+          await secureStorage.read(key: AppString.keyCipher.string) as String;
+      String masterKeyNonceBase64 =
+          await secureStorage.read(key: AppString.keyNonce.string) as String;
+
+      Uint8List masterKeyCipheredBytes = base64Decode(masterKeyCipheredBase64);
+      Uint8List masterKeyNonceBytes = base64Decode(masterKeyNonceBase64);
+
+      ExecutionResult masterKeyDecryptionResult = cryptoUtils.decryptBytes(
+          cipherBytes: masterKeyCipheredBytes,
+          nonce: masterKeyNonceBytes,
+          key: accessKeyBytes);
+
+      if (masterKeyDecryptionResult.isFailure) {
+        if (mounted) showAlertMessage(context, "Failure", "Invalid access key");
+      } else {
+        Uint8List decryptedMasterKeyBytes =
+            masterKeyDecryptionResult.getResult()!["decrypted"];
+        String decryptedMasterKeyBase64 = base64Encode(decryptedMasterKeyBytes);
+
+        // Save keys to secure storage
+        await secureStorage.write(
+            key: AppString.masterKey.string, value: decryptedMasterKeyBase64);
+        await secureStorage.write(
+            key: AppString.accessKey.string,
+            value: base64Encode(accessKeyBytes));
+
+        // Delete keycipher and keynonce
+        await secureStorage.delete(key: AppString.keyCipher.string);
+        await secureStorage.delete(key: AppString.keyNonce.string);
+
+        if (mounted) {
+          await context.read<AppSetupState>().registerDevice();
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        showAlertMessage(context, "Error",
+            "An unexpected error occurred during decryption.");
+      }
+    } finally {
+      if (mounted) {
+        setState(() => processing = false);
+      }
     }
-    String accessKeyHex = bip39.mnemonicToEntropy(words);
-    Uint8List accessKeyBytes = hexToBytes(accessKeyHex);
-
-    String masterKeyCipheredBase64 =
-        await secureStorage.read(key: AppString.keyCipher.string) as String;
-    String masterKeyNonceBase64 =
-        await secureStorage.read(key: AppString.keyNonce.string) as String;
-
-    Uint8List masterKeyCipheredBytes = base64Decode(masterKeyCipheredBase64);
-    Uint8List masterKeyNonceBytes = base64Decode(masterKeyNonceBase64);
-    ExecutionResult masterKeyDecryptionResult = cryptoUtils.decryptBytes(
-        cipherBytes: masterKeyCipheredBytes,
-        nonce: masterKeyNonceBytes,
-        key: accessKeyBytes);
-    if (masterKeyDecryptionResult.isFailure) {
-      if (mounted) {
-        showAlertMessage(context, "Failure", "Invalid access key");
-      }
-    } else {
-      Uint8List decryptedMasterKeyBytes =
-          masterKeyDecryptionResult.getResult()!["decrypted"];
-      String decryptedMasterKeyBase64 = base64Encode(decryptedMasterKeyBytes);
-
-      // save keys to secure storage
-      await secureStorage.write(
-          key: AppString.masterKey.string, value: decryptedMasterKeyBase64);
-      await secureStorage.write(
-          key: AppString.accessKey.string, value: base64Encode(accessKeyBytes));
-
-      // delete keycipher and keynonce
-      await secureStorage.delete(key: AppString.keyCipher.string);
-      await secureStorage.delete(key: AppString.keyNonce.string);
-
-      if (mounted) {
-        await context.read<AppSetupState>().registerDevice();
-      }
-    }
-    setState(() {
-      processing = false;
-    });
   }
 
   /// Handles file selection and validation
@@ -114,14 +128,15 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
         type: FileType.custom,
         allowedExtensions: ['txt'],
       );
-      if (result != null) {
+
+      if (result != null && result.files.single.path != null) {
         final file = File(result.files.single.path!);
         final content = await file.readAsString();
+
         if (_validateWordCount(content)) {
-          setState(() {
-            _loadedFileContent = content.trim();
-          });
-          _processWords(_loadedFileContent);
+          // Update the text field so the user sees what was loaded
+          _textController.text = content.trim();
+          await _processWords(content.trim());
         } else {
           if (mounted) {
             showAlertMessage(context, "Error",
@@ -138,113 +153,178 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
 
   @override
   Widget build(BuildContext context) {
+    // Determine dynamic color for the word counter
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Enable Sync'),
+        title: const Text('Enable Sync'),
+        centerTitle: true,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: SafeArea(
         child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
           child: Form(
             key: _formKey,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Text Widget
-                Text(
-                  "Please enter your 24-word recovery phrase or load a .txt file containing it.",
-                  style: TextStyle(fontSize: 16.0),
+                const Icon(
+                  LucideIcons.shieldCheck,
+                  size: 48,
+                  color: Colors.blueAccent,
+                ),
+                const SizedBox(height: 16.0),
+                const Text(
+                  "Enter your 24-word recovery phrase or load a .txt file to securely enable cloud sync.",
+                  style: TextStyle(fontSize: 16.0, height: 1.4),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 32.0),
 
-                // TextField with Validation
+                // TextField with enhanced UX
                 TextFormField(
                   controller: _textController,
+                  enabled: !processing,
                   autofocus: true,
-                  maxLines: null, // Allows all words to be visible
+                  minLines: 4,
+                  maxLines: 6,
                   textInputAction: TextInputAction.done,
                   decoration: InputDecoration(
-                    labelText: 'Enter your 24-word phrase',
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter your recovery phrase here',
+                    labelText: 'Recovery Phrase',
+                    alignLabelWithHint: true,
+                    hintText: 'word1 word2 word3...',
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceVariant
+                        .withOpacity(0.3),
+
+                    // GUARANTEED TO UPDATE: ValueListenableBuilder listens directly to the controller
+                    counter: ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _textController,
+                      builder: (context, value, child) {
+                        // Calculate word count in real-time
+                        final text = value.text.trim();
+                        final wordCount = text.isEmpty
+                            ? 0
+                            : text.split(RegExp(r'\s+')).length;
+
+                        // Determine dynamic color
+                        final counterColor = wordCount == 24
+                            ? Colors.green.shade700
+                            : (wordCount > 24
+                                ? Colors.red
+                                : Colors.grey.shade600);
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton.icon(
+                              onPressed:
+                                  processing ? null : _pasteFromClipboard,
+                              icon: const Icon(LucideIcons.clipboardPaste,
+                                  size: 16),
+                              label: const Text("Paste"),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(50, 30),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                            Text(
+                              '$wordCount / 24 words',
+                              style: TextStyle(
+                                color: counterColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter your recovery phrase';
                     }
                     if (!_validateWordCount(value)) {
-                      return 'Recovery phrase must contain exactly 24 words';
+                      return 'Must contain exactly 24 words';
                     }
                     return null;
                   },
-                  onEditingComplete: () {
-                    _processWords(_textController.text);
-                  },
                 ),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 24.0),
 
                 // Submit Button
-                ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _processWords(_textController.text);
-                    }
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (processing)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                              right:
-                                  8.0), // Add spacing between indicator and text
-                          child: SizedBox(
-                            width: 16, // Set width and height for the indicator
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              color: Colors.black,
-                              strokeWidth: 2, // Set color to white
-                            ),
-                          ),
-                        ),
-                      Text(
-                        'Submit',
-                        style: TextStyle(fontSize: 16.0, color: Colors.black),
-                      ),
-                    ],
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
+                  onPressed: processing
+                      ? null
+                      : () {
+                          if (_formKey.currentState!.validate()) {
+                            // Hide keyboard on submit
+                            FocusScope.of(context).unfocus();
+                            _processWords(_textController.text);
+                          }
+                        },
+                  child: processing
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : const Text(
+                          'Verify & Enable Sync',
+                          style: TextStyle(
+                              fontSize: 16.0, fontWeight: FontWeight.bold),
+                        ),
                 ),
-                SizedBox(height: 30.0),
+                const SizedBox(height: 24.0),
 
                 // Separator Line
                 Row(
                   children: [
-                    Expanded(child: Divider(thickness: 1)),
+                    const Expanded(child: Divider()),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
-                        'Or',
+                        'OR',
                         style: TextStyle(
-                            fontSize: 14.0, fontWeight: FontWeight.w500),
+                          fontSize: 12.0,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                    Expanded(child: Divider(thickness: 1)),
+                    const Expanded(child: Divider()),
                   ],
                 ),
-                SizedBox(height: 20.0),
+                const SizedBox(height: 24.0),
 
                 // File Upload Button
-                ElevatedButton.icon(
-                  onPressed: _selectFile,
-                  icon: Icon(
-                    LucideIcons.upload,
-                    color: Colors.black,
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  label: Text(
-                    "Select .txt File",
-                    style: TextStyle(color: Colors.black),
+                  onPressed: processing ? null : _selectFile,
+                  icon: const Icon(LucideIcons.fileText),
+                  label: const Text(
+                    "Load from .txt File",
+                    style: TextStyle(fontSize: 16.0),
                   ),
                 ),
               ],
