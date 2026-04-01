@@ -2,6 +2,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
 import '../../models/model_file.dart';
 import '../../models/model_item.dart';
@@ -151,7 +152,7 @@ class _FilePaneState extends State<FilePane> {
     SyncUtils.waitAndSyncChanges();
   }
 
-  void _onTap(ModelItem item) {
+  Future<void> _onTap(ModelItem item) async {
     if (_isMultiSelectNotifier.value) {
       _toggleSelection(item);
       return;
@@ -164,6 +165,13 @@ class _FilePaneState extends State<FilePane> {
         parentChilds = parentChilds.sublist(0, parentChilds.indexOf(item) + 1);
       } else {
         parentChilds.add(item);
+      }
+    } else {
+      String path = await ModelItem.getPathForItem(item.id);
+      final openResult = await OpenFilex.open(path);
+      if (openResult.type != ResultType.done) {
+        String message = 'Could not open file: ${openResult.message}';
+        logger.error(message);
       }
     }
   }

@@ -55,6 +55,20 @@ class ModelFile {
     );
   }
 
+  static Future<ModelFile> fromServerMap(Map<String, dynamic> changeMap) async {
+    final data = changeMap["11"];
+    return ModelFile(
+      id: changeMap["1"].split("_")[1],
+      itemCount: int.parse(changeMap["6"].toString()),
+      parts: int.parse(changeMap["7"].toString()),
+      uploadedAt: int.parse(changeMap["8"].toString()),
+      provider: int.parse(changeMap["9"].toString()),
+      storageId: changeMap["10"],
+      data: data is String ? jsonDecode(data) : data,
+      updatedAt: int.parse(changeMap["12"].toString()),
+    );
+  }
+
   static Future<List<ModelFile>> pendingForUpload() async {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
@@ -109,7 +123,7 @@ class ModelFile {
     return updated;
   }
 
-  Future<int> upcertFromServer() async {
+  Future<int> upcertFromServer({bool overwrite = false}) async {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
@@ -117,6 +131,8 @@ class ModelFile {
         await dbHelper.getWithId(Tables.files.string, id);
     if (rows.isEmpty) {
       result = await dbHelper.insert(Tables.files.string, map);
+    } else if (overwrite) {
+      result = await dbHelper.update(Tables.files.string, map, id);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];

@@ -219,30 +219,42 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 		const incomingUpdatedAt = change['updated_at'] || 0;
 		const changeString = change['data'];
 		const changedData = typeof changeString == 'string' ? JSON.parse(changeString) : changeString;
-		const existingRow = db
-			.select({ clientUpdatedAt: file[FileKeys.CLIENT_UPDATED_AT] })
-			.from(file)
-			.where(eq(file[FileKeys.ID], fileKey))
-			.get();
+		const existingRow = db.select().from(file).where(eq(file[FileKeys.ID], fileKey)).get();
+		const provider = change['provider'];
 		const storageId = change['storage_id'];
 		const uploadedAt = change['uploaded_at'];
 		const itemCount = change['item_count'];
 		if (existingRow) {
-			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
-				await db
-					.update(file)
-					.set({
-						[FileKeys.DEVICE_ID]: deviceId,
-						[FileKeys.ITEMS_COUNT]: itemCount,
-						[FileKeys.PARTS]: change['parts'] ?? 1,
-						[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
-						[FileKeys.PROVIDER]: change['provider'] ?? 0,
-						[FileKeys.STORAGE_ID]: storageId ?? null,
-						[FileKeys.JSON]: changedData,
-						[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
-						[FileKeys.DELETED]: change['deleted']
-					})
-					.where(eq(file[FileKeys.ID], fileKey));
+			if (incomingUpdatedAt > existingRow[FileKeys.CLIENT_UPDATED_AT]) {
+				const existingUploadedAt = existingRow[FileKeys.UPLOADED_AT];
+				if (itemCount > 0 && existingUploadedAt > 0) {
+					await db
+						.update(file)
+						.set({
+							[FileKeys.DEVICE_ID]: deviceId,
+							[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt
+						})
+						.where(eq(file[FileKeys.ID], fileKey));
+				} else {
+					await db
+						.update(file)
+						.set({
+							[FileKeys.DEVICE_ID]: deviceId,
+							[FileKeys.ITEMS_COUNT]: itemCount,
+							[FileKeys.PARTS]: change['parts'] ?? 1,
+							[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
+							[FileKeys.PROVIDER]: change['provider'] ?? 0,
+							[FileKeys.STORAGE_ID]: storageId ?? null,
+							[FileKeys.JSON]: changedData,
+							[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
+							[FileKeys.DELETED]: change['deleted']
+						})
+						.where(eq(file[FileKeys.ID], fileKey));
+				}
+
+				if (itemCount == 0) {
+					deleteFileFromStorage(userId, fileHash);
+				}
 			}
 		} else {
 			await db.insert(file).values({
@@ -253,7 +265,7 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 				[FileKeys.PARTS]: change['parts'] ?? 1,
 				[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
 				[FileKeys.STORAGE_ID]: storageId ?? null,
-				[FileKeys.PROVIDER]: change['provider'] ?? 0,
+				[FileKeys.PROVIDER]: provider,
 				[FileKeys.JSON]: changedData,
 				[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 				[FileKeys.DELETED]: change['deleted']
@@ -271,9 +283,6 @@ export async function saveFileChanges(userId: string, deviceId: string, changes:
 			if (tempRow) {
 				await db.delete(tempStorage).where(eq(tempStorage[TempStorageKeys.ID], fileKey));
 			}
-		}
-		if (itemCount == 0) {
-			deleteFileFromStorage(userId, fileHash);
 		}
 	}
 }

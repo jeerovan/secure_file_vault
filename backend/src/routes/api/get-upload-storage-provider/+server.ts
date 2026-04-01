@@ -6,16 +6,9 @@ import {
 	addTempStorage,
 	getCredentialsById,
 	getOptimalStorage,
-	getTempStorage,
-	getUserData
+	getTempStorage
 } from '$lib/server/db/api';
-import {
-	CredentialsKeys,
-	ErrorCode,
-	StorageKeys,
-	TempStorageKeys,
-	UserDataKeys
-} from '$lib/server/db/keys';
+import { CredentialsKeys, ErrorCode, StorageKeys, TempStorageKeys } from '$lib/server/db/keys';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);

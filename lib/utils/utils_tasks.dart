@@ -153,6 +153,10 @@ class TaskManager {
     // check if already uploaded
     if (modelFile.uploadedAt > 0) {
       await itemTask.delete();
+      EventStream().publish(AppEvent(
+          type: EventType.updateItem,
+          id: modelItem.id,
+          key: EventKey.uploaded));
       return true;
     }
     int partToUpload = await ModelPart.getPartToUploadForFileHash(
@@ -170,6 +174,28 @@ class TaskManager {
     final api = BackendApi();
     // handle storage providers
     if (modelFile.storageId == null) {
+      // check server if already uploaded and get file+parts
+      final filePartResult = await api.post(
+          endpoint: '/get-file-parts', jsonBody: {"file_hash": modelFile.id});
+      final fileStatus = filePartResult["success"];
+      if (fileStatus == 1) {
+        final filePartData = filePartResult["data"];
+        final fileMap = filePartData["file"];
+        final partMapList = filePartData["parts"];
+        final newFileModel = await ModelFile.fromServerMap(fileMap);
+        await newFileModel.upcertFromServer(overwrite: true);
+        for (Map<String, dynamic> partMap in partMapList) {
+          final partModel = await ModelPart.fromServerMap(partMap);
+          await partModel.upcertFromServer(overwrite: true);
+        }
+        return true;
+      } else {
+        final errorMessageCode =
+            int.tryParse(filePartResult["message"].toString());
+        if (errorMessageCode != null && errorMessageCode != 13) {
+          return true;
+        }
+      }
       // call Api and set
       final providerResult = await api.post(
           endpoint: '/get-upload-storage-provider',

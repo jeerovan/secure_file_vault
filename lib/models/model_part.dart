@@ -50,6 +50,21 @@ class ModelPart {
     );
   }
 
+  static Future<ModelPart> fromServerMap(Map<String, dynamic> changeMap) async {
+    List<String> userIdPartId = changeMap["1"].split("_");
+    String partId = userIdPartId.skip(1).join('_');
+    final data = changeMap["9"];
+    return ModelPart(
+      id: partId,
+      size: int.parse(changeMap["6"].toString()),
+      cipher: changeMap["7"],
+      nonce: changeMap["8"],
+      data: data is String ? jsonDecode(data) : data,
+      updatedAt: int.parse(changeMap["10"].toString()),
+      uploaded: int.parse(changeMap["12"].toString()),
+    );
+  }
+
   static Future<List<String>> shasForFileId(String fileId, int parts) async {
     List<String> shas = [];
     int part = 1;
@@ -151,7 +166,7 @@ class ModelPart {
     return updated;
   }
 
-  Future<int> upcertFromServer() async {
+  Future<int> upcertFromServer({bool overwrite = false}) async {
     int result;
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
@@ -159,6 +174,8 @@ class ModelPart {
         await dbHelper.getWithId(Tables.parts.string, id);
     if (rows.isEmpty) {
       result = await dbHelper.insert(Tables.parts.string, map);
+    } else if (overwrite) {
+      result = await dbHelper.update(Tables.files.string, map, id);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
@@ -171,19 +188,9 @@ class ModelPart {
     return result;
   }
 
-  Future<int> delete({bool pushToSync = false}) async {
+  Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
-    int deleteTask = 1;
-    Map<String, dynamic> map = toMap();
     int deleted = await dbHelper.delete(Tables.parts.string, id);
-    if (pushToSync) {
-      map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
-      map["table"] = Tables.parts.string;
-      SyncUtils.logChangeToPush(
-        map,
-        deleteTask: deleteTask,
-      );
-    }
     return deleted;
   }
 
@@ -191,7 +198,7 @@ class ModelPart {
     ModelPart? part = await ModelPart.get(id);
     if (part != null) {
       if (part.updatedAt > remoteUpdatedAt) return;
-      await part.delete(pushToSync: false);
+      await part.delete();
     }
   }
 }
