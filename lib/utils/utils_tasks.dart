@@ -415,8 +415,8 @@ class TaskManager {
         Uint8List fileBytes = File(tempFilePath).readAsBytesSync();
         int contentLength = fileBytes.length;
         if (modelPart.size == contentLength) {
-          String keyCipherBase64 = modelPart.cipher;
-          String keyNonceBase64 = modelPart.nonce;
+          String keyCipherBase64 = modelPart.cipher!;
+          String keyNonceBase64 = modelPart.nonce!;
           SodiumSumo sodium = await SodiumSumoInit.init();
           CryptoUtils cryptoUtils = CryptoUtils(sodium);
           String? masterKeyBase64 = await getMasterKey();

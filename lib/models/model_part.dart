@@ -10,8 +10,8 @@ class ModelPart {
   String id;
   int size;
   int uploaded;
-  String cipher;
-  String nonce;
+  String? cipher;
+  String? nonce;
   Map<String, dynamic> data;
   int updatedAt;
 

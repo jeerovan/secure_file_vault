@@ -140,8 +140,8 @@ class StorageSqlite {
         id TEXT PRIMARY KEY,
         size INTEGER DEFAULT 0,
         uploaded INTEGER DEFAULT 0,
-        cipher TEXT NOT NULL,
-        nonce TEXT NOT NULL,
+        cipher TEXT,
+        nonce TEXT,
         data TEXT,
         updated_at INTEGER
       )
