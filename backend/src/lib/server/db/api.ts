@@ -422,6 +422,8 @@ export async function addCredentials(
 			} else if (provider == StorageProvider.OCI) {
 				priority = 8;
 				storageLimit = storageLimit * 2;
+			} else if (provider == StorageProvider.IDRIVE) {
+				priority = 9;
 			}
 			await addStorage(userId, accountId, storageLimit, storageLimit, priority, {});
 		}

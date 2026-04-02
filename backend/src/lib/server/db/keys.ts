@@ -126,5 +126,6 @@ export const StorageProvider = {
 	FIFE: 1,
 	BACKBLAZE: 2,
 	CLOUDFLARE: 3,
-	OCI: 4
+	OCI: 4,
+	IDRIVE: 5
 };

@@ -188,12 +188,13 @@ class TaskManager {
         }
       }
       // call Api and set
+      int fileSize = inFile.lengthSync();
+      int bufferSize = 1000;
+      int chunks = (fileSize / 4096).ceil();
+      int expectedSize = fileSize + 24 + (chunks * 17) + bufferSize;
       final providerResult = await api.post(
           endpoint: '/get-upload-storage-provider',
-          jsonBody: {
-            "file_hash": modelFile.id,
-            "file_size": inFile.lengthSync()
-          });
+          jsonBody: {"file_hash": modelFile.id, "file_size": expectedSize});
       final status = providerResult["success"];
       if (status <= 0) {
         logger.error('Get storage provider: ${jsonEncode(providerResult)}');
@@ -227,11 +228,14 @@ class TaskManager {
         uploadInfo["token"] = urlData["authorizationToken"];
       }
     } else if (modelFile.provider == StorageProvider.cloudflare.value ||
-        modelFile.provider == StorageProvider.oci.value) {
+        modelFile.provider == StorageProvider.oci.value ||
+        modelFile.provider == StorageProvider.idrive.value) {
       String fileId = '${modelFile.id}_$partToUpload';
       String providerPath = "r2";
       if (modelFile.provider == StorageProvider.oci.value) {
         providerPath = "oci";
+      } else if (modelFile.provider == StorageProvider.idrive.value) {
+        providerPath = "e2";
       }
       final urlResult = await api.post(
           endpoint: '/$providerPath/get-upload-url',
@@ -464,6 +468,8 @@ class TaskManager {
       providerPath = "r2";
     } else if (modelFile.provider == StorageProvider.oci.value) {
       providerPath = "oci";
+    } else if (modelFile.provider == StorageProvider.idrive.value) {
+      providerPath = "e2";
     }
     final downloadResult = await api.post(
         endpoint: '/$providerPath/get-download-url',
