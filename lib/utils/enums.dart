@@ -282,7 +282,7 @@ extension ScanStateExtension on ScanState {
   }
 }
 
-enum StorageProvider { none, fife, backblaze, cloudflare }
+enum StorageProvider { none, fife, backblaze, cloudflare, oci }
 
 extension StorageProviderExtension on StorageProvider {
   int get value {
@@ -295,6 +295,8 @@ extension StorageProviderExtension on StorageProvider {
         return 2;
       case StorageProvider.cloudflare:
         return 3;
+      case StorageProvider.oci:
+        return 4;
     }
   }
 }

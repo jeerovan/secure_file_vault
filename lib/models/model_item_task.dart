@@ -67,7 +67,7 @@ class ModelItemTask {
     }
   }
 
-  static Future<void> deleteTask(String id) async {
+  static Future<void> completeTask(String id) async {
     ModelItemTask? task = await get(id);
     if (task != null) {
       int taskType = task.task;

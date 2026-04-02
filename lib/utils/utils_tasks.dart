@@ -7,7 +7,6 @@ import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
-import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
@@ -152,7 +151,7 @@ class TaskManager {
     }
     // check if already uploaded
     if (modelFile.uploadedAt > 0) {
-      await itemTask.delete();
+      await ModelItemTask.completeTask(itemTask.id);
       return true;
     }
     int partToUpload = await ModelPart.getPartToUploadForFileHash(
@@ -160,7 +159,7 @@ class TaskManager {
     if (partToUpload > modelFile.parts) {
       modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
       await modelFile.update(["uploaded_at"]);
-      await itemTask.delete();
+      await ModelItemTask.completeTask(itemTask.id);
       return true;
     }
     final api = BackendApi();
@@ -227,17 +226,22 @@ class TaskManager {
         uploadInfo["url"] = urlData["uploadUrl"];
         uploadInfo["token"] = urlData["authorizationToken"];
       }
-    } else if (modelFile.provider == StorageProvider.cloudflare.value) {
+    } else if (modelFile.provider == StorageProvider.cloudflare.value ||
+        modelFile.provider == StorageProvider.oci.value) {
       String fileId = '${modelFile.id}_$partToUpload';
+      String providerPath = "r2";
+      if (modelFile.provider == StorageProvider.oci.value) {
+        providerPath = "oci";
+      }
       final urlResult = await api.post(
-          endpoint: '/r2/get-upload-url',
+          endpoint: '/$providerPath/get-upload-url',
           jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId});
       final status = urlResult["success"];
       if (status <= 0) {
-        logger.error('Get R2 upload url: ${jsonEncode(urlResult)}');
+        logger.error('Get upload url: ${jsonEncode(urlResult)}');
         return true;
       } else {
-        uploadInfo["provider"] = "r2";
+        uploadInfo["provider"] = "s3";
         uploadInfo["url"] = urlResult["data"];
       }
     }
@@ -305,7 +309,7 @@ class TaskManager {
         "Content-Length": contentLength.toString(),
         "Content-Type": "application/octet-stream",
       };
-    } else if (uploadInfo["provider"] == "r2") {
+    } else if (uploadInfo["provider"] == "s3") {
       method = 'PUT';
       headers = {
         "Content-Length": contentLength.toString(),
@@ -385,21 +389,14 @@ class TaskManager {
     if (partsHave == parts) {
       String finalFilePath = await ModelItem.getPathForItem(modelItem.id);
       await File(filePath).rename(finalFilePath);
-      await itemTask.delete();
+      await ModelItemTask.completeTask(itemTask.id);
       return;
     }
     int partToDownload = partsHave + 1;
-    int provider = modelFile.provider;
     String fileHashPart = '${modelFile.id}_$partToDownload';
     ModelPart? modelPart = await ModelPart.get(fileHashPart);
     if (modelPart == null) return;
-    String downloadUrl = "";
-    if (provider == StorageProvider.fife.value ||
-        provider == StorageProvider.backblaze.value) {
-      downloadUrl = await getDownloadUrl("b2", modelFile, partToDownload);
-    } else if (provider == StorageProvider.cloudflare.value) {
-      downloadUrl = await getDownloadUrl("r2", modelFile, partToDownload);
-    }
+    String downloadUrl = await getDownloadUrl(modelFile, partToDownload);
     if (downloadUrl.isNotEmpty) {
       logger.info("$name:$partToDownload: fetched download url");
       Directory tempDir = await getTemporaryDirectory();
@@ -431,7 +428,7 @@ class TaskManager {
                 String finalFilePath =
                     await ModelItem.getPathForItem(modelItem.id);
                 await File(filePath).rename(finalFilePath);
-                await itemTask.delete();
+                await ModelItemTask.completeTask(itemTask.id);
               } else {
                 // Broadcast download progress
                 final int percent = parts > 0 ? (partToDownload ~/ parts) : 0;
@@ -460,11 +457,16 @@ class TaskManager {
     }
   }
 
-  static Future<String> getDownloadUrl(
-      String provider, ModelFile modelFile, int part) async {
+  static Future<String> getDownloadUrl(ModelFile modelFile, int part) async {
     final api = BackendApi();
+    String providerPath = "b2";
+    if (modelFile.provider == StorageProvider.cloudflare.value) {
+      providerPath = "r2";
+    } else if (modelFile.provider == StorageProvider.oci.value) {
+      providerPath = "oci";
+    }
     final downloadResult = await api.post(
-        endpoint: '/$provider/get-download-url',
+        endpoint: '/$providerPath/get-download-url',
         jsonBody: {
           "storage_id": modelFile.storageId,
           "file_id": '${modelFile.id}_$part'
