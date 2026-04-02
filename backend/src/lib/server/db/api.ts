@@ -418,7 +418,10 @@ export async function addCredentials(
 			let priority = 10;
 			let storageLimit = 10737418240;
 			if (provider == StorageProvider.CLOUDFLARE) {
-				priority = 9;
+				priority = 6;
+			} else if (provider == StorageProvider.OCI) {
+				priority = 8;
+				storageLimit = storageLimit * 2;
 			}
 			await addStorage(userId, accountId, storageLimit, storageLimit, priority, {});
 		}

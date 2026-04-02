@@ -125,5 +125,6 @@ export const ErrorCode = {
 export const StorageProvider = {
 	FIFE: 1,
 	BACKBLAZE: 2,
-	CLOUDFLARE: 3
+	CLOUDFLARE: 3,
+	OCI: 4
 };
