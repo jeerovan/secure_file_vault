@@ -81,6 +81,65 @@ export async function deleteFileFromStorage(userId: string, fileHash: string) {
 					allRemoved = false;
 					console.error(e);
 				}
+			} else if (provider == StorageProvider.OCI && credential) {
+				const credsData = credential[CredentialsKeys.CREDENTIALS] as {
+					appId: string;
+					appKey: string;
+					bucketName: string;
+					namespace: string;
+					region: string;
+				};
+				const s3Endpoint = `https://${credsData.namespace}.compat.objectstorage.${credsData.region}.oraclecloud.com`;
+				const s3Client = new S3Client({
+					region: credsData.region,
+					endpoint: s3Endpoint,
+					credentials: {
+						accessKeyId: credsData.appId,
+						secretAccessKey: credsData.appKey
+					},
+					forcePathStyle: true
+				});
+				const command = new DeleteObjectCommand({
+					Bucket: credsData.bucketName,
+					Key: file_name
+				});
+				try {
+					await s3Client.send(command);
+					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetFilePart(partKey);
+				} catch (e) {
+					allRemoved = false;
+					console.error(e);
+				}
+			} else if (provider == StorageProvider.IDRIVE && credential) {
+				const credsData = credential[CredentialsKeys.CREDENTIALS] as {
+					appId: string;
+					appKey: string;
+					bucketName: string;
+					region: string;
+				};
+				const s3Endpoint = `https://s3.${credsData.region}.idrivee2.com`;
+				const s3Client = new S3Client({
+					region: credsData.region,
+					endpoint: s3Endpoint,
+					credentials: {
+						accessKeyId: credsData.appId,
+						secretAccessKey: credsData.appKey
+					},
+					forcePathStyle: true
+				});
+				const command = new DeleteObjectCommand({
+					Bucket: credsData.bucketName,
+					Key: file_name
+				});
+				try {
+					await s3Client.send(command);
+					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetFilePart(partKey);
+				} catch (e) {
+					allRemoved = false;
+					console.error(e);
+				}
 			}
 		}
 	}

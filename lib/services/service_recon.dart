@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:file_vault_bb/models/model_item_task.dart';
-import 'package:file_vault_bb/services/service_events.dart';
 
 import '../utils/enums.dart';
 
