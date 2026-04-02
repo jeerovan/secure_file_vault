@@ -251,12 +251,6 @@ class _FilePaneState extends State<FilePane> {
       if (!File(path).existsSync()) {
         await ModelItemTask.addTask(item.id, ItemTask.download.value);
         hasTasks = true;
-        // Broadcast download events
-        EventStream().publish(AppEvent(
-            type: EventType.updateItem,
-            id: item.id,
-            key: EventKey.downloadProgress,
-            value: 0.0));
       }
     }
     if (hasTasks) {
@@ -604,7 +598,7 @@ class _FileListItemState extends State<_FileListItem> {
   bool? _isUploaded;
   bool _isUploading = false;
   bool _isDownloading = false;
-  double transferProgress = 0.0;
+  int transferProgress = 0;
   AppLogger logger = AppLogger(prefixes: ["FileListItem"]);
 
   @override
@@ -683,43 +677,49 @@ class _FileListItemState extends State<_FileListItem> {
     return false;
   }
 
-  Future<bool> isUploading(ModelItem item) async {
+  Future<int> getUploadProgress(ModelItem item) async {
     ModelItemTask? itemTask = await ModelItemTask.get(item.id);
-    if (itemTask != null) {
-      return itemTask.task == ItemTask.upload.value;
+    if (itemTask != null && itemTask.task == ItemTask.upload.value) {
+      return itemTask.progress;
     } else {
-      return false;
+      return -1;
     }
   }
 
-  Future<bool> isDownloading(ModelItem item) async {
+  Future<int> getDownloadProgress(ModelItem item) async {
     ModelItemTask? itemTask = await ModelItemTask.get(item.id);
-    if (itemTask != null) {
-      return itemTask.task == ItemTask.upload.value;
+    if (itemTask != null && itemTask.task == ItemTask.download.value) {
+      return itemTask.progress;
     } else {
-      return false;
+      return -1;
     }
   }
 
   Future<void> _checkFileStates() async {
     // Run both async tasks concurrently for optimal performance
-    final results = await Future.wait([
+    final stateResults = await Future.wait([
       fileExistsLocally(widget.item),
       widget.item.isFolder
           ? Future.value(false)
           : fileUploadedToCloud(widget.item),
-      isUploading(widget.item),
-      isDownloading(widget.item)
     ]);
+
+    final transferResults = await Future.wait(
+        [getUploadProgress(widget.item), getDownloadProgress(widget.item)]);
 
     // Always check if the widget is still in the tree before calling setState
     if (!mounted) return;
 
     setState(() {
-      _isLocal = results[0];
-      _isUploaded = results[1];
-      _isUploading = results[2];
-      _isDownloading = results[3];
+      _isLocal = stateResults[0];
+      _isUploaded = stateResults[1];
+      if (transferResults[0] > -1) {
+        _isUploading = true;
+        transferProgress = transferResults[0];
+      } else if (transferResults[1] > -1) {
+        _isDownloading = true;
+        transferProgress = transferResults[1];
+      }
     });
   }
 
@@ -766,7 +766,7 @@ class _FileListItemState extends State<_FileListItem> {
                 alignment: AlignmentDirectional.centerStart,
                 // Smoothly animates the width changes as data arrives
                 child: TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0, end: transferProgress),
+                  tween: Tween<double>(begin: 0, end: transferProgress / 100),
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOutCubic,
                   builder: (context, value, child) {

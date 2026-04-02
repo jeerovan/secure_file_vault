@@ -153,10 +153,6 @@ class TaskManager {
     // check if already uploaded
     if (modelFile.uploadedAt > 0) {
       await itemTask.delete();
-      EventStream().publish(AppEvent(
-          type: EventType.updateItem,
-          id: modelItem.id,
-          key: EventKey.uploaded));
       return true;
     }
     int partToUpload = await ModelPart.getPartToUploadForFileHash(
@@ -165,10 +161,6 @@ class TaskManager {
       modelFile.uploadedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
       await modelFile.update(["uploaded_at"]);
       await itemTask.delete();
-      EventStream().publish(AppEvent(
-          type: EventType.updateItem,
-          id: modelItem.id,
-          key: EventKey.uploaded));
       return true;
     }
     final api = BackendApi();
@@ -353,13 +345,10 @@ class TaskManager {
         int parts = modelFile.parts;
         int partsUploaded =
             await ModelPart.getPartsUploadedForFileHash(fileHash, parts);
-        final double percent = parts > 0 ? (partsUploaded / parts) : 0.0;
-        final double uploaded = percent.clamp(0.0, 1.0);
-        EventStream().publish(AppEvent(
-            type: EventType.updateItem,
-            id: itemTask.id,
-            key: EventKey.uploadProgress,
-            value: uploaded));
+        final int percent = parts > 0 ? (partsUploaded * 100 ~/ parts) : 0;
+        final int uploaded = percent.clamp(0, 100);
+        itemTask.progress = uploaded;
+        await itemTask.update(["progress"]);
       }
     } else {
       logger.error("Upload File Part", error: jsonEncode(uploadResult));
@@ -443,20 +432,12 @@ class TaskManager {
                     await ModelItem.getPathForItem(modelItem.id);
                 await File(filePath).rename(finalFilePath);
                 await itemTask.delete();
-                EventStream().publish(AppEvent(
-                    type: EventType.updateItem,
-                    id: modelItem.id,
-                    key: EventKey.downloaded));
               } else {
                 // Broadcast download progress
-                final double percent =
-                    parts > 0 ? (partToDownload / parts) : 0.0;
-                final double downloaded = percent.clamp(0.0, 1.0);
-                EventStream().publish(AppEvent(
-                    type: EventType.updateItem,
-                    id: modelItem.id,
-                    key: EventKey.downloadProgress,
-                    value: downloaded));
+                final int percent = parts > 0 ? (partToDownload ~/ parts) : 0;
+                final int downloaded = percent.clamp(0, 100);
+                itemTask.progress = downloaded;
+                await itemTask.update(["progress"]);
               }
             } else {
               String error = decryptionResult.failureReason ?? "";

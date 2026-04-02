@@ -422,11 +422,6 @@ class ReconciliationService {
     }
     if (createUploadTask) {
       await ModelItemTask.addTask(newItemId, ItemTask.upload.value);
-      EventStream().publish(AppEvent(
-          type: EventType.updateItem,
-          id: newItemId,
-          key: EventKey.uploadProgress,
-          value: 0.0));
     }
   }
 
