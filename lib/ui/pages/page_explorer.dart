@@ -134,8 +134,9 @@ class _FilePaneState extends State<FilePane> {
     _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
     String deviceRootHash = await getDeviceHash();
     _isDeviceRoot = currentItem?.id == deviceRootHash;
-    _itemsNotifier.value = items;
+
     if (mounted) {
+      _itemsNotifier.value = items;
       setState(() {
         _isLoading = false;
       });
@@ -269,162 +270,137 @@ class _FilePaneState extends State<FilePane> {
     context.read<AppSetupState>().showArchives();
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  // Note: Changed return type from PreferredSizeWidget to Widget
+  Widget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
-    Widget buildBreadcrumb() {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_breadcrumbController.hasClients) {
-          _breadcrumbController.animateTo(
-            _breadcrumbController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutCubic,
+
+    return ListenableBuilder(
+      listenable:
+          Listenable.merge([_selectedItemsNotifier, _isMultiSelectNotifier]),
+      builder: (context, _) {
+        final isMultiSelectMode = _isMultiSelectNotifier.value;
+        final selectedItems = _selectedItemsNotifier.value;
+
+        if (isMultiSelectMode) {
+          return _buildToolbarLayout(
+            color: surfaceColor,
+            leading: IconButton(
+              icon: const Icon(LucideIcons.x),
+              tooltip: 'Cancel',
+              onPressed: _cancelMultiSelect,
+            ),
+            title: Text('${selectedItems.length} Selected'),
+            actions: [
+              if (selectedItems.length == 1 && !selectedItems.first.isFolder)
+                IconButton(
+                  icon: const Icon(LucideIcons.info),
+                  tooltip: 'Info',
+                  onPressed: showInfo, // Ensure showInfo is implemented
+                ),
+              IconButton(
+                icon: const Icon(LucideIcons.downloadCloud),
+                tooltip: 'Download',
+                onPressed: downloadItems, // Ensure downloadItems is implemented
+              ),
+              IconButton(
+                icon: const Icon(LucideIcons.archive),
+                tooltip: 'Archive',
+                onPressed: trashItems, // Ensure trashItems is implemented
+              ),
+            ],
           );
         }
-      });
-      List<Widget> breadcrumbWidgets = [];
 
-      for (int i = 0; i < parentChilds.length; i++) {
-        ModelItem item = parentChilds[i];
-        final part = item.name;
-        final isLast = i == parentChilds.length - 1;
-
-        breadcrumbWidgets.add(
-          InkWell(
-            onTap: () => {_onTap(item)},
-            borderRadius: BorderRadius.circular(4),
-            child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-              child: Text(
-                part,
-                style: TextStyle(
-                  fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
-                  color: isLast
-                      ? Theme.of(context).colorScheme.onSurface
-                      : Theme.of(context).colorScheme.onSurface.withAlpha(140),
-                  fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
+        // Default Mode
+        return _buildToolbarLayout(
+          color: surfaceColor,
+          leading: currentItem?.id != 'fife'
+              ? IconButton(
+                  icon: const Icon(LucideIcons.arrowLeft),
+                  onPressed: _navigateBack)
+              : null,
+          title: BreadcrumbTrail(
+            parentChilds: parentChilds,
+            onTap: _onTap, // Ensure _onTap matches the expected signature
           ),
-        );
-
-        if (!isLast) {
-          breadcrumbWidgets.add(Icon(LucideIcons.chevronRight,
-              size: 18,
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(100)));
-        }
-      }
-
-      breadcrumbWidgets.add(const SizedBox(width: 16));
-
-      return SingleChildScrollView(
-        controller: _breadcrumbController,
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: breadcrumbWidgets,
-        ),
-      );
-    }
-
-    return PreferredSize(
-        preferredSize: const Size.fromHeight(kToolbarHeight),
-        // Update AppBar only when selection/multi-select changes
-        child: ListenableBuilder(
-            listenable: Listenable.merge(
-                [_selectedItemsNotifier, _isMultiSelectNotifier]),
-            builder: (context, _) {
-              final isMultiSelectMode = _isMultiSelectNotifier.value;
-              final selectedItems = _selectedItemsNotifier.value;
-              if (isMultiSelectMode) {
-                return AppBar(
-                  leading: IconButton(
-                    icon: const Icon(LucideIcons.x),
-                    tooltip: 'Cancel',
-                    onPressed: _cancelMultiSelect,
-                  ),
-                  title: Text('${selectedItems.length} Selected'),
-                  backgroundColor: surfaceColor,
-                  actions: [
-                    // TODO show storage details: file id, storage provider, parts, reference counts
-                    if (selectedItems.length == 1 &&
-                        !selectedItems.first.isFolder)
-                      IconButton(
-                        icon: const Icon(LucideIcons.info),
-                        tooltip: 'Info',
-                        onPressed: showInfo,
-                      ),
-                    IconButton(
-                      icon: const Icon(LucideIcons.downloadCloud),
-                      tooltip: 'Download',
-                      onPressed: downloadItems,
-                    ),
-                    IconButton(
-                      icon: const Icon(LucideIcons.archive),
-                      tooltip: 'Archive',
-                      onPressed: trashItems,
-                    ),
-                  ],
-                );
-              }
-
-              // Default AppBar
-              return AppBar(
-                leading: currentItem?.id != 'fife'
-                    ? IconButton(
-                        icon: const Icon(LucideIcons.arrowLeft),
-                        onPressed: _navigateBack)
-                    : null,
-                title: buildBreadcrumb(),
-                backgroundColor: surfaceColor,
-                actions: [
-                  if (_isLocalPath)
-                    IconButton(
-                        icon: const Icon(LucideIcons.refreshCw),
-                        onPressed: _syncRootFolders),
-                  if (_isDeviceRoot)
-                    IconButton(
-                        icon: const Icon(LucideIcons.plus),
-                        onPressed: addSyncFolder),
-                  PopupMenuButton<int>(
-                    icon: const Icon(LucideIcons.moreVertical),
-                    onSelected: (value) {
-                      switch (value) {
-                        case 0:
-                          signout();
-                          break;
-                        case 1:
-                          showArchives();
-                          break;
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      PopupMenuItem<int>(
-                        value: 0,
-                        child: Row(
-                          children: [
-                            const Icon(LucideIcons.logOut, color: Colors.grey),
-                            const SizedBox(width: 16),
-                            const Text('Signout'),
-                          ],
-                        ),
-                      ),
-                      PopupMenuItem<int>(
-                        value: 1,
-                        child: Row(
-                          children: [
-                            const Icon(LucideIcons.archive, color: Colors.grey),
-                            const SizedBox(width: 16),
-                            const Text('Trash'),
-                          ],
-                        ),
-                      ),
+          actions: [
+            if (_isLocalPath)
+              IconButton(
+                  icon: const Icon(LucideIcons.refreshCw),
+                  onPressed: _syncRootFolders),
+            if (_isDeviceRoot)
+              IconButton(
+                  icon: const Icon(LucideIcons.plus), onPressed: addSyncFolder),
+            PopupMenuButton<int>(
+              icon: const Icon(LucideIcons.moreVertical),
+              onSelected: (value) {
+                if (value == 0) signout();
+                if (value == 1) showArchives();
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem<int>(
+                  value: 0,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.logOut, color: Colors.grey),
+                      SizedBox(width: 16),
+                      Text('Signout'),
                     ],
                   ),
-                ],
-              );
-            }));
+                ),
+                const PopupMenuItem<int>(
+                  value: 1,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.archive, color: Colors.grey),
+                      SizedBox(width: 16),
+                      Text('Trash'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Helper method to build the toolbar layout cleanly
+  Widget _buildToolbarLayout({
+    required Color color,
+    Widget? leading,
+    required Widget title,
+    required List<Widget> actions,
+  }) {
+    return Container(
+      color: color,
+      child: SafeArea(
+        top: false, // Crucial: prevents the status bar padding issue
+        bottom: true, // Protects against bottom system navigation bars
+        child: SizedBox(
+          height: 64.0, // Standard Material 3 toolbar height
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(width: 4.0),
+              if (leading != null) leading,
+              if (leading == null)
+                const SizedBox(width: 16.0), // Padding if no leading icon
+              Expanded(
+                // Expanded forces the title/breadcrumb to take up remaining space
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  child: title,
+                ),
+              ),
+              ...actions,
+              const SizedBox(width: 4.0),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _addSyncFolder(String folderPath) async {
@@ -513,6 +489,113 @@ class _FilePaneState extends State<FilePane> {
             },
           );
         });
+  }
+}
+
+class BreadcrumbTrail extends StatefulWidget {
+  final List<ModelItem> parentChilds;
+  final Function(ModelItem) onTap;
+
+  const BreadcrumbTrail({
+    super.key,
+    required this.parentChilds,
+    required this.onTap,
+  });
+
+  @override
+  State<BreadcrumbTrail> createState() => _BreadcrumbTrailState();
+}
+
+class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
+  final ScrollController _scrollController = ScrollController();
+
+  void _scrollToEnd() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Fires when the breadcrumb is first built (e.g. exiting multi-select)
+    _scrollToEnd();
+  }
+
+  @override
+  void didUpdateWidget(covariant BreadcrumbTrail oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Fires safely whenever the parent passes a new or mutated path
+    _scrollToEnd();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Widget> breadcrumbWidgets = [];
+
+    for (int i = 0; i < widget.parentChilds.length; i++) {
+      final item = widget.parentChilds[i];
+      final isLast = i == widget.parentChilds.length - 1;
+      final colorScheme = Theme.of(context).colorScheme;
+
+      breadcrumbWidgets.add(
+        InkWell(
+          onTap: () => widget.onTap(item),
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+            child: Text(
+              item.name,
+              style: TextStyle(
+                fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
+                color: isLast
+                    ? colorScheme.onSurface
+                    : colorScheme.onSurface.withValues(alpha: 0.55),
+                fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+        ),
+      );
+
+      if (!isLast) {
+        breadcrumbWidgets.add(
+          Icon(
+            LucideIcons.chevronRight,
+            size: 18,
+            color: colorScheme.onSurface.withValues(alpha: 0.40),
+          ),
+        );
+      }
+    }
+
+    breadcrumbWidgets.add(const SizedBox(width: 16));
+
+    // Wrapped the Row in an intrinsic height/alignment container to
+    // guarantee vertical centering regardless of the SingleChildScrollView
+    return SizedBox(
+      height: 64.0,
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: breadcrumbWidgets,
+        ),
+      ),
+    );
   }
 }
 
@@ -636,6 +719,7 @@ class _FileListItemState extends State<_FileListItem> {
             setState(() {
               _isUploaded = true;
               _isUploading = false;
+              transferProgress = 0;
             });
           }
         } else if (event.key == EventKey.downloaded) {
@@ -643,6 +727,7 @@ class _FileListItemState extends State<_FileListItem> {
             setState(() {
               _isLocal = true;
               _isDownloading = false;
+              transferProgress = 0;
             });
           }
         } else if (event.key == EventKey.uploadProgress) {
@@ -868,7 +953,7 @@ class _FileListItemState extends State<_FileListItem> {
                         ),
                       ),
 
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 4),
 
                       // 3. File Details
                       Expanded(

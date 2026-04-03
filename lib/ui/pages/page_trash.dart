@@ -179,10 +179,11 @@ class _FilePaneState extends State<FilePane> {
       title: Text("Trash"),
       backgroundColor: surfaceColor,
       actions: [
-        IconButton(
-            icon: const Icon(LucideIcons.trash2),
-            tooltip: 'Empty',
-            onPressed: clearAll),
+        if (_items.isNotEmpty)
+          IconButton(
+              icon: const Icon(LucideIcons.trash2),
+              tooltip: 'Empty',
+              onPressed: clearAll),
       ],
     );
   }

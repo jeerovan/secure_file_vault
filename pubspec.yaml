@@ -62,6 +62,7 @@ dependencies:
   share_plus: ^12.0.1
   internet_connection_checker_plus: ^2.9.1+2
   synchronized: ^3.4.0
+  change_app_package_name: ^1.5.0
 
 dev_dependencies:
   flutter_test:

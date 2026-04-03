@@ -1,4 +1,4 @@
-package com.example.file_vault_bb
+package one.jeero.fife
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -49,9 +49,9 @@ class _PageSigninState extends State<PageSignin> {
 
   void _setupGestureRecognizers() {
     _termsRecognizer = TapGestureRecognizer()
-      ..onTap = () => openURL('https://fife.jeerovan.com/policy/terms');
+      ..onTap = () => openURL('https://fife.jeero.one/policy/terms');
     _privacyRecognizer = TapGestureRecognizer()
-      ..onTap = () => openURL('https://fife.jeerovan.com/policy/privacy');
+      ..onTap = () => openURL('https://fife.jeero.one/policy/privacy');
   }
 
   void _checkInitialAuthState() {
