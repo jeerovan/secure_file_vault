@@ -602,19 +602,7 @@ class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
 Future<String?> getSelectFolderWithReadWritePermission() async {
   // Request storage permission for Android
   if (Platform.isAndroid) {
-    // Android 13+ uses granular media permissions
-    if (await _isAndroid13OrAbove()) {
-      // For Android 13+, file_picker handles permissions internally
-      // when user selects via SAF (Storage Access Framework)
-      return await FilePicker.platform.getDirectoryPath();
-    } else {
-      // For Android 12 and below
-      final status = await Permission.storage.request();
-
-      if (status.isGranted) {
-        return await FilePicker.platform.getDirectoryPath();
-      }
-    }
+    return await FilePicker.platform.getDirectoryPath();
   }
 
   // iOS doesn't require explicit permissions for user-selected directories
@@ -651,7 +639,7 @@ Future<String?> getSelectFolderWithReadWritePermission() async {
 Future<bool> _isAndroid13OrAbove() async {
   if (Platform.isAndroid) {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
-    return androidInfo.version.sdkInt >= 33;
+    return androidInfo.version.sdkInt >= 30;
   }
   return false;
 }

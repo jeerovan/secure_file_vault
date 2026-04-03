@@ -771,11 +771,10 @@ Future<PermissionStatus> getStoragePermissionStatus() async {
   if (Platform.isAndroid) {
     final deviceInfo = DeviceInfoPlugin();
     final androidInfo = await deviceInfo.androidInfo;
-    // Android 13+ (API 33): MANAGE_EXTERNAL_STORAGE permission
-    if (androidInfo.version.sdkInt >= 33) {
+    // Android 11 (API 30): MANAGE_EXTERNAL_STORAGE permission
+    if (androidInfo.version.sdkInt >= 30) {
       return await Permission.manageExternalStorage.status;
     } else {
-      // Android 12 and below: STORAGE permission
       return await Permission.storage.status;
     }
   } else if (Platform.isIOS) {

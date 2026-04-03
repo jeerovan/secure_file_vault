@@ -70,15 +70,6 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    /*
-    // Check plan subscription with revenuecat
-    _selectedPlan = await _prefs.read(key: 'selected_plan');
-    if (_selectedPlan == null) {
-      _currentStep = SetupStep.planSelection;
-      notifyListeners();
-      return;
-    } */
-
     // All setup complete
     SyncUtils.waitAndSyncChanges();
     _currentStep = SetupStep.explorer;
