@@ -1,4 +1,3 @@
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -16,7 +15,6 @@ import 'package:path/path.dart' as path_lib;
 
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../utils/utils_tasks.dart';
 import '../common_widgets.dart';
@@ -187,6 +185,9 @@ class _FilePaneState extends State<FilePane> {
   }
 
   void _onLongPress(ModelItem item) {
+    if (currentItem != null && currentItem!.id == 'fife') {
+      return;
+    }
     if (!_isMultiSelectNotifier.value) {
       _isMultiSelectNotifier.value = true;
       _toggleSelection(item);
@@ -634,14 +635,6 @@ Future<String?> getSelectFolderWithReadWritePermission() async {
   }
 
   return null;
-}
-
-Future<bool> _isAndroid13OrAbove() async {
-  if (Platform.isAndroid) {
-    final androidInfo = await DeviceInfoPlugin().androidInfo;
-    return androidInfo.version.sdkInt >= 30;
-  }
-  return false;
 }
 
 class _FileListItem extends StatefulWidget {

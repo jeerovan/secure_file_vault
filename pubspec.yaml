@@ -63,6 +63,8 @@ dependencies:
   internet_connection_checker_plus: ^2.9.1+2
   synchronized: ^3.4.0
   change_app_package_name: ^1.5.0
+  flutter_native_splash: ^2.4.7
+  flutter_launcher_icons: ^0.14.4
 
 dev_dependencies:
   flutter_test:
@@ -85,7 +87,11 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/
+    - assets/cacert.pem
+    - assets/logo.png
+    - assets/splash-logo.png
+    - assets/monochrome-logo.png
+    - assets/foreground-logo.png
   fonts:
     - family: Inter
       fonts:
@@ -94,6 +100,44 @@ flutter:
         - asset: fonts/Inter-Light.ttf
         - asset: fonts/Inter-SemiBold.ttf
         - asset: fonts/Inter-Bold.ttf
+
+flutter_native_splash:
+  # General settings for iOS and Android 11 or lower
+  color: "#FFFFFF" # Your app's background color
+  image: "assets/splash-logo.png" # Path to your logo (use a 4x resolution PNG)
+
+  # Optional Dark Mode Support
+  color_dark: "#FF4040"
+  image_dark: "assets/splash-logo.png"
+
+  # Android 12+ specific settings
+  android_12:
+    # App icon with an icon background should be 960x960 pixels.
+    # It will be automatically clipped to a circle by Android.
+    image: "assets/splash-logo.png"
+    color: "#FFFFFF"
+
+    # Optional Dark Mode for Android 12+
+    image_dark: "assets/splash-logo.png"
+    color_dark: "#FF4040"
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
+  min_sdk_android: 24
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: "assets/foreground-logo.png"
+  adaptive_icon_monochrome: "assets/monochrome-logo.png"
+  web:
+    generate: false
+  windows:
+    generate: true
+    image_path: "assets/logo.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "assets/logo.png"
 
   # To add assets to your application, add an assets section, like this:
   # assets:
