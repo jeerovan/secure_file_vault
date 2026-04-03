@@ -392,7 +392,11 @@ class TaskManager {
     }
     if (partsHave == parts) {
       String finalFilePath = await ModelItem.getPathForItem(modelItem.id);
-      await File(filePath).rename(finalFilePath);
+      try {
+        await moveFileSafely(filePath, finalFilePath);
+      } catch (e) {
+        logger.error("failed to move download temp file", error: e);
+      }
       await ModelItemTask.completeTask(itemTask.id);
       return;
     }

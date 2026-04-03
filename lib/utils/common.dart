@@ -475,6 +475,45 @@ Future<void> initializeDirectories() async {
   }
 }
 
+Future<void> moveFileSafely(String sourcePath, String destPath) async {
+  final File sourceFile = File(sourcePath);
+  final File destFile = File(destPath);
+
+  // 1. Verify the source file actually exists before doing anything
+  if (!await sourceFile.exists()) {
+    throw FileSystemException(
+      'Source file missing. It may have already been moved or deleted.',
+      sourcePath,
+      const OSError('No such file or directory', 2),
+    );
+  }
+
+  // 2. Safely create the destination's parent directory
+  final Directory parentDir = destFile.parent;
+  if (!await parentDir.exists()) {
+    await parentDir.create(recursive: true);
+  }
+
+  // 3. Optional: Check if a directory mistakenly exists at the destination path
+  // (Fixing the ghost folder issue from your previous run)
+  if (await Directory(destPath).exists()) {
+    await Directory(destPath).delete(recursive: true);
+  }
+
+  // 4. Perform the rename (with EXDEV fallback)
+  try {
+    await sourceFile.rename(destPath);
+  } on FileSystemException catch (e) {
+    if (e.osError?.errorCode == 18) {
+      // EXDEV: Cross-device link
+      await sourceFile.copy(destPath);
+      await sourceFile.delete();
+    } else {
+      rethrow;
+    }
+  }
+}
+
 Future<String> getHashOfString(String stringForHash) async {
   return sha256.convert(utf8.encode(stringForHash)).toString();
 }
