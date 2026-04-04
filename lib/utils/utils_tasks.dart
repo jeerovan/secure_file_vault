@@ -14,7 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path_lib;
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
+import 'package:sodium/sodium_sumo.dart';
 
 import '../services/service_logger.dart';
 import 'utils_crypto.dart';

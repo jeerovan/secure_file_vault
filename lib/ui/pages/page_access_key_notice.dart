@@ -3,7 +3,7 @@ import 'package:file_vault_bb/services/service_backend.dart';
 import '../../services/service_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
+import 'package:sodium/sodium_sumo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../utils/common.dart';

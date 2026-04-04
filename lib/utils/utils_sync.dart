@@ -16,7 +16,7 @@ import '../models/model_state.dart';
 import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import '../utils/utils_crypto.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
+import 'package:sodium/sodium_sumo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:synchronized/synchronized.dart';

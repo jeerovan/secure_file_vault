@@ -96,9 +96,6 @@ class StorageSqlite {
   Future _onCreate(Database db, int version) async {
     await initTables(db);
     logger.info('Database created with version: $version');
-    int now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await db.insert(Tables.settings.string,
-        {"id": AppString.installedAt.string, "value": now});
     await createDbEntriesOnFreshInstall(db);
   }
 
@@ -171,37 +168,43 @@ class StorageSqlite {
     await db.execute('''
     CREATE INDEX idx_items_file_hash ON items (file_hash)
     ''');
-    await db.execute('''
-        CREATE VIRTUAL TABLE items_fts USING fts4(
-            content="items",
-            name, 
-            tokenize=unicode61
+    bool fts5Available = await isFts5Available(db);
+    if (fts5Available) {
+      await db.execute('''
+        CREATE VIRTUAL TABLE items_fts USING fts5(
+            name,
+            content='items',
+            content_rowid='rowid',
+            tokenize='unicode61'
         );
-    ''');
-    await db.execute('''
-    CREATE TRIGGER items_ai AFTER INSERT ON items BEGIN
-      INSERT INTO items_fts(rowid, name) VALUES (new.rowid, new.name);
-    END;
-  ''');
-    await db.execute('''
-      CREATE TRIGGER items_bd BEFORE DELETE ON items BEGIN
-        DELETE FROM items_fts WHERE docid = old.rowid;
-      END;
-    ''');
-    await db.execute('''
-      CREATE TRIGGER items_bu BEFORE UPDATE ON items 
-      WHEN old.name IS NOT new.name
-      BEGIN
-        DELETE FROM items_fts WHERE docid = old.rowid;
-      END;
-    ''');
-    await db.execute('''
-      CREATE TRIGGER items_au AFTER UPDATE ON items 
-      WHEN old.name IS NOT new.name
-      BEGIN
-        INSERT INTO items_fts(docid, name) VALUES (new.rowid, new.name);
-      END;
-    ''');
+      ''');
+
+      await db.execute('''
+        CREATE TRIGGER items_ai AFTER INSERT ON items BEGIN
+          INSERT INTO items_fts(rowid, name) VALUES (new.rowid, new.name);
+        END;
+      ''');
+
+      await db.execute('''
+        CREATE TRIGGER items_bd AFTER DELETE ON items BEGIN
+          INSERT INTO items_fts(items_fts, rowid, name) VALUES ('delete', old.rowid, old.name);
+        END;
+      ''');
+
+      // Note: BEFORE UPDATE is no longer needed. FTS5 handles both steps in AFTER UPDATE.
+      await db.execute('''
+        CREATE TRIGGER items_au AFTER UPDATE ON items 
+        WHEN old.name IS NOT new.name
+        BEGIN
+          -- First, 'delete' the old index
+          INSERT INTO items_fts(items_fts, rowid, name) VALUES ('delete', old.rowid, old.name);
+          -- Then, insert the new index
+          INSERT INTO items_fts(rowid, name) VALUES (new.rowid, new.name);
+        END;
+      ''');
+    }
+    // NOTE: else no need to create normal index on 'name' as the search term
+    // will start with a "*" and B-tree does not support it
     await db.execute('''
       CREATE TABLE changes (
         id TEXT PRIMARY KEY,
@@ -241,15 +244,30 @@ class StorageSqlite {
     logger.info("Tables Created");
   }
 
+  Future<bool> isFts5Available(Database db) async {
+    final result = await db
+        .rawQuery("SELECT name FROM pragma_module_list WHERE name = 'fts5'");
+
+    if (result.isNotEmpty) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   Future<Uint8List> loadImageAsUint8List(String assetPath) async {
     ByteData data = await rootBundle.load(assetPath);
     return data.buffer.asUint8List();
   }
 
   Future<void> createDbEntriesOnFreshInstall(Database db) async {
-    /* int createdAt = DateTime.now().toUtc().millisecondsSinceEpoch;
-    Uuid uuid = const Uuid();
-    String uniqueId = uuid.v4(); */
+    // Insert app settings
+    int now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    await db.insert(Tables.settings.string,
+        {"id": AppString.installedAt.string, "value": now});
+    String hasFts5 = await isFts5Available(db) ? "yes" : "no";
+    await db.insert(Tables.settings.string,
+        {"id": AppString.hasFts5.string, "value": hasFts5});
   }
 
   Future<int> insert(String tableName, Map<String, dynamic> row) async {

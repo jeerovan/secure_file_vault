@@ -106,6 +106,8 @@ enum AppTask {
 }
 
 enum AppString {
+  // DB
+  hasFts5,
   // app
   appName,
   deviceId,
@@ -165,6 +167,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.hasFts5:
+        return "has_fts5";
       case AppString.tableMaps:
         return "table_maps";
       case AppString.serverKeys:

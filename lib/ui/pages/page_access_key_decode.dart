@@ -7,7 +7,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
+import 'package:sodium/sodium_sumo.dart';
 
 import '../../utils/common.dart';
 import '../../ui/common_widgets.dart';
@@ -157,7 +157,7 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Enable Sync'),
+        title: const Text('Encryption'),
         centerTitle: true,
         elevation: 0,
       ),
@@ -285,7 +285,7 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                           ),
                         )
                       : const Text(
-                          'Verify & Enable Sync',
+                          'Verify',
                           style: TextStyle(
                               fontSize: 16.0, fontWeight: FontWeight.bold),
                         ),

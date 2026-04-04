@@ -6,10 +6,10 @@ import 'package:flutter/foundation.dart';
 import '../utils/common.dart';
 import '../services/service_logger.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sodium_libs/sodium_libs_sumo.dart';
+import 'package:sodium/sodium_sumo.dart';
 import 'enums.dart';
 
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart' as http_lib;
 
 class CryptoUtils {
   final logger = AppLogger(prefixes: ["utils_crypto"]);
@@ -22,24 +22,6 @@ class CryptoUtils {
 
   SecureKey generateKey() {
     return _sodium.crypto.secretBox.keygen(); // Generate 256-bit (32-byte) key
-  }
-
-  // Derive key from password and salt
-  Future<SecureKey> deriveKeyFromPassword({
-    required String password,
-    required Uint8List salt,
-  }) async {
-    return await _sodium.runIsolated((sodium, secureKeys, keyPairs) {
-      return sodium.crypto.pwhash.call(
-        password: password.toCharArray(),
-        salt: salt,
-        outLen: sodium.crypto.secretBox.keyBytes,
-        opsLimit: sodium.crypto.pwhash.opsLimitSensitive *
-            4, // compensation for memlimit
-        memLimit: sodium.crypto.pwhash.memLimitModerate,
-        alg: CryptoPwhashAlgorithm.argon2id13,
-      );
-    });
   }
 
   Uint8List generateSalt() {
@@ -152,8 +134,8 @@ class CryptoUtils {
       File fileIn = File(fileInPath);
       IOSink fileInSink = fileIn.openWrite();
       try {
-        var request = http.Request("GET", Uri.parse(downloadUrl));
-        http.StreamedResponse response = await request.send();
+        var request = http_lib.Request("GET", Uri.parse(downloadUrl));
+        http_lib.StreamedResponse response = await request.send();
         if (response.statusCode == 200) {
           // Stream file data to avoid memory overuse
           await response.stream.forEach((chunk) => fileInSink.add(chunk));
