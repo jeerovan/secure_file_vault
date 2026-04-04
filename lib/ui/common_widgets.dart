@@ -104,6 +104,11 @@ class AppSetupState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> manageDevices() async {
+    _currentStep = SetupStep.manageDevices;
+    notifyListeners();
+  }
+
   Future<void> deviceRegistered() async {
     _currentStep = SetupStep.storagePermission;
     notifyListeners();
@@ -275,37 +280,71 @@ class WidgetKeyValueTable extends StatelessWidget {
   }
 }
 
-class WidgetCategoryGroupAvatar extends StatelessWidget {
-  final String type;
-  final Uint8List? thumbnail;
-  final double size;
-  final String color;
-  final String title;
+// Try failed request again
+Widget tryFailedRequestAgain(
+    {required String message,
+    required TextStyle? style,
+    required Function() onPressed}) {
+  return Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: style,
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: onPressed,
+            icon: const Icon(Icons.refresh),
+            label: const Text("Try Again"),
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
-  const WidgetCategoryGroupAvatar(
-      {super.key,
-      required this.type,
-      required this.size,
-      this.thumbnail,
-      required this.color,
-      required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return type == "group"
-        ? Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Icon(Icons.circle,
-                size: 14, color: colorFromHex(color).withValues(alpha: 0.8)),
-          )
-        : Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: Icon(
-              Icons.workspaces,
-              color: colorFromHex(color).withValues(alpha: 0.8),
+/// Helper method to build the toolbar layout cleanly
+Widget buildBottomBarLayout({
+  required Color color,
+  Widget? leading,
+  required Widget title,
+  required List<Widget> actions,
+}) {
+  return Container(
+    color: color,
+    child: SafeArea(
+      top: false, // Crucial: prevents the status bar padding issue
+      bottom: true, // Protects against bottom system navigation bars
+      child: SizedBox(
+        height: 64.0, // Standard Material 3 toolbar height
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(width: 4.0),
+            if (leading != null) leading,
+            if (leading == null)
+              const SizedBox(width: 16.0), // Padding if no leading icon
+            Expanded(
+              // Expanded forces the title/breadcrumb to take up remaining space
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: title,
+              ),
             ),
-          );
-  }
+            ...actions,
+            const SizedBox(width: 4.0),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class WidgetTextWithLinks extends StatefulWidget {

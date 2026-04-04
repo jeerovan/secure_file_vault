@@ -168,5 +168,29 @@ class BackendApi {
     }
   }
 
+  Future<Map<String, dynamic>> delete({
+    required String endpoint,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
+  }) async {
+    try {
+      logger.info('DELETE $endpoint ${queryParameters.toString()}');
+      final res = await _http
+          .delete(
+            _buildUri(endpoint, queryParameters: queryParameters),
+            headers: await _headers(
+                withAuth: getSignedInEmailId() != testEmailId, extra: headers),
+          )
+          .timeout(timeout);
+      return _formatResponse(res);
+    } catch (e) {
+      logger.error(e.toString());
+      if (_isNetworkException(e)) {
+        return {'success': -1, 'message': 'Network Error'};
+      }
+      return {'success': -1, 'message': 'Unexpected Error'};
+    }
+  }
+
   void close() => _http.close();
 }

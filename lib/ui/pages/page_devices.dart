@@ -1,4 +1,7 @@
+import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../../utils/common.dart';
 import '../../ui/common_widgets.dart';
 import '../../services/service_logger.dart';
@@ -14,10 +17,12 @@ class PageDevices extends StatefulWidget {
 }
 
 class _PageDevicesState extends State<PageDevices> {
-  AppLogger logger = AppLogger(prefixes: ["PageDevices"]);
+  AppLogger logger = AppLogger(prefixes: ["Devices"]);
   final SupabaseClient supabase = Supabase.instance.client;
   List<Map<String, dynamic>> devices = [];
   bool processing = true;
+  String? _errorMessage;
+  final api = BackendApi();
 
   @override
   void initState() {
@@ -26,38 +31,50 @@ class _PageDevicesState extends State<PageDevices> {
   }
 
   Future<void> fetchDevices() async {
+    _errorMessage = null;
+    setState(() {
+      processing = true;
+    });
     try {
-      final response = await supabase
-          .from('devices')
-          .select('id, title, last_at, status')
-          .order('status', ascending: false)
-          .order('last_at', ascending: false);
-
-      if (response.isNotEmpty) {
-        setState(() {
-          devices = List<Map<String, dynamic>>.from(response);
-          processing = false;
-        });
-      } else {
+      final response = await api.get(endpoint: '/devices');
+      final status = response["success"];
+      if (status <= 0) {
+        _errorMessage = response["message"].toString();
+      } else if (status == 1) {
+        if (mounted) {
+          setState(() {
+            devices = List<Map<String, dynamic>>.from(response["data"]);
+            processing = false;
+          });
+        }
+      }
+    } catch (e, s) {
+      logger.error("fetching Devices", error: e, stackTrace: s);
+    } finally {
+      if (mounted) {
         setState(() {
           processing = false;
         });
       }
-    } catch (e, s) {
-      logger.error("fetching Devices", error: e, stackTrace: s);
     }
   }
 
-  Future<void> disableDevice(String deviceId) async {
+  Future<void> signoutDevice(String deviceId) async {
+    setState(() {
+      processing = true;
+    });
     try {
-      setState(() {
-        processing = true;
-      });
-      await supabase.functions
-          .invoke("remove_device", body: {"deviceId": deviceId});
-      if (mounted) {
-        displaySnackBar(context, message: 'Device disabled!', seconds: 2);
-        fetchDevices(); // Refresh the list
+      final response = await api.delete(
+          endpoint: '/devices', queryParameters: {'device_id': deviceId});
+      final status = response["success"];
+      if (status <= 0) {
+        logger.error("Error signing out",
+            error: response["message"].toString());
+        if (mounted) {
+          displaySnackBar(context, message: 'Please try again!', seconds: 2);
+        }
+      } else if (status == 1) {
+        fetchDevices();
       }
     } catch (e) {
       if (mounted) {
@@ -72,20 +89,19 @@ class _PageDevicesState extends State<PageDevices> {
     }
   }
 
-  Future<void> showDisableDialog(String deviceId) async {
+  Future<void> showDisableDialog(String userIdDeviceId) async {
+    String deviceId = userIdDeviceId.split("_")[1];
     String thisDeviceId = await getDeviceId();
     if (thisDeviceId.isNotEmpty && deviceId == thisDeviceId && mounted) {
-      displaySnackBar(context,
-          message: "Can't remove this device!", seconds: 2);
+      displaySnackBar(context, message: "Not this device!", seconds: 2);
       return;
     }
     if (!mounted) return;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Confirm Remove"),
-        content:
-            Text("Are you sure? This will delete all the data on the device."),
+        title: Text("Confirm signout device"),
+        content: Text("Are you sure?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context), // Cancel
@@ -94,7 +110,7 @@ class _PageDevicesState extends State<PageDevices> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              disableDevice(deviceId);
+              signoutDevice(deviceId);
             },
             child: Text("OK", style: TextStyle(color: Colors.red)),
           ),
@@ -103,46 +119,73 @@ class _PageDevicesState extends State<PageDevices> {
     );
   }
 
+  Future<void> _navigateBack() async {
+    context.read<AppSetupState>().recheckStatus();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Register Device"),
-      ),
-      body: processing
-          ? Center(child: CircularProgressIndicator())
-          : devices.isEmpty
-              ? Center(child: Text("No devices found"))
-              : ListView.builder(
-                  itemCount: devices.length,
-                  itemBuilder: (context, index) {
-                    final device = devices[index];
-                    final bool isEnabled = device['status'] == 1;
-                    String lastAt = getFormattedDateTime(device["last_at"]);
-                    return ListTile(
-                      title: Text(device['title'], style: TextStyle()),
-                      subtitle: Text(
-                        lastAt,
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            isEnabled ? "Enabled" : "Disabled",
-                            style: TextStyle(
-                                color: isEnabled ? Colors.green : Colors.red),
-                          ),
-                          if (isEnabled) // Show disable button only if enabled
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => showDisableDialog(device['id']),
-                            ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-    );
+        body: Column(
+      children: [
+        Expanded(
+          child: processing
+              ? const Center(child: CircularProgressIndicator())
+              : _errorMessage != null
+                  ? tryFailedRequestAgain(
+                      message: _errorMessage!,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      onPressed: fetchDevices)
+                  : devices.isEmpty
+                      ? Center(child: Text("No device found"))
+                      : ListView.builder(
+                          itemCount: devices.length,
+                          itemBuilder: (context, index) {
+                            final device = devices[index];
+                            final bool isEnabled = device["active"] == 1;
+                            String lastAt =
+                                getFormattedDateTime(device["lastAt"]);
+                            return ListTile(
+                              leading: Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: isEnabled ? Colors.green : Colors.red,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Theme.of(context)
+                                        .scaffoldBackgroundColor,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                              title: Text(device["title"], style: TextStyle()),
+                              subtitle: Text(
+                                lastAt,
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              trailing: isEnabled
+                                  ? // Show disable button only if enabled
+                                  IconButton(
+                                      icon: Icon(LucideIcons.logOut,
+                                          color: Colors.red),
+                                      onPressed: () =>
+                                          showDisableDialog(device["id"]),
+                                    )
+                                  : null,
+                            );
+                          },
+                        ),
+        ),
+        buildBottomBarLayout(
+            color: surfaceColor,
+            leading: IconButton(
+                icon: const Icon(LucideIcons.arrowLeft),
+                onPressed: _navigateBack),
+            title: Text("Devices"),
+            actions: [])
+      ],
+    ));
   }
 }

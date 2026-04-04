@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
 
-import { addUpdateDevice, getUserDevices } from '$lib/server/db/api';
+import { addUpdateDevice, getUserDevices, updateDeviceStatus } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
 
 export const GET: RequestHandler = async ({ request }) => {
@@ -32,4 +32,27 @@ export const POST: RequestHandler = async ({ request }) => {
 	const tableId = authUser.id + '_' + device_id;
 
 	return await addUpdateDevice(authUser.id, tableId, title, type, notificationId, active);
+};
+
+export const DELETE: RequestHandler = async ({ request, url }) => {
+	const authUser = await requireAuth(request);
+
+	let device_id = url.searchParams.get('device_id');
+
+	if (!device_id) {
+		try {
+			const body = await request.json();
+			device_id = body.device_id;
+		} catch {
+			return json({ success: 0, message: ErrorCode.INVALID_JSON });
+		}
+	}
+
+	if (!device_id) {
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
+	}
+
+	const tableId = authUser.id + '_' + device_id;
+
+	return updateDeviceStatus(tableId, 0);
 };

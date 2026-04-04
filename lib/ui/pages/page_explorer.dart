@@ -271,7 +271,10 @@ class _FilePaneState extends State<FilePane> {
     context.read<AppSetupState>().showArchives();
   }
 
-  // Note: Changed return type from PreferredSizeWidget to Widget
+  Future<void> showDevices() async {
+    context.read<AppSetupState>().manageDevices();
+  }
+
   Widget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -283,7 +286,7 @@ class _FilePaneState extends State<FilePane> {
         final selectedItems = _selectedItemsNotifier.value;
 
         if (isMultiSelectMode) {
-          return _buildToolbarLayout(
+          return buildBottomBarLayout(
             color: surfaceColor,
             leading: IconButton(
               icon: const Icon(LucideIcons.x),
@@ -313,7 +316,7 @@ class _FilePaneState extends State<FilePane> {
         }
 
         // Default Mode
-        return _buildToolbarLayout(
+        return buildBottomBarLayout(
           color: surfaceColor,
           leading: currentItem?.id != 'fife'
               ? IconButton(
@@ -337,6 +340,7 @@ class _FilePaneState extends State<FilePane> {
               onSelected: (value) {
                 if (value == 0) signout();
                 if (value == 1) showArchives();
+                if (value == 2) showDevices();
               },
               itemBuilder: (context) => [
                 const PopupMenuItem<int>(
@@ -359,48 +363,21 @@ class _FilePaneState extends State<FilePane> {
                     ],
                   ),
                 ),
+                const PopupMenuItem<int>(
+                  value: 2,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.monitorSmartphone, color: Colors.grey),
+                      SizedBox(width: 16),
+                      Text('Devices'),
+                    ],
+                  ),
+                ),
               ],
             ),
           ],
         );
       },
-    );
-  }
-
-  /// Helper method to build the toolbar layout cleanly
-  Widget _buildToolbarLayout({
-    required Color color,
-    Widget? leading,
-    required Widget title,
-    required List<Widget> actions,
-  }) {
-    return Container(
-      color: color,
-      child: SafeArea(
-        top: false, // Crucial: prevents the status bar padding issue
-        bottom: true, // Protects against bottom system navigation bars
-        child: SizedBox(
-          height: 64.0, // Standard Material 3 toolbar height
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(width: 4.0),
-              if (leading != null) leading,
-              if (leading == null)
-                const SizedBox(width: 16.0), // Padding if no leading icon
-              Expanded(
-                // Expanded forces the title/breadcrumb to take up remaining space
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: title,
-                ),
-              ),
-              ...actions,
-              const SizedBox(width: 4.0),
-            ],
-          ),
-        ),
-      ),
     );
   }
 

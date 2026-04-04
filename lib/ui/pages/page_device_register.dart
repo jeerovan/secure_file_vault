@@ -51,7 +51,11 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     });
     final status = result["success"];
     if (status <= 0) {
-      _errorMessage = result["message"];
+      _errorMessage = result["message"].toString();
+      if (_errorMessage == "7" && mounted) {
+        displaySnackBar(context, message: "Device limit reached", seconds: 2);
+        await context.read<AppSetupState>().manageDevices();
+      } // Device limit reached
     } else {
       await ModelSetting.set(AppString.deviceId.string, deviceId);
       String deviceRoot = await getDeviceHash();
@@ -84,29 +88,10 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
 
     // State 2: Error
     if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: _registerDevice,
-                icon: const Icon(Icons.refresh),
-                label: const Text("Try Again"),
-              ),
-            ],
-          ),
-        ),
-      );
+      return tryFailedRequestAgain(
+          message: _errorMessage!,
+          style: Theme.of(context).textTheme.bodyLarge,
+          onPressed: _registerDevice);
     }
 
     return const SizedBox.shrink();

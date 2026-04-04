@@ -41,7 +41,7 @@ class StorageSqlite {
       final dbPath = join(dbDir, dbFileName);
       logger.info("DbPath:$dbPath");
       return await openDatabase(dbPath,
-          version: 13,
+          version: 1,
           onConfigure: _onConfigure,
           onCreate: _onCreate,
           onUpgrade: _onUpgrade,

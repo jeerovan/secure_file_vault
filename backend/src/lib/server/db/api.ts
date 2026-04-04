@@ -70,8 +70,7 @@ export async function getUserDevices(userId: string) {
 			active: userDevice[UserDeviceKeys.STATUS]
 		})
 		.from(userDevice)
-		.where(eq(userDevice[UserDeviceKeys.USER_ID], userId))
-		.get();
+		.where(eq(userDevice[UserDeviceKeys.USER_ID], userId));
 }
 
 export async function addUpdateDevice(
@@ -143,6 +142,22 @@ export async function removeDevice(tableId: string) {
 		.where(eq(userDevice[UserDeviceKeys.ID], tableId));
 	if (device) {
 		await db.delete(userDevice).where(eq(userDevice[UserDeviceKeys.ID], tableId));
+		return json({ success: 1 });
+	} else {
+		return json({ success: 0, message: ErrorCode.NO_DEVICE });
+	}
+}
+
+export async function updateDeviceStatus(tableId: string, status: number) {
+	const device = await db
+		.select()
+		.from(userDevice)
+		.where(eq(userDevice[UserDeviceKeys.ID], tableId));
+	if (device) {
+		await db
+			.update(userDevice)
+			.set({ [UserDeviceKeys.STATUS]: status })
+			.where(eq(userDevice[UserDeviceKeys.ID], tableId));
 		return json({ success: 1 });
 	} else {
 		return json({ success: 0, message: ErrorCode.NO_DEVICE });
