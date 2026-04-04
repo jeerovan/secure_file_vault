@@ -8,7 +8,8 @@ import {
 	ItemKeys,
 	CredentialsKeys,
 	StorageKeys,
-	TempStorageKeys
+	TempStorageKeys,
+	ProviderKeys
 } from './keys';
 
 export const user = sqliteTable('user', {
@@ -141,6 +142,21 @@ export const storage = sqliteTable('storage', {
 	[StorageKeys.PRIORITY]: integer(StorageKeys.PRIORITY).notNull().default(0),
 	[StorageKeys.JSON]: text(StorageKeys.JSON, { mode: 'json' }).notNull(),
 	[StorageKeys.LIMIT_FREE_BYTES]: integer(StorageKeys.LIMIT_FREE_BYTES).notNull()
+});
+
+export const provider = sqliteTable('provider', {
+	[ProviderKeys.ID]: integer(ProviderKeys.ID, { mode: 'number' }).primaryKey({
+		autoIncrement: true
+	}),
+	[ProviderKeys.SERVER_CREATED_AT]: integer(ProviderKeys.SERVER_CREATED_AT)
+		.notNull()
+		.$defaultFn(() => Date.now()),
+	[ProviderKeys.SERVER_UPDATED_AT]: integer(ProviderKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
+	[ProviderKeys.TITLE]: text(ProviderKeys.TITLE).notNull(),
+	[ProviderKeys.FREE_BYTES]: integer(ProviderKeys.FREE_BYTES).notNull(),
+	[ProviderKeys.PRIORITY]: integer(ProviderKeys.PRIORITY).notNull()
 });
 
 export const tempStorage = sqliteTable('temp_storage', {

@@ -106,6 +106,15 @@ export const TempStorageKeys = {
 	PROVIDER: '7'
 } as const;
 
+export const ProviderKeys = {
+	ID: '1',
+	SERVER_CREATED_AT: '2',
+	SERVER_UPDATED_AT: '3',
+	TITLE: '4',
+	FREE_BYTES: '5',
+	PRIORITY: '6'
+} as const;
+
 export const ErrorCode = {
 	NO_USER: 1,
 	INVALID_JSON: 2,

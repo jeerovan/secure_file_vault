@@ -9,7 +9,8 @@ import {
 	part,
 	credentials,
 	storage,
-	tempStorage
+	tempStorage,
+	provider
 } from '$lib/server/db/schema';
 import { eq, and, ne, gt, count, desc, sql } from 'drizzle-orm';
 import {
@@ -23,7 +24,8 @@ import {
 	StorageKeys,
 	ErrorCode,
 	StorageProvider,
-	TempStorageKeys
+	TempStorageKeys,
+	ProviderKeys
 } from '$lib/server/db/keys';
 import { deleteFileFromStorage } from '../deleteWorker';
 
@@ -43,7 +45,22 @@ export async function addKey(userId: string, email: string, cipher: string, nonc
 	// add default fife 5 gb storage for this user
 	const fifeCredentials = await getCredentials('fife', StorageProvider.FIFE);
 	if (fifeCredentials) {
-		await addStorage(userId, fifeCredentials[CredentialsKeys.ID], 5368709120, 5368709120, 1, {});
+		const fifeProvider = db
+			.select()
+			.from(provider)
+			.where(eq(provider[ProviderKeys.ID], StorageProvider.FIFE))
+			.get();
+		if (!fifeProvider) {
+			return;
+		}
+		await addStorage(
+			userId,
+			fifeCredentials[CredentialsKeys.ID],
+			fifeProvider[ProviderKeys.FREE_BYTES],
+			fifeProvider[ProviderKeys.FREE_BYTES],
+			fifeProvider[ProviderKeys.PRIORITY],
+			{}
+		);
 	}
 	await db
 		.insert(userData)
@@ -413,7 +430,7 @@ export async function addCredentials(
 	userId: string,
 	accountId: string,
 	credentialsData: any,
-	provider: number
+	providerId: number
 ) {
 	const existingEntry = db
 		.select()
@@ -425,22 +442,27 @@ export async function addCredentials(
 		await db.insert(credentials).values({
 			[CredentialsKeys.ID]: accountId,
 			[CredentialsKeys.OWNER_ID]: userId,
-			[CredentialsKeys.PROVIDER]: provider,
+			[CredentialsKeys.PROVIDER]: providerId,
 			[CredentialsKeys.CREDENTIALS]: credentialsData
 		});
+		const providerEntry = db
+			.select()
+			.from(provider)
+			.where(eq(provider[ProviderKeys.ID], providerId))
+			.get();
+		if (!providerEntry) {
+			return;
+		}
 
-		if (provider != StorageProvider.FIFE) {
-			let priority = 10;
-			let storageLimit = 10737418240;
-			if (provider == StorageProvider.CLOUDFLARE) {
-				priority = 6;
-			} else if (provider == StorageProvider.OCI) {
-				priority = 8;
-				storageLimit = storageLimit * 2;
-			} else if (provider == StorageProvider.IDRIVE) {
-				priority = 9;
-			}
-			await addStorage(userId, accountId, storageLimit, storageLimit, priority, {});
+		if (providerEntry[ProviderKeys.ID] != StorageProvider.FIFE) {
+			await addStorage(
+				userId,
+				accountId,
+				providerEntry[ProviderKeys.FREE_BYTES],
+				providerEntry[ProviderKeys.FREE_BYTES],
+				providerEntry[ProviderKeys.PRIORITY],
+				{}
+			);
 		}
 	} else {
 		await db
@@ -453,14 +475,14 @@ export async function addCredentials(
 	}
 }
 
-export async function getCredentials(userId: string, provider: number) {
+export async function getCredentials(userId: string, providerId: number) {
 	return db
 		.select()
 		.from(credentials)
 		.where(
 			and(
 				eq(credentials[CredentialsKeys.OWNER_ID], userId),
-				eq(credentials[CredentialsKeys.PROVIDER], provider)
+				eq(credentials[CredentialsKeys.PROVIDER], providerId)
 			)
 		)
 		.get();

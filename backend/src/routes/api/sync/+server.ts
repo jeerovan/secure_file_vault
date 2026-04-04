@@ -5,7 +5,8 @@ import {
 	fetchChanges,
 	saveFileChanges,
 	saveItemChanges,
-	savePartChanges
+	savePartChanges,
+	updateDeviceStatus
 } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
 
@@ -58,6 +59,8 @@ export const POST: RequestHandler = async ({ request }) => {
 					break;
 			}
 		}
+		const userDeviceKey = userId + '_' + deviceId;
+		await updateDeviceStatus(userDeviceKey, 1); // This will set device active time
 	} catch (e) {
 		return json({ success: 0, message: e });
 	}
