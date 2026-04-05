@@ -295,7 +295,7 @@ class _FilePaneState extends State<FilePane> {
         final selectedItems = _selectedItemsNotifier.value;
 
         if (isMultiSelectMode) {
-          return buildBottomBarLayout(
+          return buildBottomAppBar(
             color: surfaceColor,
             leading: IconButton(
               icon: const Icon(LucideIcons.x),
@@ -325,7 +325,7 @@ class _FilePaneState extends State<FilePane> {
         }
 
         // Default Mode
-        return buildBottomBarLayout(
+        return buildBottomAppBar(
           color: surfaceColor,
           leading: currentItem?.id != 'fife'
               ? IconButton(

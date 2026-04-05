@@ -1,11 +1,12 @@
 import 'dart:math';
 import 'package:file_vault_bb/ui/common_widgets.dart';
+import 'package:file_vault_bb/ui/pages/page_add_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:provider/provider.dart';
 
 import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
+import '../../utils/enums.dart';
 
 class StorageProvidersScreen extends StatefulWidget {
   const StorageProvidersScreen({super.key});
@@ -68,46 +69,59 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
     Navigator.pop(context);
   }
 
+  Future<void> connectStorageProvider(StorageProvider storageProvider) async {
+    Navigator.of(context).push(AnimatedPageRoute(
+        child: AddProviderScreen(
+      storageProvider: storageProvider,
+    )));
+  }
+
   @override
   Widget build(BuildContext context) {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
-    return Scaffold(
-      body: Column(
-        children: [
-          Expanded(
-            child: processing
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
-                    ? tryFailedRequestAgain(
-                        message: _errorMessage!,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                        onPressed: fetchStorage)
-                    : storages.isEmpty
-                        ? Center(child: Text("No device found"))
-                        : ListView.builder(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0, vertical: 24.0),
-                            itemCount: storages.length,
-                            itemBuilder: (context, index) {
-                              final provider = storages[index];
-                              return _buildProviderCard(context, provider);
-                            },
-                          ),
-          ),
-          buildBottomBarLayout(
-              color: surfaceColor,
-              leading: IconButton(
-                  icon: const Icon(LucideIcons.arrowLeft),
-                  onPressed: _navigateBack),
-              title: Text("Storage"),
-              actions: []),
-        ],
+    return CrossPlatformBackHandler(
+      canPop: true,
+      onManualBack: _navigateBack,
+      child: Scaffold(
+        body: Column(
+          children: [
+            Expanded(
+              child: processing
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage != null
+                      ? tryFailedRequestAgain(
+                          message: _errorMessage!,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                          onPressed: fetchStorage)
+                      : storages.isEmpty
+                          ? Center(child: Text("No device found"))
+                          : ListView.builder(
+                              reverse: true,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0, vertical: 24.0),
+                              itemCount: storages.length,
+                              itemBuilder: (context, index) {
+                                final provider = storages[index];
+                                return _buildProviderCard(context, provider);
+                              },
+                            ),
+            ),
+            buildBottomAppBar(
+                color: surfaceColor,
+                leading: IconButton(
+                    icon: const Icon(LucideIcons.arrowLeft),
+                    onPressed: _navigateBack),
+                title: Text("Storage"),
+                actions: []),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildProviderCard(
       BuildContext context, Map<String, dynamic> provider) {
+    final int providerId = provider['id'];
     final bool isAdded = provider['added'] == 1;
     final int totalBytes = provider['bytes'] ?? 0;
     final int usedBytes = provider['used'] ?? 0;
@@ -159,7 +173,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
               if (isAdded)
                 _buildUsageIndicator(context, usedBytes, totalBytes)
               else
-                _buildUnaddedState(context, totalBytes),
+                _buildUnaddedState(context, providerId, totalBytes),
             ],
           ),
         ),
@@ -211,9 +225,11 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
     );
   }
 
-  Widget _buildUnaddedState(BuildContext context, int totalBytes) {
+  Widget _buildUnaddedState(
+      BuildContext context, int providerId, int totalBytes) {
     final theme = Theme.of(context);
-
+    StorageProvider storageProvider =
+        StorageProviderExtension.fromValue(providerId);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -237,8 +253,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
         ),
         FilledButton.icon(
           onPressed: () {
-            // TODO: Navigate to addition widget
-            // Navigator.push(context, MaterialPageRoute(builder: (_) => AddProviderScreen()));
+            connectStorageProvider(storageProvider);
           },
           icon: const Icon(Icons.add_link, size: 18),
           label: const Text('Connect'),

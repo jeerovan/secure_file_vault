@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../models/model_storage_providers.dart';
 import '../../services/service_storage_validation.dart';
 import '../../utils/enums.dart';
+import '../common_widgets.dart';
 
 class AddProviderScreen extends StatefulWidget {
   final StorageProvider storageProvider;
@@ -73,96 +75,118 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
     }
   }
 
+  Future<void> _navigateBack() async {
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Connect ${config.title}'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.all(24.0),
-            children: [
-              Text(
-                'Enter your credentials',
-                style: theme.textTheme.headlineSmall
-                    ?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Your keys are verified locally and encrypted before transmission.',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: theme.colorScheme.outline),
-              ),
-              const SizedBox(height: 32),
-              ...config.fields.map((field) => Padding(
-                    padding: const EdgeInsets.only(bottom: 20.0),
-                    child: TextFormField(
-                      decoration: InputDecoration(
-                        labelText: field.label,
-                        helperText: field.helperText,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest
-                            .withAlpha(30),
-                      ),
-                      obscureText: field.isObscured,
-                      validator: (value) =>
-                          value == null || value.isEmpty ? 'Required' : null,
-                      onSaved: (value) => _formData[field.key] = value!.trim(),
-                    ),
-                  )),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.errorContainer,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
+    final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
+    return CrossPlatformBackHandler(
+      canPop: true,
+      onManualBack: _navigateBack,
+      child: Scaffold(
+        body: Column(
+          children: [
+            Expanded(
+              child: SafeArea(
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    padding: const EdgeInsets.all(24.0),
                     children: [
-                      Icon(Icons.error_outline,
-                          color: theme.colorScheme.onErrorContainer),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(
-                              color: theme.colorScheme.onErrorContainer),
+                      Text(
+                        'Enter your credentials',
+                        style: theme.textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Your keys are verified locally and encrypted before transmission.',
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: theme.colorScheme.outline),
+                      ),
+                      const SizedBox(height: 32),
+                      ...config.fields.map((field) => Padding(
+                            padding: const EdgeInsets.only(bottom: 20.0),
+                            child: TextFormField(
+                              decoration: InputDecoration(
+                                labelText: field.label,
+                                helperText: field.helperText,
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                filled: true,
+                                fillColor: theme
+                                    .colorScheme.surfaceContainerHighest
+                                    .withAlpha(30),
+                              ),
+                              obscureText: field.isObscured,
+                              validator: (value) =>
+                                  value == null || value.isEmpty
+                                      ? 'Required'
+                                      : null,
+                              onSaved: (value) =>
+                                  _formData[field.key] = value!.trim(),
+                            ),
+                          )),
+                      if (_errorMessage != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.error_outline,
+                                  color: theme.colorScheme.onErrorContainer),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _errorMessage!,
+                                  style: TextStyle(
+                                      color:
+                                          theme.colorScheme.onErrorContainer),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                      ],
+                      const SizedBox(height: 32),
+                      FilledButton(
+                        onPressed: _isLoading ? null : _handleConnect,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(54.0),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
+                            : const Text('Verify & Connect',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
                     ],
                   ),
                 ),
-              ],
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _isLoading ? null : _handleConnect,
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(54.0),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 24,
-                        width: 24,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white))
-                    : const Text('Verify & Connect',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
               ),
-            ],
-          ),
+            ),
+            buildBottomAppBar(
+                color: surfaceColor,
+                leading: IconButton(
+                    icon: const Icon(LucideIcons.arrowLeft),
+                    onPressed: _navigateBack),
+                title: Text('Connect ${config.title}'),
+                actions: [])
+          ],
         ),
       ),
     );

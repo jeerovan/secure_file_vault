@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:file_vault_bb/utils/utils_sync.dart';
+import 'package:flutter/services.dart';
 
 import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
@@ -304,8 +305,52 @@ Widget tryFailedRequestAgain(
   );
 }
 
+class CrossPlatformBackHandler extends StatelessWidget {
+  final Widget child;
+
+  /// The manual action to trigger when back/ESC is pressed.
+  final VoidCallback onManualBack;
+
+  /// Determines if the system can pop automatically.
+  /// Set to false to block default behavior and use [onManualBack].
+  final bool canPop;
+
+  const CrossPlatformBackHandler({
+    super.key,
+    required this.child,
+    required this.onManualBack,
+    this.canPop = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 1. CallbackShortcuts handles hardware keyboard events (Desktop ESC key)
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): onManualBack,
+      },
+      // Focus ensures the keyboard listener is active on this screen
+      child: Focus(
+        autofocus: true,
+        // 2. PopScope handles Android back button / iOS swipe (replaces WillPopScope)
+        child: PopScope(
+          canPop: canPop,
+          onPopInvokedWithResult: (bool didPop, Object? result) {
+            // If the system already popped (canPop was true), do nothing to avoid duplicate pops.
+            if (didPop) return;
+
+            // Otherwise, trigger your custom manual logic
+            onManualBack();
+          },
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 /// Helper method to build the toolbar layout cleanly
-Widget buildBottomBarLayout({
+Widget buildBottomAppBar({
   required Color color,
   Widget? leading,
   required Widget title,

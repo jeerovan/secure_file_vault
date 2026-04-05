@@ -293,6 +293,23 @@ extension StorageProviderExtension on StorageProvider {
         return 5;
     }
   }
+
+  static StorageProvider fromValue(int value) {
+    switch (value) {
+      case 1:
+        return StorageProvider.fife;
+      case 2:
+        return StorageProvider.backblaze;
+      case 3:
+        return StorageProvider.cloudflare;
+      case 4:
+        return StorageProvider.oracle;
+      case 5:
+        return StorageProvider.idrive;
+      default:
+        return StorageProvider.none;
+    }
+  }
 }
 
 enum ItemTask { none, upload, download }

@@ -130,66 +130,74 @@ class _PageDevicesState extends State<PageDevices> {
   @override
   Widget build(BuildContext context) {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
-    return Scaffold(
-        body: Column(
-      children: [
-        Expanded(
-          child: processing
-              ? const Center(child: CircularProgressIndicator())
-              : _errorMessage != null
-                  ? tryFailedRequestAgain(
-                      message: _errorMessage!,
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      onPressed: fetchDevices)
-                  : devices.isEmpty
-                      ? Center(child: Text("No device found"))
-                      : ListView.builder(
-                          itemCount: devices.length,
-                          itemBuilder: (context, index) {
-                            final device = devices[index];
-                            final bool isEnabled = device["active"] == 1;
-                            String lastAt =
-                                getFormattedDateTime(device["lastAt"]);
-                            return ListTile(
-                              leading: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  color: isEnabled ? Colors.green : Colors.red,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Theme.of(context)
-                                        .scaffoldBackgroundColor,
-                                    width: 2,
+    return CrossPlatformBackHandler(
+      canPop: true,
+      onManualBack: _navigateBack,
+      child: Scaffold(
+          body: Column(
+        children: [
+          Expanded(
+            child: processing
+                ? const Center(child: CircularProgressIndicator())
+                : _errorMessage != null
+                    ? tryFailedRequestAgain(
+                        message: _errorMessage!,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                        onPressed: fetchDevices)
+                    : devices.isEmpty
+                        ? Center(child: Text("No device found"))
+                        : ListView.builder(
+                            reverse: true,
+                            itemCount: devices.length,
+                            itemBuilder: (context, index) {
+                              final device = devices[index];
+                              final bool isEnabled = device["active"] == 1;
+                              String lastAt =
+                                  getFormattedDateTime(device["lastAt"]);
+                              return ListTile(
+                                leading: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isEnabled ? Colors.green : Colors.red,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Theme.of(context)
+                                          .scaffoldBackgroundColor,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
-                              ),
-                              title: Text(device["title"], style: TextStyle()),
-                              subtitle: Text(
-                                lastAt,
-                                style: TextStyle(fontSize: 12),
-                              ),
-                              trailing: isEnabled
-                                  ? // Show disable button only if enabled
-                                  IconButton(
-                                      icon: Icon(LucideIcons.logOut,
-                                          color: Colors.red),
-                                      onPressed: () =>
-                                          showDisableDialog(device["id"]),
-                                    )
-                                  : null,
-                            );
-                          },
-                        ),
-        ),
-        buildBottomBarLayout(
-            color: surfaceColor,
-            leading: IconButton(
-                icon: const Icon(LucideIcons.arrowLeft),
-                onPressed: _navigateBack),
-            title: Text("Devices"),
-            actions: [])
-      ],
-    ));
+                                title:
+                                    Text(device["title"], style: TextStyle()),
+                                subtitle: Text(
+                                  lastAt,
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                                trailing: isEnabled
+                                    ? // Show disable button only if enabled
+                                    IconButton(
+                                        icon: Icon(LucideIcons.logOut,
+                                            color: Colors.red),
+                                        onPressed: () =>
+                                            showDisableDialog(device["id"]),
+                                      )
+                                    : null,
+                              );
+                            },
+                          ),
+          ),
+          buildBottomAppBar(
+              color: surfaceColor,
+              leading: IconButton(
+                  tooltip: 'Back',
+                  icon: const Icon(LucideIcons.arrowLeft),
+                  onPressed: _navigateBack),
+              title: Text("Devices"),
+              actions: [])
+        ],
+      )),
+    );
   }
 }

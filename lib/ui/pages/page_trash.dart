@@ -1,6 +1,5 @@
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:provider/provider.dart';
 import '../../models/model_item.dart';
 import '../../services/service_logger.dart';
 import '../../utils/common.dart';
@@ -14,29 +13,6 @@ class PageTrash extends StatefulWidget {
 }
 
 class _PageTrashState extends State<PageTrash> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return FilePane();
-        },
-      ),
-    );
-  }
-}
-
-// --- File Pane Widget ---
-class FilePane extends StatefulWidget {
-  const FilePane({
-    super.key,
-  });
-
-  @override
-  State<FilePane> createState() => _FilePaneState();
-}
-
-class _FilePaneState extends State<FilePane> {
   final AppLogger logger = AppLogger(prefixes: ["TrashPage"]);
   List<ModelItem> _items = [];
   bool _isLoading = false;
@@ -117,7 +93,6 @@ class _FilePaneState extends State<FilePane> {
     setState(() {
       _isLoading = true;
     });
-    logger.log('Clear all');
     for (ModelItem modelItem in _items) {
       await modelItem.remove();
     }
@@ -143,18 +118,18 @@ class _FilePaneState extends State<FilePane> {
     Navigator.pop(context);
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  Widget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
     if (_isMultiSelectMode) {
-      return AppBar(
+      return buildBottomAppBar(
         leading: IconButton(
           icon: const Icon(LucideIcons.x),
           tooltip: 'Cancel',
           onPressed: _cancelMultiSelect,
         ),
         title: Text('${_selectedItems.length} Selected'),
-        backgroundColor: surfaceColor,
+        color: surfaceColor,
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.undo),
@@ -171,13 +146,13 @@ class _FilePaneState extends State<FilePane> {
     }
 
     // Default AppBar
-    return AppBar(
+    return buildBottomAppBar(
       leading: IconButton(
           icon: const Icon(LucideIcons.arrowLeft),
           tooltip: 'Back',
           onPressed: navigateBack),
       title: Text("Trash"),
-      backgroundColor: surfaceColor,
+      color: surfaceColor,
       actions: [
         if (_items.isNotEmpty)
           IconButton(
@@ -190,17 +165,23 @@ class _FilePaneState extends State<FilePane> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _items.isEmpty
-                  ? const Center(child: Text('No items.'))
-                  : _buildFileView(),
+    return CrossPlatformBackHandler(
+      canPop: true,
+      onManualBack: navigateBack,
+      child: Scaffold(
+        body: Column(
+          children: [
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _items.isEmpty
+                      ? const Center(child: Text('No items.'))
+                      : _buildFileView(),
+            ),
+            _buildAppBar()
+          ],
         ),
-        _buildAppBar()
-      ],
+      ),
     );
   }
 
