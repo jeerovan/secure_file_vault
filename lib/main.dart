@@ -167,7 +167,9 @@ class AppNavigator extends StatelessWidget {
           case SetupStep.registerDevice:
             return PageRegisterDevice();
           case SetupStep.manageDevices:
-            return const PageDevices();
+            return const PageDevices(
+              onStack: false,
+            );
           case SetupStep.storagePermission:
             return const StoragePermissionPage();
           case SetupStep.explorer:
@@ -175,10 +177,6 @@ class AppNavigator extends StatelessWidget {
               themeMode: themeMode,
               onThemeToggle: onThemeToggle,
             );
-          case SetupStep.archives:
-            return PageTrash();
-          case SetupStep.storageProviders:
-            return StorageProvidersScreen();
         }
       },
     );

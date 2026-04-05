@@ -5,11 +5,12 @@ import 'package:provider/provider.dart';
 import '../../utils/common.dart';
 import '../../ui/common_widgets.dart';
 import '../../services/service_logger.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PageDevices extends StatefulWidget {
+  final bool onStack;
   const PageDevices({
     super.key,
+    required this.onStack,
   });
 
   @override
@@ -119,7 +120,11 @@ class _PageDevicesState extends State<PageDevices> {
   }
 
   Future<void> _navigateBack() async {
-    context.read<AppSetupState>().recheckStatus();
+    if (widget.onStack) {
+      Navigator.pop(context);
+    } else {
+      context.read<AppSetupState>().recheckStatus();
+    }
   }
 
   @override

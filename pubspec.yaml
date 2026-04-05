@@ -62,6 +62,8 @@ dependencies:
   flutter_native_splash: ^2.4.7
   flutter_launcher_icons: ^0.14.4
   sodium: ^4.0.1+1
+  aws_signature_v4: ^0.6.10
+  aws_common: ^0.7.12
 
 dev_dependencies:
   flutter_test:

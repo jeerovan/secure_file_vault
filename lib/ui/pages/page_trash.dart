@@ -140,7 +140,7 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Future<void> navigateBack() async {
-    context.read<AppSetupState>().showExplorer();
+    Navigator.pop(context);
   }
 
   PreferredSizeWidget _buildAppBar() {

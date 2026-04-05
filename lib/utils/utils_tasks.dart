@@ -228,11 +228,11 @@ class TaskManager {
         uploadInfo["token"] = urlData["authorizationToken"];
       }
     } else if (modelFile.provider == StorageProvider.cloudflare.value ||
-        modelFile.provider == StorageProvider.oci.value ||
+        modelFile.provider == StorageProvider.oracle.value ||
         modelFile.provider == StorageProvider.idrive.value) {
       String fileId = '${modelFile.id}_$partToUpload';
       String providerPath = "r2";
-      if (modelFile.provider == StorageProvider.oci.value) {
+      if (modelFile.provider == StorageProvider.oracle.value) {
         providerPath = "oci";
       } else if (modelFile.provider == StorageProvider.idrive.value) {
         providerPath = "e2";
@@ -470,7 +470,7 @@ class TaskManager {
     String providerPath = "b2";
     if (modelFile.provider == StorageProvider.cloudflare.value) {
       providerPath = "r2";
-    } else if (modelFile.provider == StorageProvider.oci.value) {
+    } else if (modelFile.provider == StorageProvider.oracle.value) {
       providerPath = "oci";
     } else if (modelFile.provider == StorageProvider.idrive.value) {
       providerPath = "e2";

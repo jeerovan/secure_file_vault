@@ -118,16 +118,6 @@ class AppSetupState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> showArchives() async {
-    _currentStep = SetupStep.archives;
-    notifyListeners();
-  }
-
-  Future<void> showStorageProviders() async {
-    _currentStep = SetupStep.storageProviders;
-    notifyListeners();
-  }
-
   // Logout / Reset
   Future<void> logout() async {
     bool signedOut = await SyncUtils.signout();

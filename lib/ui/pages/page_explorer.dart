@@ -1,4 +1,6 @@
-import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/ui/pages/page_devices.dart';
+import 'package:file_vault_bb/ui/pages/page_storage_providers.dart';
+import 'package:file_vault_bb/ui/pages/page_trash.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -118,37 +120,14 @@ class _FilePaneState extends State<FilePane> {
     }
   }
 
-  Future<void> setDevicePath() async {
-    ModelItem? rootFife = await ModelItem.get("fife");
-    if (rootFife != null) {
-      parentChilds.add(rootFife);
-    }
-    currentItem = await ModelItem.get(await getDeviceHash());
-    if (currentItem != null) parentChilds.add(currentItem!);
-  }
-
   Future<void> _loadFiles() async {
     if (currentItem == null) {
-      String lastItemId = ModelSetting.get(AppString.currentItemId.string);
-      if (lastItemId.isNotEmpty) {
-        ModelItem? lastItem = await ModelItem.get(lastItemId);
-        if (lastItem != null) {
-          currentItem = lastItem;
-          List<Map<String, dynamic>> pathParts =
-              await ModelItem.getPathRowsForItem(lastItemId);
-          for (final row in pathParts) {
-            String itemId = row["id"];
-            ModelItem? item = await ModelItem.get(itemId);
-            if (item != null) {
-              parentChilds.add(item);
-            }
-          }
-        } else {
-          await setDevicePath();
-        }
-      } else {
-        await setDevicePath();
+      ModelItem? rootFife = await ModelItem.get("fife");
+      if (rootFife != null) {
+        parentChilds.add(rootFife);
       }
+      currentItem = await ModelItem.get(await getDeviceHash());
+      if (currentItem != null) parentChilds.add(currentItem!);
     }
     if (currentItem == null) return;
     setState(() => _isLoading = true);
@@ -189,7 +168,6 @@ class _FilePaneState extends State<FilePane> {
       } else {
         parentChilds.add(item);
       }
-      await ModelSetting.set(AppString.currentItemId.string, item.id);
     } else {
       String path = await ModelItem.getPathForItem(item.id);
       final openResult = await OpenFilex.open(path);
@@ -293,15 +271,32 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Future<void> showArchives() async {
-    context.read<AppSetupState>().showArchives();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PageTrash(),
+      ),
+    );
   }
 
   Future<void> showDevices() async {
-    context.read<AppSetupState>().manageDevices();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PageDevices(
+          onStack: true,
+        ),
+      ),
+    );
   }
 
   Future<void> showStorageProviders() async {
-    context.read<AppSetupState>().showStorageProviders();
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const StorageProvidersScreen(),
+      ),
+    );
   }
 
   Widget _buildAppBar() {

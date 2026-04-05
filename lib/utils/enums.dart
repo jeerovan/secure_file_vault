@@ -9,8 +9,6 @@ enum SetupStep {
   manageDevices,
   storagePermission,
   explorer,
-  archives,
-  storageProviders,
 }
 
 enum Tables {
@@ -119,7 +117,6 @@ enum AppString {
   deviceRegistered,
   loggingEnabled,
   simulateTesting,
-  currentItemId,
 
   // Supabase
   supabaseInitialized,
@@ -164,8 +161,6 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
-      case AppString.currentItemId:
-        return "current_item_id";
       case AppString.hasFts5:
         return "has_fts5";
       case AppString.tableMaps:
@@ -279,7 +274,7 @@ extension ScanStateExtension on ScanState {
   }
 }
 
-enum StorageProvider { none, fife, backblaze, cloudflare, oci, idrive }
+enum StorageProvider { none, fife, backblaze, cloudflare, oracle, idrive }
 
 extension StorageProviderExtension on StorageProvider {
   int get value {
@@ -292,7 +287,7 @@ extension StorageProviderExtension on StorageProvider {
         return 2;
       case StorageProvider.cloudflare:
         return 3;
-      case StorageProvider.oci:
+      case StorageProvider.oracle:
         return 4;
       case StorageProvider.idrive:
         return 5;

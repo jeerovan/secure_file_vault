@@ -65,7 +65,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
   }
 
   Future<void> _navigateBack() async {
-    context.read<AppSetupState>().showExplorer();
+    Navigator.pop(context);
   }
 
   @override
