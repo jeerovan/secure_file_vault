@@ -18,7 +18,6 @@ class PageDevices extends StatefulWidget {
 
 class _PageDevicesState extends State<PageDevices> {
   AppLogger logger = AppLogger(prefixes: ["Devices"]);
-  final SupabaseClient supabase = Supabase.instance.client;
   List<Map<String, dynamic>> devices = [];
   bool processing = true;
   String? _errorMessage;

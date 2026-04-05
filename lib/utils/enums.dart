@@ -10,6 +10,7 @@ enum SetupStep {
   storagePermission,
   explorer,
   archives,
+  storageProviders,
 }
 
 enum Tables {

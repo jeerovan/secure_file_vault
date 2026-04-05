@@ -673,6 +673,15 @@ export async function resetFile(userId: string, fileHash: string) {
 		.where(eq(file[FileKeys.ID], fileKey));
 }
 
+export async function getStorages() {
+	return db
+		.select({
+			title: provider[ProviderKeys.TITLE],
+			bytes: provider[ProviderKeys.FREE_BYTES]
+		})
+		.from(provider);
+}
+
 export async function getUserStorage(userId: string) {
 	// 1. Fetch data from all three tables concurrently for maximum performance
 	const [allProviders, userCredentials, userStorages] = await Promise.all([

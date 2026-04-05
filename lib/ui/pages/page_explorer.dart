@@ -300,6 +300,10 @@ class _FilePaneState extends State<FilePane> {
     context.read<AppSetupState>().manageDevices();
   }
 
+  Future<void> showStorageProviders() async {
+    context.read<AppSetupState>().showStorageProviders();
+  }
+
   Widget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -366,6 +370,7 @@ class _FilePaneState extends State<FilePane> {
                 if (value == 0) signout();
                 if (value == 1) showArchives();
                 if (value == 2) showDevices();
+                if (value == 3) showStorageProviders();
               },
               itemBuilder: (context) => [
                 const PopupMenuItem<int>(
@@ -395,6 +400,16 @@ class _FilePaneState extends State<FilePane> {
                       Icon(LucideIcons.monitorSmartphone, color: Colors.grey),
                       SizedBox(width: 16),
                       Text('Devices'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<int>(
+                  value: 3,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.hardDrive, color: Colors.grey),
+                      SizedBox(width: 16),
+                      Text('Storage'),
                     ],
                   ),
                 ),
