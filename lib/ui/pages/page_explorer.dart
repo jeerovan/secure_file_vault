@@ -271,32 +271,17 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Future<void> showArchives() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const PageTrash(),
-      ),
-    );
+    Navigator.of(context).push(AnimatedPageRoute(child: const PageTrash()));
   }
 
   Future<void> showDevices() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const PageDevices(
-          onStack: true,
-        ),
-      ),
-    );
+    Navigator.of(context)
+        .push(AnimatedPageRoute(child: const PageDevices(onStack: true)));
   }
 
   Future<void> showStorageProviders() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const StorageProvidersScreen(),
-      ),
-    );
+    Navigator.of(context)
+        .push(AnimatedPageRoute(child: const StorageProvidersScreen()));
   }
 
   Widget _buildAppBar() {
