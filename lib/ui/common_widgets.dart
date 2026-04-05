@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:file_vault_bb/utils/utils_sync.dart';
 

@@ -672,3 +672,57 @@ export async function resetFile(userId: string, fileHash: string) {
 		})
 		.where(eq(file[FileKeys.ID], fileKey));
 }
+
+export async function getUserStorage(userId: string) {
+	// 1. Fetch data from all three tables concurrently for maximum performance
+	const [allProviders, userCredentials, userStorages] = await Promise.all([
+		db.select().from(provider),
+		db.select().from(credentials).where(eq(credentials[CredentialsKeys.OWNER_ID], userId)),
+		db.select().from(storage).where(eq(storage[StorageKeys.USER_ID], userId))
+	]);
+
+	// 2. Create O(1) lookup maps to map relations in memory
+	const providerMap = new Map(allProviders.map((p) => [p[ProviderKeys.ID], p]));
+	const credentialsMap = new Map(userCredentials.map((c) => [c[CredentialsKeys.ID], c]));
+
+	const storages = [];
+	const addedProviderIds = new Set<number>();
+
+	// 3. Process the storage table to build the added storages array
+	for (const storageRecord of userStorages) {
+		const credId = storageRecord[StorageKeys.CREDENTIALS_ID];
+		const credRecord = credentialsMap.get(credId);
+
+		if (credRecord) {
+			const providerId = credRecord[CredentialsKeys.PROVIDER];
+			const providerRecord = providerMap.get(providerId);
+
+			if (providerRecord) {
+				storages.push({
+					id: providerRecord[ProviderKeys.ID],
+					title: providerRecord[ProviderKeys.TITLE],
+					added: 1 as const,
+					bytes: storageRecord[StorageKeys.LIMIT_BYTES],
+					used: storageRecord[StorageKeys.USED_BYTES]
+				});
+				// Track this provider as added
+				addedProviderIds.add(providerId);
+			}
+		}
+	}
+
+	// 4. Process the provider table to build the available storages array
+	for (const providerRecord of allProviders) {
+		if (!addedProviderIds.has(providerRecord[ProviderKeys.ID])) {
+			storages.push({
+				id: providerRecord[ProviderKeys.ID],
+				title: providerRecord[ProviderKeys.TITLE],
+				added: 0 as const,
+				bytes: providerRecord[ProviderKeys.FREE_BYTES],
+				used: 0 as const
+			});
+		}
+	}
+
+	return storages;
+}

@@ -118,14 +118,10 @@ enum AppString {
   deviceRegistered,
   loggingEnabled,
   simulateTesting,
+  currentItemId,
 
   // Supabase
   supabaseInitialized,
-
-  // RevenueCat
-  hasValidPlan,
-  planStorageFull,
-  planRcId,
 
   //sign-in
   signedIn,
@@ -167,6 +163,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.currentItemId:
+        return "current_item_id";
       case AppString.hasFts5:
         return "has_fts5";
       case AppString.tableMaps:
@@ -189,8 +187,6 @@ extension AppStringExtension on AppString {
         return "signed_in";
       case AppString.loggingEnabled:
         return "logging_enabled";
-      case AppString.planRcId:
-        return "plan_rc_id";
       case AppString.supabaseInitialized:
         return "supabase_initialized";
       case AppString.syncInProgress:
@@ -203,10 +199,6 @@ extension AppStringExtension on AppString {
         return "has_encryption_keys";
       case AppString.pushedLocalContentForSync:
         return 'pushed_local_content_for_sync';
-      case AppString.hasValidPlan:
-        return 'has_valid_plan';
-      case AppString.planStorageFull:
-        return 'rc_plan_full';
       case AppString.deviceRegistered:
         return "device_registered";
       case AppString.appName:
