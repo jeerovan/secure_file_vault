@@ -50,15 +50,14 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
         final namespace = _formData['namespace']!;
         final region = _formData['region']!;
         isValid = await StorageValidationService.validateS3(
-          accessKey: _formData['appId']!,
-          secretKey: _formData['appKey']!,
+          accessKey: _formData['app_id']!,
+          secretKey: _formData['app_key']!,
           region: region,
           endpoint:
               'https://$namespace.compat.objectstorage.$region.oraclecloud.com',
           bucket: _formData['bucket']!,
         );
       }
-      // Add logic for Cloudflare and IDrive here using validateS3...
 
       if (isValid) {
         // TODO: Send _formData to your backend Node.js/Svelte endpoint to finalize

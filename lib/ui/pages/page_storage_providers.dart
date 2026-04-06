@@ -30,6 +30,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
 
   Future<void> fetchStorage() async {
     _errorMessage = null;
+    if (!mounted) return;
     setState(() {
       processing = true;
     });
@@ -72,10 +73,14 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
   }
 
   Future<void> connectStorageProvider(StorageProvider storageProvider) async {
-    Navigator.of(context).push(AnimatedPageRoute(
-        child: AddProviderScreen(
+    Navigator.of(context)
+        .push(AnimatedPageRoute(
+            child: AddProviderScreen(
       storageProvider: storageProvider,
-    )));
+    )))
+        .then((value) {
+      fetchStorage();
+    });
   }
 
   @override
@@ -253,13 +258,13 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
             ),
           ],
         ),
-        FilledButton.icon(
+        OutlinedButton.icon(
           onPressed: () {
             connectStorageProvider(storageProvider);
           },
           icon: const Icon(Icons.add_link, size: 18),
           label: const Text('Connect'),
-          style: FilledButton.styleFrom(
+          style: OutlinedButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
