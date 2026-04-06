@@ -4,8 +4,6 @@ import 'dart:ui';
 import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_device_register.dart';
-import 'package:file_vault_bb/ui/pages/page_storage_providers.dart';
-import 'package:file_vault_bb/ui/pages/page_trash.dart';
 
 import '../models/model_setting.dart';
 import '../services/service_logger.dart';

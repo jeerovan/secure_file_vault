@@ -26,3 +26,5 @@ vite.config.ts.timestamp-*
 
 # Database
 drizzle
+
+package-lock.json
