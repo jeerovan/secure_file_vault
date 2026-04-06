@@ -697,7 +697,6 @@ export async function getUserStorage(userId: string) {
 	const storages = [];
 	const addedProviderIds = new Set<number>();
 
-	// 3. Process the storage table to build the added storages array
 	for (const storageRecord of userStorages) {
 		const credId = storageRecord[StorageKeys.CREDENTIALS_ID];
 		const credRecord = credentialsMap.get(credId);
@@ -720,7 +719,6 @@ export async function getUserStorage(userId: string) {
 		}
 	}
 
-	// 4. Process the provider table to build the available storages array
 	for (const providerRecord of allProviders) {
 		if (!addedProviderIds.has(providerRecord[ProviderKeys.ID])) {
 			storages.push({

@@ -41,7 +41,9 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
       } else if (status == 1) {
         if (mounted) {
           setState(() {
-            storages = List<Map<String, dynamic>>.from(response["data"]);
+            storages = List<Map<String, dynamic>>.from(response["data"])
+                .reversed
+                .toList();
             processing = false;
           });
         }
