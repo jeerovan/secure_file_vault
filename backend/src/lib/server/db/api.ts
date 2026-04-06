@@ -42,7 +42,7 @@ export async function getKeys(userId: string) {
 }
 
 export async function addKey(userId: string, email: string, cipher: string, nonce: string) {
-	// add default fife 5 gb storage for this user
+	// add default fife storage for this user
 	const fifeCredentials = await getCredentials('fife', StorageProvider.FIFE);
 	if (fifeCredentials) {
 		const fifeProvider = db
@@ -50,17 +50,16 @@ export async function addKey(userId: string, email: string, cipher: string, nonc
 			.from(provider)
 			.where(eq(provider[ProviderKeys.ID], StorageProvider.FIFE))
 			.get();
-		if (!fifeProvider) {
-			return;
+		if (fifeProvider) {
+			await addStorage(
+				userId,
+				fifeCredentials[CredentialsKeys.ID],
+				fifeProvider[ProviderKeys.FREE_BYTES],
+				fifeProvider[ProviderKeys.FREE_BYTES],
+				fifeProvider[ProviderKeys.PRIORITY],
+				{}
+			);
 		}
-		await addStorage(
-			userId,
-			fifeCredentials[CredentialsKeys.ID],
-			fifeProvider[ProviderKeys.FREE_BYTES],
-			fifeProvider[ProviderKeys.FREE_BYTES],
-			fifeProvider[ProviderKeys.PRIORITY],
-			{}
-		);
 	}
 	await db
 		.insert(userData)
@@ -432,6 +431,14 @@ export async function addCredentials(
 	credentialsData: any,
 	providerId: number
 ) {
+	const providerEntry = db
+		.select()
+		.from(provider)
+		.where(eq(provider[ProviderKeys.ID], providerId))
+		.get();
+	if (!providerEntry) {
+		return;
+	}
 	const existingEntry = db
 		.select()
 		.from(credentials)
@@ -445,14 +452,6 @@ export async function addCredentials(
 			[CredentialsKeys.PROVIDER]: providerId,
 			[CredentialsKeys.CREDENTIALS]: credentialsData
 		});
-		const providerEntry = db
-			.select()
-			.from(provider)
-			.where(eq(provider[ProviderKeys.ID], providerId))
-			.get();
-		if (!providerEntry) {
-			return;
-		}
 
 		if (providerEntry[ProviderKeys.ID] != StorageProvider.FIFE) {
 			await addStorage(

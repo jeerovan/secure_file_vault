@@ -9,7 +9,7 @@ import {
 	markCredentialsUpdating,
 	updateCredentials
 } from './db/api';
-import { CredentialsKeys, StorageKeys, StorageProvider } from './db/keys';
+import { CredentialsKeys, StorageProvider } from './db/keys';
 
 export async function authorize(appId: string, appKey: string) {
 	let data;
@@ -61,10 +61,7 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		downloadUrl,
 		s3ApiUrl
 	};
-	let provider = StorageProvider.BACKBLAZE;
-	if (userId == 'fife') {
-		provider = StorageProvider.FIFE;
-	}
+	const provider = StorageProvider.BACKBLAZE;
 	await addCredentials(userId, accountId, credentials, provider);
 	return json({ success: 1 });
 }

@@ -24,16 +24,10 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 
 	// Use service role client ONLY for verifying the token — never expose this key
 	const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-	let response;
-	if (token == 'fife@jeerovan.com') {
-		response = { data: { user: { id: 'fife', email: 'fife@jeerovan.com' } }, error: null };
-	} else {
-		response = await supabase.auth.getUser(token);
-	}
 	const {
 		data: { user },
 		error: authError
-	} = response;
+	} = await supabase.auth.getUser(token);
 
 	if (authError || !user) {
 		throw error(401, 'Invalid or expired token');
