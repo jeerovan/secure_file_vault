@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_device_register.dart';
+import 'package:file_vault_bb/ui/pages/page_welcome.dart';
 
 import '../models/model_setting.dart';
 import '../services/service_logger.dart';
@@ -150,6 +151,8 @@ class AppNavigator extends StatelessWidget {
         switch (setupState.currentStep) {
           case SetupStep.loading:
             return const PageLoading();
+          case SetupStep.onboard:
+            return const FiFeOnboardingScreen();
           case SetupStep.signin:
             return PageSignin();
           case SetupStep.checkAccessKey:

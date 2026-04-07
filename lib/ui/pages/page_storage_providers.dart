@@ -291,6 +291,9 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
       case 4:
         iconData = LucideIcons.tableProperties;
         break;
+      case 5:
+        iconData = LucideIcons.hardDrive;
+        break;
       default:
         iconData = LucideIcons.hardDrive;
     }

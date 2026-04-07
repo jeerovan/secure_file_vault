@@ -1,5 +1,6 @@
 enum SetupStep {
   loading,
+  onboard,
   signin,
   checkAccessKey,
   generateAccessKey,
@@ -109,6 +110,7 @@ enum AppString {
   hasFts5,
   // app
   appName,
+  onboarding,
   deviceId,
   deviceHash,
   fcmId,
@@ -161,6 +163,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.onboarding:
+        return "onboarding";
       case AppString.hasFts5:
         return "has_fts5";
       case AppString.tableMaps:

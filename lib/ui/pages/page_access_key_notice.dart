@@ -50,13 +50,18 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
     Map<String, dynamic> privateKeys = keys[AppString.privateKeys.string];
     Map<String, dynamic> serverKeys = keys[AppString.serverKeys.string];
     try {
-      final result = await api.post(endpoint: '/keys', jsonBody: serverKeys);
-      final status = result["success"];
-      if (status <= 0) {
-        if (mounted) {
-          displaySnackBar(context, message: result["message"], seconds: 2);
+      bool showKeys = true;
+      if (!simulateTesting()) {
+        final result = await api.post(endpoint: '/keys', jsonBody: serverKeys);
+        final status = result["success"];
+        if (status <= 0) {
+          showKeys = false;
+          if (mounted) {
+            displaySnackBar(context, message: result["message"], seconds: 2);
+          }
         }
-      } else {
+      }
+      if (showKeys) {
         String masterKeyBase64 = privateKeys[AppString.masterKey.string];
         String accessKeyBase64 = privateKeys[AppString.accessKey.string];
         await secureStorage.write(
@@ -93,6 +98,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(height: 20),
             Text(

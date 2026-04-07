@@ -156,22 +156,21 @@ class SyncUtils {
       String deviceId = await getDeviceId();
       SecureStorage storage = SecureStorage();
       try {
-        if (deviceId.isNotEmpty) {
-          final api = BackendApi();
-          final response = await api
-              .post(endpoint: '/signout', jsonBody: {"device_id": deviceId});
-          if (response["success"] == 0) {
+        if (!simulateTesting()) {
+          if (deviceId.isNotEmpty) {
+            final api = BackendApi();
+            final response = await api
+                .post(endpoint: '/signout', jsonBody: {"device_id": deviceId});
+            if (response["success"] == 0) {
+              return false;
+            }
+          } else {
             return false;
           }
-        } else {
-          return false;
-        }
-        if (!simulateTesting()) {
           await Supabase.instance.client.auth.signOut();
         }
         await storage.delete(key: AppString.masterKey.string);
         await storage.delete(key: AppString.accessKey.string);
-        await storage.delete(key: 'selected_plan');
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
         //TODO remove all local media (FiFe folder)
@@ -209,10 +208,10 @@ class SyncUtils {
 
   static Future<void> pushMapChanges() async {
     logger.info("Push Map Changes");
+    String? masterKeyBase64 = await getMasterKey();
+    if (masterKeyBase64 == null || simulateTesting()) return;
     final api = BackendApi();
     bool changesAvailable = true;
-    String? masterKeyBase64 = await getMasterKey();
-    if (masterKeyBase64 == null) return;
     Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
     while (changesAvailable) {
       changesAvailable = false;
@@ -279,7 +278,11 @@ class SyncUtils {
 
   static Future<void> fetchMapChanges() async {
     String? masterKeyBase64 = await getMasterKey();
-    if (await canSync() == false || masterKeyBase64 == null) return;
+    if (await canSync() == false ||
+        masterKeyBase64 == null ||
+        simulateTesting()) {
+      return;
+    }
     logger.info("Fetch Map Changes");
     final api = BackendApi();
     Uint8List masterKeyBytes = base64Decode(masterKeyBase64);

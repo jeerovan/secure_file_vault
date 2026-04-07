@@ -689,6 +689,7 @@ export async function resetFile(userId: string, fileHash: string) {
 export async function getStorages() {
 	return db
 		.select({
+			id: provider[ProviderKeys.ID],
 			title: provider[ProviderKeys.TITLE],
 			bytes: provider[ProviderKeys.FREE_BYTES]
 		})

@@ -70,7 +70,6 @@ class BackendApi {
     final h = <String, String>{
       'Content-Type': 'application/json',
       if (withAuth) 'Authorization': 'Bearer ${_accessTokenOrThrow()}',
-      if (!withAuth) 'Authorization': 'Bearer ${getSignedInEmailId()}',
     };
     if (extra != null) h.addAll(extra);
     final deviceId = await getDeviceId();
@@ -125,12 +124,13 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
+      String? signedEmailId = getSignedInEmailId();
+      bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
       logger.info('GET $endpoint ${queryParameters.toString()}');
       final res = await _http
           .get(
             _buildUri(endpoint, queryParameters: queryParameters),
-            headers: await _headers(
-                withAuth: getSignedInEmailId() != testEmailId, extra: headers),
+            headers: await _headers(withAuth: withAuth, extra: headers),
           )
           .timeout(timeout);
       return _formatResponse(res);
@@ -149,12 +149,13 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
+      String? signedEmailId = getSignedInEmailId();
+      bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
       logger.info('POST $endpoint ${jsonEncode(jsonBody)}');
       final res = await _http
           .post(
             _buildUri(endpoint),
-            headers: await _headers(
-                withAuth: getSignedInEmailId() != testEmailId, extra: headers),
+            headers: await _headers(withAuth: withAuth, extra: headers),
             body: jsonEncode(jsonBody),
           )
           .timeout(timeout);

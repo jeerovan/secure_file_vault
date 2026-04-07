@@ -44,19 +44,27 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     String deviceId = uuid.v4();
     String deviceName = await getDeviceName();
     int deviceType = await getDeviceType();
-    final result = await api.post(endpoint: '/devices', jsonBody: {
-      "device_id": deviceId,
-      "title": deviceName,
-      "type": deviceType
-    });
-    final status = result["success"];
-    if (status <= 0) {
-      _errorMessage = result["message"].toString();
-      if (_errorMessage == "7" && mounted) {
-        displaySnackBar(context, message: "Device limit reached", seconds: 2);
-        await context.read<AppSetupState>().manageDevices();
-      } // Device limit reached
+    bool deviceRegistered = false;
+    if (!simulateTesting()) {
+      final result = await api.post(endpoint: '/devices', jsonBody: {
+        "device_id": deviceId,
+        "title": deviceName,
+        "type": deviceType
+      });
+      final status = result["success"];
+      if (status <= 0) {
+        _errorMessage = result["message"].toString();
+        deviceRegistered = false;
+        if (_errorMessage == "7" && mounted) {
+          displaySnackBar(context, message: "Device limit reached", seconds: 2);
+          await context.read<AppSetupState>().manageDevices();
+        } // Device limit reached
+      }
     } else {
+      deviceRegistered = true;
+    }
+
+    if (deviceRegistered) {
       await ModelSetting.set(AppString.deviceId.string, deviceId);
       String deviceRoot = await getDeviceHash();
       ModelItem deviceItem = await ModelItem.fromMap({

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/services.dart';
 
@@ -37,6 +38,16 @@ class AppSetupState extends ChangeNotifier {
     _currentStep = SetupStep.loading;
     notifyListeners();
 
+    bool onboarded =
+        ModelSetting.get(AppString.onboarding.string, defaultValue: "no") ==
+            "yes";
+    if (!onboarded) {
+      logger.info("Onboarding");
+      _currentStep = SetupStep.onboard;
+      notifyListeners();
+      return;
+    }
+
     if (getSignedInUserId() == null) {
       logger.info("Signin");
       _currentStep = SetupStep.signin;
@@ -73,6 +84,12 @@ class AppSetupState extends ChangeNotifier {
     // All setup complete
     SyncUtils.waitAndSyncChanges();
     _currentStep = SetupStep.explorer;
+    notifyListeners();
+  }
+
+  // Onboarded
+  Future<void> onBoarded() async {
+    _currentStep = SetupStep.signin;
     notifyListeners();
   }
 
