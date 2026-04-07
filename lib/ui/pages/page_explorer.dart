@@ -226,8 +226,20 @@ class _FilePaneState extends State<FilePane> {
     logger.log('Trashing ${selectedItems.length} items');
     if (await ModelItem.isLocalPath(currentItem!.id)) {
       for (ModelItem modelItem in selectedItems) {
+        bool isFolder = modelItem.isFolder;
+        bool addToRemove = false;
         String localPath = await ModelItem.getPathForLocalItem(modelItem.id);
-        if (!File(localPath).existsSync()) {
+        if (isFolder) {
+          Directory directory = Directory(localPath);
+          if (!directory.existsSync()) {
+            addToRemove = true;
+          }
+        } else {
+          if (!File(localPath).existsSync()) {
+            addToRemove = true;
+          }
+        }
+        if (addToRemove) {
           modelItem.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
           await modelItem.update(["archived_at"]);
           toRemove.add(modelItem);
