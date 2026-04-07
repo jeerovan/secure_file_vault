@@ -66,40 +66,36 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
 
   @override
   Widget build(BuildContext context) {
-    // State 1: Loading
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator.adaptive(),
-      );
-    }
-
-    // State 2: Error
-    if (_errorMessage != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: _performCheck,
-                icon: const Icon(Icons.refresh),
-                label: const Text("Try Again"),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return const SizedBox.shrink();
+    return Scaffold(
+        body: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator.adaptive(),
+              )
+            : _errorMessage != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.wifi_off_rounded,
+                              size: 48, color: Colors.grey),
+                          const SizedBox(height: 16),
+                          Text(
+                            _errorMessage!,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          const SizedBox(height: 24),
+                          FilledButton.icon(
+                            onPressed: _performCheck,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text("Try Again"),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : const SizedBox.shrink());
   }
 }

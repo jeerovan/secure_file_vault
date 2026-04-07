@@ -79,21 +79,16 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
 
   @override
   Widget build(BuildContext context) {
-    // State 1: Loading
-    if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    // State 2: Error
-    if (_errorMessage != null) {
-      return tryFailedRequestAgain(
-          message: _errorMessage!,
-          style: Theme.of(context).textTheme.bodyLarge,
-          onPressed: _registerDevice);
-    }
-
-    return const SizedBox.shrink();
+    return Scaffold(
+        body: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : _errorMessage != null
+                ? tryFailedRequestAgain(
+                    message: _errorMessage!,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    onPressed: _registerDevice)
+                : const SizedBox.shrink());
   }
 }
