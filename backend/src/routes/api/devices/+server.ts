@@ -5,10 +5,10 @@ import { requireAuth } from '$lib/server/auth';
 import { addUpdateDevice, getUserDevices, updateDeviceStatus } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
 
-export const GET: RequestHandler = async ({ request }) => {
+export const GET: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
-
-	const result = await getUserDevices(authUser.id);
+	const deviceId = url.searchParams.get('device_id') || undefined;
+	const result = await getUserDevices(authUser.id, deviceId);
 
 	return json({ success: 1, data: result });
 };

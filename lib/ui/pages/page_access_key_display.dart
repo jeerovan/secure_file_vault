@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
@@ -50,15 +52,42 @@ class _PageAccessKeyState extends State<PageAccessKey> {
 
   Future<void> _downloadTextFile(String text) async {
     try {
-      final directory = await getTemporaryDirectory();
-      final filePath = path.join(directory.path, 'fife_access_key.txt');
-      final file = File(filePath);
-      await file.writeAsString(text);
+      // Determine if the current platform is a Desktop OS
+      final bool isDesktop =
+          Platform.isWindows || Platform.isMacOS || Platform.isLinux;
 
-      await Share.shareXFiles(
-        [XFile(filePath)],
-        text: 'Here is your access key.',
-      );
+      if (isDesktop) {
+        // DESKTOP: Open a native "Save As" dialog window
+        final String? outputFile = await FilePicker.platform.saveFile(
+          dialogTitle: 'Save Access Key',
+          fileName: 'fife_access_key.txt',
+          type: FileType.custom,
+          allowedExtensions: ['txt'],
+        );
+
+        // If user didn't cancel the dialog, save the file
+        if (outputFile != null) {
+          final file = File(outputFile);
+          await file.writeAsString(text);
+
+          if (mounted) {
+            displaySnackBar(context,
+                message: "File saved successfully.", seconds: 2);
+          }
+        }
+      } else {
+        // MOBILE: Save to temp directory and open the native Share Sheet
+        final directory = await getTemporaryDirectory();
+        final filePath = path.join(directory.path, 'fife_access_key.txt');
+        final file = File(filePath);
+        await file.writeAsString(text);
+
+        // Updated share_plus syntax (replacing the deprecated Share.shareFiles)
+        await SharePlus.instance.share(ShareParams(
+          files: [XFile(filePath)],
+          text: 'Here is your access key.',
+        ));
+      }
     } catch (e) {
       if (mounted) {
         displaySnackBar(context, message: "Please try again.", seconds: 1);

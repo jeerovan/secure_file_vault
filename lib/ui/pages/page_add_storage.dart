@@ -93,21 +93,29 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
                 child: Form(
                   key: _formKey,
                   child: ListView(
+                    reverse: true,
                     padding: const EdgeInsets.all(24.0),
                     children: [
-                      Text(
-                        'Enter your credentials',
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Your keys are verified locally and encrypted before transmission.',
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(color: theme.colorScheme.outline),
+                      FilledButton(
+                        onPressed: _isLoading ? null : _handleConnect,
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(54.0),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
+                            : const Text('Verify & Connect',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
                       const SizedBox(height: 32),
-                      ...config.fields.map((field) => Padding(
+                      ...config.fields.reversed.map((field) => Padding(
                             padding: const EdgeInsets.only(bottom: 20.0),
                             child: TextFormField(
                               decoration: InputDecoration(
@@ -155,23 +163,16 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
                         ),
                       ],
                       const SizedBox(height: 32),
-                      FilledButton(
-                        onPressed: _isLoading ? null : _handleConnect,
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size.fromHeight(54.0),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
-                            : const Text('Verify & Connect',
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(
+                        'Your keys are verified locally and encrypted before transmission.',
+                        style: theme.textTheme.bodyMedium
+                            ?.copyWith(color: theme.colorScheme.outline),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Enter your credentials',
+                        style: theme.textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),

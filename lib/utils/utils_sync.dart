@@ -113,7 +113,6 @@ class SyncUtils {
 
   // to sync, one must have masterKey with an active plan
   static Future<bool> canSync() async {
-    // TODO check for plan also
     String? masterKey = await getMasterKey();
     bool hasKeys = masterKey != null;
     return hasKeys;
@@ -126,7 +125,9 @@ class SyncUtils {
     }
     final api = BackendApi();
     try {
-      final response = await api.get(endpoint: '/devices');
+      String deviceId = await getDeviceId();
+      final response = await api
+          .get(endpoint: '/devices', queryParameters: {'device_id': deviceId});
       final status = response["success"];
       if (status == -1) {
         logger.error("checkDeviceStatus", error: response["message"]);

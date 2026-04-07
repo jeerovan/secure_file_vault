@@ -76,7 +76,21 @@ export async function getUserData(userId: string) {
 	return db.select().from(userData).where(eq(userData[UserDataKeys.ID], userId)).get();
 }
 
-export async function getUserDevices(userId: string) {
+export async function getUserDevices(userId: string, deviceId?: string) {
+	if (deviceId) {
+		const tableKey = userId + '_' + deviceId;
+		return db
+			.select({
+				id: userDevice[UserDeviceKeys.ID],
+				lastAt: userDevice[UserDeviceKeys.SERVER_UPDATED_AT],
+				title: userDevice[UserDeviceKeys.TITLE],
+				type: userDevice[UserDeviceKeys.DEVICE_TYPE],
+				active: userDevice[UserDeviceKeys.STATUS]
+			})
+			.from(userDevice)
+			.where(eq(userDevice[UserDeviceKeys.ID], tableKey))
+			.get();
+	}
 	return db
 		.select({
 			id: userDevice[UserDeviceKeys.ID],
