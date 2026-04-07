@@ -1,3 +1,4 @@
+import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -20,6 +21,7 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
   final Map<String, String> _formData = {};
   bool _isLoading = false;
   String? _errorMessage;
+  final api = BackendApi();
 
   late final StorageProviderConfig config;
 
@@ -38,18 +40,20 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
       _errorMessage = null;
     });
 
-    bool isValid = false;
-
+    String? result;
+    String? endpoint;
     try {
       if (widget.storageProvider == StorageProvider.backblaze) {
-        isValid = await StorageValidationService.validateBackblaze(
+        endpoint = "/b2/add-account";
+        result = await StorageValidationService.validateBackblaze(
           _formData['app_id']!,
           _formData['app_key']!,
         );
       } else if (widget.storageProvider == StorageProvider.oracle) {
+        endpoint = "oci/add-account";
         final namespace = _formData['namespace']!;
         final region = _formData['region']!;
-        isValid = await StorageValidationService.validateS3(
+        result = await StorageValidationService.validateS3(
           accessKey: _formData['app_id']!,
           secretKey: _formData['app_key']!,
           region: region,
@@ -57,18 +61,47 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
               'https://$namespace.compat.objectstorage.$region.oraclecloud.com',
           bucket: _formData['bucket']!,
         );
+      } else if (widget.storageProvider == StorageProvider.cloudflare) {
+        endpoint = "/r2/add-account";
+        final accountId = _formData['accountId']!;
+        result = await StorageValidationService.validateS3(
+          accessKey: _formData['app_id']!,
+          secretKey: _formData['app_key']!,
+          region: 'auto',
+          endpoint: 'https://$accountId.r2.cloudflarestorage.com',
+          bucket: _formData['bucket']!,
+        );
+      } else if (widget.storageProvider == StorageProvider.idrive) {
+        endpoint = "/e2/add-account";
+        final region = _formData['region']!;
+        result = await StorageValidationService.validateS3(
+          accessKey: _formData['app_id']!,
+          secretKey: _formData['app_key']!,
+          region: region,
+          endpoint: 'https://s3.$region.idrivee2.com',
+          bucket: _formData['bucket']!,
+        );
       }
 
-      if (isValid) {
-        // TODO: Send _formData to your backend Node.js/Svelte endpoint to finalize
-        if (mounted) Navigator.pop(context, true);
+      if (result != null && result == "ok") {
+        final apiResult =
+            await api.post(endpoint: endpoint!, jsonBody: _formData);
+        final status = apiResult["success"];
+        if (status <= 0) {
+          if (mounted) {
+            setState(() => _errorMessage = apiResult["message"].toString());
+          }
+        } else {
+          if (mounted) Navigator.pop(context, true);
+        }
       } else {
-        setState(() => _errorMessage =
-            'Validation failed. Check credentials and permissions.');
+        if (mounted) setState(() => _errorMessage = result);
       }
     } catch (e) {
-      setState(
-          () => _errorMessage = 'Network error occurred during validation.');
+      if (mounted) {
+        setState(
+            () => _errorMessage = 'Network error occurred during validation.');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -137,6 +170,7 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
                                   _formData[field.key] = value!.trim(),
                             ),
                           )),
+                      const SizedBox(height: 8),
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 8),
                         Container(
