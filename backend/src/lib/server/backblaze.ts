@@ -9,7 +9,7 @@ import {
 	markCredentialsUpdating,
 	updateCredentials
 } from './db/api';
-import { CredentialsKeys, StorageProvider } from './db/keys';
+import { CredentialKeys, StorageProvider } from './db/keys';
 
 export async function authorize(appId: string, appKey: string) {
 	let data;
@@ -74,8 +74,8 @@ export async function authenticate(userId: string, storageId: string) {
 		return undefined;
 	}
 
-	const accountId = credential[CredentialsKeys.ID];
-	const creds = credential[CredentialsKeys.CREDENTIALS] as {
+	const accountId = credential[CredentialKeys.ID];
+	const creds = credential[CredentialKeys.CREDENTIALS] as {
 		appId: string;
 		appKey: string;
 		authorizationToken: string;
@@ -96,8 +96,8 @@ export async function authenticate(userId: string, storageId: string) {
 		downloadUrl: existingDownloadUrl,
 		s3ApiUrl: existingS3ApiUrl
 	} = creds;
-	const isUpdating = credential[CredentialsKeys.UPDATING];
-	const updatedAt = credential[CredentialsKeys.SERVER_UPDATED_AT] || Date.now();
+	const isUpdating = credential[CredentialKeys.UPDATING];
+	const updatedAt = credential[CredentialKeys.SERVER_UPDATED_AT] || Date.now();
 
 	// Bundle the existing credentials to easily return them
 	const existingData = {

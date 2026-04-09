@@ -8,7 +8,7 @@ import {
 	getOptimalStorage,
 	getTempStorage
 } from '$lib/server/db/api';
-import { CredentialsKeys, ErrorCode, StorageKeys, TempStorageKeys } from '$lib/server/db/keys';
+import { CredentialKeys, ErrorCode, StorageKeys, TempStorageKeys } from '$lib/server/db/keys';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
@@ -30,17 +30,17 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({
 			success: 1,
 			data: {
-				provider: tempStorage[TempStorageKeys.PROVIDER],
+				provider: tempStorage[TempStorageKeys.PROVIDER_ID],
 				storage_id: tempStorage[TempStorageKeys.STORAGE_ID]
 			}
 		});
 	} else {
 		const storage = await getOptimalStorage(authUser.id, file_size);
 		if (storage) {
-			const credentialId = storage[StorageKeys.CREDENTIALS_ID];
+			const credentialId = storage[StorageKeys.CREDENTIAL_ID];
 			const credential = await getCredentialsById(credentialId);
 			if (credential) {
-				const provider = credential[CredentialsKeys.PROVIDER];
+				const provider = credential[CredentialKeys.PROVIDER_ID];
 				const storageId = storage[StorageKeys.ID];
 				await addTempStorage(authUser.id, file_hash, storageId, file_size, provider);
 				return json({ success: 1, data: { provider, storage_id: storageId } });

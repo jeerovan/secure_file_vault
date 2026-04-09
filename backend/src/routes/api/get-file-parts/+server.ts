@@ -11,7 +11,7 @@ import {
 	getTempStorage
 } from '$lib/server/db/api';
 import {
-	CredentialsKeys,
+	CredentialKeys,
 	ErrorCode,
 	FileKeys,
 	StorageKeys,

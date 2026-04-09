@@ -8,7 +8,7 @@ import {
 	resetFilePart,
 	updateStorageUsedSize
 } from './db/api';
-import { CredentialsKeys, FileKeys, PartKeys, StorageProvider } from './db/keys';
+import { CredentialKeys, FileKeys, PartKeys, StorageProvider } from './db/keys';
 
 export async function deleteFileFromStorage(userId: string, fileHash: string) {
 	const fileRow = await getFile(userId, fileHash);
@@ -53,12 +53,12 @@ export async function deleteFileFromStorage(userId: string, fileHash: string) {
 					allRemoved = false;
 				}
 			} else if (provider == StorageProvider.CLOUDFLARE && credential) {
-				const credsData = credential[CredentialsKeys.CREDENTIALS] as {
+				const credsData = credential[CredentialKeys.CREDENTIALS] as {
 					appId: string;
 					appKey: string;
 					bucketName: string;
 				};
-				const accountId = credential[CredentialsKeys.ID];
+				const accountId = credential[CredentialKeys.ID];
 				const s3Endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
 				const region = 'auto';
 				const s3Client = new S3Client({
@@ -82,7 +82,7 @@ export async function deleteFileFromStorage(userId: string, fileHash: string) {
 					console.error(e);
 				}
 			} else if (provider == StorageProvider.OCI && credential) {
-				const credsData = credential[CredentialsKeys.CREDENTIALS] as {
+				const credsData = credential[CredentialKeys.CREDENTIALS] as {
 					appId: string;
 					appKey: string;
 					bucketName: string;
@@ -112,7 +112,7 @@ export async function deleteFileFromStorage(userId: string, fileHash: string) {
 					console.error(e);
 				}
 			} else if (provider == StorageProvider.IDRIVE && credential) {
-				const credsData = credential[CredentialsKeys.CREDENTIALS] as {
+				const credsData = credential[CredentialKeys.CREDENTIALS] as {
 					appId: string;
 					appKey: string;
 					bucketName: string;

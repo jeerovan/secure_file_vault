@@ -2,20 +2,22 @@ export const UserKeys = {
 	ID: '1',
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
-	EMAIL: '4',
-	CIPHER: '5',
-	NONCE: '6'
+	USER_ID: '4',
+	EMAIL: '5',
+	CIPHER: '6',
+	NONCE: '7'
 } as const;
 
 export const UserDataKeys = {
 	ID: '1',
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
-	USER_NAME: '4',
-	DEVICE_ID: '5',
-	PRO_ID: '6',
-	PROFILE_IMAGE: '7',
-	PLAN_EXPIRES_AT: '8'
+	USER_ID: '4',
+	USER_NAME: '5',
+	DEVICE_ID: '6',
+	PRO_ID: '7',
+	PROFILE_IMAGE: '8',
+	PLAN_EXPIRES_AT: '9'
 } as const;
 
 export const UserDeviceKeys = {
@@ -23,10 +25,11 @@ export const UserDeviceKeys = {
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
 	USER_ID: '4',
-	TITLE: '5',
-	DEVICE_TYPE: '6',
-	NOTIFICATION_ID: '7',
-	STATUS: '8'
+	DEVICE_ID: '5',
+	TITLE: '6',
+	DEVICE_TYPE: '7',
+	NOTIFICATION_ID: '8',
+	STATUS: '9'
 } as const;
 
 export const FileKeys = {
@@ -35,14 +38,15 @@ export const FileKeys = {
 	SERVER_UPDATED_AT: '3',
 	USER_ID: '4',
 	DEVICE_ID: '5',
-	ITEMS_COUNT: '6',
-	PARTS: '7',
-	UPLOADED_AT: '8',
-	PROVIDER: '9',
-	STORAGE_ID: '10',
-	JSON: '11',
-	CLIENT_UPDATED_AT: '12',
-	DELETED: '13'
+	FILE_ID: '6',
+	ITEMS_COUNT: '7',
+	PARTS: '8',
+	UPLOADED_AT: '9',
+	PROVIDER: '10',
+	STORAGE_ID: '11',
+	JSON: '12',
+	CLIENT_UPDATED_AT: '13',
+	DELETED: '14'
 } as const;
 
 export const PartKeys = {
@@ -51,13 +55,15 @@ export const PartKeys = {
 	SERVER_UPDATED_AT: '3',
 	USER_ID: '4',
 	DEVICE_ID: '5',
-	PART_SIZE: '6',
-	CIPHER: '7',
-	NONCE: '8',
-	JSON: '9',
-	CLIENT_UPDATED_AT: '10',
-	DELETED: '11',
-	UPLOADED: '12'
+	FILE_ID: '6',
+	PART: '7',
+	PART_SIZE: '8',
+	CIPHER: '9',
+	NONCE: '10',
+	JSON: '11',
+	CLIENT_UPDATED_AT: '12',
+	DELETED: '13',
+	UPLOADED: '14'
 } as const;
 
 export const ItemKeys = {
@@ -66,19 +72,20 @@ export const ItemKeys = {
 	SERVER_UPDATED_AT: '3',
 	USER_ID: '4',
 	DEVICE_ID: '5',
-	TEXT_CIPHER: '6',
-	TEXT_NONCE: '7',
-	KEY_CIPHER: '8',
-	KEY_NONCE: '9',
-	CLIENT_UPDATED_AT: '10'
+	ITEM_ID: '6',
+	TEXT_CIPHER: '7',
+	TEXT_NONCE: '8',
+	KEY_CIPHER: '9',
+	KEY_NONCE: '10',
+	CLIENT_UPDATED_AT: '11'
 } as const;
 
-export const CredentialsKeys = {
+export const CredentialKeys = {
 	ID: '1',
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
 	OWNER_ID: '4', // Either a user ID, or 'fife'
-	PROVIDER: '5',
+	PROVIDER_ID: '5',
 	CREDENTIALS: '6',
 	UPDATING: '7'
 } as const;
@@ -88,7 +95,7 @@ export const StorageKeys = {
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
 	USER_ID: '4',
-	CREDENTIALS_ID: '5',
+	CREDENTIAL_ID: '5',
 	LIMIT_BYTES: '6',
 	USED_BYTES: '7',
 	PRIORITY: '8',
@@ -101,9 +108,10 @@ export const TempStorageKeys = {
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
 	USER_ID: '4',
-	STORAGE_ID: '5',
-	SIZE: '6',
-	PROVIDER: '7'
+	FILE_ID: '5',
+	STORAGE_ID: '6',
+	SIZE: '7',
+	PROVIDER_ID: '8'
 } as const;
 
 export const ProviderKeys = {

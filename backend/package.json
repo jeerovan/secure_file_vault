@@ -46,6 +46,7 @@
 		"@aws-sdk/client-s3": "^3.1016.0",
 		"@aws-sdk/s3-request-presigner": "^3.1016.0",
 		"@supabase/supabase-js": "^2.97.0",
-		"better-sqlite3": "^12.6.2"
+		"better-sqlite3": "^12.6.2",
+		"undici": "^8.0.2"
 	}
 }

@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { CredentialsKeys, ErrorCode } from '$lib/server/db/keys';
+import { CredentialKeys, ErrorCode } from '$lib/server/db/keys';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getCredentialsByStorageId } from '$lib/server/db/api';
@@ -25,13 +25,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!credentials) {
 		return json({ success: 0, message: ErrorCode.NO_STORAGE });
 	}
-	const credsData = credentials[CredentialsKeys.CREDENTIALS] as {
+	const credsData = credentials[CredentialKeys.CREDENTIALS] as {
 		appId: string;
 		appKey: string;
 		bucketName: string;
 	};
 	const file_path = `${authUser.id}/${file_id}`;
-	const accountId = credentials[CredentialsKeys.ID];
+	const accountId = credentials[CredentialKeys.ID];
 	const s3Endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
 	const region = 'auto';
 	const s3Client = new S3Client({

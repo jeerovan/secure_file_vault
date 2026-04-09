@@ -45,9 +45,9 @@ final Map<StorageProvider, StorageProviderConfig> providerConfigurations = {
     type: StorageProvider.backblaze,
     title: 'Backblaze B2',
     fields: [
-      StorageProviderField(key: 'app_id', label: 'Access Key ID'),
+      StorageProviderField(key: 'app_id', label: 'Key ID'),
       StorageProviderField(
-          key: 'app_key', label: 'Secret Access Key', isObscured: true),
+          key: 'app_key', label: 'Application Key', isObscured: true),
     ],
   ),
   StorageProvider.idrive: StorageProviderConfig(

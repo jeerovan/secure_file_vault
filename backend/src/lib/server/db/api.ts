@@ -20,7 +20,7 @@ import {
 	FileKeys,
 	PartKeys,
 	ItemKeys,
-	CredentialsKeys,
+	CredentialKeys,
 	StorageKeys,
 	ErrorCode,
 	StorageProvider,
@@ -28,6 +28,8 @@ import {
 	ProviderKeys
 } from '$lib/server/db/keys';
 import { deleteFileFromStorage } from '../deleteWorker';
+
+const customDb: boolean = true;
 
 export async function getKeys(userId: string) {
 	return db
@@ -53,7 +55,7 @@ export async function addKey(userId: string, email: string, cipher: string, nonc
 		if (fifeProvider) {
 			await addStorage(
 				userId,
-				fifeCredentials[CredentialsKeys.ID],
+				fifeCredentials[CredentialKeys.ID],
 				fifeProvider[ProviderKeys.FREE_BYTES],
 				fifeProvider[ProviderKeys.FREE_BYTES],
 				fifeProvider[ProviderKeys.PRIORITY],
@@ -456,15 +458,15 @@ export async function addCredentials(
 	const existingEntry = db
 		.select()
 		.from(credentials)
-		.where(eq(credentials[CredentialsKeys.ID], accountId))
+		.where(eq(credentials[CredentialKeys.ID], accountId))
 		.get();
 
 	if (!existingEntry) {
 		await db.insert(credentials).values({
-			[CredentialsKeys.ID]: accountId,
-			[CredentialsKeys.OWNER_ID]: userId,
-			[CredentialsKeys.PROVIDER]: providerId,
-			[CredentialsKeys.CREDENTIALS]: credentialsData
+			[CredentialKeys.ID]: accountId,
+			[CredentialKeys.OWNER_ID]: userId,
+			[CredentialKeys.PROVIDER_ID]: providerId,
+			[CredentialKeys.CREDENTIALS]: credentialsData
 		});
 
 		if (providerEntry[ProviderKeys.ID] != StorageProvider.FIFE) {
@@ -481,10 +483,10 @@ export async function addCredentials(
 		await db
 			.update(credentials)
 			.set({
-				[CredentialsKeys.SERVER_UPDATED_AT]: Date.now(),
-				[CredentialsKeys.CREDENTIALS]: credentialsData
+				[CredentialKeys.SERVER_UPDATED_AT]: Date.now(),
+				[CredentialKeys.CREDENTIALS]: credentialsData
 			})
-			.where(eq(credentials[CredentialsKeys.ID], accountId));
+			.where(eq(credentials[CredentialKeys.ID], accountId));
 	}
 }
 
@@ -494,19 +496,19 @@ export async function getCredentials(userId: string, providerId: number) {
 		.from(credentials)
 		.where(
 			and(
-				eq(credentials[CredentialsKeys.OWNER_ID], userId),
-				eq(credentials[CredentialsKeys.PROVIDER], providerId)
+				eq(credentials[CredentialKeys.OWNER_ID], userId),
+				eq(credentials[CredentialKeys.PROVIDER_ID], providerId)
 			)
 		)
 		.get();
 }
 export async function getCredentialsById(id: string) {
-	return db.select().from(credentials).where(eq(credentials[CredentialsKeys.ID], id)).get();
+	return db.select().from(credentials).where(eq(credentials[CredentialKeys.ID], id)).get();
 }
 export async function getCredentialsByStorageId(userId: string, storageId: string) {
 	const storage = await getStorageById(storageId);
 	if (storage && storage[StorageKeys.USER_ID] == userId) {
-		return await getCredentialsById(storage[StorageKeys.CREDENTIALS_ID]);
+		return await getCredentialsById(storage[StorageKeys.CREDENTIAL_ID]);
 	} else {
 		return undefined;
 	}
@@ -515,29 +517,27 @@ export async function getCredentialsByStorageId(userId: string, storageId: strin
 export async function markCredentialsUpdating(Id: string) {
 	return await db
 		.update(credentials)
-		.set({ [CredentialsKeys.UPDATING]: 1 })
-		.where(
-			and(eq(credentials[CredentialsKeys.ID], Id), eq(credentials[CredentialsKeys.UPDATING], 0))
-		)
+		.set({ [CredentialKeys.UPDATING]: 1 })
+		.where(and(eq(credentials[CredentialKeys.ID], Id), eq(credentials[CredentialKeys.UPDATING], 0)))
 		.returning();
 }
 
 export async function markCredentialsUpdated(Id: string) {
 	await db
 		.update(credentials)
-		.set({ [CredentialsKeys.UPDATING]: 0 })
-		.where(eq(credentials[CredentialsKeys.ID], Id));
+		.set({ [CredentialKeys.UPDATING]: 0 })
+		.where(eq(credentials[CredentialKeys.ID], Id));
 }
 
 export async function updateCredentials(accountId: string, creds: any) {
 	await db
 		.update(credentials)
 		.set({
-			[CredentialsKeys.SERVER_UPDATED_AT]: Date.now(),
-			[CredentialsKeys.CREDENTIALS]: creds,
-			[CredentialsKeys.UPDATING]: 0
+			[CredentialKeys.SERVER_UPDATED_AT]: Date.now(),
+			[CredentialKeys.CREDENTIALS]: creds,
+			[CredentialKeys.UPDATING]: 0
 		})
-		.where(eq(credentials[CredentialsKeys.ID], accountId));
+		.where(eq(credentials[CredentialKeys.ID], accountId));
 }
 
 export async function addStorage(
@@ -550,7 +550,7 @@ export async function addStorage(
 ) {
 	return await db.insert(storage).values({
 		[StorageKeys.USER_ID]: userId,
-		[StorageKeys.CREDENTIALS_ID]: accountId,
+		[StorageKeys.CREDENTIAL_ID]: accountId,
 		[StorageKeys.LIMIT_BYTES]: storageLimit,
 		[StorageKeys.PRIORITY]: priority,
 		[StorageKeys.JSON]: json,
@@ -645,7 +645,7 @@ export async function addTempStorage(
 		[TempStorageKeys.USER_ID]: userId,
 		[TempStorageKeys.STORAGE_ID]: storageId,
 		[TempStorageKeys.SIZE]: size,
-		[TempStorageKeys.PROVIDER]: provider
+		[TempStorageKeys.PROVIDER_ID]: provider
 	});
 }
 export async function getFile(userId: string, fileHash: string) {
@@ -700,23 +700,23 @@ export async function getUserStorage(userId: string) {
 	// 1. Fetch data from all three tables concurrently for maximum performance
 	const [allProviders, userCredentials, userStorages] = await Promise.all([
 		db.select().from(provider),
-		db.select().from(credentials).where(eq(credentials[CredentialsKeys.OWNER_ID], userId)),
+		db.select().from(credentials).where(eq(credentials[CredentialKeys.OWNER_ID], userId)),
 		db.select().from(storage).where(eq(storage[StorageKeys.USER_ID], userId))
 	]);
 
 	// 2. Create O(1) lookup maps to map relations in memory
 	const providerMap = new Map(allProviders.map((p) => [p[ProviderKeys.ID], p]));
-	const credentialsMap = new Map(userCredentials.map((c) => [c[CredentialsKeys.ID], c]));
+	const credentialsMap = new Map(userCredentials.map((c) => [c[CredentialKeys.ID], c]));
 
 	const storages = [];
 	const addedProviderIds = new Set<number>();
 
 	for (const storageRecord of userStorages) {
-		const credId = storageRecord[StorageKeys.CREDENTIALS_ID];
+		const credId = storageRecord[StorageKeys.CREDENTIAL_ID];
 		const credRecord = credentialsMap.get(credId);
 
 		if (credRecord) {
-			const providerId = credRecord[CredentialsKeys.PROVIDER];
+			const providerId = credRecord[CredentialKeys.PROVIDER_ID];
 			const providerRecord = providerMap.get(providerId);
 
 			if (providerRecord) {
