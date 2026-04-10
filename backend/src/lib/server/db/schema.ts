@@ -276,5 +276,8 @@ export const item = sqliteTable(
 		[ItemKeys.KEY_NONCE]: text(ItemKeys.KEY_NONCE).notNull(),
 		[ItemKeys.CLIENT_UPDATED_AT]: integer(ItemKeys.CLIENT_UPDATED_AT).notNull().default(0)
 	},
-	(table) => [index('item_idx_user_id').on(table[ItemKeys.USER_ID])]
+	(table) => [
+		index('item_idx_user_id').on(table[ItemKeys.USER_ID]),
+		index('item_idx_user_id_item_id').on(table[ItemKeys.USER_ID], table[ItemKeys.ITEM_ID])
+	]
 );

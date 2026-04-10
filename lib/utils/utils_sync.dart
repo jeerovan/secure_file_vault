@@ -153,14 +153,14 @@ class SyncUtils {
     if (!hasInternet) return false;
     String? userId = getSignedInUserId();
     if (userId != null) {
-      String deviceId = await getDeviceId();
+      String deviceUuid = await getDeviceId();
       SecureStorage storage = SecureStorage();
       try {
         if (!simulateTesting()) {
-          if (deviceId.isNotEmpty) {
+          if (deviceUuid.isNotEmpty) {
             final api = BackendApi();
-            final response = await api
-                .post(endpoint: '/signout', jsonBody: {"device_id": deviceId});
+            final response = await api.post(
+                endpoint: '/signout', jsonBody: {"device_uuid": deviceUuid});
             if (response["success"] == 0) {
               return false;
             }
@@ -331,11 +331,11 @@ class SyncUtils {
             Map<String, dynamic> map = {};
             if (table == Tables.items.string) {
               int itemTS = int.parse(changeMap["3"].toString());
-              map[AppString.textCipher.string] = changeMap["6"];
-              map[AppString.textNonce.string] = changeMap["7"];
-              map[AppString.keyCipher.string] = changeMap["8"];
-              map[AppString.keyNonce.string] = changeMap["9"];
-              int clientTS = int.parse(changeMap["10"].toString());
+              map[AppString.textCipher.string] = changeMap["7"];
+              map[AppString.textNonce.string] = changeMap["8"];
+              map[AppString.keyCipher.string] = changeMap["9"];
+              map[AppString.keyNonce.string] = changeMap["10"];
+              int clientTS = int.parse(changeMap["11"].toString());
               Uint8List? decryptedBytes =
                   cryptoUtils.getDecryptedBytesFromMap(map, masterKeyBytes);
               if (decryptedBytes == null) continue;
@@ -357,7 +357,7 @@ class SyncUtils {
               String fileHash = newModelFile.id;
               int fileServerTS = int.parse(changeMap["3"].toString());
               int clientTS = newModelFile.updatedAt;
-              int deleteTask = int.parse(changeMap["13"].toString());
+              int deleteTask = int.parse(changeMap["14"].toString());
               if (deleteTask > 0) {
                 await ModelFile.deletedFromServer(fileHash, clientTS);
               } else {
@@ -371,7 +371,7 @@ class SyncUtils {
               ModelPart newModelPart = await ModelPart.fromServerMap(changeMap);
               final partId = newModelPart.id;
               int clientTS = newModelPart.updatedAt;
-              int deleteTask = int.parse(changeMap["11"].toString());
+              int deleteTask = int.parse(changeMap["13"].toString());
               if (deleteTask > 0) {
                 await ModelPart.deletedFromServer(partId, clientTS);
               } else {

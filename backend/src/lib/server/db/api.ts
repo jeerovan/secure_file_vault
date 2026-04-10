@@ -12,7 +12,7 @@ import {
 	tempStorage,
 	provider
 } from '$lib/server/db/schema';
-import { eq, and, ne, gt, count, desc, sql } from 'drizzle-orm';
+import { eq, and, ne, gt, count, desc, sql, getTableColumns } from 'drizzle-orm';
 import {
 	UserKeys,
 	UserDeviceKeys,
@@ -195,32 +195,7 @@ export async function addUpdateDevice(
 	}
 }
 
-export async function removeDevice(userId: number, deviceId: string) {
-	const device = await db
-		.select()
-		.from(userDevice)
-		.where(
-			and(
-				eq(userDevice[UserDeviceKeys.USER_ID], userId),
-				eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceId)
-			)
-		);
-	if (device) {
-		await db
-			.delete(userDevice)
-			.where(
-				and(
-					eq(userDevice[UserDeviceKeys.USER_ID], userId),
-					eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceId)
-				)
-			);
-		return json({ success: 1 });
-	} else {
-		return json({ success: 0, message: ErrorCode.NO_DEVICE });
-	}
-}
-
-export async function updateDeviceStatus(userId: number, deviceUuid: string, status: number) {
+export async function removeDevice(userId: number, deviceUuid: string) {
 	const device = await db
 		.select()
 		.from(userDevice)
@@ -232,8 +207,7 @@ export async function updateDeviceStatus(userId: number, deviceUuid: string, sta
 		);
 	if (device) {
 		await db
-			.update(userDevice)
-			.set({ [UserDeviceKeys.ACTIVE]: status })
+			.delete(userDevice)
 			.where(
 				and(
 					eq(userDevice[UserDeviceKeys.USER_ID], userId),
@@ -244,6 +218,19 @@ export async function updateDeviceStatus(userId: number, deviceUuid: string, sta
 	} else {
 		return json({ success: 0, message: ErrorCode.NO_DEVICE });
 	}
+}
+
+export async function updateDeviceStatus(userId: number, deviceUuid: string, status: number) {
+	await db
+		.update(userDevice)
+		.set({ [UserDeviceKeys.ACTIVE]: status })
+		.where(
+			and(
+				eq(userDevice[UserDeviceKeys.USER_ID], userId),
+				eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
+			)
+		);
+	return json({ success: 1 });
 }
 
 export async function fetchChanges(
@@ -281,8 +268,12 @@ export async function fetchChanges(
 		.all();
 
 	const partRows = db
-		.select()
+		.select({
+			...getTableColumns(part), // Spreads all original columns from the part table
+			[PartKeys.FILE_ID]: file[FileKeys.FILE_HASH] // Overrides FILE_ID with FILE_HASH
+		})
 		.from(part)
+		.innerJoin(file, eq(part[PartKeys.FILE_ID], file[FileKeys.ID]))
 		.where(
 			and(
 				eq(part[PartKeys.USER_ID], userId),
@@ -481,7 +472,6 @@ export async function savePartChanges(userId: number, deviceId: string, changes:
 export async function saveItemChanges(userId: number, deviceId: string, changes: any[]) {
 	for (const change of changes) {
 		const itemId = change['id'];
-		const tableKey = userId + '_' + itemId;
 		const incomingUpdatedAt = change['updated_at'] || 0;
 
 		const existingRow = db

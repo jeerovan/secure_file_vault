@@ -56,16 +56,16 @@ class ModelFile {
   }
 
   static Future<ModelFile> fromServerMap(Map<String, dynamic> changeMap) async {
-    final data = changeMap["11"];
+    final data = changeMap["12"];
     return ModelFile(
-      id: changeMap["1"].split("_")[1],
-      itemCount: int.parse(changeMap["6"].toString()),
-      parts: int.parse(changeMap["7"].toString()),
-      uploadedAt: int.parse(changeMap["8"].toString()),
-      providerId: int.parse(changeMap["9"].toString()),
-      storageId: int.parse(changeMap["10"]),
+      id: changeMap["6"],
+      itemCount: int.parse(changeMap["7"].toString()),
+      parts: int.parse(changeMap["8"].toString()),
+      uploadedAt: int.parse(changeMap["9"].toString()),
+      providerId: int.parse(changeMap["10"].toString()),
+      storageId: int.parse(changeMap["11"]),
       data: data is String ? jsonDecode(data) : data,
-      updatedAt: int.parse(changeMap["12"].toString()),
+      updatedAt: int.parse(changeMap["13"].toString()),
     );
   }
 

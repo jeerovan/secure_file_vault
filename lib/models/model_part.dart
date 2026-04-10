@@ -51,17 +51,17 @@ class ModelPart {
   }
 
   static Future<ModelPart> fromServerMap(Map<String, dynamic> changeMap) async {
-    List<String> userIdPartId = changeMap["1"].split("_");
-    String partId = userIdPartId.skip(1).join('_');
-    final data = changeMap["9"];
+    String fileHash = changeMap["6"];
+    String partNumber = changeMap["7"].toString();
+    final data = changeMap["11"];
     return ModelPart(
-      id: partId,
-      size: int.parse(changeMap["6"].toString()),
-      cipher: changeMap["7"],
-      nonce: changeMap["8"],
+      id: '${fileHash}_$partNumber',
+      size: int.parse(changeMap["8"].toString()),
+      cipher: changeMap["9"],
+      nonce: changeMap["10"],
       data: data is String ? jsonDecode(data) : data,
-      updatedAt: int.parse(changeMap["10"].toString()),
-      uploaded: int.parse(changeMap["12"].toString()),
+      updatedAt: int.parse(changeMap["12"].toString()),
+      uploaded: int.parse(changeMap["14"].toString()),
     );
   }
 

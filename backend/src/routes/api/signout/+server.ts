@@ -15,10 +15,10 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
-	const { device_id } = body;
+	const { device_uuid } = body;
 
-	if (!device_id) {
+	if (!device_uuid) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	return await removeDevice(authUser.userId!, device_id);
+	return await removeDevice(authUser.userId!, device_uuid);
 };
