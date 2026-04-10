@@ -21,7 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const credentials = await getCredentialByStorageId(authUser.sid, storage_id);
+	const credentials = await getCredentialByStorageId(authUser.supabaseId, storage_id);
 	if (!credentials) {
 		return json({ success: 0, message: ErrorCode.NO_STORAGE });
 	}
@@ -32,7 +32,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		namespace: string;
 		region: string;
 	};
-	const file_path = `${authUser.sid}/${file_id}`;
+	const file_path = `${authUser.supabaseId}/${file_id}`;
 	const s3Endpoint = `https://${credsData.namespace}.compat.objectstorage.${credsData.region}.oraclecloud.com`;
 	const s3Client = new S3Client({
 		region: credsData.region,

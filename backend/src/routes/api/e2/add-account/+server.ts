@@ -57,7 +57,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			region: region
 		};
 		const provider = StorageProvider.IDRIVE;
-		await addCredentials(authUser.sid, app_id, credentials, provider);
+		await addCredentials(authUser.supabaseId, app_id, credentials, provider);
 		return json({ success: 1 });
 	} else {
 		// TODO flag user with attempt count

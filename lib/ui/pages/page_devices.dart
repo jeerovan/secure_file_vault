@@ -59,13 +59,13 @@ class _PageDevicesState extends State<PageDevices> {
     }
   }
 
-  Future<void> signoutDevice(String deviceId) async {
+  Future<void> signoutDevice(String deviceUuid) async {
     setState(() {
       processing = true;
     });
     try {
       final response = await api.delete(
-          endpoint: '/devices', queryParameters: {'device_id': deviceId});
+          endpoint: '/devices', queryParameters: {'device_uuid': deviceUuid});
       final status = response["success"];
       if (status <= 0) {
         logger.error("Error signing out",
@@ -89,10 +89,9 @@ class _PageDevicesState extends State<PageDevices> {
     }
   }
 
-  Future<void> showDisableDialog(String userIdDeviceId) async {
-    String deviceId = userIdDeviceId.split("_")[1];
-    String thisDeviceId = await getDeviceId();
-    if (thisDeviceId.isNotEmpty && deviceId == thisDeviceId && mounted) {
+  Future<void> showLogoutDialog(String deviceUuid) async {
+    String thisDeviceUuid = await getDeviceId();
+    if (thisDeviceUuid.isNotEmpty && deviceUuid == thisDeviceUuid && mounted) {
       displaySnackBar(context, message: "Not this device!", seconds: 2);
       return;
     }
@@ -110,7 +109,7 @@ class _PageDevicesState extends State<PageDevices> {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close dialog
-              signoutDevice(deviceId);
+              signoutDevice(deviceUuid);
             },
             child: Text("OK", style: TextStyle(color: Colors.red)),
           ),
@@ -181,7 +180,7 @@ class _PageDevicesState extends State<PageDevices> {
                                         icon: Icon(LucideIcons.logOut,
                                             color: Colors.red),
                                         onPressed: () =>
-                                            showDisableDialog(device["id"]),
+                                            showLogoutDialog(device["id"]),
                                       )
                                     : null,
                               );

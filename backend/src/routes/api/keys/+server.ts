@@ -6,10 +6,10 @@ import { addUser, getUser } from '$lib/server/db/api';
 
 export const GET: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
-	if (!authUser.id) {
+	if (!authUser.userId) {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
-	const user = await getUser(authUser.id);
+	const user = await getUser(authUser.userId);
 	if (!user) {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
@@ -33,7 +33,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	const result = await addUser(authUser.sid, authUser.email, cipher, nonce);
+	const result = await addUser(authUser.supabaseId, authUser.email, cipher, nonce);
 
 	return json({ success: 1, data: result });
 };

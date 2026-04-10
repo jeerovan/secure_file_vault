@@ -16,7 +16,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const { storage_id } = body;
 
-	const authData = await authenticate(authUser.sid, storage_id);
+	const authData = await authenticate(authUser.supabaseId, storage_id);
 	if (!authData) {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}

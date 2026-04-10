@@ -41,13 +41,13 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
       _errorMessage = null;
     });
     Uuid uuid = Uuid();
-    String deviceId = uuid.v4();
+    String deviceUuid = uuid.v4();
     String deviceName = await getDeviceName();
     int deviceType = await getDeviceType();
     bool deviceRegistered = false;
     if (!simulateTesting()) {
       final result = await api.post(endpoint: '/devices', jsonBody: {
-        "device_id": deviceId,
+        "device_uuid": deviceUuid,
         "title": deviceName,
         "type": deviceType
       });
@@ -65,7 +65,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     }
 
     if (deviceRegistered) {
-      await ModelSetting.set(AppString.deviceId.string, deviceId);
+      await ModelSetting.set(AppString.deviceId.string, deviceUuid);
       String deviceRoot = await getDeviceHash();
       ModelItem deviceItem = await ModelItem.fromMap({
         "id": deviceRoot,

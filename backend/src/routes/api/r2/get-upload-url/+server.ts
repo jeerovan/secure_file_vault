@@ -21,7 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const credentials = await getCredentialByStorageId(authUser.sid, storage_id);
+	const credentials = await getCredentialByStorageId(authUser.supabaseId, storage_id);
 	if (!credentials) {
 		return json({ success: 0, message: ErrorCode.NO_STORAGE });
 	}
@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		appKey: string;
 		bucketName: string;
 	};
-	const file_path = `${authUser.sid}/${file_id}`;
+	const file_path = `${authUser.supabaseId}/${file_id}`;
 	const accountId = credentials[CredentialKeys.ID];
 	const s3Endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
 	const region = 'auto';

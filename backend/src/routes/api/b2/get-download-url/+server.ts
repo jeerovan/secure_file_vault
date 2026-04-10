@@ -21,11 +21,11 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const authData = await authenticate(authUser.sid, storage_id);
+	const authData = await authenticate(authUser.supabaseId, storage_id);
 	if (!authData) {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
-	const file_path = `${authUser.sid}/${file_id}`;
+	const file_path = `${authUser.supabaseId}/${file_id}`;
 	const s3Endpoint = authData.s3ApiUrl;
 	const region = extractRegion(s3Endpoint);
 	const s3Client = new S3Client({

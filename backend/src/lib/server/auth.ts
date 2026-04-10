@@ -6,10 +6,10 @@ import { getUserBySupabaseId } from './db/api';
 import { UserKeys } from './db/keys';
 
 export interface AuthUser {
-	id?: number;
-	sid: string;
+	userId?: number;
+	supabaseId: string;
 	email: string;
-	did: string;
+	deviceUuid: string;
 }
 
 /**
@@ -44,9 +44,9 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 	const userEntry = await getUserBySupabaseId(user.id);
 
 	return {
-		sid: user.id,
+		supabaseId: user.id,
 		email: user.email,
-		did: device_id,
-		id: userEntry?.[UserKeys.ID]
+		deviceUuid: device_id,
+		userId: userEntry?.[UserKeys.ID]
 	};
 }

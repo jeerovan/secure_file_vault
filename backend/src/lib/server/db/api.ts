@@ -52,7 +52,7 @@ export async function addUser(supabaseId: string, email: string, cipher: string,
 		.get();
 	await db
 		.insert(userData)
-		.values({ [UserDataKeys.USER_ID]: newUser[UserKeys.ID], [UserDataKeys.DEVICE_ID]: 'Server' });
+		.values({ [UserDataKeys.USER_ID]: newUser[UserKeys.ID], [UserDataKeys.DEVICE_UUID]: 'Server' });
 
 	// add default fife storage for this user
 	const fifeUser = await getUserBySupabaseId('fife');
@@ -96,7 +96,7 @@ export async function getUserDevices(userId: number, deviceId?: string) {
 	if (deviceId) {
 		return db
 			.select({
-				deviceId: userDevice[UserDeviceKeys.DEVICE_HASH],
+				id: userDevice[UserDeviceKeys.DEVICE_UUID],
 				lastAt: userDevice[UserDeviceKeys.SERVER_UPDATED_AT],
 				title: userDevice[UserDeviceKeys.TITLE],
 				type: userDevice[UserDeviceKeys.DEVICE_TYPE],
@@ -106,14 +106,14 @@ export async function getUserDevices(userId: number, deviceId?: string) {
 			.where(
 				and(
 					eq(userDevice[UserDeviceKeys.USER_ID], userId),
-					eq(userDevice[UserDeviceKeys.DEVICE_HASH], deviceId)
+					eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceId)
 				)
 			)
 			.get();
 	}
 	return db
 		.select({
-			deviceId: userDevice[UserDeviceKeys.DEVICE_HASH],
+			id: userDevice[UserDeviceKeys.DEVICE_UUID],
 			lastAt: userDevice[UserDeviceKeys.SERVER_UPDATED_AT],
 			title: userDevice[UserDeviceKeys.TITLE],
 			type: userDevice[UserDeviceKeys.DEVICE_TYPE],
@@ -125,7 +125,7 @@ export async function getUserDevices(userId: number, deviceId?: string) {
 
 export async function addUpdateDevice(
 	userId: number,
-	deviceHash: string,
+	deviceUuid: string,
 	title: string,
 	type: number,
 	notificationId: string,
@@ -137,7 +137,7 @@ export async function addUpdateDevice(
 		.where(
 			and(
 				eq(userDevice[UserDeviceKeys.USER_ID], userId),
-				eq(userDevice[UserDeviceKeys.DEVICE_HASH], deviceHash)
+				eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
 			)
 		)
 		.get();
@@ -155,7 +155,7 @@ export async function addUpdateDevice(
 			.where(
 				and(
 					eq(userDevice[UserDeviceKeys.USER_ID], userId),
-					eq(userDevice[UserDeviceKeys.DEVICE_HASH], deviceHash)
+					eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
 				)
 			);
 
@@ -182,7 +182,7 @@ export async function addUpdateDevice(
 			}
 
 			await db.insert(userDevice).values({
-				[UserDeviceKeys.DEVICE_HASH]: deviceHash,
+				[UserDeviceKeys.DEVICE_UUID]: deviceUuid,
 				[UserDeviceKeys.USER_ID]: userId,
 				[UserDeviceKeys.TITLE]: title,
 				[UserDeviceKeys.DEVICE_TYPE]: type,
@@ -202,7 +202,7 @@ export async function removeDevice(userId: number, deviceId: string) {
 		.where(
 			and(
 				eq(userDevice[UserDeviceKeys.USER_ID], userId),
-				eq(userDevice[UserDeviceKeys.DEVICE_HASH], deviceId)
+				eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceId)
 			)
 		);
 	if (device) {
@@ -211,7 +211,7 @@ export async function removeDevice(userId: number, deviceId: string) {
 			.where(
 				and(
 					eq(userDevice[UserDeviceKeys.USER_ID], userId),
-					eq(userDevice[UserDeviceKeys.DEVICE_HASH], deviceId)
+					eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceId)
 				)
 			);
 		return json({ success: 1 });
@@ -220,14 +220,14 @@ export async function removeDevice(userId: number, deviceId: string) {
 	}
 }
 
-export async function updateDeviceStatus(userId: number, deviceId: string, status: number) {
+export async function updateDeviceStatus(userId: number, deviceUuid: string, status: number) {
 	const device = await db
 		.select()
 		.from(userDevice)
 		.where(
 			and(
 				eq(userDevice[UserDeviceKeys.USER_ID], userId),
-				eq(userDevice[UserDeviceKeys.DEVICE_HASH], deviceId)
+				eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
 			)
 		);
 	if (device) {
@@ -237,7 +237,7 @@ export async function updateDeviceStatus(userId: number, deviceId: string, statu
 			.where(
 				and(
 					eq(userDevice[UserDeviceKeys.USER_ID], userId),
-					eq(userDevice[UserDeviceKeys.DEVICE_HASH], deviceId)
+					eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
 				)
 			);
 		return json({ success: 1 });
@@ -248,7 +248,7 @@ export async function updateDeviceStatus(userId: number, deviceId: string, statu
 
 export async function fetchChanges(
 	userId: number,
-	deviceId: string,
+	deviceUuid: string,
 	lastProfilesTS: number,
 	lastFilesTS: number,
 	lastItemsTS: number,
@@ -262,7 +262,7 @@ export async function fetchChanges(
 			and(
 				eq(userData[UserDataKeys.USER_ID], userId),
 				gt(userData[UserDataKeys.SERVER_UPDATED_AT], lastProfilesTS),
-				ne(userData[UserDataKeys.DEVICE_ID], deviceId)
+				ne(userData[UserDataKeys.DEVICE_UUID], deviceUuid)
 			)
 		)
 		.all();
@@ -274,7 +274,7 @@ export async function fetchChanges(
 			and(
 				eq(file[FileKeys.USER_ID], userId),
 				gt(file[FileKeys.SERVER_UPDATED_AT], lastFilesTS),
-				ne(file[FileKeys.DEVICE_ID], deviceId)
+				ne(file[FileKeys.DEVICE_UUID], deviceUuid)
 			)
 		)
 		.limit(rowLimit)
@@ -287,7 +287,7 @@ export async function fetchChanges(
 			and(
 				eq(part[PartKeys.USER_ID], userId),
 				gt(part[PartKeys.SERVER_UPDATED_AT], lastPartsTS),
-				ne(part[PartKeys.DEVICE_ID], deviceId)
+				ne(part[PartKeys.DEVICE_UUID], deviceUuid)
 			)
 		)
 		.limit(rowLimit)
@@ -300,7 +300,7 @@ export async function fetchChanges(
 			and(
 				eq(item[ItemKeys.USER_ID], userId),
 				gt(item[ItemKeys.SERVER_UPDATED_AT], lastItemsTS),
-				ne(item[ItemKeys.DEVICE_ID], deviceId)
+				ne(item[ItemKeys.DEVICE_UUID], deviceUuid)
 			)
 		)
 		.limit(rowLimit)
@@ -309,7 +309,7 @@ export async function fetchChanges(
 	return { profileRows, fileRows, partRows, itemRows };
 }
 
-export async function saveFileChanges(userId: number, deviceId: string, changes: any[]) {
+export async function saveFileChanges(userId: number, deviceUuid: string, changes: any[]) {
 	for (const change of changes) {
 		const fileHash = change['id'];
 		const incomingUpdatedAt = change['updated_at'] || 0;
@@ -331,7 +331,7 @@ export async function saveFileChanges(userId: number, deviceId: string, changes:
 					await db
 						.update(file)
 						.set({
-							[FileKeys.DEVICE_ID]: deviceId,
+							[FileKeys.DEVICE_UUID]: deviceUuid,
 							[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt
 						})
 						.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)));
@@ -339,7 +339,7 @@ export async function saveFileChanges(userId: number, deviceId: string, changes:
 					await db
 						.update(file)
 						.set({
-							[FileKeys.DEVICE_ID]: deviceId,
+							[FileKeys.DEVICE_UUID]: deviceUuid,
 							[FileKeys.ITEMS_COUNT]: itemCount,
 							[FileKeys.PARTS]: change['parts'] ?? 1,
 							[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
@@ -360,7 +360,7 @@ export async function saveFileChanges(userId: number, deviceId: string, changes:
 			await db.insert(file).values({
 				[FileKeys.FILE_HASH]: fileHash,
 				[FileKeys.USER_ID]: userId,
-				[FileKeys.DEVICE_ID]: deviceId,
+				[FileKeys.DEVICE_UUID]: deviceUuid,
 				[FileKeys.ITEMS_COUNT]: itemCount,
 				[FileKeys.PARTS]: change['parts'] ?? 1,
 				[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
@@ -429,7 +429,7 @@ export async function savePartChanges(userId: number, deviceId: string, changes:
 				await db
 					.update(part)
 					.set({
-						[PartKeys.DEVICE_ID]: deviceId,
+						[PartKeys.DEVICE_UUID]: deviceId,
 						[PartKeys.PART_SIZE]: partBytes,
 						[PartKeys.CIPHER]: change['cipher'] ?? null,
 						[PartKeys.NONCE]: change['nonce'] ?? null,
@@ -451,7 +451,7 @@ export async function savePartChanges(userId: number, deviceId: string, changes:
 				[PartKeys.FILE_ID]: fileId,
 				[PartKeys.USER_ID]: userId,
 				[PartKeys.PART_NUMBER]: partNumber,
-				[PartKeys.DEVICE_ID]: deviceId,
+				[PartKeys.DEVICE_UUID]: deviceId,
 				[PartKeys.PART_SIZE]: partBytes,
 				[PartKeys.CIPHER]: change['cipher'] ?? null,
 				[PartKeys.NONCE]: change['nonce'] ?? null,
@@ -495,7 +495,7 @@ export async function saveItemChanges(userId: number, deviceId: string, changes:
 				await db
 					.update(item)
 					.set({
-						[ItemKeys.DEVICE_ID]: deviceId,
+						[ItemKeys.DEVICE_UUID]: deviceId,
 						[ItemKeys.TEXT_CIPHER]: change['text_cipher'],
 						[ItemKeys.TEXT_NONCE]: change['text_nonce'],
 						[ItemKeys.KEY_CIPHER]: change['key_cipher'],
@@ -508,7 +508,7 @@ export async function saveItemChanges(userId: number, deviceId: string, changes:
 			await db.insert(item).values({
 				[ItemKeys.ITEM_ID]: itemId,
 				[ItemKeys.USER_ID]: userId,
-				[ItemKeys.DEVICE_ID]: deviceId,
+				[ItemKeys.DEVICE_UUID]: deviceId,
 				[ItemKeys.TEXT_CIPHER]: change['text_cipher'],
 				[ItemKeys.TEXT_NONCE]: change['text_nonce'],
 				[ItemKeys.KEY_CIPHER]: change['key_cipher'],
@@ -778,7 +778,7 @@ export async function resetUserFilePart(userId: number, fileId: number, partNumb
 	return db
 		.update(part)
 		.set({
-			[PartKeys.DEVICE_ID]: 'SERVER',
+			[PartKeys.DEVICE_UUID]: 'SERVER',
 			[PartKeys.PART_SIZE]: 0,
 			[PartKeys.CIPHER]: null,
 			[PartKeys.NONCE]: null,
@@ -798,7 +798,7 @@ export async function resetUserFileByHash(userId: number, fileHash: string) {
 	return db
 		.update(file)
 		.set({
-			[FileKeys.DEVICE_ID]: 'SERVER',
+			[FileKeys.DEVICE_UUID]: 'SERVER',
 			[FileKeys.PARTS]: 0,
 			[FileKeys.UPLOADED_AT]: 0,
 			[FileKeys.PROVIDER_ID]: 0,

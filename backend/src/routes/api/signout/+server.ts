@@ -20,5 +20,5 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!device_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	return await removeDevice(authUser.id!, device_id);
+	return await removeDevice(authUser.userId!, device_id);
 };

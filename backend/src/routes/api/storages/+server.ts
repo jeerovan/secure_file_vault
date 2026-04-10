@@ -8,7 +8,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	if (request.headers.has('Authorization')) {
 		const authUser = await requireAuth(request);
 
-		const result = await getUserStorage(authUser.sid);
+		const result = await getUserStorage(authUser.supabaseId);
 
 		if (!result) {
 			return json({ success: 0, message: ErrorCode.NO_USER });
@@ -37,7 +37,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	const result = await addUser(authUser.sid, authUser.email, cipher, nonce);
+	const result = await addUser(authUser.supabaseId, authUser.email, cipher, nonce);
 
 	return json({ success: 1, data: result });
 };

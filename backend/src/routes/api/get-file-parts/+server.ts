@@ -33,14 +33,14 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_hash) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const file = await getUserFile(authUser.sid, file_hash);
+	const file = await getUserFile(authUser.supabaseId, file_hash);
 	if (file) {
 		if (file[FileKeys.UPLOADED_AT] > 0) {
 			const parts = [];
 			const partIds = Array.from({ length: file[FileKeys.PARTS] }, (_, i) => `${i + 1}`);
 			for (const index in partIds) {
 				const partId = partIds[index];
-				const partKey = `${authUser.sid}_${file_hash}_${partId}`;
+				const partKey = `${authUser.supabaseId}_${file_hash}_${partId}`;
 				const filePart = await getUserFilePart(partKey);
 				if (filePart) {
 					parts.push(filePart);

@@ -126,8 +126,8 @@ class SyncUtils {
     final api = BackendApi();
     try {
       String deviceId = await getDeviceId();
-      final response = await api
-          .get(endpoint: '/devices', queryParameters: {'device_id': deviceId});
+      final response = await api.get(
+          endpoint: '/devices', queryParameters: {'device_uuid': deviceId});
       final status = response["success"];
       if (status == -1) {
         logger.error("checkDeviceStatus", error: response["message"]);

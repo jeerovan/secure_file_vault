@@ -7,8 +7,8 @@ import { ErrorCode } from '$lib/server/db/keys';
 
 export const GET: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
-	const deviceId = url.searchParams.get('device_id') || undefined;
-	const result = await getUserDevices(authUser.id!, deviceId);
+	const deviceUuid = url.searchParams.get('device_uuid') || undefined;
+	const result = await getUserDevices(authUser.userId!, deviceUuid);
 
 	return json({ success: 1, data: result });
 };
@@ -23,32 +23,32 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
-	const { device_id, title, type, notificationId, active } = body;
+	const { device_uuid, title, type, notificationId, active } = body;
 
-	if (!device_id) {
+	if (!device_uuid) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	return await addUpdateDevice(authUser.id!, device_id, title, type, notificationId, active);
+	return await addUpdateDevice(authUser.userId!, device_uuid, title, type, notificationId, active);
 };
 
 export const DELETE: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
 
-	let device_id = url.searchParams.get('device_id');
+	let deviceUuid = url.searchParams.get('device_uuid');
 
-	if (!device_id) {
+	if (!deviceUuid) {
 		try {
 			const body = await request.json();
-			device_id = body.device_id;
+			deviceUuid = body.device_id;
 		} catch {
 			return json({ success: 0, message: ErrorCode.INVALID_JSON });
 		}
 	}
 
-	if (!device_id) {
+	if (!deviceUuid) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	return updateDeviceStatus(authUser.id!, device_id, 0);
+	return updateDeviceStatus(authUser.userId!, deviceUuid, 0);
 };
