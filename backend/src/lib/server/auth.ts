@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { error } from '@sveltejs/kit';
 import { SUPABASE_URL, SUPABASE_KEY } from '$env/static/private';
+import { db } from './db';
+import { getUserBySupabaseId } from './db/api';
+import { UserKeys } from './db/keys';
 
 export interface AuthUser {
-	id: string;
+	id?: number;
+	sid: string;
 	email: string;
 	did: string;
 }
@@ -37,9 +41,12 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 		throw error(400, 'Authenticated user has no email');
 	}
 
+	const userEntry = await getUserBySupabaseId(user.id);
+
 	return {
-		id: user.id,
+		sid: user.id,
 		email: user.email,
-		did: device_id
+		did: device_id,
+		id: userEntry?.[UserKeys.ID]
 	};
 }

@@ -202,18 +202,18 @@ class TaskManager {
       } else {
         final providerData = providerResult["data"];
         modelFile.storageId = providerData["storage_id"];
-        modelFile.provider = providerData["provider"];
-        List<String> attrs = ["storage_id", "provider"];
+        modelFile.providerId = providerData["provider_id"];
+        List<String> attrs = ["storage_id", "provider_id"];
         await modelFile.update(attrs);
       }
     }
-    if (modelFile.provider == 0) {
+    if (modelFile.providerId == 0) {
       return true;
     }
 
     Map<String, dynamic> uploadInfo = {};
-    if (modelFile.provider == StorageProvider.fife.value ||
-        modelFile.provider == StorageProvider.backblaze.value) {
+    if (modelFile.providerId == StorageProvider.fife.value ||
+        modelFile.providerId == StorageProvider.backblaze.value) {
       final urlResult = await api.post(
           endpoint: '/b2/get-upload-url',
           jsonBody: {"storage_id": modelFile.storageId});
@@ -227,14 +227,14 @@ class TaskManager {
         uploadInfo["url"] = urlData["uploadUrl"];
         uploadInfo["token"] = urlData["authorizationToken"];
       }
-    } else if (modelFile.provider == StorageProvider.cloudflare.value ||
-        modelFile.provider == StorageProvider.oracle.value ||
-        modelFile.provider == StorageProvider.idrive.value) {
+    } else if (modelFile.providerId == StorageProvider.cloudflare.value ||
+        modelFile.providerId == StorageProvider.oracle.value ||
+        modelFile.providerId == StorageProvider.idrive.value) {
       String fileId = '${modelFile.id}_$partToUpload';
       String providerPath = "r2";
-      if (modelFile.provider == StorageProvider.oracle.value) {
+      if (modelFile.providerId == StorageProvider.oracle.value) {
         providerPath = "oci";
-      } else if (modelFile.provider == StorageProvider.idrive.value) {
+      } else if (modelFile.providerId == StorageProvider.idrive.value) {
         providerPath = "e2";
       }
       final urlResult = await api.post(
@@ -468,11 +468,11 @@ class TaskManager {
   static Future<String> getDownloadUrl(ModelFile modelFile, int part) async {
     final api = BackendApi();
     String providerPath = "b2";
-    if (modelFile.provider == StorageProvider.cloudflare.value) {
+    if (modelFile.providerId == StorageProvider.cloudflare.value) {
       providerPath = "r2";
-    } else if (modelFile.provider == StorageProvider.oracle.value) {
+    } else if (modelFile.providerId == StorageProvider.oracle.value) {
       providerPath = "oci";
-    } else if (modelFile.provider == StorageProvider.idrive.value) {
+    } else if (modelFile.providerId == StorageProvider.idrive.value) {
       providerPath = "e2";
     }
     final downloadResult = await api.post(

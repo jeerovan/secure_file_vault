@@ -56,7 +56,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		];
 		const allExists = required.every((item) => capabilities.includes(item));
 		if (allExists) {
-			const result = await addAccount(authUser.id, app_id, app_key, data);
+			const result = await addAccount(authUser.id!, app_id, app_key, data);
 			return result;
 		} else {
 			return json({ success: 0, message: ErrorCode.CREDENTIALS_INCAPABLE });

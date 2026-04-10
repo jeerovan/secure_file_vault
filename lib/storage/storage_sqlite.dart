@@ -125,13 +125,13 @@ class StorageSqlite {
         parts INTEGER DEFAULT 1,
         parts_uploaded INTEGER DEFAULT 0,
         uploaded_at INTEGER DEFAULT 0,
-        provider INTEGER DEFAULT 0,
-        storage_id TEXT,
+        provider_id INTEGER DEFAULT 0,
+        storage_id INTEGER DEFAULT 0,
         data TEXT,
         updated_at INTEGER
       )
     ''');
-    // id : FileId_PartNumber
+    // id : FileHash_PartNumber
     await db.execute('''
       CREATE TABLE parts (
         id TEXT PRIMARY KEY,

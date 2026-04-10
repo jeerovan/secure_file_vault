@@ -1,19 +1,20 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { ErrorCode } from '$lib/server/db/keys';
-import { addKey, getKeys } from '$lib/server/db/api';
+import { ErrorCode, UserKeys } from '$lib/server/db/keys';
+import { addUser, getUser } from '$lib/server/db/api';
 
 export const GET: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
-
-	const result = await getKeys(authUser.id);
-
-	if (!result) {
+	if (!authUser.id) {
+		return json({ success: 0, message: ErrorCode.NO_USER });
+	}
+	const user = await getUser(authUser.id);
+	if (!user) {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
 
-	return json({ success: 1, data: result });
+	return json({ success: 1, data: { cipher: user[UserKeys.CIPHER], nonce: user[UserKeys.NONCE] } });
 };
 
 export const POST: RequestHandler = async ({ request }) => {
@@ -32,7 +33,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	const result = await addKey(authUser.id, authUser.email, cipher, nonce);
+	const result = await addUser(authUser.sid, authUser.email, cipher, nonce);
 
 	return json({ success: 1, data: result });
 };

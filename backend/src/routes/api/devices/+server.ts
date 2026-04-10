@@ -8,7 +8,7 @@ import { ErrorCode } from '$lib/server/db/keys';
 export const GET: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
 	const deviceId = url.searchParams.get('device_id') || undefined;
-	const result = await getUserDevices(authUser.id, deviceId);
+	const result = await getUserDevices(authUser.id!, deviceId);
 
 	return json({ success: 1, data: result });
 };
@@ -29,9 +29,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	const tableId = authUser.id + '_' + device_id;
-
-	return await addUpdateDevice(authUser.id, tableId, title, type, notificationId, active);
+	return await addUpdateDevice(authUser.id!, device_id, title, type, notificationId, active);
 };
 
 export const DELETE: RequestHandler = async ({ request, url }) => {
@@ -52,7 +50,5 @@ export const DELETE: RequestHandler = async ({ request, url }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	const tableId = authUser.id + '_' + device_id;
-
-	return updateDeviceStatus(tableId, 0);
+	return updateDeviceStatus(authUser.id!, device_id, 0);
 };

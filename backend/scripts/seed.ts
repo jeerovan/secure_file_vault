@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
 import * as schema from '../src/lib/server/db/schema'; // Path relative to the scripts folder
-import { ProviderKeys } from '../src/lib/server/db/keys';
+import { ProviderKeys, UserKeys } from '../src/lib/server/db/keys';
 
 const main = async () => {
 	const dbUrl = process.env.DATABASE_URL;
@@ -19,6 +19,12 @@ const main = async () => {
 	console.log('🌱 Seeding database...');
 
 	try {
+		await db.insert(schema.user).values({
+			[UserKeys.SUPABASE_ID]: 'fife',
+			[UserKeys.EMAIL]: 'fife@jeero.one',
+			[UserKeys.CIPHER]: 'None',
+			[UserKeys.NONCE]: 'None'
+		});
 		await db.insert(schema.provider).values({
 			[ProviderKeys.TITLE]: 'FiFe',
 			[ProviderKeys.FREE_BYTES]: 1073741824,

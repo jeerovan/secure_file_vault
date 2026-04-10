@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
 import {
 	addCredentials,
+	getUserCredential,
 	getCredentials,
-	getCredentialsById,
-	getCredentialsByStorageId,
-	getStorageById,
+	getCredentialByStorageId,
+	getStorage,
 	markCredentialsUpdated,
 	markCredentialsUpdating,
 	updateCredentials
@@ -36,7 +36,7 @@ export async function authorize(appId: string, appKey: string) {
 	return { message, data };
 }
 
-export async function addAccount(userId: string, appId: string, appKey: string, data: any) {
+export async function addAccount(userId: number, appId: string, appKey: string, data: any) {
 	const {
 		accountId,
 		authorizationToken,
@@ -52,6 +52,7 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		}
 	} = data;
 	const credentials = {
+		accountId,
 		appId,
 		appKey,
 		authorizationToken,
@@ -61,21 +62,21 @@ export async function addAccount(userId: string, appId: string, appKey: string, 
 		downloadUrl,
 		s3ApiUrl
 	};
-	const provider = StorageProvider.BACKBLAZE;
-	await addCredentials(userId, accountId, credentials, provider);
+	const providerId = StorageProvider.BACKBLAZE;
+	await addCredentials(userId, credentials, providerId);
 	return json({ success: 1 });
 }
 
-export async function authenticate(userId: string, storageId: string) {
-	const credential = await getCredentialsByStorageId(userId, storageId);
+export async function authenticate(userId: number, storageId: number) {
+	const credential = await getCredentialByStorageId(userId, storageId);
 
 	if (!credential) {
 		// TODO user should be flagged here
 		return undefined;
 	}
 
-	const accountId = credential[CredentialKeys.ID];
 	const creds = credential[CredentialKeys.CREDENTIALS] as {
+		accountId: string;
 		appId: string;
 		appKey: string;
 		authorizationToken: string;
@@ -87,6 +88,7 @@ export async function authenticate(userId: string, storageId: string) {
 	};
 
 	const {
+		accountId,
 		appId,
 		appKey,
 		authorizationToken: existingToken,
@@ -101,6 +103,7 @@ export async function authenticate(userId: string, storageId: string) {
 
 	// Bundle the existing credentials to easily return them
 	const existingData = {
+		accountId,
 		appId,
 		appKey,
 		authorizationToken: existingToken,
@@ -127,7 +130,7 @@ export async function authenticate(userId: string, storageId: string) {
 	}
 
 	// 4. Mark as updating (Atomic lock to prevent race conditions)
-	const lockResult = await markCredentialsUpdating(accountId);
+	const lockResult = await markCredentialsUpdating(credential[CredentialKeys.ID]);
 
 	// If no rows are returned, another process grabbed the lock right before us
 	if (lockResult.length === 0) {
@@ -144,6 +147,7 @@ export async function authenticate(userId: string, storageId: string) {
 			}
 		} = data;
 		const credentials = {
+			accountId,
 			appId,
 			appKey,
 			authorizationToken,
@@ -153,7 +157,7 @@ export async function authenticate(userId: string, storageId: string) {
 			downloadUrl,
 			s3ApiUrl
 		};
-		await updateCredentials(accountId, credentials);
+		await updateCredentials(credential[CredentialKeys.ID], credentials);
 
 		// Return the newly fetched credentials alongside the existing bucketId
 		return {
@@ -167,7 +171,7 @@ export async function authenticate(userId: string, storageId: string) {
 			s3ApiUrl
 		};
 	} else {
-		await markCredentialsUpdated(accountId);
+		await markCredentialsUpdated(credential[CredentialKeys.ID]);
 		return existingData;
 	}
 }

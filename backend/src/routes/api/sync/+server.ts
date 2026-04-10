@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	const lastPartsTS = parseInt(url.searchParams.get('last_part_ts') || '0', 10);
 
 	const { profileRows, fileRows, partRows, itemRows } = await fetchChanges(
-		authUser.id,
+		authUser.sid,
 		deviceId,
 		lastProfilesTS,
 		lastFilesTS,
@@ -36,7 +36,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
-	const userId = authUser.id;
+	const userId = authUser.sid;
 	const deviceId = authUser.did;
 	if (!deviceId) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
@@ -59,8 +59,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					break;
 			}
 		}
-		const userDeviceKey = userId + '_' + deviceId;
-		await updateDeviceStatus(userDeviceKey, 1); // This will set device active time
+		await updateDeviceStatus(userId, deviceId, 1); // This will set device active time
 	} catch (e) {
 		return json({ success: 0, message: e });
 	}

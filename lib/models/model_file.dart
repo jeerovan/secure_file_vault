@@ -11,8 +11,8 @@ class ModelFile {
   int itemCount;
   int parts;
   int uploadedAt;
-  String? storageId;
-  int provider;
+  int storageId;
+  int providerId;
   Map<String, dynamic> data;
   int updatedAt;
 
@@ -21,8 +21,8 @@ class ModelFile {
     required this.itemCount,
     required this.parts,
     required this.uploadedAt,
-    this.provider = 0,
-    this.storageId,
+    this.providerId = 0,
+    this.storageId = 0,
     required this.data,
     required this.updatedAt,
   });
@@ -34,7 +34,7 @@ class ModelFile {
       'parts': parts,
       'uploaded_at': uploadedAt,
       'storage_id': storageId,
-      'provider': provider,
+      'provider_id': providerId,
       'data': data is String ? data : jsonEncode(data),
       'updated_at': updatedAt
     };
@@ -48,8 +48,8 @@ class ModelFile {
       itemCount: getValueFromMap(map, "item_count", defaultValue: 1),
       parts: getValueFromMap(map, "parts", defaultValue: 0),
       uploadedAt: getValueFromMap(map, "uploaded_at", defaultValue: 0),
-      storageId: getValueFromMap(map, "storage_id", defaultValue: null),
-      provider: getValueFromMap(map, "provider", defaultValue: 0),
+      storageId: getValueFromMap(map, "storage_id", defaultValue: 0),
+      providerId: getValueFromMap(map, "provider_id", defaultValue: 0),
       data: data is String ? jsonDecode(data) : data,
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
@@ -62,8 +62,8 @@ class ModelFile {
       itemCount: int.parse(changeMap["6"].toString()),
       parts: int.parse(changeMap["7"].toString()),
       uploadedAt: int.parse(changeMap["8"].toString()),
-      provider: int.parse(changeMap["9"].toString()),
-      storageId: changeMap["10"],
+      providerId: int.parse(changeMap["9"].toString()),
+      storageId: int.parse(changeMap["10"]),
       data: data is String ? jsonDecode(data) : data,
       updatedAt: int.parse(changeMap["12"].toString()),
     );

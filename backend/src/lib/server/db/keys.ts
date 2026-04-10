@@ -2,7 +2,7 @@ export const UserKeys = {
 	ID: '1',
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
-	USER_ID: '4',
+	SUPABASE_ID: '4',
 	EMAIL: '5',
 	CIPHER: '6',
 	NONCE: '7'
@@ -25,11 +25,11 @@ export const UserDeviceKeys = {
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
 	USER_ID: '4',
-	DEVICE_ID: '5',
+	DEVICE_HASH: '5',
 	TITLE: '6',
 	DEVICE_TYPE: '7',
 	NOTIFICATION_ID: '8',
-	STATUS: '9'
+	ACTIVE: '9'
 } as const;
 
 export const FileKeys = {
@@ -38,11 +38,11 @@ export const FileKeys = {
 	SERVER_UPDATED_AT: '3',
 	USER_ID: '4',
 	DEVICE_ID: '5',
-	FILE_ID: '6',
+	FILE_HASH: '6',
 	ITEMS_COUNT: '7',
 	PARTS: '8',
 	UPLOADED_AT: '9',
-	PROVIDER: '10',
+	PROVIDER_ID: '10',
 	STORAGE_ID: '11',
 	JSON: '12',
 	CLIENT_UPDATED_AT: '13',
@@ -56,7 +56,7 @@ export const PartKeys = {
 	USER_ID: '4',
 	DEVICE_ID: '5',
 	FILE_ID: '6',
-	PART: '7',
+	PART_NUMBER: '7',
 	PART_SIZE: '8',
 	CIPHER: '9',
 	NONCE: '10',
@@ -84,7 +84,7 @@ export const CredentialKeys = {
 	ID: '1',
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
-	OWNER_ID: '4', // Either a user ID, or 'fife'
+	USER_ID: '4', // Either a user ID, or 'fife'
 	PROVIDER_ID: '5',
 	CREDENTIALS: '6',
 	UPDATING: '7'

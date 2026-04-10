@@ -56,7 +56,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			bucketName: bucket
 		};
 		const provider = StorageProvider.CLOUDFLARE;
-		await addCredentials(authUser.id, accountId, credentials, provider);
+		await addCredentials(authUser.sid, accountId, credentials, provider);
 		return json({ success: 1 });
 	} else {
 		// TODO flag user with attempt count

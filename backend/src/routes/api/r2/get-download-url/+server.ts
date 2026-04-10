@@ -4,7 +4,7 @@ import { requireAuth } from '$lib/server/auth';
 import { CredentialKeys, ErrorCode } from '$lib/server/db/keys';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { getCredentialsByStorageId } from '$lib/server/db/api';
+import { getCredentialByStorageId } from '$lib/server/db/api';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
@@ -21,7 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const credentials = await getCredentialsByStorageId(authUser.id, storage_id);
+	const credentials = await getCredentialByStorageId(authUser.sid, storage_id);
 	if (!credentials) {
 		return json({ success: 0, message: ErrorCode.NO_STORAGE });
 	}
@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		appKey: string;
 		bucketName: string;
 	};
-	const file_path = `${authUser.id}/${file_id}`;
+	const file_path = `${authUser.sid}/${file_id}`;
 	const accountId = credentials[CredentialKeys.ID];
 	const s3Endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
 	const region = 'auto';

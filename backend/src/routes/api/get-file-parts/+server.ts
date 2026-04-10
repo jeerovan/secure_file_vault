@@ -4,9 +4,9 @@ import { requireAuth } from '$lib/server/auth';
 
 import {
 	addTempStorage,
-	getCredentialsById,
-	getFile,
-	getFilePart,
+	getCredentials,
+	getUserFile,
+	getUserFilePart,
 	getOptimalStorage,
 	getTempStorage
 } from '$lib/server/db/api';
@@ -33,15 +33,15 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_hash) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const file = await getFile(authUser.id, file_hash);
+	const file = await getUserFile(authUser.sid, file_hash);
 	if (file) {
 		if (file[FileKeys.UPLOADED_AT] > 0) {
 			const parts = [];
 			const partIds = Array.from({ length: file[FileKeys.PARTS] }, (_, i) => `${i + 1}`);
 			for (const index in partIds) {
 				const partId = partIds[index];
-				const partKey = `${authUser.id}_${file_hash}_${partId}`;
-				const filePart = await getFilePart(partKey);
+				const partKey = `${authUser.sid}_${file_hash}_${partId}`;
+				const filePart = await getUserFilePart(partKey);
 				if (filePart) {
 					parts.push(filePart);
 				}
