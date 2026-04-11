@@ -50,9 +50,9 @@ export async function addUser(supabaseId: string, email: string, cipher: string,
 		})
 		.returning()
 		.get();
-	await db
-		.insert(userData)
-		.values({ [UserDataKeys.USER_ID]: newUser[UserKeys.ID], [UserDataKeys.DEVICE_UUID]: 'Server' });
+	db.insert(userData)
+		.values({ [UserDataKeys.USER_ID]: newUser[UserKeys.ID], [UserDataKeys.DEVICE_UUID]: 'Server' })
+		.run();
 
 	// add default fife storage for this user
 	const fifeUser = await getUserBySupabaseId('fife');
@@ -120,7 +120,8 @@ export async function getUserDevices(userId: number, deviceId?: string) {
 			active: userDevice[UserDeviceKeys.ACTIVE]
 		})
 		.from(userDevice)
-		.where(eq(userDevice[UserDeviceKeys.USER_ID], userId));
+		.where(eq(userDevice[UserDeviceKeys.USER_ID], userId))
+		.all();
 }
 
 export async function addUpdateDevice(
@@ -143,8 +144,7 @@ export async function addUpdateDevice(
 		.get();
 
 	if (deviceRow) {
-		await db
-			.update(userDevice)
+		db.update(userDevice)
 			.set({
 				[UserDeviceKeys.TITLE]: title ?? deviceRow[UserDeviceKeys.TITLE],
 				[UserDeviceKeys.DEVICE_TYPE]: type ?? deviceRow[UserDeviceKeys.DEVICE_TYPE],
@@ -157,7 +157,8 @@ export async function addUpdateDevice(
 					eq(userDevice[UserDeviceKeys.USER_ID], userId),
 					eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
 				)
-			);
+			)
+			.run();
 
 		return json({ success: 1 });
 	} else {
@@ -181,14 +182,16 @@ export async function addUpdateDevice(
 				return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 			}
 
-			await db.insert(userDevice).values({
-				[UserDeviceKeys.DEVICE_UUID]: deviceUuid,
-				[UserDeviceKeys.USER_ID]: userId,
-				[UserDeviceKeys.TITLE]: title,
-				[UserDeviceKeys.DEVICE_TYPE]: type,
-				[UserDeviceKeys.NOTIFICATION_ID]: notificationId,
-				[UserDeviceKeys.ACTIVE]: 1
-			});
+			db.insert(userDevice)
+				.values({
+					[UserDeviceKeys.DEVICE_UUID]: deviceUuid,
+					[UserDeviceKeys.USER_ID]: userId,
+					[UserDeviceKeys.TITLE]: title,
+					[UserDeviceKeys.DEVICE_TYPE]: type,
+					[UserDeviceKeys.NOTIFICATION_ID]: notificationId,
+					[UserDeviceKeys.ACTIVE]: 1
+				})
+				.run();
 
 			return json({ success: 1 });
 		}
@@ -196,7 +199,7 @@ export async function addUpdateDevice(
 }
 
 export async function removeDevice(userId: number, deviceUuid: string) {
-	const device = await db
+	const device = db
 		.select()
 		.from(userDevice)
 		.where(
@@ -204,16 +207,17 @@ export async function removeDevice(userId: number, deviceUuid: string) {
 				eq(userDevice[UserDeviceKeys.USER_ID], userId),
 				eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
 			)
-		);
+		)
+		.get();
 	if (device) {
-		await db
-			.delete(userDevice)
+		db.delete(userDevice)
 			.where(
 				and(
 					eq(userDevice[UserDeviceKeys.USER_ID], userId),
 					eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
 				)
-			);
+			)
+			.run();
 		return json({ success: 1 });
 	} else {
 		return json({ success: 0, message: ErrorCode.NO_DEVICE });
@@ -221,15 +225,15 @@ export async function removeDevice(userId: number, deviceUuid: string) {
 }
 
 export async function updateDeviceStatus(userId: number, deviceUuid: string, status: number) {
-	await db
-		.update(userDevice)
+	db.update(userDevice)
 		.set({ [UserDeviceKeys.ACTIVE]: status })
 		.where(
 			and(
 				eq(userDevice[UserDeviceKeys.USER_ID], userId),
 				eq(userDevice[UserDeviceKeys.DEVICE_UUID], deviceUuid)
 			)
-		);
+		)
+		.run();
 	return json({ success: 1 });
 }
 
@@ -323,16 +327,15 @@ export async function saveFileChanges(userId: number, deviceUuid: string, change
 			if (incomingUpdatedAt > userFile[FileKeys.CLIENT_UPDATED_AT]) {
 				const existingUploadedAt = userFile[FileKeys.UPLOADED_AT];
 				if (itemCount > 0 && existingUploadedAt > 0) {
-					await db
-						.update(file)
+					db.update(file)
 						.set({
 							[FileKeys.DEVICE_UUID]: deviceUuid,
 							[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt
 						})
-						.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)));
+						.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)))
+						.run();
 				} else {
-					await db
-						.update(file)
+					db.update(file)
 						.set({
 							[FileKeys.DEVICE_UUID]: deviceUuid,
 							[FileKeys.ITEMS_COUNT]: itemCount,
@@ -344,7 +347,8 @@ export async function saveFileChanges(userId: number, deviceUuid: string, change
 							[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
 							[FileKeys.DELETED]: change['deleted']
 						})
-						.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)));
+						.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)))
+						.run();
 				}
 
 				if (itemCount == 0) {
@@ -352,19 +356,21 @@ export async function saveFileChanges(userId: number, deviceUuid: string, change
 				}
 			}
 		} else {
-			await db.insert(file).values({
-				[FileKeys.FILE_HASH]: fileHash,
-				[FileKeys.USER_ID]: userId,
-				[FileKeys.DEVICE_UUID]: deviceUuid,
-				[FileKeys.ITEMS_COUNT]: itemCount,
-				[FileKeys.PARTS]: change['parts'] ?? 1,
-				[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
-				[FileKeys.STORAGE_ID]: storageId,
-				[FileKeys.PROVIDER_ID]: providerId,
-				[FileKeys.JSON]: changedData,
-				[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
-				[FileKeys.DELETED]: change['deleted']
-			});
+			db.insert(file)
+				.values({
+					[FileKeys.FILE_HASH]: fileHash,
+					[FileKeys.USER_ID]: userId,
+					[FileKeys.DEVICE_UUID]: deviceUuid,
+					[FileKeys.ITEMS_COUNT]: itemCount,
+					[FileKeys.PARTS]: change['parts'] ?? 1,
+					[FileKeys.UPLOADED_AT]: uploadedAt ?? 0,
+					[FileKeys.STORAGE_ID]: storageId,
+					[FileKeys.PROVIDER_ID]: providerId,
+					[FileKeys.JSON]: changedData,
+					[FileKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
+					[FileKeys.DELETED]: change['deleted']
+				})
+				.run();
 		}
 		if (uploadedAt > 0 && userFile) {
 			const tempRow = db
@@ -381,14 +387,14 @@ export async function saveFileChanges(userId: number, deviceUuid: string, change
 				)
 				.get();
 			if (tempRow) {
-				await db
-					.delete(tempStorage)
+				db.delete(tempStorage)
 					.where(
 						and(
 							eq(tempStorage[TempStorageKeys.USER_ID], userId),
 							eq(tempStorage[TempStorageKeys.FILE_ID], userFile[FileKeys.ID])
 						)
-					);
+					)
+					.run();
 			}
 		}
 	}
@@ -425,14 +431,13 @@ export async function savePartChanges(userId: number, deviceId: string, changes:
 		const deleted = change['deleted'];
 		const uploaded = change['uploaded'];
 		const partBytes = change['size'];
-		let updateUsedBytes = uploaded == 1;
+		let updateUsedBytes = uploaded === 1;
 		if (existingRow) {
-			if (existingRow.uploaded == 1) {
+			if (existingRow.uploaded === 1) {
 				updateUsedBytes = false;
 			}
 			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
-				await db
-					.update(part)
+				db.update(part)
 					.set({
 						[PartKeys.DEVICE_UUID]: deviceId,
 						[PartKeys.PART_SIZE]: partBytes,
@@ -449,22 +454,25 @@ export async function savePartChanges(userId: number, deviceId: string, changes:
 							eq(part[PartKeys.FILE_ID], fileHash),
 							eq(part[PartKeys.PART_NUMBER], partNumber)
 						)
-					);
+					)
+					.run();
 			}
 		} else {
-			await db.insert(part).values({
-				[PartKeys.FILE_ID]: fileId,
-				[PartKeys.USER_ID]: userId,
-				[PartKeys.PART_NUMBER]: partNumber,
-				[PartKeys.DEVICE_UUID]: deviceId,
-				[PartKeys.PART_SIZE]: partBytes,
-				[PartKeys.CIPHER]: change['cipher'] ?? null,
-				[PartKeys.NONCE]: change['nonce'] ?? null,
-				[PartKeys.JSON]: changedData,
-				[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
-				[PartKeys.DELETED]: deleted,
-				[PartKeys.UPLOADED]: uploaded
-			});
+			db.insert(part)
+				.values({
+					[PartKeys.FILE_ID]: fileId,
+					[PartKeys.USER_ID]: userId,
+					[PartKeys.PART_NUMBER]: partNumber,
+					[PartKeys.DEVICE_UUID]: deviceId,
+					[PartKeys.PART_SIZE]: partBytes,
+					[PartKeys.CIPHER]: change['cipher'] ?? null,
+					[PartKeys.NONCE]: change['nonce'] ?? null,
+					[PartKeys.JSON]: changedData,
+					[PartKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt,
+					[PartKeys.DELETED]: deleted,
+					[PartKeys.UPLOADED]: uploaded
+				})
+				.run();
 		}
 		if (updateUsedBytes) {
 			const fileRow = db
@@ -491,13 +499,12 @@ export async function saveItemChanges(userId: number, deviceId: string, changes:
 		const existingRow = db
 			.select({ clientUpdatedAt: item[ItemKeys.CLIENT_UPDATED_AT] })
 			.from(item)
-			.where(and(eq(item[ItemKeys.ITEM_ID], itemId), eq(item[ItemKeys.USER_ID], userId)))
+			.where(and(eq(item[ItemKeys.USER_ID], userId), eq(item[ItemKeys.ITEM_ID], itemId)))
 			.get();
 
 		if (existingRow) {
 			if (incomingUpdatedAt > existingRow.clientUpdatedAt) {
-				await db
-					.update(item)
+				db.update(item)
 					.set({
 						[ItemKeys.DEVICE_UUID]: deviceId,
 						[ItemKeys.TEXT_CIPHER]: change['text_cipher'],
@@ -506,19 +513,22 @@ export async function saveItemChanges(userId: number, deviceId: string, changes:
 						[ItemKeys.KEY_NONCE]: change['key_nonce'],
 						[ItemKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt
 					})
-					.where(and(eq(item[ItemKeys.ITEM_ID], itemId), eq(item[ItemKeys.USER_ID], userId)));
+					.where(and(eq(item[ItemKeys.USER_ID], userId), eq(item[ItemKeys.ITEM_ID], itemId)))
+					.run();
 			}
 		} else {
-			await db.insert(item).values({
-				[ItemKeys.ITEM_ID]: itemId,
-				[ItemKeys.USER_ID]: userId,
-				[ItemKeys.DEVICE_UUID]: deviceId,
-				[ItemKeys.TEXT_CIPHER]: change['text_cipher'],
-				[ItemKeys.TEXT_NONCE]: change['text_nonce'],
-				[ItemKeys.KEY_CIPHER]: change['key_cipher'],
-				[ItemKeys.KEY_NONCE]: change['key_nonce'],
-				[ItemKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt
-			});
+			db.insert(item)
+				.values({
+					[ItemKeys.ITEM_ID]: itemId,
+					[ItemKeys.USER_ID]: userId,
+					[ItemKeys.DEVICE_UUID]: deviceId,
+					[ItemKeys.TEXT_CIPHER]: change['text_cipher'],
+					[ItemKeys.TEXT_NONCE]: change['text_nonce'],
+					[ItemKeys.KEY_CIPHER]: change['key_cipher'],
+					[ItemKeys.KEY_NONCE]: change['key_nonce'],
+					[ItemKeys.CLIENT_UPDATED_AT]: incomingUpdatedAt
+				})
+				.run();
 		}
 	}
 }
@@ -565,13 +575,12 @@ export async function addCredentials(userId: number, credentialsData: any, provi
 			);
 		}
 	} else {
-		await db
-			.update(credential)
+		db.update(credential)
 			.set({
-				[CredentialKeys.SERVER_UPDATED_AT]: Date.now(),
 				[CredentialKeys.CREDENTIALS]: credentialsData
 			})
-			.where(eq(credential[CredentialKeys.ID], existingEntry[CredentialKeys.ID]));
+			.where(eq(credential[CredentialKeys.ID], existingEntry[CredentialKeys.ID]))
+			.run();
 	}
 }
 
@@ -602,29 +611,29 @@ export async function getCredentialByStorageId(userId: number, storageId: number
 }
 
 export async function markCredentialsUpdating(Id: number) {
-	return await db
+	return db
 		.update(credential)
 		.set({ [CredentialKeys.UPDATING]: 1 })
 		.where(and(eq(credential[CredentialKeys.ID], Id), eq(credential[CredentialKeys.UPDATING], 0)))
-		.returning();
+		.returning()
+		.all();
 }
 
 export async function markCredentialsUpdated(Id: number) {
-	await db
-		.update(credential)
+	db.update(credential)
 		.set({ [CredentialKeys.UPDATING]: 0 })
-		.where(eq(credential[CredentialKeys.ID], Id));
+		.where(eq(credential[CredentialKeys.ID], Id))
+		.run();
 }
 
 export async function updateCredentials(Id: number, creds: any) {
-	await db
-		.update(credential)
+	db.update(credential)
 		.set({
-			[CredentialKeys.SERVER_UPDATED_AT]: Date.now(),
 			[CredentialKeys.CREDENTIALS]: creds,
 			[CredentialKeys.UPDATING]: 0
 		})
-		.where(eq(credential[CredentialKeys.ID], Id));
+		.where(eq(credential[CredentialKeys.ID], Id))
+		.run();
 }
 
 export async function addStorage(
@@ -635,14 +644,17 @@ export async function addStorage(
 	priority: number = 0,
 	json: {}
 ) {
-	return await db.insert(storage).values({
-		[StorageKeys.USER_ID]: userId,
-		[StorageKeys.CREDENTIAL_ID]: credentialId,
-		[StorageKeys.LIMIT_BYTES]: storageLimit,
-		[StorageKeys.PRIORITY]: priority,
-		[StorageKeys.JSON]: json,
-		[StorageKeys.LIMIT_FREE_BYTES]: freeStorageLimit
-	});
+	return db
+		.insert(storage)
+		.values({
+			[StorageKeys.USER_ID]: userId,
+			[StorageKeys.CREDENTIAL_ID]: credentialId,
+			[StorageKeys.LIMIT_BYTES]: storageLimit,
+			[StorageKeys.PRIORITY]: priority,
+			[StorageKeys.JSON]: json,
+			[StorageKeys.LIMIT_FREE_BYTES]: freeStorageLimit
+		})
+		.run();
 }
 
 export async function getStorage(id: number) {
@@ -691,13 +703,13 @@ export async function updateStorageUsedSize(
 	const newBytes = add
 		? sql`${storage[StorageKeys.USED_BYTES]} + ${bytes}`
 		: sql`${storage[StorageKeys.USED_BYTES]} - ${bytes}`;
-	await db
-		.update(storage)
+	db.update(storage)
 		.set({
 			// Atomically add (or subtract) the bytes from the current USED_BYTES
 			[StorageKeys.USED_BYTES]: newBytes
 		})
-		.where(and(eq(storage[StorageKeys.USER_ID], userId), eq(storage[StorageKeys.ID], storageId)));
+		.where(and(eq(storage[StorageKeys.USER_ID], userId), eq(storage[StorageKeys.ID], storageId)))
+		.run();
 }
 
 export async function updateTempStorageSize(userId: number, fileId: number, bytes: number) {
@@ -713,8 +725,7 @@ export async function updateTempStorageSize(userId: number, fileId: number, byte
 		.get();
 	const newBytes = sql`MAX(0, ${tempStorage[TempStorageKeys.SIZE]} - ${bytes})`;
 	if (row) {
-		await db
-			.update(tempStorage)
+		db.update(tempStorage)
 			.set({
 				[TempStorageKeys.SIZE]: newBytes
 			})
@@ -723,7 +734,8 @@ export async function updateTempStorageSize(userId: number, fileId: number, byte
 					eq(tempStorage[TempStorageKeys.USER_ID], userId),
 					eq(tempStorage[TempStorageKeys.FILE_ID], fileId)
 				)
-			);
+			)
+			.run();
 	}
 }
 
@@ -733,8 +745,8 @@ export async function getTempStorage(userId: number, fileId: number) {
 		.from(tempStorage)
 		.where(
 			and(
-				eq(tempStorage[TempStorageKeys.FILE_ID], fileId),
-				eq(tempStorage[TempStorageKeys.USER_ID], userId)
+				eq(tempStorage[TempStorageKeys.USER_ID], userId),
+				eq(tempStorage[TempStorageKeys.FILE_ID], fileId)
 			)
 		)
 		.get();
@@ -747,13 +759,15 @@ export async function addTempStorage(
 	size: number,
 	providerId: number
 ) {
-	await db.insert(tempStorage).values({
-		[TempStorageKeys.FILE_ID]: fileId,
-		[TempStorageKeys.USER_ID]: userId,
-		[TempStorageKeys.STORAGE_ID]: storageId,
-		[TempStorageKeys.SIZE]: size,
-		[TempStorageKeys.PROVIDER_ID]: providerId
-	});
+	db.insert(tempStorage)
+		.values({
+			[TempStorageKeys.FILE_ID]: fileId,
+			[TempStorageKeys.USER_ID]: userId,
+			[TempStorageKeys.STORAGE_ID]: storageId,
+			[TempStorageKeys.SIZE]: size,
+			[TempStorageKeys.PROVIDER_ID]: providerId
+		})
+		.run();
 }
 
 export async function getUserFile(userId: number, fileHash: string) {
@@ -774,8 +788,8 @@ export async function getUserFilePart(userId: number, fileId: number, partNumber
 		.innerJoin(file, eq(part[PartKeys.FILE_ID], file[FileKeys.ID]))
 		.where(
 			and(
-				eq(part[PartKeys.FILE_ID], fileId),
 				eq(part[PartKeys.USER_ID], userId),
+				eq(part[PartKeys.FILE_ID], fileId),
 				eq(part[PartKeys.PART_NUMBER], partNumber)
 			)
 		)
@@ -796,11 +810,12 @@ export async function resetUserFilePart(userId: number, fileId: number, partNumb
 		})
 		.where(
 			and(
-				eq(part[PartKeys.FILE_ID], fileId),
 				eq(part[PartKeys.USER_ID], userId),
+				eq(part[PartKeys.FILE_ID], fileId),
 				eq(part[PartKeys.PART_NUMBER], partNumber)
 			)
-		);
+		)
+		.run();
 }
 export async function resetUserFileByHash(userId: number, fileHash: string) {
 	return db
@@ -815,7 +830,8 @@ export async function resetUserFileByHash(userId: number, fileHash: string) {
 			[FileKeys.CLIENT_UPDATED_AT]: Date.now(),
 			[FileKeys.DELETED]: 1
 		})
-		.where(and(eq(file[FileKeys.FILE_HASH], fileHash), eq(file[FileKeys.USER_ID], userId)));
+		.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)))
+		.run();
 }
 
 export async function getProviders() {
@@ -825,15 +841,16 @@ export async function getProviders() {
 			title: provider[ProviderKeys.TITLE],
 			bytes: provider[ProviderKeys.FREE_BYTES]
 		})
-		.from(provider);
+		.from(provider)
+		.all();
 }
 
 export async function getUserStorage(userId: number) {
 	// 1. Fetch data from all three tables concurrently for maximum performance
 	const [allProviders, userCredentials, userStorages] = await Promise.all([
-		db.select().from(provider),
-		db.select().from(credential).where(eq(credential[CredentialKeys.USER_ID], userId)),
-		db.select().from(storage).where(eq(storage[StorageKeys.USER_ID], userId))
+		db.select().from(provider).all(),
+		db.select().from(credential).where(eq(credential[CredentialKeys.USER_ID], userId)).all(),
+		db.select().from(storage).where(eq(storage[StorageKeys.USER_ID], userId)).all()
 	]);
 
 	// 2. Create O(1) lookup maps to map relations in memory

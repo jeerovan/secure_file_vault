@@ -31,23 +31,19 @@ export const provider = sqliteTable('provider', {
 	[ProviderKeys.PRIORITY]: integer(ProviderKeys.PRIORITY).notNull()
 });
 
-export const user = sqliteTable(
-	'user',
-	{
-		[UserKeys.ID]: integer(UserKeys.ID, { mode: 'number' }).primaryKey({ autoIncrement: true }),
-		[UserKeys.SERVER_CREATED_AT]: integer(UserKeys.SERVER_CREATED_AT)
-			.notNull()
-			.$defaultFn(() => Date.now()),
-		[UserKeys.SERVER_UPDATED_AT]: integer(UserKeys.SERVER_UPDATED_AT)
-			.$defaultFn(() => Date.now())
-			.$onUpdate(() => Date.now()),
-		[UserKeys.SUPABASE_ID]: text(UserKeys.SUPABASE_ID).notNull().unique(),
-		[UserKeys.EMAIL]: text(UserKeys.EMAIL).notNull().unique(),
-		[UserKeys.CIPHER]: text(UserKeys.CIPHER).notNull(),
-		[UserKeys.NONCE]: text(UserKeys.NONCE).notNull()
-	},
-	(table) => [index('user_idx_supabase_id').on(table[UserKeys.SUPABASE_ID])]
-);
+export const user = sqliteTable('user', {
+	[UserKeys.ID]: integer(UserKeys.ID, { mode: 'number' }).primaryKey({ autoIncrement: true }),
+	[UserKeys.SERVER_CREATED_AT]: integer(UserKeys.SERVER_CREATED_AT)
+		.notNull()
+		.$defaultFn(() => Date.now()),
+	[UserKeys.SERVER_UPDATED_AT]: integer(UserKeys.SERVER_UPDATED_AT)
+		.$defaultFn(() => Date.now())
+		.$onUpdate(() => Date.now()),
+	[UserKeys.SUPABASE_ID]: text(UserKeys.SUPABASE_ID).notNull().unique(),
+	[UserKeys.EMAIL]: text(UserKeys.EMAIL).notNull().unique(),
+	[UserKeys.CIPHER]: text(UserKeys.CIPHER).notNull(),
+	[UserKeys.NONCE]: text(UserKeys.NONCE).notNull()
+});
 
 export const credential = sqliteTable(
 	'credential',
@@ -214,7 +210,7 @@ export const file = sqliteTable(
 		[FileKeys.DELETED]: integer(FileKeys.DELETED).notNull().default(0)
 	},
 	(table) => [
-		index('file_idx_file_hash_user_id').on(table[FileKeys.USER_ID], table[FileKeys.FILE_HASH]),
+		index('file_idx_user_id_file_hash').on(table[FileKeys.USER_ID], table[FileKeys.FILE_HASH]),
 		index('file_idx_user_id').on(table[FileKeys.USER_ID])
 	]
 );
