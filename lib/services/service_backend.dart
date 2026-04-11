@@ -161,7 +161,7 @@ class BackendApi {
           .timeout(timeout);
       return _formatResponse(res);
     } catch (e) {
-      logger.error(e.toString());
+      logger.error(endpoint, error: e.toString());
       if (_isNetworkException(e)) {
         return {'success': -1, 'message': 'Network Error'};
       }

@@ -183,7 +183,9 @@ class TaskManager {
       } else {
         final errorMessageCode =
             int.tryParse(filePartResult["message"].toString());
-        if (errorMessageCode != null && errorMessageCode != 13) {
+        if (errorMessageCode == null) {
+          return false;
+        } else if (errorMessageCode != 13) {
           return true;
         }
       }

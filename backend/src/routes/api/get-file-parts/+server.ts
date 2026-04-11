@@ -2,21 +2,8 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
 
-import {
-	addTempStorage,
-	getCredentials,
-	getUserFile,
-	getUserFilePart,
-	getOptimalStorage,
-	getTempStorage
-} from '$lib/server/db/api';
-import {
-	CredentialKeys,
-	ErrorCode,
-	FileKeys,
-	StorageKeys,
-	TempStorageKeys
-} from '$lib/server/db/keys';
+import { getUserFile, getUserFilePart } from '$lib/server/db/api';
+import { ErrorCode, FileKeys } from '$lib/server/db/keys';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
