@@ -65,7 +65,7 @@ class AppSetupState extends ChangeNotifier {
     }
 
     // Check device registration
-    String deviceId = await getDeviceId();
+    String deviceId = await getDeviceUuid();
     if (deviceId.isEmpty) {
       logger.info("Registration");
       _currentStep = SetupStep.registerDevice;

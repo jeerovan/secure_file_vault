@@ -60,8 +60,11 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		}
 		await updateDeviceStatus(userId, deviceUuid, 1); // This will set device active time
-	} catch (e) {
-		return json({ success: 0, message: e });
+	} catch (error) {
+		if (error instanceof Error) {
+			console.log(error.stack);
+		}
+		return json({ success: 0, message: error });
 	}
 
 	return json({ success: 1 });

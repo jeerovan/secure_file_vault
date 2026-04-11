@@ -21,7 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const credentials = await getCredentialByStorageId(authUser.supabaseId, storage_id);
+	const credentials = await getCredentialByStorageId(authUser.userId!, storage_id);
 	if (!credentials) {
 		return json({ success: 0, message: ErrorCode.NO_STORAGE });
 	}

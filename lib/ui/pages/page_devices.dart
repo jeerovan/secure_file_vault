@@ -90,7 +90,7 @@ class _PageDevicesState extends State<PageDevices> {
   }
 
   Future<void> showLogoutDialog(String deviceUuid) async {
-    String thisDeviceUuid = await getDeviceId();
+    String thisDeviceUuid = await getDeviceUuid();
     if (thisDeviceUuid.isNotEmpty && deviceUuid == thisDeviceUuid && mounted) {
       displaySnackBar(context, message: "Not this device!", seconds: 2);
       return;

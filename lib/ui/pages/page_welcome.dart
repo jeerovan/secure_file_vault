@@ -193,7 +193,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            "An open-source, professional file explorer built with zero-trust architecture. Your data is encrypted locally before it ever leaves your device.",
+            "An open-source, cloud storage service built with zero-trust architecture. Your data is encrypted locally before it ever leaves your device.",
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -222,7 +222,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            "Connect your favorite providers. Start right away with FiFe's built-in 1 GB free secure storage to test the waters.",
+            "Connect your favorite providers. Start right away with FiFe's built-in 1 GB free secure storage.",
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
@@ -244,7 +244,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.onPrimaryContainer)),
-              subtitle: Text("Test functionality instantly",
+              subtitle: Text("Start backups instantly",
                   style: TextStyle(
                       color:
                           theme.colorScheme.onPrimaryContainer.withAlpha(80))),

@@ -72,9 +72,9 @@ class BackendApi {
       if (withAuth) 'Authorization': 'Bearer ${_accessTokenOrThrow()}',
     };
     if (extra != null) h.addAll(extra);
-    final deviceId = await getDeviceId();
-    if (deviceId.isNotEmpty) {
-      h.addAll({'device_id': deviceId});
+    final deviceUuid = await getDeviceUuid();
+    if (deviceUuid.isNotEmpty) {
+      h.addAll({'device_uuid': deviceUuid});
     }
     return h;
   }

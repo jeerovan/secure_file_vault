@@ -28,6 +28,7 @@ export async function authorize(appId: string, appKey: string) {
 		}
 	} catch (e) {
 		if (e instanceof Error) {
+			console.log(e.stack);
 			message = e.message;
 		} else {
 			message = e;

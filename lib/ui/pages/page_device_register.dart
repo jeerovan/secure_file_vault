@@ -59,13 +59,15 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
           displaySnackBar(context, message: "Device limit reached", seconds: 2);
           await context.read<AppSetupState>().manageDevices();
         } // Device limit reached
+      } else {
+        deviceRegistered = true;
       }
     } else {
       deviceRegistered = true;
     }
 
     if (deviceRegistered) {
-      await ModelSetting.set(AppString.deviceId.string, deviceUuid);
+      await ModelSetting.set(AppString.deviceUuid.string, deviceUuid);
       String deviceRoot = await getDeviceHash();
       ModelItem deviceItem = await ModelItem.fromMap({
         "id": deviceRoot,

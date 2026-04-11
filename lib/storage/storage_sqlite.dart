@@ -125,8 +125,8 @@ class StorageSqlite {
         parts INTEGER DEFAULT 1,
         parts_uploaded INTEGER DEFAULT 0,
         uploaded_at INTEGER DEFAULT 0,
-        provider_id INTEGER DEFAULT 0,
-        storage_id INTEGER DEFAULT 0,
+        provider_id INTEGER,
+        storage_id INTEGER,
         data TEXT,
         updated_at INTEGER
       )

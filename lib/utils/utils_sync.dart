@@ -125,7 +125,7 @@ class SyncUtils {
     }
     final api = BackendApi();
     try {
-      String deviceId = await getDeviceId();
+      String deviceId = await getDeviceUuid();
       final response = await api.get(
           endpoint: '/devices', queryParameters: {'device_uuid': deviceId});
       final status = response["success"];
@@ -153,7 +153,7 @@ class SyncUtils {
     if (!hasInternet) return false;
     String? userId = getSignedInUserId();
     if (userId != null) {
-      String deviceUuid = await getDeviceId();
+      String deviceUuid = await getDeviceUuid();
       SecureStorage storage = SecureStorage();
       try {
         if (!simulateTesting()) {
@@ -382,9 +382,9 @@ class SyncUtils {
               }
             } else if (table == Tables.profiles.string) {
               int profileTS = int.parse(changeMap["3"].toString());
-              String profileId = changeMap["1"];
-              map["username"] = changeMap["4"];
-              map["image"] = changeMap["7"];
+              String profileId = changeMap["4"];
+              map["username"] = changeMap["5"];
+              map["image"] = changeMap["8"];
               await ModelProfile.upcertFromServer(profileId, map);
               if (profileTS > lastProfileTS) {
                 lastProfileTS = profileTS;

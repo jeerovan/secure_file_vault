@@ -111,7 +111,7 @@ enum AppString {
   // app
   appName,
   onboarding,
-  deviceId,
+  deviceUuid,
   deviceHash,
   fcmId,
   installedAt,
@@ -207,7 +207,7 @@ extension AppStringExtension on AppString {
         return "review_dialog_shown";
       case AppString.installedAt:
         return "installed_at";
-      case AppString.deviceId:
+      case AppString.deviceUuid:
         return "device_id";
       case AppString.deviceHash:
         return "device_hash";

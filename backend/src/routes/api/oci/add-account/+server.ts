@@ -59,8 +59,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			namespace: namespace,
 			region: region
 		};
-		const provider = StorageProvider.OCI;
-		await addCredentials(authUser.supabaseId, app_id, credentials, provider);
+		const providerId = StorageProvider.OCI;
+		await addCredentials(authUser.userId!, credentials, providerId);
 		return json({ success: 1 });
 	} else {
 		// TODO flag user with attempt count

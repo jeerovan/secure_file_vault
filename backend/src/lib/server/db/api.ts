@@ -243,8 +243,12 @@ export async function fetchChanges(
 ) {
 	const rowLimit = 100;
 	const profileRows = db
-		.select()
+		.select({
+			...getTableColumns(userData),
+			[UserDataKeys.USER_ID]: user[UserKeys.SUPABASE_ID]
+		})
 		.from(userData)
+		.innerJoin(user, eq(userData[UserDataKeys.USER_ID], user[UserKeys.ID]))
 		.where(
 			and(
 				eq(userData[UserDataKeys.USER_ID], userId),
@@ -269,8 +273,8 @@ export async function fetchChanges(
 
 	const partRows = db
 		.select({
-			...getTableColumns(part), // Spreads all original columns from the part table
-			[PartKeys.FILE_ID]: file[FileKeys.FILE_HASH] // Overrides FILE_ID with FILE_HASH
+			...getTableColumns(part),
+			[PartKeys.FILE_ID]: file[FileKeys.FILE_HASH]
 		})
 		.from(part)
 		.innerJoin(file, eq(part[PartKeys.FILE_ID], file[FileKeys.ID]))
@@ -311,8 +315,8 @@ export async function saveFileChanges(userId: number, deviceUuid: string, change
 			.from(file)
 			.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)))
 			.get();
-		const providerId = change['provider_id'];
-		const storageId = change['storage_id'];
+		const providerId = change['provider_id'] || null;
+		const storageId = change['storage_id'] || null;
 		const uploadedAt = change['uploaded_at'];
 		const itemCount = change['item_count'];
 		if (userFile) {
@@ -362,19 +366,29 @@ export async function saveFileChanges(userId: number, deviceUuid: string, change
 				[FileKeys.DELETED]: change['deleted']
 			});
 		}
-		if (uploadedAt > 0) {
+		if (uploadedAt > 0 && userFile) {
 			const tempRow = db
 				.select({
 					bytes: tempStorage[TempStorageKeys.SIZE],
 					storageId: tempStorage[TempStorageKeys.STORAGE_ID]
 				})
 				.from(tempStorage)
-				.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)))
+				.where(
+					and(
+						eq(tempStorage[TempStorageKeys.USER_ID], userId),
+						eq(tempStorage[TempStorageKeys.FILE_ID], userFile[FileKeys.ID])
+					)
+				)
 				.get();
 			if (tempRow) {
 				await db
 					.delete(tempStorage)
-					.where(and(eq(file[FileKeys.USER_ID], userId), eq(file[FileKeys.FILE_HASH], fileHash)));
+					.where(
+						and(
+							eq(tempStorage[TempStorageKeys.USER_ID], userId),
+							eq(tempStorage[TempStorageKeys.FILE_ID], userFile[FileKeys.ID])
+						)
+					);
 			}
 		}
 	}
@@ -752,8 +766,12 @@ export async function getUserFile(userId: number, fileHash: string) {
 
 export async function getUserFilePart(userId: number, fileId: number, partNumber: number) {
 	return db
-		.select()
+		.select({
+			...getTableColumns(part),
+			[PartKeys.FILE_ID]: file[FileKeys.FILE_HASH]
+		})
 		.from(part)
+		.innerJoin(file, eq(part[PartKeys.FILE_ID], file[FileKeys.ID]))
 		.where(
 			and(
 				eq(part[PartKeys.FILE_ID], fileId),

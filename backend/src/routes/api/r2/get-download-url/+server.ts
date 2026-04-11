@@ -21,18 +21,18 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const credentials = await getCredentialByStorageId(authUser.supabaseId, storage_id);
+	const credentials = await getCredentialByStorageId(authUser.userId!, storage_id);
 	if (!credentials) {
 		return json({ success: 0, message: ErrorCode.NO_STORAGE });
 	}
 	const credsData = credentials[CredentialKeys.CREDENTIALS] as {
+		accountId: string;
 		appId: string;
 		appKey: string;
 		bucketName: string;
 	};
 	const file_path = `${authUser.supabaseId}/${file_id}`;
-	const accountId = credentials[CredentialKeys.ID];
-	const s3Endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
+	const s3Endpoint = `https://${credsData.accountId}.r2.cloudflarestorage.com`;
 	const region = 'auto';
 	const s3Client = new S3Client({
 		endpoint: s3Endpoint,

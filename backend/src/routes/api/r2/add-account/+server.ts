@@ -51,12 +51,13 @@ export const POST: RequestHandler = async ({ request }) => {
 	const validData = await verifyR2Credentials(bucket, accountId, app_id, app_key);
 	if (validData) {
 		const credentials = {
+			accountId,
 			appId: app_id,
 			appKey: app_key,
 			bucketName: bucket
 		};
-		const provider = StorageProvider.CLOUDFLARE;
-		await addCredentials(authUser.supabaseId, accountId, credentials, provider);
+		const providerId = StorageProvider.CLOUDFLARE;
+		await addCredentials(authUser.userId!, credentials, providerId);
 		return json({ success: 1 });
 	} else {
 		// TODO flag user with attempt count

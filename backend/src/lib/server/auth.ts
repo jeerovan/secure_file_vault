@@ -19,7 +19,7 @@ export interface AuthUser {
  */
 export async function requireAuth(request: Request): Promise<AuthUser> {
 	const authHeader = request.headers.get('Authorization');
-	const device_id = request.headers.get('device_id') || '';
+	const device_uuid = request.headers.get('device_uuid') || '';
 	if (!authHeader?.startsWith('Bearer ')) {
 		throw error(401, 'Missing or invalid Authorization header');
 	}
@@ -46,7 +46,7 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 	return {
 		supabaseId: user.id,
 		email: user.email,
-		deviceUuid: device_id,
+		deviceUuid: device_uuid,
 		userId: userEntry?.[UserKeys.ID]
 	};
 }

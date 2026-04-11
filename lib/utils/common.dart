@@ -762,8 +762,8 @@ Future<String> getDeviceHash() async {
   }
 }
 
-Future<String> getDeviceId() async {
-  return ModelSetting.get(AppString.deviceId.string);
+Future<String> getDeviceUuid() async {
+  return ModelSetting.get(AppString.deviceUuid.string);
 }
 
 // storage permission
