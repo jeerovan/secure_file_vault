@@ -29,7 +29,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	return await addUpdateDevice(authUser.userId!, device_uuid, title, type, notificationId, active);
+	return addUpdateDevice(authUser.userId!, device_uuid, title, type, notificationId, active);
 };
 
 export const DELETE: RequestHandler = async ({ request, url }) => {

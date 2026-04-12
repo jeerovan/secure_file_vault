@@ -169,7 +169,15 @@ export function addUpdateDevice(
 
 			return json({ success: 1 });
 		} else {
-			const result = tx
+			const planData = getUserData(userId);
+			let planExpiresAt = 0;
+			if (planData) {
+				planExpiresAt = planData.planExpiresAt;
+			}
+			const hasPlan = planExpiresAt > Date.now();
+			const deviceLimit = hasPlan ? 10 : 5;
+
+			const activeDeviceRows = tx
 				.select({ count: count() })
 				.from(userDevice)
 				.where(
@@ -180,9 +188,9 @@ export function addUpdateDevice(
 				)
 				.get();
 
-			const activeDevicesCount = result?.count ?? 0;
+			const activeDevicesCount = activeDeviceRows?.count ?? 0;
 
-			if (activeDevicesCount >= 5) {
+			if (activeDevicesCount >= deviceLimit) {
 				return json({ success: 0, message: ErrorCode.DEVICE_LIMIT_REACHED });
 			} else {
 				if (!title || type === undefined) {
