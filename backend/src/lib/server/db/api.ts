@@ -402,7 +402,7 @@ export function saveFileChanges(userId: number, deviceUuid: string, changes: any
 					}
 
 					if (itemCount == 0) {
-						deleteFileFromStorage(userFile);
+						deleteFileFromStorage(userFile, tx);
 					}
 				}
 			} else {
@@ -809,7 +809,8 @@ export function updateStorageUsedSize(
 ) {
 	const newBytes = add
 		? sql`${storage[StorageKeys.USED_BYTES]} + ${bytes}`
-		: sql`${storage[StorageKeys.USED_BYTES]} - ${bytes}`;
+		: sql`MAX(0, ${storage[StorageKeys.USED_BYTES]} - ${bytes})`;
+
 	dbOrTx
 		.update(storage)
 		.set({
@@ -930,7 +931,8 @@ export function resetUserFilePart(
 			[PartKeys.NONCE]: null,
 			[PartKeys.JSON]: {},
 			[PartKeys.CLIENT_UPDATED_AT]: Date.now(),
-			[PartKeys.DELETED]: 1
+			[PartKeys.DELETED]: 1,
+			[PartKeys.UPLOADED]: 0
 		})
 		.where(
 			and(
