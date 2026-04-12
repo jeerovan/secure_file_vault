@@ -37,7 +37,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.NO_DATA });
 	}
 	const fileId = fileRow[FileKeys.ID];
-	const tempStorage = await getTempStorage(authUser.userId!, fileId);
+	const tempStorage = getTempStorage(authUser.userId!, fileId);
 	if (tempStorage) {
 		return json({
 			success: 1,
@@ -47,14 +47,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		});
 	} else {
-		const storage = await getOptimalStorage(authUser.userId!, file_size);
+		const storage = getOptimalStorage(authUser.userId!, file_size);
 		if (storage) {
 			const credentialId = storage[StorageKeys.CREDENTIAL_ID];
 			const credential = await getCredentials(credentialId);
 			if (credential) {
 				const providerId = credential[CredentialKeys.PROVIDER_ID];
 				const storageId = storage[StorageKeys.ID];
-				await addTempStorage(authUser.userId!, fileId, storageId, file_size, providerId);
+				addTempStorage(authUser.userId!, fileId, storageId, file_size, providerId);
 				return json({ success: 1, data: { provider_id: providerId, storage_id: storageId } });
 			} else {
 				return json({ success: 0, message: ErrorCode.NO_STORAGE });

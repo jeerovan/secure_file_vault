@@ -13,7 +13,7 @@ import {
 } from './keys';
 
 /* -- Keys --
-  DEVICE_ID to track Made changes by, changes on logout->login
+  DEVICE_ID to track Made changes by, it changes on logout->login
 	DEVICE_HASH for a user for its particular device, fixed, wont change, derived from user key
 */
 export const provider = sqliteTable('provider', {

@@ -10,8 +10,9 @@ import {
 	updateStorageUsedSize
 } from './db/api';
 import { CredentialKeys, FileKeys, PartKeys, StorageProvider, UserKeys } from './db/keys';
+import { db } from './db';
 
-export async function deleteFileFromStorage(fileRow: any) {
+export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 	const parts = fileRow[FileKeys.PARTS];
 	const partNumbers = Array.from({ length: parts }, (_, i) => i + 1);
 	const userId = fileRow[FileKeys.USER_ID];
@@ -19,16 +20,15 @@ export async function deleteFileFromStorage(fileRow: any) {
 	const providerId = fileRow[FileKeys.PROVIDER_ID];
 	const storageId = fileRow[FileKeys.STORAGE_ID];
 	const fileHash = fileRow[FileKeys.FILE_HASH];
-	const userRow = await getUser(userId);
+	const userRow = getUser(userId, dbOrTx);
 	if (storageId == null || userRow == undefined) return;
-	const credential = await getCredentialByStorageId(userId, storageId);
+	const credential = getCredentialByStorageId(userId, storageId, dbOrTx);
 	const supabaseId = userRow[UserKeys.SUPABASE_ID];
 	let allRemoved = true;
 	for (const index in partNumbers) {
 		const partNumber = partNumbers[index];
-		const partKey = `${supabaseId}_${fileHash}_${partNumber}`;
 		const file_name = `${supabaseId}/${fileHash}_${partNumber}`;
-		const filePart = await getUserFilePart(userId, fileRow[FileKeys.ID], partNumber);
+		const filePart = getUserFilePart(userId, fileRow[FileKeys.ID], partNumber, dbOrTx);
 		if (filePart && filePart[PartKeys.PART_SIZE] > 0) {
 			if (providerId == StorageProvider.FIFE || providerId == StorageProvider.BACKBLAZE) {
 				const partData = filePart[PartKeys.JSON];
@@ -46,11 +46,11 @@ export async function deleteFileFromStorage(fileRow: any) {
 				});
 				const result = await response.json();
 				if (result['success'] == 1) {
-					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false, dbOrTx);
 					await resetUserFilePart(userId, fileId, partNumber);
 				} else if (result['message'] == 'file_not_found') {
-					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
-					await resetUserFilePart(userId, fileId, partNumber);
+					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					resetUserFilePart(userId, fileId, partNumber, dbOrTx);
 				} else {
 					allRemoved = false;
 				}
@@ -77,8 +77,8 @@ export async function deleteFileFromStorage(fileRow: any) {
 				});
 				try {
 					await s3Client.send(command);
-					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
-					await resetUserFilePart(userId, fileId, partNumber);
+					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false, dbOrTx);
+					resetUserFilePart(userId, fileId, partNumber, dbOrTx);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -107,8 +107,8 @@ export async function deleteFileFromStorage(fileRow: any) {
 				});
 				try {
 					await s3Client.send(command);
-					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
-					await resetUserFilePart(userId, fileId, partNumber);
+					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false, dbOrTx);
+					resetUserFilePart(userId, fileId, partNumber, dbOrTx);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -136,8 +136,8 @@ export async function deleteFileFromStorage(fileRow: any) {
 				});
 				try {
 					await s3Client.send(command);
-					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
-					await resetUserFilePart(userId, fileId, partNumber);
+					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false, dbOrTx);
+					resetUserFilePart(userId, fileId, partNumber, dbOrTx);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -146,6 +146,6 @@ export async function deleteFileFromStorage(fileRow: any) {
 		}
 	}
 	if (allRemoved) {
-		await resetUserFileByHash(userId, fileHash);
+		resetUserFileByHash(userId, fileHash, dbOrTx);
 	}
 }

@@ -10,6 +10,7 @@ import {
 	updateCredentials
 } from './db/api';
 import { CredentialKeys, StorageProvider } from './db/keys';
+import { db } from './db';
 
 export async function authorize(appId: string, appKey: string) {
 	let data;
@@ -64,12 +65,12 @@ export async function addAccount(userId: number, appId: string, appKey: string, 
 		s3ApiUrl
 	};
 	const providerId = StorageProvider.BACKBLAZE;
-	await addCredentials(userId, credentials, providerId);
+	addCredentials(userId, credentials, providerId);
 	return json({ success: 1 });
 }
 
-export async function authenticate(userId: number, storageId: number) {
-	const credential = await getCredentialByStorageId(userId, storageId);
+export async function authenticate(userId: number, storageId: number, dbOrTx: any = db) {
+	const credential = getCredentialByStorageId(userId, storageId, dbOrTx);
 
 	if (!credential) {
 		// TODO user should be flagged here
@@ -131,7 +132,7 @@ export async function authenticate(userId: number, storageId: number) {
 	}
 
 	// 4. Mark as updating (Atomic lock to prevent race conditions)
-	const lockResult = await markCredentialsUpdating(credential[CredentialKeys.ID]);
+	const lockResult = markCredentialsUpdating(credential[CredentialKeys.ID]);
 
 	// If no rows are returned, another process grabbed the lock right before us
 	if (lockResult.length === 0) {
@@ -158,7 +159,7 @@ export async function authenticate(userId: number, storageId: number) {
 			downloadUrl,
 			s3ApiUrl
 		};
-		await updateCredentials(credential[CredentialKeys.ID], credentials);
+		updateCredentials(credential[CredentialKeys.ID], credentials);
 
 		// Return the newly fetched credentials alongside the existing bucketId
 		return {
@@ -172,7 +173,7 @@ export async function authenticate(userId: number, storageId: number) {
 			s3ApiUrl
 		};
 	} else {
-		await markCredentialsUpdated(credential[CredentialKeys.ID]);
+		markCredentialsUpdated(credential[CredentialKeys.ID]);
 		return existingData;
 	}
 }
