@@ -1,8 +1,10 @@
 // scripts/seed.ts
 import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
-import * as schema from '../src/lib/server/db/schema'; // Path relative to the scripts folder
+//import { drizzle } from 'drizzle-orm/better-sqlite3';
+//import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
+import * as schema from '../src/lib/server/db/schema';
 import { ProviderKeys, UserKeys } from '../src/lib/server/db/keys';
 
 const main = async () => {
@@ -13,8 +15,10 @@ const main = async () => {
 	}
 
 	// Initialize the SQLite connection and Drizzle ORM
-	const sqlite = new Database(dbUrl);
-	const db = drizzle(sqlite, { schema });
+	//const client = new Database(dbUrl);
+
+	const client = postgres(dbUrl);
+	const db = drizzle(client, { schema });
 
 	console.log('🌱 Seeding database...');
 

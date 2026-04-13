@@ -25,6 +25,7 @@ export const provider = pgTable('provider', {
 	[ProviderKeys.SERVER_UPDATED_AT]: bigint(ProviderKeys.SERVER_UPDATED_AT, { mode: 'number' })
 		.$defaultFn(() => Date.now())
 		.$onUpdate(() => Date.now()),
+	[ProviderKeys.TITLE]: text(ProviderKeys.TITLE).notNull(),
 	[ProviderKeys.FREE_BYTES]: bigint(ProviderKeys.FREE_BYTES, { mode: 'number' }).notNull(),
 	[ProviderKeys.PRIORITY]: integer(ProviderKeys.PRIORITY).notNull()
 });
