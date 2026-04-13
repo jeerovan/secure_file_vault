@@ -1,10 +1,7 @@
 import { json } from '@sveltejs/kit';
 import {
 	addCredentials,
-	getUserCredential,
-	getCredentials,
 	getCredentialByStorageId,
-	getStorage,
 	markCredentialsUpdated,
 	markCredentialsUpdating,
 	updateCredentials
@@ -65,7 +62,7 @@ export async function addAccount(userId: number, appId: string, appKey: string, 
 		s3ApiUrl
 	};
 	const providerId = StorageProvider.BACKBLAZE;
-	addCredentials(userId, credentials, providerId);
+	await addCredentials(userId, credentials, providerId);
 	return json({ success: 1 });
 }
 

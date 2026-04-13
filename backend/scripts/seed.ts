@@ -11,9 +11,6 @@ const main = async () => {
 		throw new Error('DATABASE_URL is not defined in the .env file');
 	}
 
-	// Initialize the SQLite connection and Drizzle ORM
-	//const client = new Database(dbUrl);
-
 	const client = postgres(dbUrl);
 	const db = drizzle(client, { schema });
 
