@@ -7,7 +7,9 @@ import { addUser, getProviders, getUserStorage } from '$lib/server/db/api';
 export const GET: RequestHandler = async ({ request }) => {
 	if (request.headers.has('Authorization')) {
 		const authUser = await requireAuth(request);
-
+		if (!authUser.authorized) {
+			return json({ success: 0, message: authUser.message });
+		}
 		const result = await getUserStorage(authUser.userId!);
 
 		if (!result) {

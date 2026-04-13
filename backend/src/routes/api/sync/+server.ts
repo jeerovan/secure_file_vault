@@ -12,6 +12,12 @@ import { ErrorCode } from '$lib/server/db/keys';
 
 export const GET: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
+	if (!authUser.authorized) {
+		return json({ success: 0, message: authUser.message });
+	}
+	if (!authUser.deviceUuid) {
+		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
+	}
 	const deviceUuid = authUser.deviceUuid;
 	// Fetch query parameters using url.searchParams
 	const lastProfilesTS = parseInt(url.searchParams.get('last_profile_ts') || '0', 10);
@@ -36,6 +42,9 @@ export const GET: RequestHandler = async ({ request, url }) => {
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
+	if (!authUser.authorized) {
+		return json({ success: 0, message: authUser.message });
+	}
 	const userId = authUser.userId!;
 	const deviceUuid = authUser.deviceUuid;
 	if (!deviceUuid) {

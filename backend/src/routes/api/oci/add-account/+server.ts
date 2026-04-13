@@ -37,6 +37,9 @@ async function verifyR2Credentials(
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
+	if (!authUser.authorized) {
+		return json({ success: 0, message: authUser.message });
+	}
 	let body;
 
 	try {

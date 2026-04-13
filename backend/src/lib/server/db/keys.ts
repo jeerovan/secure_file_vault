@@ -136,7 +136,8 @@ export const ErrorCode = {
 	MULTIPLE_BUCKETS: 10,
 	NAMEPREFIX_EXIST: 11,
 	BUCKET_INFO: 12,
-	NO_DATA: 13
+	NO_DATA: 13,
+	UNAUTHORIZED: 14
 } as const;
 
 export const StorageProvider = {

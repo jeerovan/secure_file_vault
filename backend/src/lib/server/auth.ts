@@ -3,13 +3,15 @@ import { error } from '@sveltejs/kit';
 import { SUPABASE_URL, SUPABASE_KEY } from '$env/static/private';
 import { db } from './db';
 import { getUserBySupabaseId } from './db/api';
-import { UserKeys } from './db/keys';
+import { ErrorCode, UserKeys } from './db/keys';
 
 export interface AuthUser {
+	authorized: boolean;
 	userId?: number;
-	supabaseId: string;
-	email: string;
-	deviceUuid: string;
+	supabaseId?: string;
+	email?: string;
+	deviceUuid?: string;
+	message?: number;
 }
 
 /**
@@ -19,9 +21,9 @@ export interface AuthUser {
  */
 export async function requireAuth(request: Request): Promise<AuthUser> {
 	const authHeader = request.headers.get('Authorization');
-	const device_uuid = request.headers.get('device_uuid') || '';
+	const device_uuid = request.headers.get('device_uuid') || undefined;
 	if (!authHeader?.startsWith('Bearer ')) {
-		throw error(401, 'Missing or invalid Authorization header');
+		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
 	}
 
 	const token = authHeader.split(' ')[1];
@@ -34,16 +36,17 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 	} = await supabase.auth.getUser(token);
 
 	if (authError || !user) {
-		throw error(401, 'Invalid or expired token');
+		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
 	}
 
 	if (!user.email) {
-		throw error(400, 'Authenticated user has no email');
+		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
 	}
 
 	const userEntry = await getUserBySupabaseId(user.id);
 
 	return {
+		authorized: true,
 		supabaseId: user.id,
 		email: user.email,
 		deviceUuid: device_uuid,

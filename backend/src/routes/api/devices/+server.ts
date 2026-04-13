@@ -7,6 +7,9 @@ import { ErrorCode } from '$lib/server/db/keys';
 
 export const GET: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
+	if (!authUser.authorized) {
+		return json({ success: 0, message: authUser.message });
+	}
 	const deviceUuid = url.searchParams.get('device_uuid') || undefined;
 	const result = await getUserDevices(authUser.userId!, deviceUuid);
 
@@ -15,6 +18,9 @@ export const GET: RequestHandler = async ({ request, url }) => {
 
 export const POST: RequestHandler = async ({ request }) => {
 	const authUser = await requireAuth(request);
+	if (!authUser.authorized) {
+		return json({ success: 0, message: authUser.message });
+	}
 	let body;
 
 	try {
@@ -34,6 +40,9 @@ export const POST: RequestHandler = async ({ request }) => {
 
 export const DELETE: RequestHandler = async ({ request, url }) => {
 	const authUser = await requireAuth(request);
+	if (!authUser.authorized) {
+		return json({ success: 0, message: authUser.message });
+	}
 
 	let deviceUuid = url.searchParams.get('device_uuid');
 
