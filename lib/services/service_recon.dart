@@ -91,10 +91,15 @@ class ReconciliationService {
           );
         } else {
           // Check if the file was modified based on hash
-          bool fileModified = await _isFileModified(childPath, dbChild);
+          String fsHash = await _computeFileHash(childPath);
+          bool fileModified = dbChild.fileHash != fsHash;
+
           if (fileModified) {
             await ModelItem.setScanState(dbChild.id, ScanState.modified.value);
-            await _handleModifiedFile(dbChild, fsChild, childPath, timestamp);
+            await _handleModifiedFile(
+                dbChild, fsChild, childPath, fsHash, timestamp);
+          } else {
+            await checkCreateUploadTask(dbChild.id, fsPath, fsHash);
           }
         }
       } else {
@@ -307,13 +312,8 @@ class ReconciliationService {
 
   // --- Change Handlers ---
 
-  Future<void> _handleModifiedFile(
-      ModelItem dbItem, FSItem fsItem, String fsPath, int timestamp) async {
-    final newHash = await _computeFileHash(fsPath);
-    if (dbItem.fileHash == newHash) {
-      return; // Only metadata changed, no content change
-    }
-
+  Future<void> _handleModifiedFile(ModelItem dbItem, FSItem fsItem,
+      String fsPath, String fsHash, int timestamp) async {
     // decrement reference count for old file
     ModelFile? oldModelFile = await ModelFile.get(dbItem.fileHash!);
     if (oldModelFile != null) {
@@ -323,12 +323,12 @@ class ReconciliationService {
     }
 
     // update item
-    dbItem.fileHash = newHash;
+    dbItem.fileHash = fsHash;
     dbItem.size = fsItem.size!;
     dbItem.archivedAt = 0;
     await dbItem.update(["file_hash", "size", "archived_at"]);
 
-    checkCreateUploadTask(dbItem.id, fsPath, newHash);
+    checkCreateUploadTask(dbItem.id, fsPath, fsHash);
     logger.info('  ~ Modified: ${fsItem.name}');
   }
 
@@ -431,11 +431,6 @@ class ReconciliationService {
     final intersection = set1.intersection(set2).length;
     final union = set1.union(set2).length;
     return union == 0 ? 0 : intersection / union;
-  }
-
-  Future<bool> _isFileModified(String fsPath, ModelItem dbItem) async {
-    String fsHash = await _computeFileHash(fsPath);
-    return dbItem.fileHash != fsHash;
   }
 
   Future<String> _computeFileHash(String path) async {
