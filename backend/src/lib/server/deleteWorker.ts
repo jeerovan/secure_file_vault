@@ -20,15 +20,15 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 	const providerId = fileRow[FileKeys.PROVIDER_ID];
 	const storageId = fileRow[FileKeys.STORAGE_ID];
 	const fileHash = fileRow[FileKeys.FILE_HASH];
-	const userRow = getUser(userId, dbOrTx);
+	const userRow = await getUser(userId, dbOrTx);
 	if (storageId == null || userRow == undefined) return;
-	const credential = getCredentialByStorageId(userId, storageId, dbOrTx);
+	const credential = await getCredentialByStorageId(userId, storageId, dbOrTx);
 	const supabaseId = userRow[UserKeys.SUPABASE_ID];
 	let allRemoved = true;
 	for (const index in partNumbers) {
 		const partNumber = partNumbers[index];
 		const file_name = `${supabaseId}/${fileHash}_${partNumber}`;
-		const filePart = getUserFilePart(userId, fileRow[FileKeys.ID], partNumber, dbOrTx);
+		const filePart = await getUserFilePart(userId, fileRow[FileKeys.ID], partNumber, dbOrTx);
 		if (filePart && filePart[PartKeys.PART_SIZE] > 0) {
 			if (providerId == StorageProvider.FIFE || providerId == StorageProvider.BACKBLAZE) {
 				const partData = filePart[PartKeys.JSON];
@@ -46,11 +46,17 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 				});
 				const result = await response.json();
 				if (result['success'] == 1) {
-					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false, dbOrTx);
+					await updateStorageUsedSize(
+						storageId,
+						userId,
+						filePart[PartKeys.PART_SIZE],
+						false,
+						dbOrTx
+					);
 					await resetUserFilePart(userId, fileId, partNumber);
 				} else if (result['message'] == 'file_not_found') {
-					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
-					resetUserFilePart(userId, fileId, partNumber, dbOrTx);
+					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetUserFilePart(userId, fileId, partNumber, dbOrTx);
 				} else {
 					allRemoved = false;
 				}
@@ -77,8 +83,14 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 				});
 				try {
 					await s3Client.send(command);
-					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false, dbOrTx);
-					resetUserFilePart(userId, fileId, partNumber, dbOrTx);
+					await updateStorageUsedSize(
+						storageId,
+						userId,
+						filePart[PartKeys.PART_SIZE],
+						false,
+						dbOrTx
+					);
+					await resetUserFilePart(userId, fileId, partNumber, dbOrTx);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -107,8 +119,14 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 				});
 				try {
 					await s3Client.send(command);
-					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false, dbOrTx);
-					resetUserFilePart(userId, fileId, partNumber, dbOrTx);
+					await updateStorageUsedSize(
+						storageId,
+						userId,
+						filePart[PartKeys.PART_SIZE],
+						false,
+						dbOrTx
+					);
+					await resetUserFilePart(userId, fileId, partNumber, dbOrTx);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -136,8 +154,14 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 				});
 				try {
 					await s3Client.send(command);
-					updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false, dbOrTx);
-					resetUserFilePart(userId, fileId, partNumber, dbOrTx);
+					await updateStorageUsedSize(
+						storageId,
+						userId,
+						filePart[PartKeys.PART_SIZE],
+						false,
+						dbOrTx
+					);
+					await resetUserFilePart(userId, fileId, partNumber, dbOrTx);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -146,6 +170,6 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 		}
 	}
 	if (allRemoved) {
-		resetUserFileByHash(userId, fileHash, dbOrTx);
+		await resetUserFileByHash(userId, fileHash, dbOrTx);
 	}
 }

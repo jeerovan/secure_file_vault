@@ -70,7 +70,7 @@ export async function addAccount(userId: number, appId: string, appKey: string, 
 }
 
 export async function authenticate(userId: number, storageId: number, dbOrTx: any = db) {
-	const credential = getCredentialByStorageId(userId, storageId, dbOrTx);
+	const credential = await getCredentialByStorageId(userId, storageId, dbOrTx);
 
 	if (!credential) {
 		// TODO user should be flagged here
@@ -132,7 +132,7 @@ export async function authenticate(userId: number, storageId: number, dbOrTx: an
 	}
 
 	// 4. Mark as updating (Atomic lock to prevent race conditions)
-	const lockResult = markCredentialsUpdating(credential[CredentialKeys.ID]);
+	const lockResult = await markCredentialsUpdating(credential[CredentialKeys.ID]);
 
 	// If no rows are returned, another process grabbed the lock right before us
 	if (lockResult.length === 0) {
@@ -159,7 +159,7 @@ export async function authenticate(userId: number, storageId: number, dbOrTx: an
 			downloadUrl,
 			s3ApiUrl
 		};
-		updateCredentials(credential[CredentialKeys.ID], credentials);
+		await updateCredentials(credential[CredentialKeys.ID], credentials);
 
 		// Return the newly fetched credentials alongside the existing bucketId
 		return {
@@ -173,7 +173,7 @@ export async function authenticate(userId: number, storageId: number, dbOrTx: an
 			s3ApiUrl
 		};
 	} else {
-		markCredentialsUpdated(credential[CredentialKeys.ID]);
+		await markCredentialsUpdated(credential[CredentialKeys.ID]);
 		return existingData;
 	}
 }
