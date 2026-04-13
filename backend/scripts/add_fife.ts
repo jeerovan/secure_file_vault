@@ -3,8 +3,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '../src/lib/server/db/schema';
 import { CredentialKeys, StorageProvider, UserKeys } from '../src/lib/server/db/keys';
-import { authorize } from '../src/lib/server/backblaze';
-import { getUserBySupabaseId } from '../src/lib/server/db/api';
+import { eq } from 'drizzle-orm';
 
 const main = async (appId: string, appKey: string) => {
 	const dbUrl = process.env.DATABASE_URL;
@@ -17,7 +16,12 @@ const main = async (appId: string, appKey: string) => {
 	const db = drizzle(client, { schema });
 
 	try {
-		const { message, data } = await authorize(appId, appKey);
+		const B2_API_URL = 'https://api.backblazeb2.com/b2api/v4';
+		const authResponse = await fetch(`${B2_API_URL}/b2_authorize_account`, {
+			headers: { Authorization: `Basic ${btoa(`${appId}:${appKey}`)}` }
+		});
+
+		const data = await authResponse.json();
 		const {
 			accountId,
 			authorizationToken,
@@ -44,7 +48,11 @@ const main = async (appId: string, appKey: string) => {
 			s3ApiUrl
 		};
 		const providerId = StorageProvider.FIFE;
-		const fifeUser = await getUserBySupabaseId('fife');
+		const [fifeUser] = await db
+			.select()
+			.from(schema.user)
+			.where(eq(schema.user[UserKeys.SUPABASE_ID], 'fife'))
+			.limit(1);
 		await db.insert(schema.credential).values({
 			[CredentialKeys.USER_ID]: fifeUser[UserKeys.ID],
 			[CredentialKeys.PROVIDER_ID]: providerId,
