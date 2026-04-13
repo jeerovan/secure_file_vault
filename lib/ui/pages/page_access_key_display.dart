@@ -17,10 +17,8 @@ import 'package:bip39/bip39.dart' as bip39;
 import '../../utils/common.dart';
 
 class PageAccessKey extends StatefulWidget {
-  final Function(PageType, bool, PageParams)? setShowHidePage;
   const PageAccessKey({
     super.key,
-    this.setShowHidePage,
   });
 
   @override

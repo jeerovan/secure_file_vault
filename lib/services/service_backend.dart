@@ -100,6 +100,58 @@ class BackendApi {
       if (decoded is Map) {
         final map = Map<String, dynamic>.from(decoded);
         response = map;
+        if (response["success"] == 0) {
+          String message = response["message"].toString();
+          String mappedMessage = "Unknown";
+          switch (message) {
+            case "1":
+              mappedMessage = "No User";
+              break;
+            case "2":
+              mappedMessage = "Invalid JSON";
+              break;
+            case "3":
+              mappedMessage = "Missing Fields";
+              break;
+            case "4":
+              mappedMessage = "No Storage";
+              break;
+            case "5":
+              mappedMessage = "Invalid Credentials";
+              break;
+            case "6":
+              mappedMessage = "Credentials Incapable";
+              break;
+            case "7":
+              mappedMessage = "Device Limit Reached";
+              break;
+            case "8":
+              mappedMessage = "No Device";
+              break;
+            case "9":
+              mappedMessage = "No Buckets";
+              break;
+            case "10":
+              mappedMessage = "Multiple Buckets";
+              break;
+            case "11":
+              mappedMessage = "Nameprefix Exist";
+              break;
+            case "12":
+              mappedMessage = "Bucket Info";
+              break;
+            case "13":
+              mappedMessage = "No Data";
+              break;
+            case "14":
+              mappedMessage = "Unauthorized";
+              break;
+            default:
+              mappedMessage = "Unknown Error";
+              break;
+          }
+          logger.error(mappedMessage);
+        }
       } else {
         response = {
           'success': 0,

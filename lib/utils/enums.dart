@@ -49,30 +49,6 @@ extension TablesExtension on Tables {
   }
 }
 
-enum PageType {
-  settings,
-  categories,
-  addEditCategory,
-  addEditGroup,
-  items,
-  editNote,
-  archive,
-  starred,
-  search,
-  mediaViewer,
-  userTask,
-  planStatus,
-  planSubscribe,
-  signIn,
-  selectKeyType,
-  accessKey,
-  accessKeyInput,
-  accessKeyCreate,
-  passwordInput,
-  passwordCreate,
-  devices,
-}
-
 enum ExecutionStatus {
   failure,
   success,
@@ -95,14 +71,6 @@ extension ExecutionModeExtension on ExecutionMode {
         return "FcmBackground";
     }
   }
-}
-
-enum AppTask {
-  registerDevice,
-  checkEncryptionKeys,
-  pushLocalContent,
-  checkCloudSync,
-  signOut,
 }
 
 enum AppString {

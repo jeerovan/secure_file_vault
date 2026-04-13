@@ -16,8 +16,7 @@ import '../../utils/utils_crypto.dart';
 import '../../utils/enums.dart';
 
 class PageAccessKeyDecode extends StatefulWidget {
-  final Function(PageType, bool, PageParams)? setShowHidePage;
-  const PageAccessKeyDecode({super.key, this.setShowHidePage});
+  const PageAccessKeyDecode({super.key});
 
   @override
   State<PageAccessKeyDecode> createState() => _PageAccessKeyDecodeState();

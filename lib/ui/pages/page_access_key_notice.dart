@@ -13,10 +13,7 @@ import '../../storage/storage_secure.dart';
 import '../../utils/utils_crypto.dart';
 
 class PageAccessKeyNotice extends StatefulWidget {
-  final bool runningOnDesktop;
-  final Function(PageType, bool, PageParams)? setShowHidePage;
-  const PageAccessKeyNotice(
-      {super.key, required this.runningOnDesktop, this.setShowHidePage});
+  const PageAccessKeyNotice({super.key});
 
   @override
   State<PageAccessKeyNotice> createState() => _PageAccessKeyNoticeState();
@@ -85,15 +82,8 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text('Important'),
-          leading: widget.runningOnDesktop
-              ? BackButton(
-                  onPressed: () {
-                    widget.setShowHidePage!(
-                        PageType.accessKeyCreate, false, PageParams());
-                  },
-                )
-              : null),
+        title: Text('Important'),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(

@@ -652,26 +652,6 @@ class ExecutionResult<T> {
   }
 }
 
-class PageParams {
-  String? id;
-  bool? isAuthenticated;
-  int? mediaIndexInGroup;
-  int? mediaCountInGroup;
-  AppTask? appTask;
-  Map<String, dynamic>? cipherData;
-  bool? recreatePassword;
-
-  PageParams({
-    this.id,
-    this.isAuthenticated,
-    this.mediaCountInGroup,
-    this.mediaIndexInGroup,
-    this.appTask,
-    this.cipherData,
-    this.recreatePassword,
-  });
-}
-
 /* hexadecimal from/to conversions */
 /// Converts a list of bytes to a hex string
 String bytesToHex(List<int> bytes) {
