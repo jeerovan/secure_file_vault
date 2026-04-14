@@ -1,4 +1,5 @@
 import 'package:file_vault_bb/ui/pages/page_devices.dart';
+import 'package:file_vault_bb/ui/pages/page_file_info.dart';
 import 'package:file_vault_bb/ui/pages/page_storage_providers.dart';
 import 'package:file_vault_bb/ui/pages/page_trash.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -276,7 +277,17 @@ class _FilePaneState extends State<FilePane> {
     _cancelMultiSelect();
   }
 
-  Future<void> showInfo() async {}
+  Future<void> showInfo() async {
+    final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
+    if (selectedItems.length > 1) {
+      return;
+    }
+    ModelItem item = selectedItems.first;
+    if (!item.isFolder) {
+      Navigator.of(context)
+          .push(AnimatedPageRoute(child: PageFileInfo(item: item)));
+    }
+  }
 
   Future<void> signout() async {
     context.read<AppSetupState>().logout();
@@ -320,17 +331,17 @@ class _FilePaneState extends State<FilePane> {
                 IconButton(
                   icon: const Icon(LucideIcons.info),
                   tooltip: 'Info',
-                  onPressed: showInfo, // Ensure showInfo is implemented
+                  onPressed: showInfo,
                 ),
               IconButton(
                 icon: const Icon(LucideIcons.downloadCloud),
                 tooltip: 'Download',
-                onPressed: downloadItems, // Ensure downloadItems is implemented
+                onPressed: downloadItems,
               ),
               IconButton(
                 icon: const Icon(LucideIcons.archive),
                 tooltip: 'Archive',
-                onPressed: trashItems, // Ensure trashItems is implemented
+                onPressed: trashItems,
               ),
             ],
           );

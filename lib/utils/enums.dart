@@ -266,6 +266,25 @@ extension StorageProviderExtension on StorageProvider {
     }
   }
 
+  static String stringFromInt(int value) {
+    switch (value) {
+      case 0:
+        return "Unknown";
+      case 1:
+        return "FiFe";
+      case 2:
+        return "BackBlaze B2";
+      case 3:
+        return "CloudFlare R2";
+      case 4:
+        return "Oracle Object Storage";
+      case 5:
+        return "IDrive E2";
+      default:
+        return "Unknown";
+    }
+  }
+
   static StorageProvider fromValue(int value) {
     switch (value) {
       case 1:
