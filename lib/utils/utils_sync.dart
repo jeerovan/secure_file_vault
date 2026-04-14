@@ -6,6 +6,7 @@ import 'package:file_vault_bb/utils/utils_tasks.dart';
 import '../models/model_change.dart';
 import 'package:flutter/foundation.dart';
 import '../services/service_backend.dart';
+import '../services/service_recon.dart';
 import '../storage/storage_sqlite.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
@@ -19,7 +20,6 @@ import '../utils/utils_crypto.dart';
 import 'package:sodium/sodium_sumo.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:synchronized/synchronized.dart';
 
 class SyncUtils {
   // Singleton setup
@@ -28,69 +28,83 @@ class SyncUtils {
   SyncUtils._internal();
 
   Timer? _debounceTimer;
-  Timer? _processTimer;
+  Timer? _syncTimer;
 
   bool _isSyncing = false;
   bool _hasPendingChanges = false;
 
-  // Use a Lock for concurrency safety
-  final Lock _lock = Lock();
+  static final logger = AppLogger(prefixes: ["Sync"]);
 
-  static final logger = AppLogger(prefixes: [
-    "Sync",
-  ]);
-  static final String processRunningAt = "sync_running_at";
-
-  // Static method to trigger change detection
-  static void waitAndSyncChanges({bool inBackground = false}) {
-    logger.info("wait and sync");
-    _instance._handleChange(inBackground);
+  void startAutoSync() {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
+      syncRootFolders(inBackground: false);
+    });
   }
 
-  void _handleChange(
-    bool inBackground,
-  ) {
+  void stopAutoSync() {
+    _syncTimer?.cancel();
+    _syncTimer = null;
+  }
+
+  // Pass inBackground flag to determine if we should await everything
+  Future<void> syncRootFolders({bool inBackground = false}) async {
+    List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
+    for (ModelItem syncFolder in syncFolders) {
+      await ReconciliationService().reconcile(syncFolder.id);
+    }
+
+    // If in background, await directly to prevent isolate termination
+    if (inBackground) {
+      await triggerSync(inBackground: true);
+    } else {
+      waitAndSyncChanges();
+    }
+  }
+
+  static void waitAndSyncChanges() {
+    logger.info("wait and sync (Foreground)");
+    _instance._handleChange();
+  }
+
+  void _handleChange() {
     _hasPendingChanges = true;
-    _debounceTimer?.cancel(); // Cancel any ongoing debounce
-    _debounceTimer = Timer(Duration(seconds: 2), () {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(seconds: 2), () {
       if (_hasPendingChanges) {
         _hasPendingChanges = false;
-        triggerSync(inBackground);
+        triggerSync(inBackground: false); // Fire and forget for foreground
       }
     });
   }
 
-  Future<void> triggerSync(
-    bool inBackground,
-  ) async {
-    await _lock.synchronized(() async {
-      if (_isSyncing) {
-        logger.warning("Sync already in progress, skipping.");
-        return;
-      }
-      try {
-        _isSyncing = true;
+  Future<void> triggerSync({required bool inBackground}) async {
+    // Drop the request if a sync is already actively running
+    if (_isSyncing) {
+      logger.warning("Sync already in progress, skipping.");
+      return;
+    }
 
-        String mode = inBackground ? "Background" : "Foreground";
-        logger.info("sync request from:$mode");
-        bool canSync = await SyncUtils.canSync();
-        if (!canSync) {
-          logger.info("Can not sync");
-          return;
-        }
-        bool hasInternet = await InternetConnection().hasInternetAccess;
-        if (!hasInternet) {
-          logger.info("No internet");
-          return;
-        }
-        await _performSyncOperations(inBackground);
-      } catch (e, stack) {
-        logger.error("Sync failed", error: e, stackTrace: stack);
-      } finally {
-        // Always release the flag, even if code crashes
-        _isSyncing = false;
-      }
-    });
+    try {
+      _isSyncing = true;
+      String mode = inBackground ? "Background" : "Foreground";
+      logger.info("sync request from: $mode");
+
+      bool canSync = await SyncUtils.canSync();
+      if (!canSync) return;
+
+      // Note: Workmanager already ensures network connectivity via constraints on Android
+      bool hasInternet = await InternetConnection().hasInternetAccess;
+      if (!hasInternet) return;
+
+      await _performSyncOperations(inBackground);
+    } catch (e, stack) {
+      logger.error("Sync failed", error: e, stackTrace: stack);
+      // If this is a background task, you might want to rethrow so Workmanager can retry
+      if (inBackground) rethrow;
+    } finally {
+      _isSyncing = false;
+    }
   }
 
   Future<void> _performSyncOperations(bool inBackground) async {
@@ -106,8 +120,6 @@ class SyncUtils {
     } catch (e, s) {
       logger.error("⚠ Sync failed", error: e.toString(), stackTrace: s);
     }
-    _processTimer?.cancel();
-    _processTimer = null;
     logger.info("$mode|Sync|------------------ENDED----------------");
   }
 

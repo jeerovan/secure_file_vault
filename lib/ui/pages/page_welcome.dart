@@ -304,7 +304,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            "* Free storage as mentioned on provider's website.",
+            "* Free storage as mentioned on provider's website. Pay-as-you-go with compatible providers.",
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
@@ -358,9 +358,9 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           _buildBenefitItem(
             theme,
             icon: LucideIcons.userCheck,
-            title: "Total Account Control",
+            title: "Pay-as-you-go for storage.",
             description:
-                "Access your encrypted storage using your own direct accounts. No middleman, no data lock-in.",
+                "Keep encrypted storage using your own direct accounts. No middleman, no data lock-in. Pay for used storage only with compatible providers. No more 1TB or 2TB plans.",
           ),
         ],
       ),

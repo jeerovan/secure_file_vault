@@ -5,6 +5,7 @@ import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_device_register.dart';
 import 'package:file_vault_bb/ui/pages/page_welcome.dart';
+import 'package:workmanager/workmanager.dart';
 
 import '../models/model_setting.dart';
 import '../services/service_logger.dart';
@@ -23,12 +24,39 @@ import '../utils/common.dart';
 import '../utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'utils/utils_sync.dart';
 
-final logger = AppLogger(prefixes: ["main"]);
+// Mobile-specific callback - must be top-level function
+@pragma('vm:entry-point')
+void backgroundTaskDispatcher() {
+  Workmanager().executeTask((taskName, inputData) async {
+    WidgetsFlutterBinding.ensureInitialized();
+    try {
+      await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
+      await initializeDependencies(mode: ExecutionMode.appBackground);
+    } catch (e, s) {
+      AppLogger(prefixes: ["Background"])
+          .error("Initialize failed", error: e, stackTrace: s);
+      return Future.value(false);
+    }
+    try {
+      switch (taskName) {
+        case DataSync.syncTaskId:
+          await SyncUtils().syncRootFolders(inBackground: true);
+          break;
+      }
+      return Future.value(true);
+    } catch (e) {
+      return Future.value(false);
+    }
+  });
+}
+
+final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageSqlite.initialize(mode: ExecutionMode.appForeground);
-  await initializeSupabase();
+  await initializeInParallel();
   SecureStorage prefs = SecureStorage();
   runApp(
     MultiProvider(
@@ -43,6 +71,19 @@ Future<void> main() async {
       child: const MyApp(),
     ),
   );
+}
+
+Future<void> initializeInParallel() async {
+  await Future.wait([
+    initializeDependencies(mode: ExecutionMode.appForeground),
+    initializeBackgroundSync()
+  ]);
+}
+
+Future<void> initializeBackgroundSync() async {
+  //initialize background sync
+  await DataSync.initialize();
+  logger.info("initialized datasync");
 }
 
 // --- Main Application Widget ---
@@ -179,5 +220,39 @@ class AppNavigator extends StatelessWidget {
         }
       },
     );
+  }
+}
+
+class DataSync {
+  static const String syncTaskId = 'dataSync';
+  static final logger = AppLogger(prefixes: ["DataSync"]);
+  // Initialize background sync based on platform
+  static Future<void> initialize() async {
+    if (Platform.isAndroid || Platform.isIOS) {
+      await _initializeBackgroundForMobile();
+    } else {
+      // start auto sync
+      SyncUtils().startAutoSync();
+      logger.info("Started autosync");
+    }
+  }
+
+  // Mobile-specific initialization using Workmanager
+  static Future<void> _initializeBackgroundForMobile() async {
+    await Workmanager().initialize(backgroundTaskDispatcher);
+    await Workmanager().registerPeriodicTask(
+      syncTaskId,
+      syncTaskId,
+      frequency: const Duration(minutes: 15),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+        requiresBatteryNotLow: true,
+        requiresStorageNotLow: true,
+      ),
+      existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+      backoffPolicy: BackoffPolicy.linear,
+      backoffPolicyDelay: Duration(minutes: 15),
+    );
+    logger.info("Background Task Registered");
   }
 }

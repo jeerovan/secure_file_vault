@@ -14,13 +14,21 @@ class StorageSqlite {
   static final StorageSqlite instance = StorageSqlite._init();
   static Database? _database;
   static Completer<Database>? _databaseCompleter;
+
+  // Track execution mode to handle background isolate behaviors safely
+  static ExecutionMode _currentMode = ExecutionMode.appForeground;
+
   final logger = AppLogger(prefixes: ["StorageSqlite"]);
   StorageSqlite._init();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    if (_databaseCompleter != null) return _databaseCompleter!.future;
-    _databaseCompleter = Completer();
+
+    if (_databaseCompleter != null) {
+      return _databaseCompleter!.future;
+    }
+
+    _databaseCompleter = Completer<Database>();
     try {
       String dbFileName = "fife.sqlite";
       _database = await _initDB(dbFileName);
@@ -30,7 +38,7 @@ class StorageSqlite {
       _databaseCompleter = null;
       rethrow;
     }
-    return _database!;
+    return _databaseCompleter!.future; // Safely return the future
   }
 
   Future<Database> _initDB(String dbFileName) async {
@@ -40,12 +48,17 @@ class StorageSqlite {
           : await getDbStoragePath();
       final dbPath = join(dbDir, dbFileName);
       logger.info("DbPath:$dbPath");
-      return await openDatabase(dbPath,
-          version: 1,
-          onConfigure: _onConfigure,
-          onCreate: _onCreate,
-          onUpgrade: _onUpgrade,
-          onOpen: _onOpen);
+
+      return await openDatabase(
+        dbPath,
+        version: 1,
+        // CRITICAL: Prevent isolate clashes. Use separate native instances in background.
+        singleInstance: _currentMode == ExecutionMode.appForeground,
+        onConfigure: _onConfigure,
+        onCreate: _onCreate,
+        onUpgrade: _onUpgrade,
+        onOpen: _onOpen,
+      );
     } catch (e, stackTrace) {
       logger.error("Failed to initialize database",
           error: e, stackTrace: stackTrace);
@@ -54,42 +67,63 @@ class StorageSqlite {
   }
 
   Future<void> ensureInitialized() async {
-    await database; // Forces lazy initialization if not already done
+    await database;
   }
 
   static Future<void> initialize(
       {ExecutionMode mode = ExecutionMode.appForeground}) async {
+    _currentMode = mode; // Store mode for the lazy initializer
     bool runningOnMobile = Platform.isIOS || Platform.isAndroid;
+
     if (!runningOnMobile) {
-      // Initialize sqflite for FFI (non-mobile platforms)
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }
+
     await instance.ensureInitialized();
     List<Map<String, dynamic>> keyValuePairs =
         await instance.getAll(Tables.settings.string);
+
     ModelSetting.settingJson = {
       for (var pair in keyValuePairs) pair['id']: pair['value']
     };
+
     AppLogger(prefixes: [mode.string]).info("Initialized SqliteDB");
   }
 
   Future close() async {
-    final db = await instance.database;
-    await db.close();
-    _database = null;
-    _databaseCompleter = null;
+    // Guard: Never close the DB from a background isolate.
+    // Doing so would kill the shared native connection for the foreground app.
+    if (_currentMode == ExecutionMode.appBackground) {
+      logger.warning(
+          "Ignored close() call from background isolate to protect foreground UI.");
+      return;
+    }
+
+    if (_database != null) {
+      await _database!.close();
+      _database = null;
+      _databaseCompleter = null;
+    }
   }
 
   Future _onConfigure(Database db) async {
+    // CRITICAL: Enable WAL mode for concurrent read/write between isolates
+    await db.execute('PRAGMA journal_mode = WAL');
+
+    // Add a busy timeout (e.g., 5 seconds) so queries wait instead of immediately failing
+    // if the other isolate temporarily holds a lock.
+    await db.execute('PRAGMA busy_timeout = 5000');
+
     await db.execute('PRAGMA foreign_keys = ON');
-    logger.info("onConfigure:Foreign keys enabled.");
+    logger
+        .info("onConfigure: WAL mode, busy_timeout, and Foreign keys enabled.");
   }
 
   Future _onOpen(Database db) async {
     List<Map<String, dynamic>> result =
         await db.rawQuery('SELECT sqlite_version()');
-    String version = result.first.values.first;
+    String version = result.first.values.first as String;
     logger.info('Database opened, Version: $version');
   }
 
@@ -100,7 +134,7 @@ class StorageSqlite {
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    //await dbMigration_N(db);
+    // await dbMigration_N(db);
     logger.info('Database upgraded from version $oldVersion to $newVersion');
   }
 

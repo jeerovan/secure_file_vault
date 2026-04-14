@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_vault_bb/utils/utils_crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -457,24 +458,6 @@ Future<void> checkAndCreateDirectory(String filePath) async {
   }
 }
 
-Future<void> initializeDirectories() async {
-  SecureStorage secureStorage = SecureStorage();
-  final directory = await getApplicationDocumentsDirectory();
-  AppLogger(prefixes: ["MediaDirPath"]).info(directory.path);
-  String? mediaDir = await secureStorage.read(key: "media_dir");
-  String mediaDirPath = path_lib.join(directory.path, mediaDir);
-  final mediaDirectory = Directory(mediaDirPath);
-  if (!mediaDirectory.existsSync()) {
-    await mediaDirectory.create(recursive: true);
-  }
-  String? backupDir = await secureStorage.read(key: "backup_dir");
-  String backupDirPath = path_lib.join(directory.path, backupDir);
-  final backupDirectory = Directory(backupDirPath);
-  if (!backupDirectory.existsSync()) {
-    await backupDirectory.create(recursive: true);
-  }
-}
-
 Future<void> moveFileSafely(String sourcePath, String destPath) async {
   final File sourceFile = File(sourcePath);
   final File destFile = File(destPath);
@@ -793,7 +776,6 @@ Future<void> initializeDependencies(
     {ExecutionMode mode = ExecutionMode.appForeground}) async {
   // initialize in parallel
   await Future.wait(([
-    initializeDirectories(),
     initializeSupabase(mode: mode),
     initializePackages(mode: mode),
   ]));
@@ -802,7 +784,7 @@ Future<void> initializeDependencies(
 
 Future<void> initializePackages(
     {ExecutionMode mode = ExecutionMode.appForeground}) async {
-  //CryptoUtils.init();
+  CryptoUtils.init();
 }
 
 Future<void> initializeSupabase(
