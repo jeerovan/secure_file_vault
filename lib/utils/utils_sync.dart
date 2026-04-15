@@ -329,7 +329,7 @@ class SyncUtils {
         };
         final responseData =
             await api.get(endpoint: '/sync', queryParameters: requestData);
-        if (responseData["success"] == 0) break;
+        if (responseData["success"] <= 0) break;
         Map<String, dynamic> tableChanges = responseData["data"];
         for (String table in tables) {
           if (!tableChanges.containsKey(table)) continue;

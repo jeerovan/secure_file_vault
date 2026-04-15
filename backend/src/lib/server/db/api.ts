@@ -963,9 +963,16 @@ export async function getProviders() {
 }
 
 export async function getUserStorage(userId: number) {
+	const fifeUser = await getUserBySupabaseId('fife', db);
+	if (!fifeUser) {
+		return [];
+	}
 	const [allProviders, userCredentials, userStorages] = await Promise.all([
 		db.select().from(provider),
-		db.select().from(credential).where(eq(credential[CredentialKeys.USER_ID], userId)),
+		db
+			.select()
+			.from(credential)
+			.where(inArray(credential[CredentialKeys.USER_ID], [userId, fifeUser[UserKeys.ID]])),
 		db.select().from(storage).where(eq(storage[StorageKeys.USER_ID], userId))
 	]);
 

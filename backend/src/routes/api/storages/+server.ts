@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
 import { ErrorCode } from '$lib/server/db/keys';
-import { addUser, getProviders, getUserStorage } from '$lib/server/db/api';
+import { getProviders, getUserStorage } from '$lib/server/db/api';
 
 export const GET: RequestHandler = async ({ request }) => {
 	if (request.headers.has('Authorization')) {

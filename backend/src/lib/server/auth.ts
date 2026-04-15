@@ -20,7 +20,7 @@ export interface AuthUser {
  * Use in any +server.ts route.
  */
 export async function requireAuth(request: Request): Promise<AuthUser> {
-	const authHeader = request.headers.get('Authorization');
+	const authHeader = request.headers.get('authorization');
 	const device_uuid = request.headers.get('device_uuid') || undefined;
 	if (!authHeader?.startsWith('Bearer ')) {
 		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
