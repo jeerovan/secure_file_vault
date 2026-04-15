@@ -115,7 +115,7 @@ class SyncUtils {
       if (!removed) {
         await fetchMapChanges();
         await pushMapChanges();
-        TaskManager.init(inBackground: inBackground);
+        await TaskManager.init(inBackground: inBackground);
       }
     } catch (e, s) {
       logger.error("⚠ Sync failed", error: e.toString(), stackTrace: s);
@@ -123,7 +123,7 @@ class SyncUtils {
     logger.info("$mode|Sync|------------------ENDED----------------");
   }
 
-  // to sync, one must have masterKey with an active plan
+  // to sync, one must have masterKey with
   static Future<bool> canSync() async {
     String? masterKey = await getMasterKey();
     bool hasKeys = masterKey != null;
@@ -214,7 +214,6 @@ class SyncUtils {
           {"id": changeId, "data": map, "table_name": table});
       await change.insert();
       logger.info("encryptAndPushChange:$table|$changeId");
-      waitAndSyncChanges();
     }
   }
 

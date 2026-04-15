@@ -20,11 +20,12 @@ import '../services/service_logger.dart';
 import 'utils_crypto.dart';
 
 class TaskManager {
-  // 1. Singleton implementation
+// 1. Singleton implementation
   static final TaskManager _instance = TaskManager._internal();
   static final logger = AppLogger(prefixes: [
     "Tasker",
   ]);
+
   factory TaskManager() {
     return _instance;
   }
@@ -36,20 +37,34 @@ class TaskManager {
   bool _inBackground = false;
   DateTime _startTime = DateTime.now();
 
+  // Completer to keep background isolate alive
+  Completer<void>? _syncCompleter;
+
   // Stores active uploads with an identifiable parameter (Task ID)
   final Set<String> _activeTaskIds = {};
 
-  /// Static function "init" to start the process
-  static void init({bool inBackground = false}) {
+  /// Static function "init" to start the process.
+  static Future<void> init({bool inBackground = false}) async {
     if (_instance._activeTaskIds.isNotEmpty || _instance._isDispatching) {
       logger.info("Already running.");
+      // Return the existing future if it's already processing to prevent premature exit
+      if (_instance._syncCompleter != null &&
+          !_instance._syncCompleter!.isCompleted) {
+        return _instance._syncCompleter!.future;
+      }
       return;
     }
+
+    _instance._syncCompleter = Completer<void>();
     _instance.setStartTime();
+
+    // Fire and forget start, but block init() using the completer
     _instance.start(inBackground);
+
+    return _instance._syncCompleter!.future;
   }
 
-  void setStartTime() async {
+  void setStartTime() {
     _startTime = DateTime.now();
   }
 
@@ -63,10 +78,14 @@ class TaskManager {
 
     try {
       bool hasInternet = await InternetConnection().hasInternetAccess;
-      if (!hasInternet) return;
+      if (!hasInternet) {
+        _checkCompletion();
+        return;
+      }
 
       // Concurrency limits
-      final int maxConcurrentProcesses = _inBackground ? 1 : 1;
+      final int maxConcurrentProcesses = _inBackground ? 1 : 3;
+      bool tasksDispatched = false;
 
       while (_activeTaskIds.length < maxConcurrentProcesses) {
         // Fetches pending upload identifier from another function
@@ -82,12 +101,19 @@ class TaskManager {
         if (!_activeTaskIds.contains(pendingTaskId)) {
           _activeTaskIds.add(pendingTaskId);
           logger.info("Starting task: $pendingTaskId");
+          tasksDispatched = true;
           // Initiate task process without awaiting to allow parallel execution up to the limit
           dispatchTask(pendingTaskId);
         }
       }
+
+      // If loop finished and nothing was queued while nothing is active, complete the process
+      if (!tasksDispatched && _activeTaskIds.isEmpty) {
+        _checkCompletion();
+      }
     } catch (e, s) {
       logger.error('Error in dispatcher', error: e.toString(), stackTrace: s);
+      _checkCompletion();
     } finally {
       // Release dispatcher lock so finishing processes can re-trigger it
       _isDispatching = false;
@@ -99,7 +125,9 @@ class TaskManager {
     bool queueNext = true;
     try {
       ModelItemTask? itemTask = await ModelItemTask.get(taskId);
-      if (itemTask!.task == ItemTask.download.value) {
+      if (itemTask == null) return;
+
+      if (itemTask.task == ItemTask.download.value) {
         await checkInitDownload(itemTask);
       } else if (itemTask.task == ItemTask.upload.value) {
         queueNext = await checkInitUpload(itemTask);
@@ -122,11 +150,28 @@ class TaskManager {
               'Background process exceeded 1 minute limit. Ending queue.');
           queueNext = false;
         } else if (Platform.isAndroid && taskDuration.inMinutes >= 2) {
+          logger.info(
+              'Background process exceeded 2 minute limit. Ending queue.');
           queueNext = false;
         }
       }
+
       // Call dispatcher function to enqueue new task process
-      if (queueNext) start(_inBackground);
+      if (queueNext) {
+        start(_inBackground);
+      } else {
+        // If we shouldn't queue next, verify if all remaining concurrent tasks are also done
+        _checkCompletion();
+      }
+    }
+  }
+
+  /// Evaluates if the task queue has fully emptied, allowing the isolate to shut down gracefully
+  void _checkCompletion() {
+    if (_activeTaskIds.isEmpty) {
+      if (_syncCompleter != null && !_syncCompleter!.isCompleted) {
+        _syncCompleter!.complete();
+      }
     }
   }
 

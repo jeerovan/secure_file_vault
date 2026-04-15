@@ -131,7 +131,10 @@ class _FilePaneState extends State<FilePane> {
       if (currentItem != null) parentChilds.add(currentItem!);
     }
     if (currentItem == null) return;
+
+    if (!mounted) return;
     setState(() => _isLoading = true);
+
     final items = await ModelItem.getDisplayItems(currentItem);
     _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
     String deviceRootHash = await getDeviceHash();
@@ -710,6 +713,7 @@ class _FileListItemState extends State<_FileListItem> {
   }
 
   void _handleItemUpdateEvent() {
+    if (!mounted) return;
     final AppEvent? event = EventStream().notifier.value;
     if (event == null) return;
 

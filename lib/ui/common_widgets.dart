@@ -82,7 +82,7 @@ class AppSetupState extends ChangeNotifier {
     }
 
     // All setup complete
-    SyncUtils.waitAndSyncChanges();
+    SyncUtils().syncRootFolders();
     _currentStep = SetupStep.explorer;
     notifyListeners();
   }
