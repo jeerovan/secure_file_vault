@@ -407,7 +407,7 @@ Future<String> getDbStoragePath() async {
     dbDirPath = libDir.path;
   } else if (Platform.isWindows) {
     dbDirPath = Platform.environment['APPDATA'];
-  } else if (Platform.isLinux) {
+  } else if (Platform.isLinux || Platform.isAndroid) {
     Directory supportDir = await getApplicationSupportDirectory();
     dbDirPath = supportDir.path;
   }
@@ -415,6 +415,7 @@ Future<String> getDbStoragePath() async {
     Directory documentsPath = await getApplicationDocumentsDirectory();
     dbDirPath = documentsPath.path;
   }
+  dbDirPath = '$dbDirPath/databases';
   Directory dbDir = Directory(dbDirPath); // Ensure directory exists
   if (!dbDir.existsSync()) {
     await dbDir.create(recursive: true);

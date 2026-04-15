@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_vault_bb/models/model_part.dart';
-import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -353,41 +352,28 @@ class ModelItem {
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = [];
     try {
-      bool hasFts5 =
-          ModelSetting.get(AppString.hasFts5.string, defaultValue: "no") ==
-              "yes";
-      if (hasFts5) {
-        // Split the search term by whitespace
-        List<String> tokens = term.trim().split(RegExp(r'\s+'));
+      // Split the search term by whitespace
+      List<String> tokens = term.trim().split(RegExp(r'\s+'));
 
-        // FTS5 requires quotes around tokens for prefix matching to avoid syntax
-        // errors with special characters. Format: "token"*
-        String normalizedQuery = tokens
-            .where((token) => token.isNotEmpty)
-            .map((token) => '"$token"*')
-            .join(' ');
+      // FTS5 requires quotes around tokens for prefix matching to avoid syntax
+      // errors with special characters. Format: "token"*
+      String normalizedQuery = tokens
+          .where((token) => token.isNotEmpty)
+          .map((token) => '"$token"*')
+          .join(' ');
 
-        List<Map<String, dynamic>> filteredRows = await db.rawQuery(
-          '''SELECT item.*
+      List<Map<String, dynamic>> filteredRows = await db.rawQuery(
+        '''SELECT item.*
        FROM item
        JOIN item_fts ON item.rowid = item_fts.rowid
        WHERE item_fts MATCH ?
        ORDER BY item.at DESC
        ''',
-          [
-            normalizedQuery,
-          ],
-        );
-        rows.addAll(filteredRows);
-      } else {
-        String formattedTerm = '%$term%';
-        List<Map<String, dynamic>> searchedRows =
-            await db.rawQuery('''SELECT item.*
-          FROM item
-          Where name LIKE ?
-          ''', [formattedTerm]);
-        rows.addAll(searchedRows);
-      }
+        [
+          normalizedQuery,
+        ],
+      );
+      rows.addAll(filteredRows);
     } catch (e) {
       debugPrint(e.toString());
     }

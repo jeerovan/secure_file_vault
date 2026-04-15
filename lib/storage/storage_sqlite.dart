@@ -43,9 +43,7 @@ class StorageSqlite {
 
   Future<Database> _initDB(String dbFileName) async {
     try {
-      String dbDir = Platform.isAndroid
-          ? await getDatabasesPath()
-          : await getDbStoragePath();
+      String dbDir = await getDbStoragePath();
       final dbPath = join(dbDir, dbFileName);
       logger.info("DbPath:$dbPath");
 
@@ -73,12 +71,12 @@ class StorageSqlite {
   static Future<void> initialize(
       {ExecutionMode mode = ExecutionMode.appForeground}) async {
     _currentMode = mode; // Store mode for the lazy initializer
-    bool runningOnMobile = Platform.isIOS || Platform.isAndroid;
-
-    if (!runningOnMobile) {
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
     }
+
+    // Force FFI on ALL platforms (Android, iOS, Desktop)
+    databaseFactory = databaseFactoryFfi;
 
     await instance.ensureInitialized();
     List<Map<String, dynamic>> keyValuePairs =
@@ -109,11 +107,11 @@ class StorageSqlite {
 
   Future _onConfigure(Database db) async {
     // CRITICAL: Enable WAL mode for concurrent read/write between isolates
-    await db.execute('PRAGMA journal_mode = WAL');
+    await db.rawQuery('PRAGMA journal_mode = WAL');
 
     // Add a busy timeout (e.g., 5 seconds) so queries wait instead of immediately failing
     // if the other isolate temporarily holds a lock.
-    await db.execute('PRAGMA busy_timeout = 5000');
+    await db.rawQuery('PRAGMA busy_timeout = 5000');
 
     await db.execute('PRAGMA foreign_keys = ON');
     logger
@@ -202,9 +200,8 @@ class StorageSqlite {
     await db.execute('''
     CREATE INDEX idx_items_file_hash ON items (file_hash)
     ''');
-    bool fts5Available = await isFts5Available(db);
-    if (fts5Available) {
-      await db.execute('''
+
+    await db.execute('''
         CREATE VIRTUAL TABLE items_fts USING fts5(
             name,
             content='items',
@@ -213,20 +210,20 @@ class StorageSqlite {
         );
       ''');
 
-      await db.execute('''
+    await db.execute('''
         CREATE TRIGGER items_ai AFTER INSERT ON items BEGIN
           INSERT INTO items_fts(rowid, name) VALUES (new.rowid, new.name);
         END;
       ''');
 
-      await db.execute('''
+    await db.execute('''
         CREATE TRIGGER items_bd AFTER DELETE ON items BEGIN
           INSERT INTO items_fts(items_fts, rowid, name) VALUES ('delete', old.rowid, old.name);
         END;
       ''');
 
-      // Note: BEFORE UPDATE is no longer needed. FTS5 handles both steps in AFTER UPDATE.
-      await db.execute('''
+    // Note: BEFORE UPDATE is no longer needed. FTS5 handles both steps in AFTER UPDATE.
+    await db.execute('''
         CREATE TRIGGER items_au AFTER UPDATE ON items 
         WHEN old.name IS NOT new.name
         BEGIN
@@ -236,9 +233,7 @@ class StorageSqlite {
           INSERT INTO items_fts(rowid, name) VALUES (new.rowid, new.name);
         END;
       ''');
-    }
-    // NOTE: else no need to create normal index on 'name' as the search term
-    // will start with a "*" and B-tree does not support it
+
     await db.execute('''
       CREATE TABLE changes (
         id TEXT PRIMARY KEY,
@@ -278,17 +273,6 @@ class StorageSqlite {
     logger.info("Tables Created");
   }
 
-  Future<bool> isFts5Available(Database db) async {
-    final result = await db
-        .rawQuery("SELECT name FROM pragma_module_list WHERE name = 'fts5'");
-
-    if (result.isNotEmpty) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   Future<Uint8List> loadImageAsUint8List(String assetPath) async {
     ByteData data = await rootBundle.load(assetPath);
     return data.buffer.asUint8List();
@@ -299,9 +283,6 @@ class StorageSqlite {
     int now = DateTime.now().toUtc().millisecondsSinceEpoch;
     await db.insert(Tables.settings.string,
         {"id": AppString.installedAt.string, "value": now});
-    String hasFts5 = await isFts5Available(db) ? "yes" : "no";
-    await db.insert(Tables.settings.string,
-        {"id": AppString.hasFts5.string, "value": hasFts5});
   }
 
   Future<int> insert(String tableName, Map<String, dynamic> row) async {

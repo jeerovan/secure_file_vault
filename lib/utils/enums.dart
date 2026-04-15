@@ -74,8 +74,6 @@ extension ExecutionModeExtension on ExecutionMode {
 }
 
 enum AppString {
-  // DB
-  hasFts5,
   // app
   appName,
   onboarding,
@@ -133,8 +131,6 @@ extension AppStringExtension on AppString {
     switch (this) {
       case AppString.onboarding:
         return "onboarding";
-      case AppString.hasFts5:
-        return "has_fts5";
       case AppString.tableMaps:
         return "table_maps";
       case AppString.serverKeys:

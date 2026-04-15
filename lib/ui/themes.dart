@@ -5,13 +5,13 @@ class AppThemes {
     fontFamily: 'Inter',
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.red, brightness: Brightness.light),
+        seedColor: Color(0xFFFF4040), brightness: Brightness.light),
   );
 
   static final darkTheme = ThemeData(
     fontFamily: 'Inter',
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.red, brightness: Brightness.dark),
+        seedColor: Color(0xFFFF4040), brightness: Brightness.dark),
   );
 }

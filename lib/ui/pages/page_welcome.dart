@@ -357,7 +357,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           const SizedBox(height: 24),
           _buildBenefitItem(
             theme,
-            icon: LucideIcons.userCheck,
+            icon: LucideIcons.dollarSign,
             title: "Pay-as-you-go for storage.",
             description:
                 "Keep encrypted storage using your own direct accounts. No middleman, no data lock-in. Pay for used storage only with compatible providers. No more 1TB or 2TB plans.",
