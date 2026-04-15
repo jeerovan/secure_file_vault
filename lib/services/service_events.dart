@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 enum EventType {
   updateItem,
+  syncStatus,
 }
 
 enum EventKey {
@@ -11,7 +12,9 @@ enum EventKey {
   added,
   uploaded,
   downloaded,
-  removed
+  removed,
+  running,
+  stopped
 }
 
 class AppEvent {

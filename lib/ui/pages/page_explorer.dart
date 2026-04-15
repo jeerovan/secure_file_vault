@@ -68,6 +68,7 @@ class _FilePaneState extends State<FilePane> {
   bool _isLoading = false;
   bool _isLocalPath = false;
   bool _isDeviceRoot = false;
+  bool _syncInProgress = false;
   List<ModelItem> parentChilds = [];
   // Multi-select state
   final ValueNotifier<Set<ModelItem>> _selectedItemsNotifier =
@@ -118,6 +119,20 @@ class _FilePaneState extends State<FilePane> {
           _itemsNotifier.value = currentItems;
         }
         break;
+      case EventType.syncStatus:
+        if (event.key == EventKey.running) {
+          if (mounted) {
+            setState(() {
+              _syncInProgress = true;
+            });
+          }
+        } else if (event.key == EventKey.stopped) {
+          if (mounted) {
+            setState(() {
+              _syncInProgress = false;
+            });
+          }
+        }
     }
   }
 
@@ -149,6 +164,12 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Future<void> _syncRootFolders() async {
+    if (_syncInProgress) {
+      return;
+    }
+    setState(() {
+      _syncInProgress = true;
+    });
     List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
     for (ModelItem syncFolder in syncFolders) {
       await ReconciliationService().reconcile(syncFolder.id);
@@ -364,9 +385,8 @@ class _FilePaneState extends State<FilePane> {
           ),
           actions: [
             if (_isLocalPath)
-              IconButton(
-                  icon: const Icon(LucideIcons.refreshCw),
-                  onPressed: _syncRootFolders),
+              AnimatedSyncButton(
+                  isSyncing: _syncInProgress, onPressed: _syncRootFolders),
             if (_isDeviceRoot)
               IconButton(
                   icon: const Icon(LucideIcons.plus), onPressed: addSyncFolder),
@@ -751,6 +771,8 @@ class _FileListItemState extends State<_FileListItem> {
           }
         }
         break;
+      default:
+        break;
     }
   }
 
@@ -1118,6 +1140,73 @@ class _TransferAnimatedIconState extends State<TransferAnimatedIcon>
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class AnimatedSyncButton extends StatefulWidget {
+  final bool isSyncing;
+  final VoidCallback onPressed;
+
+  const AnimatedSyncButton({
+    super.key,
+    required this.isSyncing,
+    required this.onPressed,
+  });
+
+  @override
+  State<AnimatedSyncButton> createState() => _AnimatedSyncButtonState();
+}
+
+class _AnimatedSyncButtonState extends State<AnimatedSyncButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1), // Adjust rotation speed here
+      vsync: this,
+    );
+
+    if (widget.isSyncing) {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(AnimatedSyncButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSyncing != oldWidget.isSyncing) {
+      if (widget.isSyncing) {
+        _controller.repeat();
+      } else {
+        // Smoothly completes the current rotation instead of snapping abruptly
+        _controller
+            .animateTo(1.0, duration: const Duration(milliseconds: 300))
+            .then((_) {
+          if (mounted) _controller.reset();
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      // Optional UX enhancement: disable button while syncing to prevent duplicate calls
+      onPressed: widget.isSyncing ? null : widget.onPressed,
+      icon: RotationTransition(
+        turns: _controller,
+        child: const Icon(LucideIcons.refreshCw),
       ),
     );
   }

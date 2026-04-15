@@ -6,6 +6,7 @@ import 'package:file_vault_bb/utils/utils_tasks.dart';
 import '../models/model_change.dart';
 import 'package:flutter/foundation.dart';
 import '../services/service_backend.dart';
+import '../services/service_events.dart';
 import '../services/service_recon.dart';
 import '../storage/storage_sqlite.dart';
 import '../utils/common.dart';
@@ -64,6 +65,11 @@ class SyncUtils {
 
   static void waitAndSyncChanges() {
     logger.info("wait and sync (Foreground)");
+    EventStream().publish(AppEvent(
+        type: EventType.syncStatus,
+        id: "",
+        key: EventKey.running,
+        value: null));
     _instance._handleChange();
   }
 
@@ -104,6 +110,11 @@ class SyncUtils {
       if (inBackground) rethrow;
     } finally {
       _isSyncing = false;
+      EventStream().publish(AppEvent(
+          type: EventType.syncStatus,
+          id: "",
+          key: EventKey.stopped,
+          value: null));
     }
   }
 
