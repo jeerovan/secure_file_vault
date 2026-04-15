@@ -1024,27 +1024,38 @@ class TransferAnimatedIcon extends StatefulWidget {
 class _TransferAnimatedIconState extends State<TransferAnimatedIcon>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
-  late final Animation<double> _slideAnimation;
-  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _revealAnimation;
+  late final Animation<double> _opacityAnimation;
 
   @override
   void initState() {
     super.initState();
+
+    // 1. Slow, 2-second duration for a calming, smooth effect
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 2000),
     )..repeat();
 
-    // Arrow slides from center to edge
-    _slideAnimation = Tween<double>(begin: -0.5, end: 0.5).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    // 2. The arrow reveals gradually over the first 70% of the animation.
+    // Curves.easeInOutCubic makes the start and end of the fill very smooth.
+    _revealAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeInOutCubic),
+      ),
     );
 
-    // Arrow fades in at the start, and fades out at the end of the slide
-    _fadeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0.0, end: 1.0), weight: 30),
-      TweenSequenceItem(tween: ConstantTween(1.0), weight: 40),
-      TweenSequenceItem(tween: Tween(begin: 1.0, end: 0.0), weight: 30),
+    // 3. Holds full visibility, then smoothly fades out during the last 20%
+    // to create a seamless, non-jarring loop.
+    _opacityAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 80),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 0.0).chain(
+          CurveTween(curve: Curves.easeOut),
+        ),
+        weight: 20,
+      ),
     ]).animate(_controller);
   }
 
@@ -1056,32 +1067,57 @@ class _TransferAnimatedIconState extends State<TransferAnimatedIcon>
 
   @override
   Widget build(BuildContext context) {
-    // Swap direction based on Upload vs Download
-    final yDirectionMultiplier = widget.isUpload ? -1.0 : 1.0;
+    final iconData = widget.isUpload
+        ? Icons.arrow_upward_rounded
+        : Icons.arrow_downward_rounded;
+
+    final iconColor = Theme.of(context).colorScheme.primary;
+
+    // Determine alignments:
+    // - Upload reveals bottom-to-top (anchored to bottomCenter)
+    // - Download reveals top-to-bottom (anchored to topCenter)
+    final alignment =
+        widget.isUpload ? Alignment.bottomCenter : Alignment.topCenter;
 
     return SizedBox(
       width: 24,
       height: 24,
-      child: ClipRect(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return FractionalTranslation(
-              translation:
-                  Offset(0, _slideAnimation.value * yDirectionMultiplier),
-              child: Opacity(
-                opacity: _fadeAnimation.value,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Stack(
+            alignment: alignment,
+            children: [
+              // Background Icon (Track)
+              // Using Opacity widget avoids the recently deprecated Color.withOpacity()
+              Opacity(
+                opacity: 0.2,
                 child: Icon(
-                  widget.isUpload
-                      ? Icons.arrow_upward_rounded
-                      : Icons.arrow_downward_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 14,
+                  iconData,
+                  color: iconColor,
+                  size: 20,
                 ),
               ),
-            );
-          },
-        ),
+
+              // Animated Foreground Icon (Fill)
+              Opacity(
+                opacity: _opacityAnimation.value,
+                child: ClipRect(
+                  child: Align(
+                    alignment: alignment,
+                    heightFactor: _revealAnimation.value,
+                    widthFactor: 1.0,
+                    child: Icon(
+                      iconData,
+                      color: iconColor,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
