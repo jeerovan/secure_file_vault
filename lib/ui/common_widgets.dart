@@ -1,9 +1,14 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/services.dart';
 
+import '../models/model_file.dart';
+import '../models/model_item.dart';
+import '../models/model_item_task.dart';
+import '../services/service_events.dart';
 import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
 import 'package:flutter/gestures.dart';
@@ -1020,6 +1025,538 @@ class _ImageDownloadButtonState extends State<ImageDownloadButton> {
           size: widget.iconSize / 2,
         ),
         onPressed: widget.onPressed,
+      ),
+    );
+  }
+}
+
+class FileListItem extends StatefulWidget {
+  final ModelItem item;
+  final ValueNotifier<Set<ModelItem>> selectedItemsNotifier;
+  final ValueNotifier<bool> isMultiSelectNotifier;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  const FileListItem({
+    required super.key,
+    required this.item,
+    required this.selectedItemsNotifier,
+    required this.isMultiSelectNotifier,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  @override
+  State<FileListItem> createState() => _FileListItemState();
+}
+
+class _FileListItemState extends State<FileListItem> {
+  bool? _isLocal;
+  bool? _isUploaded;
+  bool _isUploading = false;
+  bool _isDownloading = false;
+  int transferProgress = 0;
+  AppLogger logger = AppLogger(prefixes: ["FileListItem"]);
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.item.isFolder) {
+      _checkFileStates();
+    }
+    EventStream().notifier.addListener(_handleItemUpdateEvent);
+  }
+
+  @override
+  void didUpdateWidget(covariant FileListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Re-check statuses if the underlying item changes (e.g., during recycling in ListView)
+    if (oldWidget.item.id != widget.item.id && !widget.item.isFolder) {
+      _checkFileStates();
+    }
+  }
+
+  @override
+  void dispose() {
+    EventStream().notifier.removeListener(_handleItemUpdateEvent);
+    super.dispose();
+  }
+
+  void _handleItemUpdateEvent() {
+    if (!mounted) return;
+    final AppEvent? event = EventStream().notifier.value;
+    if (event == null) return;
+
+    switch (event.type) {
+      case EventType.updateItem:
+        if (event.key == EventKey.uploaded) {
+          if (event.id == widget.item.id) {
+            setState(() {
+              _isUploaded = true;
+              _isUploading = false;
+              transferProgress = 0;
+            });
+          }
+        } else if (event.key == EventKey.downloaded) {
+          if (event.id == widget.item.id) {
+            setState(() {
+              _isLocal = true;
+              _isDownloading = false;
+              transferProgress = 0;
+            });
+          }
+        } else if (event.key == EventKey.uploadProgress) {
+          if (event.id == widget.item.id) {
+            setState(() {
+              transferProgress = event.value;
+              _isUploading = true;
+            });
+          }
+        } else if (event.key == EventKey.downloadProgress) {
+          if (event.id == widget.item.id) {
+            setState(() {
+              transferProgress = event.value;
+              _isDownloading = true;
+            });
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  Future<bool> fileExistsLocally(ModelItem item) async {
+    String path = await ModelItem.getPathForItem(item.id);
+    return await File(path).exists();
+  }
+
+  Future<bool> fileUploadedToCloud(ModelItem item) async {
+    ModelFile? modelFile = await ModelFile.get(item.fileHash!);
+    if (modelFile != null) {
+      return modelFile.uploadedAt > 0;
+    }
+    return false;
+  }
+
+  Future<int> getUploadProgress(ModelItem item) async {
+    ModelItemTask? itemTask = await ModelItemTask.get(item.id);
+    if (itemTask != null && itemTask.task == ItemTask.upload.value) {
+      return itemTask.progress;
+    } else {
+      return -1;
+    }
+  }
+
+  Future<int> getDownloadProgress(ModelItem item) async {
+    ModelItemTask? itemTask = await ModelItemTask.get(item.id);
+    if (itemTask != null && itemTask.task == ItemTask.download.value) {
+      return itemTask.progress;
+    } else {
+      return -1;
+    }
+  }
+
+  Future<void> _checkFileStates() async {
+    // Run both async tasks concurrently for optimal performance
+    final stateResults = await Future.wait([
+      fileExistsLocally(widget.item),
+      widget.item.isFolder
+          ? Future.value(false)
+          : fileUploadedToCloud(widget.item),
+    ]);
+
+    final transferResults = await Future.wait(
+        [getUploadProgress(widget.item), getDownloadProgress(widget.item)]);
+
+    // Always check if the widget is still in the tree before calling setState
+    if (!mounted) return;
+
+    setState(() {
+      _isLocal = stateResults[0];
+      _isUploaded = stateResults[1];
+      if (transferResults[0] > -1) {
+        _isUploading = true;
+        transferProgress = transferResults[0];
+      } else if (transferResults[1] > -1) {
+        _isDownloading = true;
+        transferProgress = transferResults[1];
+      }
+    });
+  }
+
+  Widget _buildTrailingIndicator() {
+    if (_isUploading || _isDownloading) {
+      return TransferAnimatedIcon(isUpload: _isUploading);
+    }
+    if (_isUploaded == null) {
+      // Show a subtle, tiny loading spinner while checking cloud status
+      return const SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    }
+
+    if (_isUploaded!) {
+      return Icon(
+        Icons.check,
+        size: 16,
+        color: Theme.of(context).colorScheme.primary.withAlpha(150),
+      );
+    }
+
+    return SizedBox.shrink();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+        listenable: Listenable.merge(
+            [widget.selectedItemsNotifier, widget.isMultiSelectNotifier]),
+        builder: (context, _) {
+          final isSelected =
+              widget.selectedItemsNotifier.value.contains(widget.item);
+          final isMultiSelectMode = widget.isMultiSelectNotifier.value;
+          final theme = Theme.of(context);
+
+          return Stack(children: [
+            // --- 1. Progress Background ---
+            Positioned.fill(
+              child: Align(
+                // Automatically handles LTR (starts left) and RTL (starts right)
+                alignment: AlignmentDirectional.centerStart,
+                // Smoothly animates the width changes as data arrives
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(begin: 0, end: transferProgress / 100),
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return FractionallySizedBox(
+                      widthFactor: value,
+                      heightFactor: 1.0,
+                      child: Container(
+                        // Using a subtle primary container color for the progress fill
+                        color: theme.colorScheme.primaryContainer.withAlpha(70),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: widget.onTap,
+                onLongPress: widget.onLongPress,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0, vertical: 8.0),
+                  child: Row(
+                    children: [
+                      // 1. Multi-Select Circular Checkbox
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOutCubic,
+                        child: SizedBox(
+                          width: 18,
+                          child: isMultiSelectMode
+                              ? Row(
+                                  children: [
+                                    AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 200),
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isSelected
+                                            ? Colors.grey.shade600
+                                            : Colors.transparent,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? Colors.grey.shade600
+                                              : theme.colorScheme.outline,
+                                          width: 2,
+                                        ),
+                                      ),
+                                      child: null,
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        ),
+                      ),
+
+                      // 2. File / Folder Icon
+                      SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            if (widget.item.isFolder)
+                              Align(
+                                alignment: Alignment.center,
+                                child: Icon(LucideIcons.folder,
+                                    size: 28,
+                                    color: theme.colorScheme.primary
+                                        .withAlpha(150)),
+                              ),
+
+                            // Local Existence Indicator (Grey while loading, then Red/Green)
+                            if (!widget.item.isFolder)
+                              Align(
+                                alignment: Alignment.center,
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: _isLocal == null
+                                        ? Colors.grey.shade400 // Loading state
+                                        : (_isLocal!
+                                            ? Colors.green
+                                            : Colors.red),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: Theme.of(context)
+                                          .scaffoldBackgroundColor,
+                                      width: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(width: 4),
+
+                      // 3. File Details
+                      Expanded(
+                          child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.item.name,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: theme.colorScheme.onSurface,
+                              height:
+                                  1.2, // Tighter line height for better vertical rhythm in lists
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // Only display if it is a file
+                          if (!widget.item.isFolder) ...[
+                            const SizedBox(
+                                height:
+                                    2), // Subtle spacing separates title from metadata
+                            Text(
+                              readableFileSizeFromBytes(widget.item.size),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                // onSurfaceVariant provides the perfect professional muted contrast
+                                // against the onSurface title color
+                                color: theme.colorScheme.onSurfaceVariant,
+                                letterSpacing:
+                                    0.1, // Enhances readability for small alphanumeric text
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      )),
+
+                      const SizedBox(width: 8),
+
+                      // 4. State Indicators (Cloud / Local)
+                      if (!widget.item.isFolder) _buildTrailingIndicator()
+                    ],
+                  ),
+                ),
+              ),
+            )
+          ]);
+        });
+  }
+}
+
+class TransferAnimatedIcon extends StatefulWidget {
+  final bool isUpload;
+
+  const TransferAnimatedIcon({super.key, required this.isUpload});
+
+  @override
+  State<TransferAnimatedIcon> createState() => _TransferAnimatedIconState();
+}
+
+class _TransferAnimatedIconState extends State<TransferAnimatedIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _revealAnimation;
+  late final Animation<double> _opacityAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 1. Slow, 2-second duration for a calming, smooth effect
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+
+    // 2. The arrow reveals gradually over the first 70% of the animation.
+    // Curves.easeInOutCubic makes the start and end of the fill very smooth.
+    _revealAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeInOutCubic),
+      ),
+    );
+
+    // 3. Holds full visibility, then smoothly fades out during the last 20%
+    // to create a seamless, non-jarring loop.
+    _opacityAnimation = TweenSequence<double>([
+      TweenSequenceItem(tween: ConstantTween(1.0), weight: 80),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 0.0).chain(
+          CurveTween(curve: Curves.easeOut),
+        ),
+        weight: 20,
+      ),
+    ]).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final iconData = widget.isUpload
+        ? Icons.arrow_upward_rounded
+        : Icons.arrow_downward_rounded;
+
+    final iconColor = Theme.of(context).colorScheme.primary;
+
+    // Determine alignments:
+    // - Upload reveals bottom-to-top (anchored to bottomCenter)
+    // - Download reveals top-to-bottom (anchored to topCenter)
+    final alignment =
+        widget.isUpload ? Alignment.bottomCenter : Alignment.topCenter;
+
+    return SizedBox(
+      width: 24,
+      height: 24,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Stack(
+            alignment: alignment,
+            children: [
+              // Background Icon (Track)
+              // Using Opacity widget avoids the recently deprecated Color.withOpacity()
+              Opacity(
+                opacity: 0.2,
+                child: Icon(
+                  iconData,
+                  color: iconColor,
+                  size: 20,
+                ),
+              ),
+
+              // Animated Foreground Icon (Fill)
+              Opacity(
+                opacity: _opacityAnimation.value,
+                child: ClipRect(
+                  child: Align(
+                    alignment: alignment,
+                    heightFactor: _revealAnimation.value,
+                    widthFactor: 1.0,
+                    child: Icon(
+                      iconData,
+                      color: iconColor,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class AnimatedSyncButton extends StatefulWidget {
+  final bool isSyncing;
+  final VoidCallback onPressed;
+
+  const AnimatedSyncButton({
+    super.key,
+    required this.isSyncing,
+    required this.onPressed,
+  });
+
+  @override
+  State<AnimatedSyncButton> createState() => _AnimatedSyncButtonState();
+}
+
+class _AnimatedSyncButtonState extends State<AnimatedSyncButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1), // Adjust rotation speed here
+      vsync: this,
+    );
+
+    if (widget.isSyncing) {
+      _controller.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(AnimatedSyncButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isSyncing != oldWidget.isSyncing) {
+      if (widget.isSyncing) {
+        _controller.repeat();
+      } else {
+        // Smoothly completes the current rotation instead of snapping abruptly
+        _controller
+            .animateTo(1.0, duration: const Duration(milliseconds: 300))
+            .then((_) {
+          if (mounted) _controller.reset();
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      // Optional UX enhancement: disable button while syncing to prevent duplicate calls
+      onPressed: widget.isSyncing ? null : widget.onPressed,
+      icon: RotationTransition(
+        turns: _controller,
+        child: const Icon(LucideIcons.refreshCw),
       ),
     );
   }
