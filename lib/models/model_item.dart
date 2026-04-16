@@ -351,32 +351,36 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
     List<Map<String, dynamic>> rows = [];
+
     try {
-      // Split the search term by whitespace
       List<String> tokens = term.trim().split(RegExp(r'\s+'));
 
-      // FTS5 requires quotes around tokens for prefix matching to avoid syntax
-      // errors with special characters. Format: "token"*
-      String normalizedQuery = tokens
-          .where((token) => token.isNotEmpty)
-          .map((token) => '"$token"*')
-          .join(' ');
+      // Filter out empty tokens
+      tokens = tokens.where((token) => token.isNotEmpty).toList();
+
+      if (tokens.isEmpty) return [];
+
+      // 1. Trigram natively supports infix matching; DO NOT use the '*' wildcard.
+      // 2. Escape double quotes by replacing '"' with '""' to prevent FTS syntax crashes
+      //    when users search for files containing special characters.
+      String normalizedQuery =
+          tokens.map((token) => '"${token.replaceAll('"', '""')}"').join(' ');
 
       List<Map<String, dynamic>> filteredRows = await db.rawQuery(
-        '''SELECT item.*
-       FROM item
-       JOIN item_fts ON item.rowid = item_fts.rowid
-       WHERE item_fts MATCH ?
-       ORDER BY item.at DESC
-       ''',
-        [
-          normalizedQuery,
-        ],
+        '''SELECT items.*
+           FROM items
+           JOIN items_fts ON items.rowid = items_fts.rowid
+           WHERE items_fts MATCH ? AND items.is_folder = ?
+           ORDER BY items.updated_at DESC
+        ''',
+        [normalizedQuery, 0],
       );
+
       rows.addAll(filteredRows);
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('Search error: ${e.toString()}');
     }
+
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 

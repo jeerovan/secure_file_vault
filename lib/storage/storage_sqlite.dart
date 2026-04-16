@@ -206,7 +206,7 @@ class StorageSqlite {
             name,
             content='items',
             content_rowid='rowid',
-            tokenize='unicode61'
+            tokenize='trigram'
         );
       ''');
 

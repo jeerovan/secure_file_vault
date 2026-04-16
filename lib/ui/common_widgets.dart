@@ -132,6 +132,7 @@ class AppSetupState extends ChangeNotifier {
   }
 
   Future<void> showExplorer() async {
+    SyncUtils().syncRootFolders();
     _currentStep = SetupStep.explorer;
     notifyListeners();
   }

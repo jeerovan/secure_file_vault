@@ -1,5 +1,6 @@
 import 'package:file_vault_bb/ui/pages/page_devices.dart';
 import 'package:file_vault_bb/ui/pages/page_file_info.dart';
+import 'package:file_vault_bb/ui/pages/page_search.dart';
 import 'package:file_vault_bb/ui/pages/page_storage_providers.dart';
 import 'package:file_vault_bb/ui/pages/page_trash.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -331,6 +332,10 @@ class _FilePaneState extends State<FilePane> {
         .push(AnimatedPageRoute(child: const StorageProvidersScreen()));
   }
 
+  Future<void> showSearchScreen() async {
+    Navigator.of(context).push(AnimatedPageRoute(child: const SearchScreen()));
+  }
+
   Widget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -397,6 +402,7 @@ class _FilePaneState extends State<FilePane> {
                 if (value == 1) showArchives();
                 if (value == 2) showDevices();
                 if (value == 3) showStorageProviders();
+                if (value == 4) showSearchScreen();
               },
               itemBuilder: (context) => [
                 const PopupMenuItem<int>(
@@ -436,6 +442,16 @@ class _FilePaneState extends State<FilePane> {
                       Icon(LucideIcons.hardDrive, color: Colors.grey),
                       SizedBox(width: 16),
                       Text('Storage'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<int>(
+                  value: 4,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.search, color: Colors.grey),
+                      SizedBox(width: 16),
+                      Text('Search'),
                     ],
                   ),
                 ),
