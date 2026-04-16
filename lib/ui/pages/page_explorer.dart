@@ -74,6 +74,7 @@ class _FilePaneState extends State<FilePane> {
   bool _isDeviceRoot = false;
   bool _syncInProgress = false;
   List<ModelItem> parentChilds = [];
+  String? deviceHash;
   @override
   void initState() {
     super.initState();
@@ -135,11 +136,12 @@ class _FilePaneState extends State<FilePane> {
 
   Future<void> _loadFiles() async {
     if (currentItem == null) {
+      deviceHash = await getDeviceHash();
       ModelItem? rootFife = await ModelItem.get("fife");
       if (rootFife != null) {
         parentChilds.add(rootFife);
       }
-      currentItem = await ModelItem.get(await getDeviceHash());
+      currentItem = await ModelItem.get(deviceHash!);
       if (currentItem != null) parentChilds.add(currentItem!);
     }
     if (currentItem == null) return;
@@ -530,7 +532,13 @@ class _FilePaneState extends State<FilePane> {
         valueListenable: _itemsNotifier,
         builder: (context, items, _) {
           if (items.isEmpty) {
-            return const Center(child: Text('This Folder is empty.'));
+            if (currentItem != null &&
+                deviceHash != null &&
+                currentItem?.id == deviceHash) {
+              return const Center(child: Text('Tap + to add sync folder.'));
+            } else {
+              return const Center(child: Text('This Folder is empty.'));
+            }
           }
           return ListView.builder(
             reverse: true,

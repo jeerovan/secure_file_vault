@@ -670,7 +670,7 @@ Future<String> getDeviceName() async {
     return macInfo.computerName;
   } else if (Platform.isWindows) {
     WindowsDeviceInfo winInfo = await deviceInfo.windowsInfo;
-    return '${winInfo.productName} ${winInfo.computerName}';
+    return winInfo.productName;
   } else if (Platform.isLinux) {
     LinuxDeviceInfo linuxInfo = await deviceInfo.linuxInfo;
     return linuxInfo.name;
