@@ -62,9 +62,6 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => FontSizeController(),
-        ),
-        ChangeNotifierProvider(
           create: (_) => AppSetupState(prefs),
         ),
       ],
@@ -97,7 +94,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   ThemeMode _themeMode = ThemeMode.system;
-  late bool _isDarkMode;
 
   final logger = AppLogger(prefixes: ["MainApp"]);
 
@@ -105,21 +101,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     // Load the theme from saved preferences
-    String? savedTheme = ModelSetting.get("theme");
+    String savedTheme = ModelSetting.get(AppString.theme.string);
     switch (savedTheme) {
       case "light":
         _themeMode = ThemeMode.light;
-        _isDarkMode = false;
         break;
       case "dark":
         _themeMode = ThemeMode.dark;
-        _isDarkMode = true;
         break;
       default:
         // Default to system theme
         _themeMode = ThemeMode.system;
-        _isDarkMode =
-            PlatformDispatcher.instance.platformBrightness == Brightness.dark;
         break;
     }
     WidgetsBinding.instance.addObserver(this);
@@ -142,33 +134,37 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   // Toggle between light and dark modes
-  Future<void> _onThemeToggle() async {
+  Future<void> _onThemeChange(String? theme) async {
     setState(() {
-      _themeMode = _isDarkMode ? ThemeMode.light : ThemeMode.dark;
-      _isDarkMode = !_isDarkMode;
+      switch (theme) {
+        case "light":
+          _themeMode = ThemeMode.light;
+          break;
+        case "dark":
+          _themeMode = ThemeMode.dark;
+          break;
+        default:
+          _themeMode = ThemeMode.system;
+          break;
+      }
     });
-    await ModelSetting.set("theme", _isDarkMode ? "dark" : "light");
+    if (theme == null) {
+      await ModelSetting.delete(AppString.theme.string);
+    } else {
+      await ModelSetting.set(AppString.theme.string, theme);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final textScaler = Provider.of<FontSizeController>(context).textScaler;
     return MaterialApp(
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: textScaler,
-          ),
-          child: child!,
-        );
-      },
       theme: AppThemes.lightTheme,
       darkTheme: AppThemes.darkTheme,
       themeMode: _themeMode,
       // Uses system theme by default
       home: AppNavigator(
         themeMode: _themeMode,
-        onThemeToggle: _onThemeToggle,
+        onThemeChange: _onThemeChange,
       ),
       debugShowCheckedModeBanner: false,
     );
@@ -177,12 +173,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
 class AppNavigator extends StatelessWidget {
   final ThemeMode themeMode;
-  final VoidCallback onThemeToggle;
+  final Function(String?) onThemeChange;
 
   const AppNavigator({
     super.key,
     required this.themeMode,
-    required this.onThemeToggle,
+    required this.onThemeChange,
   });
 
   @override
@@ -215,7 +211,7 @@ class AppNavigator extends StatelessWidget {
           case SetupStep.explorer:
             return PageExplorer(
               themeMode: themeMode,
-              onThemeToggle: onThemeToggle,
+              onThemeChange: onThemeChange,
             );
         }
       },

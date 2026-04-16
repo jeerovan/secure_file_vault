@@ -11,13 +11,10 @@ import '../models/model_item_task.dart';
 import '../services/service_events.dart';
 import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/service_logger.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../utils/common.dart';
 
@@ -407,100 +404,6 @@ Widget buildBottomAppBar({
       ),
     ),
   );
-}
-
-class WidgetTextWithLinks extends StatefulWidget {
-  final String text;
-  final TextAlign? align;
-
-  const WidgetTextWithLinks({super.key, required this.text, this.align});
-
-  @override
-  State<WidgetTextWithLinks> createState() => _WidgetTextWithLinksState();
-}
-
-class _WidgetTextWithLinksState extends State<WidgetTextWithLinks> {
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<FontSizeController>(builder: (context, controller, child) {
-      return RichText(
-        text: TextSpan(
-          children: _buildTextWithLinks(context, controller, widget.text),
-        ),
-        textAlign: widget.align == null ? TextAlign.left : widget.align!,
-      );
-    });
-  }
-
-  List<TextSpan> _buildTextWithLinks(
-      BuildContext context, FontSizeController controller, String text) {
-    final List<TextSpan> spans = [];
-    final RegExp linkRegExp = RegExp(r'(https?://[^\s]+)');
-    final matches = linkRegExp.allMatches(text);
-
-    int lastMatchEnd = 0;
-
-    double fontSize = 15;
-
-    for (final match in matches) {
-      final start = match.start;
-      final end = match.end;
-
-      // Add plain text before the link
-      if (start > lastMatchEnd) {
-        spans.add(
-          TextSpan(
-              text: text.substring(lastMatchEnd, start),
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: controller.getScaledSize(fontSize))),
-        );
-      }
-
-      // Add the link text
-      final linkText = text.substring(start, end);
-      try {
-        final linkUri = Uri.parse(linkText);
-        spans.add(TextSpan(
-          text: linkText,
-          style: TextStyle(
-              color: Colors.blue, fontSize: controller.getScaledSize(fontSize)),
-          recognizer: TapGestureRecognizer()
-            ..onTap = () async {
-              if (await canLaunchUrl(linkUri)) {
-                await launchUrl(linkUri);
-              } else {
-                final logger = AppLogger(
-                    prefixes: ["common_widgets", "WidgetTextWithLink"]);
-                logger.error("Could not launch $linkText");
-              }
-            },
-        ));
-      } catch (e) {
-        spans.add(
-          TextSpan(
-              text: linkText,
-              style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: controller.getScaledSize(fontSize))),
-        );
-      }
-
-      lastMatchEnd = end;
-    }
-
-    // Add the remaining plain text after the last link
-    if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(
-          text: text.substring(lastMatchEnd),
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: controller.getScaledSize(fontSize),
-          )));
-    }
-
-    return spans;
-  }
 }
 
 class TimerWidget extends StatefulWidget {

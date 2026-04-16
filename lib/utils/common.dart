@@ -524,44 +524,6 @@ Map<String, String> getMapUrls(double lat, double lng) {
   };
 }
 
-class FontSizeController extends ChangeNotifier {
-  double _scaleFactor =
-      double.parse(ModelSetting.get("fontScale", defaultValue: "1.0"));
-
-  double get scaleFactor => _scaleFactor;
-
-  TextScaler get textScaler => TextScaler.linear(_scaleFactor);
-
-  // Get the scaled size based on base font size
-  double getScaledSize(double fontSize) => fontSize * _scaleFactor;
-
-  // Increase font size by 10%
-  void increaseFontSize() {
-    if (_scaleFactor < 1.8) {
-      _scaleFactor += 0.1;
-      ModelSetting.set("fontScale", _scaleFactor.toString());
-      notifyListeners();
-    }
-  }
-
-  // Decrease font size by 10%
-  void decreaseFontSize() {
-    if (_scaleFactor > 0.7) {
-      // Prevent text from becoming too small
-      _scaleFactor -= 0.1;
-      ModelSetting.set("fontScale", _scaleFactor.toString());
-      notifyListeners();
-    }
-  }
-
-  // Reset to default size
-  void resetFontSize() {
-    _scaleFactor = 1.2;
-    ModelSetting.set("fontScale", _scaleFactor.toString());
-    notifyListeners();
-  }
-}
-
 class ExecutionResult<T> {
   // Status of the execution using enum
   final ExecutionStatus status;

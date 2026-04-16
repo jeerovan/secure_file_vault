@@ -1,10 +1,14 @@
-import 'package:file_vault_bb/ui/pages/page_devices.dart';
-import 'package:file_vault_bb/ui/pages/page_file_info.dart';
-import 'package:file_vault_bb/ui/pages/page_search.dart';
-import 'package:file_vault_bb/ui/pages/page_storage_providers.dart';
-import 'package:file_vault_bb/ui/pages/page_trash.dart';
-import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/utils/utils_sync.dart';
+import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/ui/pages/page_logs.dart';
+
+import '../../ui/pages/page_devices.dart';
+import '../../ui/pages/page_file_info.dart';
+import '../../ui/pages/page_search.dart';
+import '../../ui/pages/page_settings.dart';
+import '../../ui/pages/page_storage_providers.dart';
+import '../../ui/pages/page_trash.dart';
+import '../../utils/enums.dart';
+import '../../utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
@@ -25,11 +29,11 @@ import '../common_widgets.dart';
 
 class PageExplorer extends StatefulWidget {
   final ThemeMode themeMode;
-  final VoidCallback onThemeToggle;
+  final Function(String?) onThemeChange;
   const PageExplorer({
     super.key,
     required this.themeMode,
-    required this.onThemeToggle,
+    required this.onThemeChange,
   });
 
   @override
@@ -42,7 +46,10 @@ class _PageExplorerState extends State<PageExplorer> {
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
-          return FilePane();
+          return FilePane(
+            themeMode: widget.themeMode,
+            onThemeChange: widget.onThemeChange,
+          );
         },
       ),
     );
@@ -52,8 +59,12 @@ class _PageExplorerState extends State<PageExplorer> {
 // --- File Pane Widget ---
 
 class FilePane extends StatefulWidget {
+  final ThemeMode themeMode;
+  final Function(String?) onThemeChange;
   const FilePane({
     super.key,
+    required this.themeMode,
+    required this.onThemeChange,
   });
 
   @override
@@ -73,6 +84,9 @@ class _FilePaneState extends State<FilePane> {
   bool _isLocalPath = false;
   bool _isDeviceRoot = false;
   bool _syncInProgress = false;
+  bool _loggingEnabled =
+      ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
+          "yes";
   List<ModelItem> parentChilds = [];
   String? deviceHash;
   @override
@@ -131,6 +145,12 @@ class _FilePaneState extends State<FilePane> {
             });
           }
         }
+        break;
+      case EventType.settings:
+        if (event.key == EventKey.logging) {
+          _loggingEnabled = event.id == "yes";
+        }
+        break;
     }
   }
 
@@ -338,6 +358,17 @@ class _FilePaneState extends State<FilePane> {
     Navigator.of(context).push(AnimatedPageRoute(child: const SearchScreen()));
   }
 
+  Future<void> showSettingScreen() async {
+    Navigator.of(context).push(AnimatedPageRoute(
+        child: SettingsPage(
+      onThemeChange: widget.onThemeChange,
+    )));
+  }
+
+  Future<void> showLogsScreen() async {
+    Navigator.of(context).push(AnimatedPageRoute(child: const PageLogs()));
+  }
+
   Widget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -405,6 +436,8 @@ class _FilePaneState extends State<FilePane> {
                 if (value == 2) showDevices();
                 if (value == 3) showStorageProviders();
                 if (value == 4) showSearchScreen();
+                if (value == 5) showSettingScreen();
+                if (value == 6) showLogsScreen();
               },
               itemBuilder: (context) => [
                 const PopupMenuItem<int>(
@@ -414,6 +447,27 @@ class _FilePaneState extends State<FilePane> {
                       Icon(LucideIcons.logOut, color: Colors.grey),
                       SizedBox(width: 16),
                       Text('Signout'),
+                    ],
+                  ),
+                ),
+                if (_loggingEnabled)
+                  const PopupMenuItem<int>(
+                    value: 6,
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.tableProperties, color: Colors.grey),
+                        SizedBox(width: 16),
+                        Text('Logs'),
+                      ],
+                    ),
+                  ),
+                const PopupMenuItem<int>(
+                  value: 5,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.settings, color: Colors.grey),
+                      SizedBox(width: 16),
+                      Text('Settings'),
                     ],
                   ),
                 ),

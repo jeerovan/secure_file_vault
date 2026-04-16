@@ -85,6 +85,7 @@ enum AppString {
   deviceRegistered,
   loggingEnabled,
   simulateTesting,
+  theme,
 
   // Supabase
   supabaseInitialized,
@@ -129,6 +130,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.theme:
+        return "theme";
       case AppString.onboarding:
         return "onboarding";
       case AppString.tableMaps:
