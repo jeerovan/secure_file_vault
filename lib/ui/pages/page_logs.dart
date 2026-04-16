@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../models/model_log.dart';
+import '../common_widgets.dart';
 
 class PageLogs extends StatefulWidget {
   const PageLogs({super.key});
@@ -14,96 +18,67 @@ class _PageLogsState extends State<PageLogs> {
   String? _filterText;
   String _filterType = 'All';
   final List<String> _logTypes = ['All', 'INFO', 'DEBUG', 'WARNING', 'ERROR'];
+  late final TextEditingController _searchController;
+
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
-    _refreshLogs();
+    _searchController = TextEditingController();
+    _loadLogs();
   }
 
-  void _refreshLogs() {
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _loadLogs() {
+    if (mounted) {
+      setState(() {});
+    }
     List<String> searches = [_filterType];
     if (_filterText != null && _filterText!.isNotEmpty) {
-      searches.add(_filterText!.trim());
+      searches.add(_filterText!);
     }
-    setState(() {
-      _logsFuture = ModelLog.all(searches);
-    });
+    _logsFuture = ModelLog.all(searches);
   }
 
   Future<void> _clearLogs() async {
     await ModelLog.clear();
-    _refreshLogs();
+    _loadLogs();
+  }
+
+  Future<void> _navigateBack() async {
+    Navigator.pop(context);
+  }
+
+  void onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) {
+      _debounce!.cancel();
+    }
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _filterText = query.trim();
+      _loadLogs();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Logs'),
-        actions: [
-          // Log type filter dropdown
-          SizedBox(
-            width: 150,
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: _filterType,
-              onChanged: (String? newValue) {
-                if (newValue != null) {
-                  _filterType = newValue;
-                  _refreshLogs();
-                }
-              },
-              items: _logTypes.map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(
-                    value,
-                    style: TextStyle(fontSize: 14),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              _clearLogs();
-            },
-          ),
-        ],
-      ),
-      body: Column(
+    final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
+    return CrossPlatformBackHandler(
+      canPop: true,
+      onManualBack: _navigateBack,
+      child: Scaffold(
+          body: Column(
         children: [
-          // Filter bar
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                // Text search field
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                        hintText: 'Search logs...',
-                        border: OutlineInputBorder(),
-                        suffix: IconButton(
-                            iconSize: 20,
-                            onPressed: _refreshLogs,
-                            icon: Icon(Icons.search))),
-                    onChanged: (value) {
-                      setState(() {
-                        _filterText = value;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: RefreshIndicator(
               onRefresh: () async {
-                _refreshLogs();
+                _loadLogs();
               },
               child: FutureBuilder<List<ModelLog>>(
                 future: _logsFuture,
@@ -117,6 +92,7 @@ class _PageLogsState extends State<PageLogs> {
                   } else {
                     final logs = snapshot.data!;
                     return ListView.builder(
+                      reverse: true,
                       itemCount: logs.length,
                       itemBuilder: (context, index) {
                         final log = logs[index];
@@ -137,8 +113,119 @@ class _PageLogsState extends State<PageLogs> {
               ),
             ),
           ),
+          buildBottomAppBar(
+            color: surfaceColor,
+            leading: IconButton(
+              tooltip: 'Back',
+              icon: const Icon(LucideIcons.arrowLeft),
+              onPressed: _navigateBack,
+            ),
+            title: Row(
+              children: [
+                // 1. Wrap the TextField's container in an Expanded widget
+                Expanded(
+                  child: SizedBox(
+                    height: 40, // Keeps the search bar vertically constrained
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: onSearchChanged, // Triggers the debounce timer
+                      textAlignVertical: TextAlignVertical
+                          .center, // FIX: Perfectly centers text vertically
+                      textInputAction: TextInputAction.search,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        filled: true,
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withAlpha(20),
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 16.0),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                          borderSide: BorderSide
+                              .none, // Removes default underline/borders
+                        ),
+                        hintText: 'Search logs..',
+                        hintStyle: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withAlpha(125),
+                        ),
+                        prefixIcon: Icon(
+                          LucideIcons.search,
+                          size: 20,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withAlpha(125),
+                        ),
+                        suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _searchController,
+                          builder: (context, value, child) {
+                            if (value.text.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return IconButton(
+                              icon: const Icon(LucideIcons.x, size: 18),
+                              // splashRadius is deprecated in recent Flutter versions
+                              // If you are on Flutter 3.22+, rely on IconButton's standard sizing
+                              // or use style: IconButton.styleFrom() instead.
+                              splashRadius: 20,
+                              onPressed: () {
+                                _searchController.clear();
+                                onSearchChanged(
+                                    ''); // Immediately reset search with debounce
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // 2. Added spacing for better UX
+                const SizedBox(width: 16),
+                // 3. Dropdown remains fixed width
+                SizedBox(
+                  width: 150,
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _filterType,
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        // Assuming _filterType is part of setState or similar state management
+                        _filterType = newValue;
+                        _loadLogs();
+                      }
+                    },
+                    items:
+                        _logTypes.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(LucideIcons.trash2),
+                onPressed: () {
+                  _clearLogs();
+                },
+              ),
+            ],
+          ),
         ],
-      ),
+      )),
     );
   }
 }
