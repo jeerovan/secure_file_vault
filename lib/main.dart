@@ -93,7 +93,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  ThemeMode _themeMode = ThemeMode.system;
+  final ValueNotifier<ThemeMode> themeNotifier =
+      ValueNotifier(ThemeMode.system);
 
   final logger = AppLogger(prefixes: ["MainApp"]);
 
@@ -104,14 +105,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     String savedTheme = ModelSetting.get(AppString.theme.string);
     switch (savedTheme) {
       case "light":
-        _themeMode = ThemeMode.light;
+        themeNotifier.value = ThemeMode.light;
         break;
       case "dark":
-        _themeMode = ThemeMode.dark;
+        themeNotifier.value = ThemeMode.dark;
         break;
       default:
-        // Default to system theme
-        _themeMode = ThemeMode.system;
+        themeNotifier.value = ThemeMode.system;
         break;
     }
     WidgetsBinding.instance.addObserver(this);
@@ -134,50 +134,46 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   // Toggle between light and dark modes
-  Future<void> _onThemeChange(String? theme) async {
-    setState(() {
-      switch (theme) {
-        case "light":
-          _themeMode = ThemeMode.light;
-          break;
-        case "dark":
-          _themeMode = ThemeMode.dark;
-          break;
-        default:
-          _themeMode = ThemeMode.system;
-          break;
-      }
-    });
-    if (theme == null) {
-      await ModelSetting.delete(AppString.theme.string);
-    } else {
-      await ModelSetting.set(AppString.theme.string, theme);
+  void _onThemeChange(String? theme) async {
+    logger.debug("Changing theme to -> $theme");
+    switch (theme) {
+      case "light":
+        themeNotifier.value = ThemeMode.light;
+        break;
+      case "dark":
+        themeNotifier.value = ThemeMode.dark;
+        break;
+      default:
+        themeNotifier.value = ThemeMode.system;
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      theme: AppThemes.lightTheme,
-      darkTheme: AppThemes.darkTheme,
-      themeMode: _themeMode,
-      // Uses system theme by default
-      home: AppNavigator(
-        themeMode: _themeMode,
-        onThemeChange: _onThemeChange,
-      ),
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, ThemeMode currentMode, child) {
+        return MaterialApp(
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: currentMode,
+          // Uses system theme by default
+          home: AppNavigator(
+            onThemeChange: _onThemeChange,
+          ),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }
 
 class AppNavigator extends StatelessWidget {
-  final ThemeMode themeMode;
   final Function(String?) onThemeChange;
 
   const AppNavigator({
     super.key,
-    required this.themeMode,
     required this.onThemeChange,
   });
 
@@ -210,7 +206,6 @@ class AppNavigator extends StatelessWidget {
             return const StoragePermissionPage();
           case SetupStep.explorer:
             return PageExplorer(
-              themeMode: themeMode,
               onThemeChange: onThemeChange,
             );
         }

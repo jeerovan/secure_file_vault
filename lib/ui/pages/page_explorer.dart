@@ -28,11 +28,9 @@ import '../../utils/utils_tasks.dart';
 import '../common_widgets.dart';
 
 class PageExplorer extends StatefulWidget {
-  final ThemeMode themeMode;
   final Function(String?) onThemeChange;
   const PageExplorer({
     super.key,
-    required this.themeMode,
     required this.onThemeChange,
   });
 
@@ -47,7 +45,6 @@ class _PageExplorerState extends State<PageExplorer> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           return FilePane(
-            themeMode: widget.themeMode,
             onThemeChange: widget.onThemeChange,
           );
         },
@@ -59,11 +56,9 @@ class _PageExplorerState extends State<PageExplorer> {
 // --- File Pane Widget ---
 
 class FilePane extends StatefulWidget {
-  final ThemeMode themeMode;
   final Function(String?) onThemeChange;
   const FilePane({
     super.key,
-    required this.themeMode,
     required this.onThemeChange,
   });
 
@@ -174,9 +169,9 @@ class _FilePaneState extends State<FilePane> {
     String deviceRootHash = await getDeviceHash();
     _isDeviceRoot = currentItem?.id == deviceRootHash;
 
-    _itemsNotifier.value = items;
     if (mounted) {
       setState(() {
+        _itemsNotifier.value = items;
         _isLoading = false;
       });
     }

@@ -43,12 +43,13 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> setTheme(String theme) async {
-    widget.onThemeChange(theme);
     if (mounted) {
       setState(() {
         isDarkMode = theme == 'dark';
+        widget.onThemeChange(theme);
       });
     }
+    await ModelSetting.set(AppString.theme.string, theme);
   }
 
   Future<void> _setLogging(bool enable) async {
@@ -96,7 +97,7 @@ class SettingsPageState extends State<SettingsPage> {
                   leading: const Icon(LucideIcons.sunMoon, color: Colors.grey),
                   title: const Text("Theme"),
                   horizontalTitleGap: 24.0,
-                  onTap: () => setTheme(isDarkMode ? 'ligh' : 'dark'),
+                  onTap: () => setTheme(isDarkMode ? 'light' : 'dark'),
                   trailing: IconButton(
                     tooltip: "Day/night theme",
                     icon: AnimatedSwitcher(
@@ -120,7 +121,7 @@ class SettingsPageState extends State<SettingsPage> {
                         color: isDarkMode ? Colors.orange : Colors.black,
                       ),
                     ),
-                    onPressed: () => setTheme(isDarkMode ? 'ligh' : 'dark'),
+                    onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
                   ),
                 ),
                 ListTile(

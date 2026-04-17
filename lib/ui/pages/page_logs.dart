@@ -190,7 +190,7 @@ class _PageLogsState extends State<PageLogs> {
                 const SizedBox(width: 16),
                 // 3. Dropdown remains fixed width
                 SizedBox(
-                  width: 150,
+                  width: 100,
                   child: DropdownButton<String>(
                     isExpanded: true,
                     value: _filterType,
