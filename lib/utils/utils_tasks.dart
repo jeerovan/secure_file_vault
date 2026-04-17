@@ -145,11 +145,11 @@ class TaskManager {
 
       // Check background constraint: if took > 1 minute, end without restarting
       if (_inBackground) {
-        if (Platform.isIOS && taskDuration.inMinutes >= 1) {
+        if (Platform.isIOS && taskDuration.inSeconds >= 30) {
           logger.info(
               'Background process exceeded 1 minute limit. Ending queue.');
           queueNext = false;
-        } else if (Platform.isAndroid && taskDuration.inMinutes >= 2) {
+        } else if (Platform.isAndroid && taskDuration.inMinutes >= 3) {
           logger.info(
               'Background process exceeded 2 minute limit. Ending queue.');
           queueNext = false;

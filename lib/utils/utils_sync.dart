@@ -124,9 +124,11 @@ class SyncUtils {
     try {
       bool removed = await SyncUtils.checkDeviceStatus();
       if (!removed) {
-        await fetchMapChanges();
-        await pushMapChanges();
-        await TaskManager.init(inBackground: inBackground);
+        await fetchMapChanges(); // fetch server changes first
+        await pushMapChanges(); // send items/files changes before client uploads them
+        await TaskManager.init(
+            inBackground: inBackground); // upload actual files
+        await pushMapChanges(); // send upload changes to server
       }
     } catch (e, s) {
       logger.error("⚠ Sync failed", error: e.toString(), stackTrace: s);
