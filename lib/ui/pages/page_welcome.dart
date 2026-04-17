@@ -164,15 +164,16 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              LucideIcons.shieldCheck,
-              size: 80,
-              color: theme.colorScheme.primary,
+            child: Image.asset(
+              'assets/logo.png', // Replace with your actual asset path
+              width: 100,
+              height: 100,
+              color: theme.colorScheme.primary, // Applies the theme color tint
             ),
           ),
           const SizedBox(height: 48),
@@ -238,8 +239,13 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
-              leading: Icon(LucideIcons.ship,
-                  color: theme.colorScheme.primary, size: 32),
+              leading: Image.asset(
+                'assets/logo.png', // Replace with your actual asset path
+                width: 40,
+                height: 40,
+                color:
+                    theme.colorScheme.primary, // Applies the theme color tint
+              ),
               title: Text("FiFe Cloud",
                   style: TextStyle(
                       fontWeight: FontWeight.bold,

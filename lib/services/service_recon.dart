@@ -328,7 +328,7 @@ class ReconciliationService {
     dbItem.archivedAt = 0;
     await dbItem.update(["file_hash", "size", "archived_at"]);
 
-    checkCreateUploadTask(dbItem.id, fsPath, fsHash);
+    await checkCreateUploadTask(dbItem.id, fsPath, fsHash);
     logger.info('  ~ Modified: ${fsItem.name}');
   }
 
@@ -352,7 +352,7 @@ class ReconciliationService {
     await modelItem.insert();
     String itemId = modelItem.id;
 
-    checkCreateUploadTask(itemId, fsPath, hash); // no wait
+    await checkCreateUploadTask(itemId, fsPath, hash);
     logger.info('  + Created File: ${fsItem.name}');
   }
 
