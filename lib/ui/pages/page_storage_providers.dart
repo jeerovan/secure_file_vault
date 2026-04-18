@@ -277,25 +277,50 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
 
   // Helper to return a stylized icon based on provider ID
   Widget _buildProviderIcon(int id, ThemeData theme) {
-    IconData iconData;
+    Widget iconData;
     switch (id) {
       case 1:
-        iconData = LucideIcons.ship;
+        iconData = Image.asset(
+          'assets/logo.png', // Replace with your actual asset path
+          width: 30,
+          height: 30,
+          color: theme.colorScheme.primary, // Applies the theme color tint
+        );
         break;
       case 2:
-        iconData = LucideIcons.package;
+        iconData = Icon(
+          LucideIcons.package,
+          color: theme.colorScheme.onSecondaryContainer,
+          size: 24,
+        );
         break;
       case 3:
-        iconData = LucideIcons.cloudLightning;
+        iconData = Icon(
+          LucideIcons.cloudLightning,
+          color: theme.colorScheme.onSecondaryContainer,
+          size: 24,
+        );
         break;
       case 4:
-        iconData = LucideIcons.tableProperties;
+        iconData = Icon(
+          LucideIcons.tableProperties,
+          color: theme.colorScheme.onSecondaryContainer,
+          size: 24,
+        );
         break;
       case 5:
-        iconData = LucideIcons.hardDrive;
+        iconData = Icon(
+          LucideIcons.hardDrive,
+          color: theme.colorScheme.onSecondaryContainer,
+          size: 24,
+        );
         break;
       default:
-        iconData = LucideIcons.hardDrive;
+        iconData = Icon(
+          LucideIcons.hardDrive,
+          color: theme.colorScheme.onSecondaryContainer,
+          size: 24,
+        );
     }
 
     return Container(
@@ -304,11 +329,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
         color: theme.colorScheme.secondaryContainer.withAlpha(50),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Icon(
-        iconData,
-        color: theme.colorScheme.onSecondaryContainer,
-        size: 24,
-      ),
+      child: iconData,
     );
   }
 }

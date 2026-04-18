@@ -240,7 +240,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
             child: ListTile(
               contentPadding: const EdgeInsets.all(16),
               leading: Image.asset(
-                'assets/logo.png', // Replace with your actual asset path
+                'assets/logo.png',
                 width: 40,
                 height: 40,
                 color:

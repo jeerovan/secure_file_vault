@@ -1,105 +1,259 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import { ArrowDown, Cloud, Database, HardDrive, KeyRound, Server } from 'lucide-svelte';
+	import {
+		ArrowDown,
+		Cloud,
+		CloudLightning,
+		Database,
+		HardDrive,
+		KeyRound,
+		Package,
+		Server,
+		TableProperties
+	} from 'lucide-svelte';
 
 	// Storage providers data with step-by-step images and descriptions
 	const storageProviders = [
 		{
 			id: 'backblaze',
 			name: 'Backblaze B2',
-			icon: Database,
+			icon: Package,
 			steps: [
 				{
 					id: 1,
-					title: 'Create Application Key',
-					description:
-						'Log into your Backblaze account, navigate to "Application Keys" in the sidebar, and click the "Add a New Application Key" button.',
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Backblaze+Step+1:+Create+Key'
+					title: '',
+					image: '/images/storage/backblaze/guide-1.webp'
 				},
 				{
 					id: 2,
-					title: 'Copy Credentials',
-					description:
-						'Instantly copy your "Key ID" and "Application Key". Warning: The Application Key will only be displayed once.',
-					image:
-						'https://placehold.co/1200x675/1e293b/e2e8f0?text=Backblaze+Step+2:+Copy+Credentials'
+					title: '',
+					image: '/images/storage/backblaze/guide-2.webp'
 				},
 				{
 					id: 3,
-					title: 'Connect in FiFe',
-					description:
-						'Open the FiFe app, select Backblaze as your provider, and paste the Key ID and Application Key to establish a secure connection.',
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Backblaze+Step+3:+Connect+App'
+					title: '',
+					image: '/images/storage/backblaze/guide-3.webp'
+				},
+				{
+					id: 4,
+					title: '',
+					image: '/images/storage/backblaze/guide-4.webp'
+				},
+				{
+					id: 5,
+					title: '',
+					image: '/images/storage/backblaze/guide-5.webp'
+				},
+				{
+					id: 6,
+					title: '',
+					image: '/images/storage/backblaze/guide-6.webp'
+				},
+				{
+					id: 7,
+					title: '',
+					image: '/images/storage/backblaze/guide-7.webp'
+				},
+				{
+					id: 8,
+					title: '',
+					image: '/images/storage/backblaze/guide-8.webp'
+				},
+				{
+					id: 9,
+					title: '',
+					image: '/images/storage/backblaze/guide-9.webp'
 				}
 			]
 		},
 		{
 			id: 'cloudflare',
 			name: 'Cloudflare R2',
-			icon: Cloud,
+			icon: CloudLightning,
 			steps: [
 				{
 					id: 1,
-					title: 'Create an R2 Bucket',
-					description:
-						'Open the Cloudflare dashboard, go to R2, and click "Create Bucket". Choose an appropriate region for your backups.',
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Cloudflare+Step+1:+Create+Bucket'
+					title: '',
+					image: '/images/storage/cloudflare/guide-1.webp'
 				},
 				{
 					id: 2,
-					title: 'Generate API Tokens',
-					description:
-						'Click on "Manage R2 API Tokens" and create a token with "Admin Read & Write" permissions.',
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Cloudflare+Step+2:+API+Tokens'
+					title: '',
+					image: '/images/storage/cloudflare/guide-2.webp'
+				},
+				{
+					id: 3,
+					title: '',
+					image: '/images/storage/cloudflare/guide-3.webp'
+				},
+				{
+					id: 4,
+					title: '',
+					image: '/images/storage/cloudflare/guide-4.webp'
+				},
+				{
+					id: 5,
+					title: '',
+					image: '/images/storage/cloudflare/guide-5.webp'
+				},
+				{
+					id: 6,
+					title: '',
+					image: '/images/storage/cloudflare/guide-6.webp'
+				},
+				{
+					id: 7,
+					title: '',
+					image: '/images/storage/cloudflare/guide-7.webp'
+				},
+				{
+					id: 8,
+					title: '',
+					image: '/images/storage/cloudflare/guide-8.webp'
+				},
+				{
+					id: 9,
+					title: '',
+					image: '/images/storage/cloudflare/guide-9.webp'
+				},
+				{
+					id: 10,
+					title: '',
+					image: '/images/storage/cloudflare/guide-10.webp'
+				},
+				{
+					id: 11,
+					title: '',
+					image: '/images/storage/cloudflare/guide-11.webp'
+				},
+				{
+					id: 12,
+					title: '',
+					image: '/images/storage/cloudflare/guide-12.webp'
 				}
 			]
 		},
 		{
 			id: 'oracle',
 			name: 'Oracle Cloud',
-			icon: Server,
+			icon: TableProperties,
 			steps: [
 				{
 					id: 1,
-					title: 'Generate Customer Secret Keys',
-					description:
-						'Click your Profile icon -> User Settings. Under Resources, click "Customer Secret Keys" and generate a new key.',
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Oracle+Step+1:+Secret+Keys'
+					title: '',
+					image: '/images/storage/oracle/guide-1.webp'
 				},
 				{
 					id: 2,
-					title: 'Locate Object Storage Namespace',
-					description:
-						'Find your Tenancy Namespace and Region string to construct your S3-compatible endpoint URL.',
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Oracle+Step+2:+Namespace'
+					title: '',
+					image: '/images/storage/oracle/guide-2.webp'
 				},
 				{
 					id: 3,
-					title: 'Configure S3 Compatible Endpoint',
-					description:
-						"Enter your custom Endpoint URL, Access Key, and Secret Key into FiFe's S3-Compatible connection menu.",
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Oracle+Step+3:+Connect+S3'
+					title: '',
+					image: '/images/storage/oracle/guide-3.webp'
+				},
+				{
+					id: 4,
+					title: '',
+					image: '/images/storage/oracle/guide-4.webp'
+				},
+				{
+					id: 5,
+					title: '',
+					image: '/images/storage/oracle/guide-5.webp'
+				},
+				{
+					id: 6,
+					title: '',
+					image: '/images/storage/oracle/guide-6.webp'
+				},
+				{
+					id: 7,
+					title: '',
+					image: '/images/storage/oracle/guide-7.webp'
+				},
+				{
+					id: 8,
+					title: '',
+					image: '/images/storage/oracle/guide-8.webp'
+				},
+				{
+					id: 9,
+					title: '',
+					image: '/images/storage/oracle/guide-9.webp'
+				},
+				{
+					id: 10,
+					title: '',
+					image: '/images/storage/oracle/guide-10.webp'
+				},
+				{
+					id: 11,
+					title: '',
+					image: '/images/storage/oracle/guide-11.webp'
+				},
+				{
+					id: 12,
+					title: '',
+					image: '/images/storage/oracle/guide-12.webp'
+				},
+				{
+					id: 13,
+					title: '',
+					image: '/images/storage/oracle/guide-13.webp'
 				}
 			]
 		},
 		{
 			id: 'idrive',
 			name: 'IDrive E2',
-			icon: Cloud,
+			icon: HardDrive,
 			steps: [
 				{
 					id: 1,
-					title: 'Create an R2 Bucket',
-					description:
-						'Open the Cloudflare dashboard, go to R2, and click "Create Bucket". Choose an appropriate region for your backups.',
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Cloudflare+Step+1:+Create+Bucket'
+					title: '',
+					image: '/images/storage/idrive/guide-1.webp'
 				},
 				{
 					id: 2,
-					title: 'Generate API Tokens',
-					description:
-						'Click on "Manage R2 API Tokens" and create a token with "Admin Read & Write" permissions.',
-					image: 'https://placehold.co/1200x675/1e293b/e2e8f0?text=Cloudflare+Step+2:+API+Tokens'
+					title: '',
+					image: '/images/storage/idrive/guide-2.webp'
+				},
+				{
+					id: 3,
+					title: '',
+					image: '/images/storage/idrive/guide-3.webp'
+				},
+				{
+					id: 4,
+					title: '',
+					image: '/images/storage/idrive/guide-4.webp'
+				},
+				{
+					id: 5,
+					title: '',
+					image: '/images/storage/idrive/guide-5.webp'
+				},
+				{
+					id: 6,
+					title: '',
+					image: '/images/storage/idrive/guide-6.webp'
+				},
+				{
+					id: 7,
+					title: '',
+					image: '/images/storage/idrive/guide-7.webp'
+				},
+				{
+					id: 8,
+					title: '',
+					image: '/images/storage/idrive/guide-8.webp'
+				},
+				{
+					id: 9,
+					title: '',
+					image: '/images/storage/idrive/guide-9.webp'
 				}
 			]
 		}
@@ -207,7 +361,6 @@
 								<!-- Step Content & Image -->
 								<div class="pt-1 pb-8">
 									<h3 class="text-xl font-medium text-white">{step.title}</h3>
-									<p class="mt-2 text-white/70">{step.description}</p>
 
 									<div
 										class="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2 shadow-2xl backdrop-blur-sm"

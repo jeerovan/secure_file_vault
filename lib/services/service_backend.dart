@@ -47,7 +47,7 @@ class BackendApi {
   String _accessTokenOrThrow() {
     final session = _supabase.auth.currentSession;
     if (session == null) throw StateError('No active Supabase session.');
-    return session.accessToken; // Session exposes accessToken [web:57]
+    return session.accessToken; // Session exposes accessToken
   }
 
   Uri _buildUri(String endpoint, {Map<String, dynamic>? queryParameters}) {
