@@ -11,7 +11,7 @@ class AppEnv {
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
     defaultValue: '',
-  ); // set via --dart-define=API_BASE_URL=... [web:44]
+  ); // set via --dart-define=API_BASE_URL=
 }
 
 class BackendApi {
@@ -28,9 +28,9 @@ class BackendApi {
     this.timeout = const Duration(seconds: 30),
   })  : _supabase = supabase ?? Supabase.instance.client,
         _http = httpClient ?? http.Client(),
-        _base =
-            Uri.parse(_normalizeBaseUrl(baseUrlOverride ?? AppEnv.apiBaseUrl)) {
-    final raw = (baseUrlOverride ?? AppEnv.apiBaseUrl).trim();
+        _base = Uri.parse(
+            _normalizeBaseUrl(baseUrlOverride ?? '${AppEnv.apiBaseUrl}/api')) {
+    final raw = (baseUrlOverride ?? '${AppEnv.apiBaseUrl}/api').trim();
     if (raw.isEmpty) {
       throw StateError(
         'API_BASE_URL is empty. Set --dart-define=API_BASE_URL=https://your.domain',

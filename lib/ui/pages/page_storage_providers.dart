@@ -1,8 +1,10 @@
 import 'dart:math';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_add_storage.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
@@ -60,6 +62,21 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
     }
   }
 
+  void openHowToConnect() {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      final accessToken = session.accessToken;
+      final refreshToken = session.refreshToken;
+      // Construct the URL to your SvelteKit endpoint
+      final url = '${AppEnv.apiBaseUrl}/connect/session'
+          '?access_token=$accessToken'
+          '&refresh_token=$refreshToken';
+
+      // Launch this URL in the browser or WebView
+      openURL(url);
+    }
+  }
+
   // Helper to format bytes into readable strings (KB, MB, GB, etc.)
   String _formatBytes(int bytes, int decimals) {
     if (bytes <= 0) return "0 B";
@@ -112,6 +129,27 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
                                 return _buildProviderCard(context, provider);
                               },
                             ),
+            ),
+            FilledButton.tonalIcon(
+              onPressed: openHowToConnect,
+              icon: const Icon(LucideIcons.arrowRight, size: 18),
+              label: const Text(
+                "How to connect",
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              iconAlignment:
+                  IconAlignment.end, // Natively places icon on the right
+              style: FilledButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(12), // Sleek, modern corners
+                ),
+              ),
+            ),
+            const SizedBox(
+              height: 12,
             ),
             buildBottomAppBar(
                 color: surfaceColor,

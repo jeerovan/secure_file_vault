@@ -11,7 +11,7 @@
 		Server,
 		TableProperties
 	} from 'lucide-svelte';
-	import type { PageData } from './$types';
+	import type { PageData } from '../connect/$types';
 	type ProviderStep = {
 		id: number;
 		title: string;
