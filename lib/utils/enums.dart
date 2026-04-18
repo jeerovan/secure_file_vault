@@ -98,7 +98,7 @@ enum AppString {
   // Sync
   encryptionKeyType,
   hasEncryptionKeys,
-  syncInProgress,
+  lastRunningAt,
   pushedLocalContentForSync,
   lastChangeTS,
   lastProfileTS,
@@ -156,8 +156,8 @@ extension AppStringExtension on AppString {
         return "logging_enabled";
       case AppString.supabaseInitialized:
         return "supabase_initialized";
-      case AppString.syncInProgress:
-        return "sync_in_progress";
+      case AppString.lastRunningAt:
+        return "sync_running_at";
       case AppString.fcmId:
         return "fcm_id";
       case AppString.encryptionKeyType:

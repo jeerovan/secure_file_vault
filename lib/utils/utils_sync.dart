@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:file_vault_bb/models/model_profile.dart';
+import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import '../models/model_change.dart';
 import 'package:flutter/foundation.dart';
@@ -30,8 +31,8 @@ class SyncUtils {
 
   Timer? _debounceTimer;
   Timer? _syncTimer;
+  Timer? _processTimer;
 
-  bool _isSyncing = false;
   bool _hasPendingChanges = false;
 
   static final logger = AppLogger(prefixes: ["Sync"]);
@@ -50,6 +51,8 @@ class SyncUtils {
 
   // Pass inBackground flag to determine if we should await everything
   Future<void> syncRootFolders({bool inBackground = false}) async {
+    String mode = inBackground ? "Background" : "Foreground";
+    logger.info("Start recon in $mode");
     List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
     for (ModelItem syncFolder in syncFolders) {
       await ReconciliationService().reconcile(syncFolder.id);
@@ -85,23 +88,40 @@ class SyncUtils {
   }
 
   Future<void> triggerSync({required bool inBackground}) async {
+    String mode = inBackground ? "Background" : "Foreground";
     // Drop the request if a sync is already actively running
-    if (_isSyncing) {
-      logger.warning("Sync already in progress, skipping.");
+    int startedAt = DateTime.now().millisecondsSinceEpoch;
+    String lastRunningAtString =
+        ModelSetting.get(AppString.lastRunningAt.string);
+    int? lastRunningAt =
+        lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
+    if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
+      logger.warning("Sync already in progress, skipping in $mode.");
       return;
     }
+    await ModelSetting.set(
+        AppString.lastRunningAt.string, startedAt.toString());
+    // set timer to update running state every seconds
+    _processTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+      await ModelSetting.set(AppString.lastRunningAt.string,
+          DateTime.now().millisecondsSinceEpoch.toString());
+    });
 
     try {
-      _isSyncing = true;
-      String mode = inBackground ? "Background" : "Foreground";
       logger.info("sync request from: $mode");
 
       bool canSync = await SyncUtils.canSync();
-      if (!canSync) return;
+      if (!canSync) {
+        logger.warning("can not sync, in :$mode");
+        return;
+      }
 
       // Note: Workmanager already ensures network connectivity via constraints on Android
       bool hasInternet = await InternetConnection().hasInternetAccess;
-      if (!hasInternet) return;
+      if (!hasInternet) {
+        logger.info("No internet, in: $mode");
+        return;
+      }
 
       await _performSyncOperations(inBackground);
     } catch (e, stack) {
@@ -109,7 +129,8 @@ class SyncUtils {
       // If this is a background task, you might want to rethrow so Workmanager can retry
       if (inBackground) rethrow;
     } finally {
-      _isSyncing = false;
+      _processTimer?.cancel();
+      _processTimer = null;
       EventStream().publish(AppEvent(
           type: EventType.syncStatus,
           id: "",
@@ -198,8 +219,7 @@ class SyncUtils {
         await storage.delete(key: AppString.accessKey.string);
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
-        //TODO remove all local media (FiFe folder)
-
+        await clearFiFeDirectory();
         success = true;
       } on FunctionException catch (e) {
         Map<String, dynamic> errorMap =

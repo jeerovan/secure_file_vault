@@ -459,6 +459,27 @@ Future<void> checkAndCreateDirectory(String filePath) async {
   }
 }
 
+Future<void> clearFiFeDirectory() async {
+  final Directory directory = await getApplicationDocumentsDirectory();
+  String fifeRoot = path_lib.join(directory.path, 'FiFe');
+  await deleteDirectory(fifeRoot);
+}
+
+Future<void> deleteDirectory(String path) async {
+  try {
+    final directory = Directory(path);
+
+    // Always check if it exists first to avoid unnecessary exceptions
+    if (await directory.exists()) {
+      // 'recursive: true' is mandatory if the directory contains any files or sub-folders.
+      await directory.delete(recursive: true);
+    }
+  } catch (e, s) {
+    AppLogger(prefixes: ["Common"])
+        .error("Failed to delete FiFe directory.", error: e, stackTrace: s);
+  }
+}
+
 Future<void> moveFileSafely(String sourcePath, String destPath) async {
   final File sourceFile = File(sourcePath);
   final File destFile = File(destPath);
