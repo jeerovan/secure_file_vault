@@ -29,8 +29,6 @@ import {
 } from '$lib/server/db/keys';
 import { deleteFileFromStorage } from '../deleteWorker';
 
-const customDb: boolean = false;
-
 export async function getUserBySupabaseId(supabaseId: string, dbOrTx: any = db) {
 	const [res] = await dbOrTx
 		.select()
@@ -957,7 +955,9 @@ export async function getProviders() {
 		.select({
 			id: provider[ProviderKeys.ID],
 			title: provider[ProviderKeys.TITLE],
-			bytes: provider[ProviderKeys.FREE_BYTES]
+			bytes: provider[ProviderKeys.FREE_BYTES],
+			added: sql<number>`0`.as('added'),
+			used: sql<number>`0`.as('used')
 		})
 		.from(provider);
 }

@@ -3,12 +3,8 @@ import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { safeGetSession } }) => {
 	// Check if the user is already authenticated
-	const { session } = await safeGetSession();
-
-	return {
-		// Passing the session to the client so the UI can default to the "signedIn" step
-		session
-	};
+	const result = await safeGetSession();
+	return result;
 };
 
 export const actions: Actions = {
@@ -21,12 +17,6 @@ export const actions: Actions = {
 				error: 'Please enter a valid email address.',
 				email
 			});
-		}
-
-		// Optional: Simulate testing delay just like your Flutter code
-		if (email === 'test@example.com') {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-			return { success: true, email, step: 'otp' };
 		}
 
 		const { error } = await supabase.auth.signInWithOtp({
@@ -92,6 +82,6 @@ export const actions: Actions = {
 		await supabase.auth.signOut();
 
 		// Redirect back to the sign-in page, clearing the state
-		throw redirect(303, '/signin');
+		throw redirect(303, '/login');
 	}
 };

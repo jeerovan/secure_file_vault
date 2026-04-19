@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { enhance } from '$app/forms';
-	let { data, form } = $props();
+	import { enhance, applyAction } from '$app/forms';
 	import { fade, slide } from 'svelte/transition';
 	import {
 		ArrowLeft,
@@ -13,8 +12,8 @@
 		MailCheck,
 		RectangleEllipsis
 	} from 'lucide-svelte';
-	// Assuming you have a Supabase client initialized somewhere like this:
-	// import { supabase } from '$lib/supabaseClient';
+
+	let { data, form } = $props();
 
 	let step = $state<'email' | 'otp' | 'signedIn'>('email');
 	let email = $state('');
@@ -22,9 +21,8 @@
 	let processing = $state(false);
 	let errorMessage = $state('');
 
-	// References to inputs for auto-focusing
-	let emailInput: HTMLInputElement;
-	let otpInput: HTMLInputElement;
+	let emailInput = $state<HTMLInputElement>();
+	let otpInput = $state<HTMLInputElement>();
 
 	onMount(async () => {
 		await checkInitialAuthState();
@@ -32,7 +30,6 @@
 
 	async function checkInitialAuthState() {
 		if (!data.session) {
-			// Check if we recently sent an OTP (15 min expiry / 900000 ms)
 			const sentOtpAt = parseInt(localStorage.getItem('fife_otpSentAt') || '0', 10);
 			const savedEmail = localStorage.getItem('fife_otpSentTo') || '';
 			const nowUtc = Date.now();
@@ -44,8 +41,6 @@
 			}
 		} else {
 			step = 'signedIn';
-			// Here you would normally redirect or trigger your app setup state
-			// e.g., completeSignin()
 		}
 	}
 
@@ -64,26 +59,23 @@
 </svelte:head>
 
 <div class="relative flex min-h-screen items-center justify-center overflow-hidden p-6">
-	<!-- Abstract Background matching the landing page -->
 	<div
 		class="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_-20%,rgba(255,64,64,0.15),transparent_45%),linear-gradient(180deg,#07090c_0%,#0b0d10_100%)]"
 	></div>
 
 	<div class="w-full max-w-[420px]">
-		<!-- Error Toast -->
-		{#if errorMessage}
+		{#if errorMessage || form?.error}
 			<div
 				transition:slide
 				class="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200"
 			>
-				{errorMessage}
+				{form?.error || errorMessage}
 			</div>
 		{/if}
 
 		<div
 			class="relative overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/5 p-8 shadow-[0_10px_50px_rgba(0,0,0,0.28)] backdrop-blur-2xl"
 		>
-			<!-- Subtle top gradient line -->
 			<div
 				class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-[#FF4040]/50 to-transparent"
 			></div>
@@ -102,13 +94,22 @@
 						action="?/sendOtp"
 						use:enhance={() => {
 							processing = true;
-							return async ({ update }) => {
+							errorMessage = '';
+							return async ({ result, update }) => {
+								// applyAction syncs the response back to SvelteKit's reactive $props
+								await applyAction(result);
 								await update();
 								processing = false;
-								if (form?.success) {
+
+								if (result.type === 'success' && result.data) {
 									step = 'otp';
-									email = form.email;
-									// handle local storage expiry tracking if needed
+									email = result.data.email as string;
+
+									// Save to local storage for persistence across reloads
+									localStorage.setItem('fife_otpSentTo', email);
+									localStorage.setItem('fife_otpSentAt', Date.now().toString());
+
+									setTimeout(() => otpInput?.focus(), 100);
 								}
 							};
 						}}
@@ -124,6 +125,7 @@
 								<input
 									bind:this={emailInput}
 									bind:value={email}
+									name="email"
 									type="email"
 									id="email"
 									required
@@ -142,27 +144,13 @@
 							{#if processing}
 								<Loader class="h-5 w-5 animate-spin" />
 							{:else}
-								{errorMessage && !email ? 'Retry Sending OTP' : 'Send OTP'}
+								{form?.error || errorMessage ? 'Retry Sending OTP' : 'Send OTP'}
 							{/if}
 						</button>
 					</form>
-
-					<p class="mt-8 text-center text-sm text-white/50">
-						By continuing, you agree to our <br />
-						<a
-							href="https://fife.jeero.one/policy/terms"
-							target="_blank"
-							class="font-medium text-[#FF4040] hover:underline">Terms of Service</a
-						>
-						and
-						<a
-							href="https://fife.jeero.one/policy/privacy"
-							target="_blank"
-							class="font-medium text-[#FF4040] hover:underline">Privacy Policy</a
-						>.
-					</p>
 				</div>
 			{:else if step === 'otp'}
+				<!-- Same fade block... -->
 				<div in:fade={{ duration: 200, delay: 100 }} out:fade={{ duration: 100 }}>
 					<div class="flex justify-center">
 						<MailCheck class="h-12 w-12 text-[#FF4040]" />
@@ -178,9 +166,15 @@
 						action="?/verifyOtp"
 						use:enhance={() => {
 							processing = true;
-							return async ({ update }) => {
+							errorMessage = '';
+							return async ({ result, update }) => {
+								await applyAction(result);
 								await update();
 								processing = false;
+
+								// Because the server action throws a redirect on success,
+								// SvelteKit will automatically handle routing if successful.
+								// If it fails, form?.error will be populated.
 							};
 						}}
 					>
@@ -196,6 +190,7 @@
 								<input
 									bind:this={otpInput}
 									bind:value={otp}
+									name="otp"
 									type="text"
 									id="otp"
 									required
@@ -244,6 +239,7 @@
 					<p class="mt-2 text-white/60">You are securely connected to your vault.</p>
 
 					<div class="mt-8">
+						<!-- Standard enhance here is perfectly fine since signout handles itself -->
 						<form method="POST" action="?/signout" use:enhance>
 							<button
 								type="submit"

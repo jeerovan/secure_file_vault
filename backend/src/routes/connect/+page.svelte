@@ -1,16 +1,6 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import {
-		ArrowDown,
-		Cloud,
-		CloudLightning,
-		Database,
-		HardDrive,
-		KeyRound,
-		Package,
-		Server,
-		TableProperties
-	} from 'lucide-svelte';
+	import { ArrowDown, CloudLightning, Database, HardDrive, Package } from 'lucide-svelte';
 	import type { PageData } from '../connect/$types';
 	type ProviderStep = {
 		id: number;
@@ -319,7 +309,7 @@
 						<span class="truncate">{provider.title}</span>
 
 						<!-- Show "Added" badge if the user has configured this provider -->
-						{#if provider.added === 1}
+						{#if provider.added == 1}
 							<span
 								class="ml-auto rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-400"
 							>
@@ -411,7 +401,7 @@
 									>
 										<img
 											src={step.image}
-											alt="Visual guide for {activeProvider.name} step {step.id}"
+											alt="Visual guide for {activeProvider.title} step {step.id}"
 											class="h-auto w-full rounded-xl border border-white/5 object-cover opacity-90 transition-opacity hover:opacity-100"
 											loading="lazy"
 										/>
