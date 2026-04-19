@@ -1,8 +1,19 @@
 <script lang="ts">
 	import './layout.css';
+	import { invalidate } from '$app/navigation';
+	import { onMount } from 'svelte';
+	let { data, children } = $props();
+	let { supabase, claims } = $derived(data);
+	onMount(() => {
+		const { data } = supabase.auth.onAuthStateChange((event, _session) => {
+			if (_session?.expires_at !== claims?.exp) {
+				invalidate('supabase:auth');
+			}
+		});
+		return () => data.subscription.unsubscribe();
+	});
 	import favicon from '$lib/assets/favicon.png';
 	import '@fontsource-variable/inter';
-	let { children } = $props();
 	import { ArrowRight, BookOpen, CodeXml, HardDrive } from 'lucide-svelte';
 	const footerGroups = [
 		{
@@ -55,8 +66,8 @@
 			</nav>
 
 			<div class="flex items-center gap-3">
-				<a href="/storages" class="btn-secondary hidden sm:inline-flex">Storage</a>
-				<a href="#download" class="btn-primary">
+				<a href="/connect" class="btn-secondary hidden sm:inline-flex">Storage</a>
+				<a href="/login" class="btn-primary">
 					Get started
 					<ArrowRight class="ml-2 h-4 w-4" />
 				</a>
@@ -84,7 +95,7 @@
 					</p>
 
 					<div class="mt-6 flex flex-wrap gap-3">
-						<a href="/storages" class="btn-secondary">
+						<a href="/connect" class="btn-secondary">
 							<HardDrive class="mr-2 h-4 w-4" />
 							Storage
 						</a>
