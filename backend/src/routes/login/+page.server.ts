@@ -82,6 +82,6 @@ export const actions: Actions = {
 		await supabase.auth.signOut();
 
 		// Redirect back to the sign-in page, clearing the state
-		throw redirect(303, '/login');
+		throw redirect(303, '/');
 	}
 };

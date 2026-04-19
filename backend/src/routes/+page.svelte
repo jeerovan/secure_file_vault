@@ -1,20 +1,19 @@
 <script lang="ts">
 	import {
-		ArrowRight,
-		BookOpen,
 		Check,
 		Cloud,
 		CloudCog,
 		Download,
 		FolderKanban,
-		CodeXml,
-		HardDrive,
 		KeyRound,
 		Lock,
 		MonitorSmartphone,
 		RefreshCcw,
 		ServerCog,
-		Sparkles
+		Sparkles,
+		AppWindowIcon,
+		AppWindowMacIcon,
+		SmartphoneIcon
 	} from 'lucide-svelte';
 
 	const providers = ['Oracle', 'Cloudflare R2', 'Backblaze B2', 'IDrive E2', 'S3 Compatible'];
@@ -258,7 +257,7 @@
 <section id="workflow" class="section-space">
 	<div class="container-shell">
 		<div class="section-label">How it works</div>
-		<h2 class="section-title">Start syncing in three clear steps.</h2>
+		<h2 class="section-title">Start syncing in three easy steps.</h2>
 		<p class="section-copy">
 			The flow is intentionally simple so the product feels approachable, even though the foundation
 			is built for serious privacy.
@@ -327,7 +326,7 @@
 			<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 				<div class="rounded-3xl border border-white/10 bg-white/5 p-5">
 					<div class="flex items-center gap-3">
-						<HardDrive class="h-5 w-5 text-[#FF6B6B]" />
+						<AppWindowIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="font-medium text-white">Windows</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Native-feeling backup and explorer workflow.</p>
@@ -335,7 +334,7 @@
 
 				<div class="rounded-3xl border border-white/10 bg-white/5 p-5">
 					<div class="flex items-center gap-3">
-						<HardDrive class="h-5 w-5 text-[#FF6B6B]" />
+						<AppWindowMacIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="font-medium text-white">macOS</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Minimal, polished, and optimized for daily use.</p>
@@ -343,7 +342,7 @@
 
 				<div class="rounded-3xl border border-white/10 bg-white/5 p-5">
 					<div class="flex items-center gap-3">
-						<MonitorSmartphone class="h-5 w-5 text-[#FF6B6B]" />
+						<SmartphoneIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="font-medium text-white">Android</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Encrypted sync with a clean mobile-first UI.</p>
@@ -351,7 +350,7 @@
 
 				<div class="rounded-3xl border border-white/10 bg-white/5 p-5">
 					<div class="flex items-center gap-3">
-						<MonitorSmartphone class="h-5 w-5 text-[#FF6B6B]" />
+						<SmartphoneIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="font-medium text-white">iOS</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Fast access to protected files on the go.</p>

@@ -11,6 +11,7 @@ export const load: PageServerLoad = async ({ locals: { safeGetSession } }) => {
 	} else {
 		storageProviders = await getProviders();
 	}
+	storageProviders = storageProviders.filter((prodier) => prodier.id != 1);
 	return {
 		storageProviders
 	};
