@@ -130,7 +130,7 @@
 						{/if}
 					</div>
 				{:else}
-					<a href="/connect" class="btn-secondary hidden text-primary sm:inline-flex"
+					<a href="/connect" class="btn-secondary hidden gap-2 text-primary sm:inline-flex"
 						><HardDriveIcon class="h-4 w-4" />Storage</a
 					>
 					<a href="/login" class="btn-primary">

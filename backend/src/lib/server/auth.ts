@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { error } from '@sveltejs/kit';
-import { SUPABASE_URL, SUPABASE_KEY } from '$env/static/private';
+import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_KEY } from '$env/static/public';
 import { db } from './db';
 import { getUserBySupabaseId } from './db/api';
 import { ErrorCode, UserKeys } from './db/keys';
@@ -29,7 +29,7 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 	const token = authHeader.split(' ')[1];
 
 	// Use service role client ONLY for verifying the token — never expose this key
-	const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+	const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_KEY);
 	const {
 		data: { user },
 		error: authError

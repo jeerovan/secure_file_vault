@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/utils/common.dart';
+import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -144,6 +145,7 @@ class BackendApi {
               mappedMessage = "No Data";
               break;
             case "14":
+              SyncUtils.signout(alreadySignedOut: true);
               mappedMessage = "Unauthorized";
               break;
             default:

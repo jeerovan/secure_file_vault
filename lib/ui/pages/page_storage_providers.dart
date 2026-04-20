@@ -4,7 +4,6 @@ import 'package:file_vault_bb/ui/pages/page_add_storage.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
@@ -63,18 +62,9 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
   }
 
   void openHowToConnect() {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      final accessToken = session.accessToken;
-      final refreshToken = session.refreshToken;
-      // Construct the URL to your SvelteKit endpoint
-      final url = '${AppEnv.apiBaseUrl}/connect/session'
-          '?access_token=$accessToken'
-          '&refresh_token=$refreshToken';
-
-      // Launch this URL in the browser or WebView
-      openURL(url);
-    }
+    final url = '${AppEnv.apiBaseUrl}/connect';
+    // Launch this URL in the browser or WebView
+    openURL(url);
   }
 
   // Helper to format bytes into readable strings (KB, MB, GB, etc.)

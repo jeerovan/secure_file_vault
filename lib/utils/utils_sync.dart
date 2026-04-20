@@ -193,7 +193,7 @@ class SyncUtils {
     return removed;
   }
 
-  static Future<bool> signout() async {
+  static Future<bool> signout({bool alreadySignedOut = false}) async {
     bool success = false;
     bool hasInternet = await InternetConnection().hasInternetAccess;
     if (!hasInternet) return false;
@@ -213,7 +213,10 @@ class SyncUtils {
           } else {
             return false;
           }
-          await Supabase.instance.client.auth.signOut();
+          if (!alreadySignedOut) {
+            await Supabase.instance.client.auth
+                .signOut(scope: SignOutScope.local);
+          }
         }
         await storage.delete(key: AppString.masterKey.string);
         await storage.delete(key: AppString.accessKey.string);

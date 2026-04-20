@@ -79,7 +79,7 @@ export const actions: Actions = {
 	},
 
 	signout: async ({ locals: { supabase } }) => {
-		await supabase.auth.signOut();
+		await supabase.auth.signOut({ scope: 'local' });
 
 		// Redirect back to the sign-in page, clearing the state
 		throw redirect(303, '/');
