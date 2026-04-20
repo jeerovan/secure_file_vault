@@ -29,4 +29,8 @@ class ModelSetting {
     final dbHelper = StorageSqlite.instance;
     await dbHelper.delete(Tables.settings.string, key);
   }
+
+  static void clear() {
+    settingJson.clear();
+  }
 }

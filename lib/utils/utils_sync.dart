@@ -222,6 +222,7 @@ class SyncUtils {
         await storage.delete(key: AppString.accessKey.string);
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
+        ModelSetting.clear();
         await clearFiFeDirectory();
         success = true;
       } on FunctionException catch (e) {

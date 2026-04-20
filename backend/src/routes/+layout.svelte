@@ -15,19 +15,35 @@
 	const footerGroups = [
 		{
 			title: 'Product',
-			links: ['Download', 'Platforms', 'Integrations']
+			links: [
+				{ title: 'Download', url: '/#download' },
+				{ title: 'Platforms', url: '/#download' },
+				{ title: 'Integrations', url: '/connect' }
+			]
 		},
 		{
 			title: 'Resources',
-			links: ['Documentation', 'Security', 'Status']
+			links: [
+				{ title: 'Documentation', url: '/connect' },
+				{ title: 'Security', url: '/#security' },
+				{ title: 'Status', url: '/' }
+			]
 		},
 		{
 			title: 'Company',
-			links: ['About', 'GitHub', 'Contact']
+			links: [
+				{ title: 'About', url: '/' },
+				{ title: 'GitHub', url: '/' },
+				{ title: 'Contact', url: '/' }
+			]
 		},
 		{
 			title: 'Legal',
-			links: ['Privacy', 'Terms', 'Cookies']
+			links: [
+				{ title: 'Privacy', url: '/' },
+				{ title: 'Terms', url: '/' },
+				{ title: 'Cookies', url: '/' }
+			]
 		}
 	];
 	let isDropdownOpen = $state(false);
@@ -62,7 +78,7 @@
 				</div>
 				<div>
 					<div class="text-sm font-semibold tracking-wide text-white">FiFe</div>
-					<div class="text-xs text-white/55">Encrypted backup, beautifully designed</div>
+					<div class="text-xs text-white/55">Your private Files Ferry</div>
 				</div>
 			</a>
 
@@ -182,7 +198,9 @@
 							<ul class="mt-4 space-y-3">
 								{#each group.links as link}
 									<li>
-										<a href="/" class="text-sm text-white/70 transition hover:text-white">{link}</a>
+										<a href={link.url} class="text-sm text-white/70 transition hover:text-white"
+											>{link.title}</a
+										>
 									</li>
 								{/each}
 							</ul>
