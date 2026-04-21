@@ -3,7 +3,9 @@ import '../utils/enums.dart';
 import '../utils/common.dart';
 
 import '../storage/storage_sqlite.dart';
-import '../utils/utils_sync.dart';
+
+// Profile changes will not be synced like others
+// username and image will be updated on server with http request
 
 class ModelProfile {
   String id;
@@ -68,7 +70,7 @@ class ModelProfile {
     return inserted;
   }
 
-  Future<int> update(List<String> attrs, {bool pushToSync = true}) async {
+  Future<int> update(List<String> attrs) async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -77,13 +79,6 @@ class ModelProfile {
       updatedMap[attr] = map[attr];
     }
     int updated = await dbHelper.update(Tables.profiles.string, updatedMap, id);
-    if (pushToSync) {
-      map["updated_at"] = utcNow;
-      map["table"] = Tables.profiles.string;
-      SyncUtils.logChangeToPush(
-        map,
-      );
-    }
     return updated;
   }
 

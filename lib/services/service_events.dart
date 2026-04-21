@@ -7,6 +7,7 @@ enum EventKey {
   uploadProgress,
   downloadProgress,
   added,
+  updated,
   uploaded,
   downloaded,
   removed,

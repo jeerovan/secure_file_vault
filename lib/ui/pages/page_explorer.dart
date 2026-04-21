@@ -1,5 +1,6 @@
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/ui/pages/page_logs.dart';
+import 'package:file_vault_bb/ui/pages/page_subscription.dart';
 
 import '../../ui/pages/page_devices.dart';
 import '../../ui/pages/page_file_info.dart';
@@ -364,6 +365,11 @@ class _FilePaneState extends State<FilePane> {
     Navigator.of(context).push(AnimatedPageRoute(child: const PageLogs()));
   }
 
+  Future<void> showSubscriptionScreen() async {
+    Navigator.of(context)
+        .push(AnimatedPageRoute(child: const SubscriptionPage()));
+  }
+
   Widget _buildAppBar() {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -433,6 +439,7 @@ class _FilePaneState extends State<FilePane> {
                 if (value == 4) showSearchScreen();
                 if (value == 5) showSettingScreen();
                 if (value == 6) showLogsScreen();
+                if (value == 7) showSubscriptionScreen();
               },
               itemBuilder: (context) => [
                 const PopupMenuItem<int>(
@@ -442,6 +449,16 @@ class _FilePaneState extends State<FilePane> {
                       Icon(LucideIcons.logOut, color: Colors.grey),
                       SizedBox(width: 16),
                       Text('Signout'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem<int>(
+                  value: 7,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.dollarSign, color: Colors.grey),
+                      SizedBox(width: 16),
+                      Text('Pro'),
                     ],
                   ),
                 ),

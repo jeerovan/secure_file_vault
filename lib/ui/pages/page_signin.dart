@@ -2,6 +2,7 @@ import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/model_item.dart';
@@ -177,6 +178,12 @@ class _PageSigninState extends State<PageSignin> {
         await deviceItem.insert();
 
         logger.info("Login Successful");
+
+        // login to revenuecat
+        if (revenueCatSupported) {
+          await Purchases.logIn(userId!);
+          await Purchases.setEmail(savedEmail);
+        }
 
         if (!mounted) return;
         final appSetup = context.read<AppSetupState>();

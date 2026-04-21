@@ -5,6 +5,7 @@ import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_device_register.dart';
 import 'package:file_vault_bb/ui/pages/page_welcome.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
 import '../models/model_setting.dart';
@@ -73,8 +74,28 @@ Future<void> main() async {
 Future<void> initializeInParallel() async {
   await Future.wait([
     initializeDependencies(mode: ExecutionMode.appForeground),
-    initializeBackgroundSync()
+    initializeBackgroundSync(),
+    initializePurchases()
   ]);
+}
+
+Future<void> initializePurchases() async {
+  if (revenueCatSupported) {
+    String rcKey = "";
+    if (Platform.isAndroid) {
+      rcKey = const String.fromEnvironment("RC_KEY_ANDROID");
+    } else if (Platform.isIOS) {
+      rcKey = const String.fromEnvironment("RC_KEY_IOS");
+    }
+    if (rcKey.isNotEmpty) {
+      if (isDebugEnabled) {
+        await Purchases.setLogLevel(LogLevel.debug);
+      }
+      PurchasesConfiguration configuration = PurchasesConfiguration(rcKey);
+      await Purchases.configure(configuration);
+      logger.info("Initialized purchases");
+    }
+  }
 }
 
 Future<void> initializeBackgroundSync() async {

@@ -61,7 +61,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
     }
   }
 
-  void openHowToConnect() {
+  Future<void> openHowToConnect() async {
     final url = '${AppEnv.apiBaseUrl}/connect';
     // Launch this URL in the browser or WebView
     openURL(url);

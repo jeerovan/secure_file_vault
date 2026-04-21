@@ -68,7 +68,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					break;
 			}
 		}
-		await updateDeviceStatus(userId, deviceUuid, 1); // This will set device active time
+		await updateDeviceStatus(userId, deviceUuid, 1);
 	} catch (error) {
 		if (error instanceof Error) {
 			console.log(error.stack);

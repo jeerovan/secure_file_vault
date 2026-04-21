@@ -36,8 +36,7 @@ bool simulateTesting() {
       "yes";
 }
 
-bool revenueCatSupported =
-    Platform.isIOS || Platform.isAndroid; // TODO || Platform.isMacOS
+bool revenueCatSupported = Platform.isIOS || Platform.isAndroid;
 
 bool runningOnMobile = Platform.isAndroid || Platform.isIOS;
 

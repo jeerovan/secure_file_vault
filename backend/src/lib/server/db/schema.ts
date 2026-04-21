@@ -142,6 +142,7 @@ export const userData = pgTable('user_data', {
 		.notNull()
 		.$defaultFn(() => Date.now()),
 	[UserDataKeys.SERVER_UPDATED_AT]: bigint(UserDataKeys.SERVER_UPDATED_AT, { mode: 'number' })
+		.notNull()
 		.$defaultFn(() => Date.now())
 		.$onUpdate(() => Date.now()),
 	[UserDataKeys.USER_ID]: integer(UserDataKeys.USER_ID)
@@ -151,7 +152,7 @@ export const userData = pgTable('user_data', {
 	[UserDataKeys.USER_NAME]: text(UserDataKeys.USER_NAME).unique(),
 	[UserDataKeys.DEVICE_UUID]: text(UserDataKeys.DEVICE_UUID).notNull(), // To track made changes by
 	[UserDataKeys.PROFILE_IMAGE]: text(UserDataKeys.PROFILE_IMAGE),
-	[UserDataKeys.PRO_ID]: text(UserDataKeys.PRO_ID),
+	[UserDataKeys.PRO_ID]: text(UserDataKeys.PRO_ID).unique(), // revenue cat id
 	[UserDataKeys.PLAN_EXPIRES_AT]: bigint(UserDataKeys.PLAN_EXPIRES_AT, { mode: 'number' })
 		.notNull()
 		.default(0) // Plan expires at

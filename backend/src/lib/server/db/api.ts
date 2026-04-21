@@ -99,12 +99,76 @@ export async function getUserData(userId: number) {
 			userName: userData[UserDataKeys.USER_NAME],
 			profileImage: userData[UserDataKeys.PROFILE_IMAGE],
 			proId: userData[UserDataKeys.PRO_ID],
-			planExpiresAt: userData[UserDataKeys.PLAN_EXPIRES_AT]
+			planExpiresAt: userData[UserDataKeys.PLAN_EXPIRES_AT],
+			updatedAt: userData[UserDataKeys.SERVER_UPDATED_AT]
 		})
 		.from(userData)
 		.where(eq(userData[UserDataKeys.USER_ID], userId))
 		.limit(1);
 	return res;
+}
+
+// On your backend (Node.js/Edge function)
+export async function syncPlanExpiry(userId: number, supaId: string) {
+	// 1. Fetch the user's true subscription status from RevenueCat securely
+	// Use your RevenueCat SECRET API key here (store in backend .env, never in app)
+	const rcResponse = await fetch(`https://api.revenuecat.com/v1/subscribers/${supaId}`, {
+		method: 'GET',
+		headers: {
+			Authorization: `Bearer ${process.env.REVENUECAT_SECRET_KEY}`,
+			'Content-Type': 'application/json'
+		}
+	});
+
+	if (!rcResponse.ok) {
+		throw new Error('Failed to verify subscription with RevenueCat');
+	}
+
+	const rcData = await rcResponse.json();
+
+	// 2. Extract the expiration date for your specific entitlement
+	const entitlement = rcData.subscriber?.entitlements?.['pro'];
+
+	let trueExpiresAt = 0;
+	if (entitlement && entitlement.expires_date) {
+		trueExpiresAt = new Date(entitlement.expires_date).getTime();
+	}
+
+	// 3. Compare and update your database safely
+	const planData = await getUserData(userId);
+	const currentPlanExpiresAt = planData ? planData.planExpiresAt : 0;
+
+	// Only update if RevenueCat says they have more time than our DB currently thinks
+	if (trueExpiresAt > currentPlanExpiresAt) {
+		await db
+			.update(userData)
+			.set({ [UserDataKeys.PLAN_EXPIRES_AT]: trueExpiresAt })
+			.where(eq(userData[UserDataKeys.USER_ID], userId));
+	}
+
+	return trueExpiresAt;
+}
+
+export async function updatePlanExpiryFromWebhook(userId: number, newExpiresAt: number) {
+	const planData = await getUserData(userId);
+	let currentPlanExpiresAt = 0;
+
+	if (planData) {
+		currentPlanExpiresAt = planData.planExpiresAt;
+	}
+
+	// Logic: Webhooks dictate the absolute state (including downgrades/refunds).
+	// Update if the value is different to ensure sync.
+	// Note: If your provider sends out-of-order webhooks, you may also want to
+	// compare an `eventTimestamp` payload to `planData.updatedAt` to ignore stale webhooks.
+	const update = newExpiresAt !== currentPlanExpiresAt;
+
+	if (update) {
+		await db
+			.update(userData)
+			.set({ [UserDataKeys.PLAN_EXPIRES_AT]: newExpiresAt })
+			.where(eq(userData[UserDataKeys.USER_ID], userId));
+	}
 }
 
 export async function getUserDevices(userId: number, deviceId?: string) {

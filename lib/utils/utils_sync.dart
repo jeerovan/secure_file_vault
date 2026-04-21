@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import '../models/model_change.dart';
 import 'package:flutter/foundation.dart';
 import '../services/service_backend.dart';
@@ -216,6 +217,10 @@ class SyncUtils {
           if (!alreadySignedOut) {
             await Supabase.instance.client.auth
                 .signOut(scope: SignOutScope.local);
+          }
+          final isAnonymous = await Purchases.isAnonymous;
+          if (!isAnonymous) {
+            await Purchases.logOut();
           }
         }
         await storage.delete(key: AppString.masterKey.string);
