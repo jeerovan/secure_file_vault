@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { ArrowDown, CloudLightning, Database, HardDrive, Package } from 'lucide-svelte';
-	import type { PageData } from '../connect/$types';
 	type ProviderStep = {
 		id: number;
 		title: string;
 		image: string;
 	};
-	let { data }: { data: PageData } = $props();
 	// Storage providers data with step-by-step images and descriptions
 	const providerIcons: Record<number, any> = {
 		2: Package,
@@ -240,12 +238,15 @@
 			}
 		]
 	};
-	let storageProviders = $derived(data.storageProviders);
+	const storageProviders = [
+		{ id: 2, title: 'Backblaze B2', bytes: 10737418240 },
+		{ id: 3, title: 'Cloudflare R2', bytes: 10737418240 },
+		{ id: 4, title: 'Oracle', bytes: 21474836480 },
+		{ id: 5, title: 'Idrive E2', bytes: 10737418240 }
+	];
 
 	// Set the first provider as active by default
-	let activeProviderId = $derived<number | null>(
-		data.storageProviders.length > 0 ? data.storageProviders[0].id : null
-	);
+	let activeProviderId = $derived<number | null>(storageProviders[0].id);
 
 	// Svelte 5 derived state
 	let activeProvider = $derived(storageProviders.find((p: any) => p.id === activeProviderId));
@@ -307,15 +308,6 @@
 								: 'text-white/40 group-hover:text-white/70'}"
 						/>
 						<span class="truncate">{provider.title}</span>
-
-						<!-- Show "Added" badge if the user has configured this provider -->
-						{#if provider.added == 1}
-							<span
-								class="ml-auto rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-400"
-							>
-								Added
-							</span>
-						{/if}
 					</div>
 
 					<!-- Storage Metrics -->
@@ -325,22 +317,8 @@
 							: 'text-white/40 group-hover:text-white/60'}"
 					>
 						<div class="flex w-full justify-between">
-							<span>Used:</span>
-							<span class="font-medium">{formatBytes(provider.used)}</span>
-						</div>
-						<div class="flex w-full justify-between">
-							<span>Limit:</span>
+							<span>Free:</span>
 							<span class="font-medium">{formatBytes(provider.bytes)}</span>
-						</div>
-
-						<!-- Optional: Tiny visual progress bar -->
-						<div class="mt-1 h-1 w-full overflow-hidden rounded-full bg-black/20">
-							<div
-								class="h-full rounded-full {activeProviderId === provider.id
-									? 'bg-[#FF4040]'
-									: 'bg-white/20 group-hover:bg-white/40'}"
-								style="width: {provider.bytes > 0 ? (provider.used / provider.bytes) * 100 : 0}%"
-							></div>
 						</div>
 					</div>
 				</button>

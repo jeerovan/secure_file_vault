@@ -1019,9 +1019,7 @@ export async function getProviders() {
 		.select({
 			id: provider[ProviderKeys.ID],
 			title: provider[ProviderKeys.TITLE],
-			bytes: provider[ProviderKeys.FREE_BYTES],
-			added: sql<number>`0`.as('added'),
-			used: sql<number>`0`.as('used')
+			bytes: provider[ProviderKeys.FREE_BYTES]
 		})
 		.from(provider);
 }

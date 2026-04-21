@@ -46,17 +46,6 @@
 			]
 		}
 	];
-	let isDropdownOpen = $state(false);
-
-	// Function to mask email (e.g., user@example.com -> us***@example.com)
-	function maskEmail(email: string) {
-		if (!email) return '';
-		const [localPart, domain] = email.split('@');
-		if (localPart.length <= 2) return `${localPart}***@${domain}`;
-
-		const firstTwo = localPart.slice(0, 2);
-		return `${firstTwo}***@${domain}`;
-	}
 </script>
 
 <svelte:head>
@@ -90,70 +79,9 @@
 			</nav>
 
 			<div class="flex items-center gap-3">
-				{#if data?.user}
-					<a href="/connect" class="btn-secondary hidden gap-2 text-primary sm:inline-flex"
-						><HardDriveIcon class="h-4 w-4" />Storage</a
-					>
-
-					<!-- User Dropdown -->
-					<div class="relative">
-						<button
-							class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:bg-white/10"
-							onclick={() => (isDropdownOpen = !isDropdownOpen)}
-						>
-							{maskEmail(data.user.email)}
-							<ChevronDown
-								class="h-4 w-4 text-white/50 transition-transform {isDropdownOpen
-									? 'rotate-180'
-									: ''}"
-							/>
-						</button>
-
-						{#if isDropdownOpen}
-							<div
-								class="ring-opacity-5 absolute right-0 mt-2 w-48 origin-top-right rounded-lg border border-white/10 bg-zinc-900 py-1 shadow-xl ring-1 ring-black"
-							>
-								<a
-									href="/connect"
-									class="inline-flex w-full gap-2 px-4 py-2 text-sm text-white/75 transition hover:bg-white/10 hover:text-white sm:hidden"
-									><HardDriveIcon class="h-4 w-4" /> Storage</a
-								>
-								<form
-									action="/login?/signout"
-									method="POST"
-									use:enhance={() => {
-										// 1. Prevent the dropdown from unmounting the form during the network request
-										isDropdownOpen = true;
-
-										return async ({ update }) => {
-											// 2. Force SvelteKit to re-run layout.ts and layout.server.ts to clear the user data
-											await update({ invalidateAll: true });
-
-											// 3. Safely close the dropdown now that the redirect has happened
-											isDropdownOpen = false;
-										};
-									}}
-								>
-									<button
-										type="submit"
-										class="flex w-full items-center gap-2 px-4 py-2 text-sm text-white/75 transition hover:bg-white/10 hover:text-white"
-									>
-										<LogOut class="h-4 w-4" />
-										Sign out
-									</button>
-								</form>
-							</div>
-						{/if}
-					</div>
-				{:else}
-					<a href="/connect" class="btn-secondary hidden gap-2 text-primary sm:inline-flex"
-						><HardDriveIcon class="h-4 w-4" />Storage</a
-					>
-					<a href="/login" class="btn-primary">
-						Get started
-						<ArrowRight class="ml-2 h-4 w-4" />
-					</a>
-				{/if}
+				<a href="/connect" class="btn-secondary hidden gap-2 text-primary sm:inline-flex"
+					><HardDriveIcon class="h-4 w-4" />Storage</a
+				>
 			</div>
 		</div>
 	</header>
@@ -182,7 +110,11 @@
 							<HardDrive class="mr-2 h-4 w-4" />
 							Storage
 						</a>
-						<a href="/" class="btn-secondary">
+						<a
+							href="https://github.com/jeerovan/secure_file_vault"
+							target="_blank"
+							class="btn-secondary"
+						>
 							<CodeXml class="mr-2 h-4 w-4" />
 							GitHub
 						</a>
