@@ -438,6 +438,8 @@ class SyncUtils {
               String profileId = changeMap["4"];
               map["username"] = changeMap["5"];
               map["image"] = changeMap["8"];
+              map["plan_expires_at"] = int.parse(
+                  getValueFromMap(changeMap, "9", defaultValue: 0).toString());
               await ModelProfile.upcertFromServer(profileId, map);
               if (profileTS > lastProfileTS) {
                 lastProfileTS = profileTS;

@@ -12,6 +12,7 @@ class ModelProfile {
   String? email;
   String? username;
   String? image;
+  int? planExpiresAt;
   int? updatedAt;
 
   ModelProfile({
@@ -19,6 +20,7 @@ class ModelProfile {
     this.email,
     this.username,
     this.image,
+    this.planExpiresAt,
     this.updatedAt,
   });
 
@@ -28,6 +30,7 @@ class ModelProfile {
       'email': email,
       'username': username,
       'image': image,
+      'plan_expires_at': planExpiresAt,
       'updated_at': updatedAt,
     };
   }
@@ -39,6 +42,7 @@ class ModelProfile {
       email: getValueFromMap(map, "email", defaultValue: ""),
       username: getValueFromMap(map, "username", defaultValue: ""),
       image: getValueFromMap(map, "image", defaultValue: ""),
+      planExpiresAt: getValueFromMap(map, "plan_expires_at", defaultValue: 0),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: nowUtc),
     );
   }

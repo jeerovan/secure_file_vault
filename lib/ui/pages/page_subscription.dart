@@ -1,6 +1,9 @@
+import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,7 +17,7 @@ class SubscriptionPage extends StatefulWidget {
 class _SubscriptionPageState extends State<SubscriptionPage> {
   static const String entitlementId = 'pro';
 
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _isActive = false;
   bool _isExpired = false;
   Package? _proPackage;
@@ -23,7 +26,23 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   @override
   void initState() {
     super.initState();
-    _initializeData();
+    if (revenueCatSupported) {
+      _initializeData();
+    } else {
+      loadFromLocal();
+    }
+  }
+
+  Future<void> loadFromLocal() async {
+    String? userId = getSignedInUserId();
+    if (userId != null) {
+      ModelProfile? profile = await ModelProfile.get(userId);
+      if (profile != null) {
+        if (profile.planExpiresAt! > 0) {
+          _isActive = true;
+        }
+      }
+    }
   }
 
   Future<void> _initializeData() async {
@@ -148,85 +167,101 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     }
   }
 
+  Future<void> _navigateBack() async {
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('Upgrade Plan'),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: colorScheme.surface,
-        foregroundColor: colorScheme.onSurface,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (_isActive) ...[
-                    _buildActiveStatusCard(theme, colorScheme),
-                  ] else ...[
-                    if (_isExpired) _buildExpiredBanner(),
-                    const SizedBox(height: 24),
-                    _buildPlanCard(
-                      theme: theme,
-                      colorScheme: colorScheme,
-                      title: 'Free',
-                      price: '\$0.00 / forever',
-                      isActive: true,
-                      isPro: false,
-                      benefits: [
-                        'Enjoy free storage from providers',
-                        'Sync up to 3 devices securely',
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    _buildPlanCard(
-                      theme: theme,
-                      colorScheme: colorScheme,
-                      title: 'FiFe Pro - Yearly',
-                      price:
-                          _proPackage?.storeProduct.priceString ?? 'Loading...',
-                      isActive: false,
-                      isPro: true,
-                      benefits: [
-                        'Modify storage limit for each provider',
-                        'Sync up to 10 devices',
-                      ],
-                      buttonAction: _purchasePlan,
-                    ),
-                    const SizedBox(height: 32),
-                    TextButton(
-                      onPressed: _restorePurchases,
-                      child: Text(
-                        'Restore Purchases',
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                        ),
+    final surfaceColor = colorScheme.surfaceContainerHighest;
+    return CrossPlatformBackHandler(
+      canPop: true,
+      onManualBack: _navigateBack,
+      child: Scaffold(
+        body: Column(
+          children: [
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0, vertical: 32.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_isActive) ...[
+                            _buildActiveStatusCard(theme, colorScheme),
+                          ] else ...[
+                            if (_isExpired) _buildExpiredBanner(),
+                            const SizedBox(height: 24),
+                            _buildPlanCard(
+                              theme: theme,
+                              colorScheme: colorScheme,
+                              title: 'Free',
+                              price: '\$0.00 / forever',
+                              isActive: true,
+                              isPro: false,
+                              benefits: [
+                                'Enjoy free storage from providers',
+                                'Sync up to 3 devices securely',
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            _buildPlanCard(
+                              theme: theme,
+                              colorScheme: colorScheme,
+                              title: 'FiFe Pro - Yearly',
+                              price: _proPackage?.storeProduct.priceString ??
+                                  'Loading...',
+                              isActive: false,
+                              isPro: true,
+                              benefits: [
+                                'Modify storage limit for each provider',
+                                'Sync up to 10 devices',
+                              ],
+                              buttonAction:
+                                  revenueCatSupported ? _purchasePlan : null,
+                            ),
+                            const SizedBox(height: 32),
+                            if (revenueCatSupported)
+                              TextButton(
+                                onPressed: _restorePurchases,
+                                child: Text(
+                                  'Restore Purchases',
+                                  style: TextStyle(
+                                    color: colorScheme.primary,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                          ],
+                          const SizedBox(
+                            height: 24,
+                          ),
+                          Text(
+                            "* Subscription is associated with email account, not the device",
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.normal,
+                              color: colorScheme.onErrorContainer,
+                            ),
+                          )
+                        ],
                       ),
                     ),
-                  ],
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  Text(
-                    "* Subscription is associated with email account and not the device",
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.normal,
-                      color: colorScheme.onErrorContainer,
-                    ),
-                  )
-                ],
-              ),
             ),
+            buildBottomAppBar(
+                color: surfaceColor,
+                leading: IconButton(
+                    tooltip: 'Back',
+                    icon: const Icon(LucideIcons.arrowLeft),
+                    onPressed: _navigateBack),
+                title: Text("FiFe Pro"),
+                actions: [])
+          ],
+        ),
+      ),
     );
   }
 
@@ -305,14 +340,16 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          TextButton.icon(
-            onPressed: _manageSubscription,
-            icon: Icon(Icons.open_in_new, size: 18, color: colorScheme.primary),
-            label: const Text('Manage Subscription'),
-            style: TextButton.styleFrom(
-              foregroundColor: colorScheme.primary,
-            ),
-          )
+          if (revenueCatSupported)
+            TextButton.icon(
+              onPressed: _manageSubscription,
+              icon:
+                  Icon(Icons.open_in_new, size: 18, color: colorScheme.primary),
+              label: const Text('Manage Subscription'),
+              style: TextButton.styleFrom(
+                foregroundColor: colorScheme.primary,
+              ),
+            )
         ],
       ),
     );
@@ -382,12 +419,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            price,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+          if (revenueCatSupported)
+            Text(
+              price,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16.0),
             child: Divider(color: colorScheme.outlineVariant),
@@ -429,7 +467,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                       borderRadius: BorderRadius.circular(12)),
                   elevation: 0,
                 ),
-                child: const Text('Subscribe Now',
+                child: Text(
+                    revenueCatSupported
+                        ? 'Subscribe Now'
+                        : 'Subscribe on moile app',
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),

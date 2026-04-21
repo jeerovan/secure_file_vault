@@ -458,7 +458,7 @@ class _FilePaneState extends State<FilePane> {
                     children: [
                       Icon(LucideIcons.dollarSign, color: Colors.grey),
                       SizedBox(width: 16),
-                      Text('Pro'),
+                      Text('FiFe Pro'),
                     ],
                   ),
                 ),

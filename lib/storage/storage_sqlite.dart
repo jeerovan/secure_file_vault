@@ -146,6 +146,7 @@ class StorageSqlite {
         email TEXT NOT NULL,
         username TEXT,
         image TEXT,
+        plan_expires_at INTEGER NOT NULL DEFAULT 0,
         updated_at INTEGER
       )
     ''');
