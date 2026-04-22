@@ -1,9 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
-import { error } from '@sveltejs/kit';
-import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_KEY } from '$env/static/public';
-import { db } from './db';
+import { SUPABASE_URL, SUPABASE_KEY } from '$env/static/private';
 import { getUserBySupabaseId } from './db/api';
 import { ErrorCode, UserKeys } from './db/keys';
+import type { Db, Tx } from './db/index';
 
 export interface AuthUser {
 	authorized: boolean;
@@ -19,7 +18,7 @@ export interface AuthUser {
  * Throws a SvelteKit HTTP error if auth fails.
  * Use in any +server.ts route.
  */
-export async function requireAuth(request: Request): Promise<AuthUser> {
+export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUser> {
 	const authHeader = request.headers.get('authorization');
 	const device_uuid = request.headers.get('device_uuid') || undefined;
 	if (!authHeader?.startsWith('Bearer ')) {
@@ -29,7 +28,7 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 	const token = authHeader.split(' ')[1];
 
 	// Use service role client ONLY for verifying the token — never expose this key
-	const supabase = createClient(PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_KEY);
+	const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 	const {
 		data: { user },
 		error: authError
@@ -43,7 +42,7 @@ export async function requireAuth(request: Request): Promise<AuthUser> {
 		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
 	}
 
-	const userEntry = await getUserBySupabaseId(user.id);
+	const userEntry = await getUserBySupabaseId(db, user.id);
 
 	return {
 		authorized: true,

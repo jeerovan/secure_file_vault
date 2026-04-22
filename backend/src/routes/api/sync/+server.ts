@@ -9,9 +9,11 @@ import {
 	updateDeviceStatus
 } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
+import { getDb } from '$lib/server/db';
 
-export const GET: RequestHandler = async ({ request, url }) => {
-	const authUser = await requireAuth(request);
+export const GET: RequestHandler = async ({ request, url, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -26,6 +28,7 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	const lastPartsTS = parseInt(url.searchParams.get('last_part_ts') || '0', 10);
 
 	const { profileRows, fileRows, partRows, itemRows } = await fetchChanges(
+		db,
 		authUser.userId!,
 		deviceUuid,
 		lastProfilesTS,
@@ -40,8 +43,9 @@ export const GET: RequestHandler = async ({ request, url }) => {
 	});
 };
 
-export const POST: RequestHandler = async ({ request }) => {
-	const authUser = await requireAuth(request);
+export const POST: RequestHandler = async ({ request, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -56,19 +60,19 @@ export const POST: RequestHandler = async ({ request }) => {
 		for (const { table, changes } of table_maps) {
 			switch (table) {
 				case 'files':
-					await saveFileChanges(userId, deviceUuid, changes);
+					await saveFileChanges(db, userId, deviceUuid, changes);
 					break;
 				case 'items':
-					await saveItemChanges(userId, deviceUuid, changes);
+					await saveItemChanges(db, userId, deviceUuid, changes);
 					break;
 				case 'parts':
-					await savePartChanges(userId, deviceUuid, changes);
+					await savePartChanges(db, userId, deviceUuid, changes);
 					break;
 				default:
 					break;
 			}
 		}
-		await updateDeviceStatus(userId, deviceUuid, 1);
+		await updateDeviceStatus(db, userId, deviceUuid, 1);
 	} catch (error) {
 		if (error instanceof Error) {
 			console.log(error.stack);

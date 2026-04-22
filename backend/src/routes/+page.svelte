@@ -71,7 +71,7 @@
 			></div>
 
 			<img
-				src="/images/fife-explorer-desktop.webp"
+				src="https://images.fife.jeero.one/fife-explorer-desktop.webp"
 				alt="FiFe explorer UI placeholder"
 				class="h-auto w-full rounded-[1.4rem] border border-white/10 object-cover"
 			/>
@@ -138,7 +138,7 @@
 
 				<div class="mt-6 overflow-hidden rounded-[1.5rem] border border-white/10 bg-black/30 p-3">
 					<img
-						src="/images/fife-explorer-options.webp"
+						src="https://images.fife.jeero.one/fife-explorer-options.webp"
 						alt="File explorer placeholder"
 						class="h-auto w-full rounded-[1.1rem]"
 					/>
@@ -186,7 +186,7 @@
 	<div class="container-shell grid gap-8 lg:grid-cols-[1.1fr_1.05fr]">
 		<div class="glass-card p-4">
 			<img
-				src="/images/encryption-flow-explain.webp"
+				src="https://images.fife.jeero.one/encryption-flow-explain.webp"
 				alt="Encryption diagram placeholder"
 				class="rounded-[1.5rem] border border-white/10"
 			/>

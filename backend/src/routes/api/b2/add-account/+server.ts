@@ -3,9 +3,11 @@ import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
 import { authorize, addAccount } from '$lib/server/backblaze';
 import { ErrorCode } from '$lib/server/db/keys';
+import { getDb } from '$lib/server/db';
 
-export const POST: RequestHandler = async ({ request }) => {
-	const authUser = await requireAuth(request);
+export const POST: RequestHandler = async ({ request, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -22,6 +24,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!app_id || !app_key) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
+
 	const { message, data } = await authorize(app_id, app_key); // TODO Should be checked on user device also
 	if (message) {
 		// TODO flag user with attempt count
@@ -59,7 +62,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		];
 		const allExists = required.every((item) => capabilities.includes(item));
 		if (allExists) {
-			const result = await addAccount(authUser.userId!, app_id, app_key, data);
+			const result = await addAccount(db, authUser.userId!, app_id, app_key, data);
 			return result;
 		} else {
 			return json({ success: 0, message: ErrorCode.CREDENTIALS_INCAPABLE });

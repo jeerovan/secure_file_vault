@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "vite preview",
+		"preview:dev": "vite preview",
+		"preview:prod": "npm run build && wrangler pages dev .svelte-kit/cloudflare",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
@@ -17,20 +18,21 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx scripts/seed.ts",
-		"db:add-fife": "tsx scripts/add_fife.ts"
+		"db:add-fife": "tsx scripts/add_fife.ts",
+		"db:add-fife-neon": "tsx scripts/add_fife_neon.ts"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^4.20260422.1",
 		"@eslint/compat": "^2.0.2",
 		"@eslint/js": "^9.39.2",
-		"@sveltejs/adapter-node": "^5.5.2",
+		"@sveltejs/adapter-cloudflare": "^7.2.8",
 		"@sveltejs/kit": "^2.50.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@tailwindcss/vite": "^4.2.2",
-		"@types/better-sqlite3": "^7.6.13",
 		"@types/node": "^22",
 		"dotenv": "^17.4.1",
 		"drizzle-kit": "^0.31.8",
-		"drizzle-orm": "^0.45.1",
+		"drizzle-orm": "^0.45.2",
 		"eslint": "^9.39.2",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.14.0",
@@ -50,11 +52,11 @@
 		"@aws-sdk/client-s3": "^3.1016.0",
 		"@aws-sdk/s3-request-presigner": "^3.1016.0",
 		"@fontsource-variable/inter": "^5.2.8",
-		"@supabase/ssr": "^0.10.2",
+		"@neondatabase/serverless": "^1.1.0",
 		"@supabase/supabase-js": "^2.97.0",
-		"better-sqlite3": "^12.6.2",
 		"lucide-svelte": "^1.0.1",
 		"postgres": "^3.4.9",
-		"undici": "^8.0.2"
+		"undici": "^8.0.2",
+		"wrangler": "^4.84.1"
 	}
 }

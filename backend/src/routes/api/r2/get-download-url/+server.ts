@@ -5,9 +5,11 @@ import { CredentialKeys, ErrorCode } from '$lib/server/db/keys';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getCredentialByStorageId } from '$lib/server/db/api';
+import { getDb } from '$lib/server/db';
 
-export const POST: RequestHandler = async ({ request }) => {
-	const authUser = await requireAuth(request);
+export const POST: RequestHandler = async ({ request, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -24,7 +26,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const credentials = await getCredentialByStorageId(authUser.userId!, storage_id);
+	const credentials = await getCredentialByStorageId(db, authUser.userId!, storage_id);
 	if (!credentials) {
 		return json({ success: 0, message: ErrorCode.NO_STORAGE });
 	}

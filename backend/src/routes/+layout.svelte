@@ -2,16 +2,8 @@
 	import './layout.css';
 	import favicon from '$lib/assets/favicon.png';
 	import '@fontsource-variable/inter';
-	import { enhance } from '$app/forms';
-	import {
-		ArrowRight,
-		ChevronDown,
-		LogOut,
-		CodeXml,
-		HardDrive,
-		HardDriveIcon
-	} from 'lucide-svelte';
-	let { data, children } = $props();
+	import { CodeXml, HardDrive, HardDriveIcon } from 'lucide-svelte';
+	let { children } = $props();
 	const footerGroups = [
 		{
 			title: 'Product',
@@ -63,7 +55,12 @@
 				<div
 					class="flex items-center justify-center rounded-xl shadow-[0_10px_30px_rgba(255,64,64,0.28)]"
 				>
-					<img src="/images/fife-logo.webp" height="30" width="30" alt="Logo" />
+					<img
+						src="https://images.fife.jeero.one/fife-logo.webp"
+						height="30"
+						width="30"
+						alt="Logo"
+					/>
 				</div>
 				<div>
 					<div class="text-sm font-semibold tracking-wide text-white">FiFe</div>
@@ -92,7 +89,12 @@
 				<div>
 					<a href="/" class="flex items-center gap-3">
 						<div class="flex h-10 w-10 items-center justify-center rounded-2xl">
-							<img src="/images/fife-logo.webp" height="30" width="30" alt="Logo" />
+							<img
+								src="https://images.fife.jeero.one/fife-logo.webp"
+								height="30"
+								width="30"
+								alt="Logo"
+							/>
 						</div>
 						<div>
 							<div class="font-semibold text-white">FiFe</div>

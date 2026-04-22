@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-
+import { getDb } from '$lib/server/db';
 import {
 	addTempStorage,
 	getCredentials,
@@ -17,8 +17,9 @@ import {
 	TempStorageKeys
 } from '$lib/server/db/keys';
 
-export const POST: RequestHandler = async ({ request }) => {
-	const authUser = await requireAuth(request);
+export const POST: RequestHandler = async ({ request, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -35,12 +36,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!file_hash || !file_size) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const fileRow = await getUserFile(authUser.userId!, file_hash);
+	const fileRow = await getUserFile(db, authUser.userId!, file_hash);
 	if (!fileRow) {
 		return json({ success: 0, message: ErrorCode.NO_DATA });
 	}
 	const fileId = fileRow[FileKeys.ID];
-	const tempStorage = await getTempStorage(authUser.userId!, fileId);
+	const tempStorage = await getTempStorage(db, authUser.userId!, fileId);
 	if (tempStorage) {
 		return json({
 			success: 1,
@@ -50,14 +51,14 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		});
 	} else {
-		const storage = await getOptimalStorage(authUser.userId!, file_size);
+		const storage = await getOptimalStorage(db, authUser.userId!, file_size);
 		if (storage) {
 			const credentialId = storage[StorageKeys.CREDENTIAL_ID];
-			const credential = await getCredentials(credentialId);
+			const credential = await getCredentials(db, credentialId);
 			if (credential) {
 				const providerId = credential[CredentialKeys.PROVIDER_ID];
 				const storageId = storage[StorageKeys.ID];
-				await addTempStorage(authUser.userId!, fileId, storageId, file_size, providerId);
+				await addTempStorage(db, authUser.userId!, fileId, storageId, file_size, providerId);
 				return json({ success: 1, data: { provider_id: providerId, storage_id: storageId } });
 			} else {
 				return json({ success: 0, message: ErrorCode.NO_STORAGE });

@@ -1,23 +1,25 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-
+import { getDb } from '$lib/server/db';
 import { addUpdateDevice, getUserDevices, updateDeviceStatus } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
 
-export const GET: RequestHandler = async ({ request, url }) => {
-	const authUser = await requireAuth(request);
+export const GET: RequestHandler = async ({ request, url, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
 	const deviceUuid = url.searchParams.get('device_uuid') || undefined;
-	const result = await getUserDevices(authUser.userId!, deviceUuid);
+	const result = await getUserDevices(db, authUser.userId!, deviceUuid);
 
 	return json({ success: 1, data: result });
 };
 
-export const POST: RequestHandler = async ({ request }) => {
-	const authUser = await requireAuth(request);
+export const POST: RequestHandler = async ({ request, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -35,11 +37,20 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	return await addUpdateDevice(authUser.userId!, device_uuid, title, type, notificationId, active);
+	return await addUpdateDevice(
+		db,
+		authUser.userId!,
+		device_uuid,
+		title,
+		type,
+		notificationId,
+		active
+	);
 };
 
-export const DELETE: RequestHandler = async ({ request, url }) => {
-	const authUser = await requireAuth(request);
+export const DELETE: RequestHandler = async ({ request, url, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -59,5 +70,5 @@ export const DELETE: RequestHandler = async ({ request, url }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	return await updateDeviceStatus(authUser.userId!, deviceUuid, 0);
+	return await updateDeviceStatus(db, authUser.userId!, deviceUuid, 0);
 };

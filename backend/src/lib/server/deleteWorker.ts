@@ -10,9 +10,9 @@ import {
 	updateStorageUsedSize
 } from './db/api';
 import { CredentialKeys, FileKeys, PartKeys, StorageProvider, UserKeys } from './db/keys';
-import { db } from './db';
+import type { Db, Tx } from './db';
 
-export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
+export async function deleteFileFromStorage(db: Db | Tx, fileRow: any) {
 	const parts = fileRow[FileKeys.PARTS];
 	const partNumbers = Array.from({ length: parts }, (_, i) => i + 1);
 	const userId = fileRow[FileKeys.USER_ID];
@@ -20,21 +20,21 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 	const providerId = fileRow[FileKeys.PROVIDER_ID];
 	const storageId = fileRow[FileKeys.STORAGE_ID];
 	const fileHash = fileRow[FileKeys.FILE_HASH];
-	const userRow = await getUser(userId, dbOrTx);
+	const userRow = await getUser(db, userId);
 	if (storageId == null || userRow == undefined) return;
-	const credential = await getCredentialByStorageId(userId, storageId, dbOrTx);
+	const credential = await getCredentialByStorageId(db, userId, storageId);
 	const supabaseId = userRow[UserKeys.SUPABASE_ID];
 	let allRemoved = true;
 	for (const index in partNumbers) {
 		const partNumber = partNumbers[index];
 		const file_name = `${supabaseId}/${fileHash}_${partNumber}`;
-		const filePart = await getUserFilePart(userId, fileRow[FileKeys.ID], partNumber, dbOrTx);
+		const filePart = await getUserFilePart(db, userId, fileRow[FileKeys.ID], partNumber);
 		if (filePart && filePart[PartKeys.PART_SIZE] > 0) {
 			if (providerId == StorageProvider.FIFE || providerId == StorageProvider.BACKBLAZE) {
 				const partData = filePart[PartKeys.JSON];
 				const parsedData = typeof partData === 'string' ? JSON.parse(partData) : partData;
 				const b2_id = parsedData.fileId;
-				const authData = await authenticate(userId, storageId);
+				const authData = await authenticate(db, userId, storageId);
 				if (!authData) {
 					return;
 				}
@@ -46,17 +46,11 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 				});
 				const result = await response.json();
 				if (result['success'] == 1) {
-					await updateStorageUsedSize(
-						storageId,
-						userId,
-						filePart[PartKeys.PART_SIZE],
-						false,
-						dbOrTx
-					);
-					await resetUserFilePart(userId, fileId, partNumber);
+					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetUserFilePart(db, userId, fileId, partNumber);
 				} else if (result['message'] == 'file_not_found') {
-					await updateStorageUsedSize(storageId, userId, filePart[PartKeys.PART_SIZE], false);
-					await resetUserFilePart(userId, fileId, partNumber, dbOrTx);
+					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetUserFilePart(db, userId, fileId, partNumber);
 				} else {
 					allRemoved = false;
 				}
@@ -83,14 +77,8 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 				});
 				try {
 					await s3Client.send(command);
-					await updateStorageUsedSize(
-						storageId,
-						userId,
-						filePart[PartKeys.PART_SIZE],
-						false,
-						dbOrTx
-					);
-					await resetUserFilePart(userId, fileId, partNumber, dbOrTx);
+					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetUserFilePart(db, userId, fileId, partNumber);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -119,14 +107,8 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 				});
 				try {
 					await s3Client.send(command);
-					await updateStorageUsedSize(
-						storageId,
-						userId,
-						filePart[PartKeys.PART_SIZE],
-						false,
-						dbOrTx
-					);
-					await resetUserFilePart(userId, fileId, partNumber, dbOrTx);
+					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetUserFilePart(db, userId, fileId, partNumber);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -154,14 +136,8 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 				});
 				try {
 					await s3Client.send(command);
-					await updateStorageUsedSize(
-						storageId,
-						userId,
-						filePart[PartKeys.PART_SIZE],
-						false,
-						dbOrTx
-					);
-					await resetUserFilePart(userId, fileId, partNumber, dbOrTx);
+					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetUserFilePart(db, userId, fileId, partNumber);
 				} catch (e) {
 					allRemoved = false;
 					console.error(e);
@@ -170,6 +146,6 @@ export async function deleteFileFromStorage(fileRow: any, dbOrTx: any = db) {
 		}
 	}
 	if (allRemoved) {
-		await resetUserFileByHash(userId, fileHash, dbOrTx);
+		await resetUserFileByHash(db, userId, fileHash);
 	}
 }

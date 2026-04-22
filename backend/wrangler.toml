@@ -1,0 +1,8 @@
+name = "fife-neon"
+compatibility_date = "2024-04-22"
+compatibility_flags = [ "nodejs_compat" ]
+pages_build_output_dir = ".svelte-kit/cloudflare"
+
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "0452f8feb0c441a8a4e8babe57c28811"

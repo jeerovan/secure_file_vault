@@ -52,6 +52,10 @@ class SyncUtils {
 
   // Pass inBackground flag to determine if we should await everything
   Future<void> syncRootFolders({bool inBackground = false}) async {
+    String? userId = getSignedInUserId();
+    if (userId == null) {
+      return;
+    }
     String mode = inBackground ? "Background" : "Foreground";
     logger.info("Start recon in $mode");
     List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
@@ -180,7 +184,7 @@ class SyncUtils {
         logger.error("checkDeviceStatus", error: response["message"]);
       } else if (status == 1) {
         final data = response["data"];
-        removed = data["active"] == 0;
+        removed = data == null || data.isEmpty || data["active"] == 0;
       }
 
       if (removed) {
@@ -218,9 +222,11 @@ class SyncUtils {
             await Supabase.instance.client.auth
                 .signOut(scope: SignOutScope.local);
           }
-          final isAnonymous = await Purchases.isAnonymous;
-          if (!isAnonymous) {
-            await Purchases.logOut();
+          if (revenueCatSupported) {
+            final isAnonymous = await Purchases.isAnonymous;
+            if (!isAnonymous) {
+              await Purchases.logOut();
+            }
           }
         }
         await storage.delete(key: AppString.masterKey.string);
@@ -321,12 +327,12 @@ class SyncUtils {
               }
             }
           }
-          logger.info("Pushed Map Changes");
         } else {
           changesAvailable = false;
         }
       }
     }
+    logger.info("Pushed Map Changes");
   }
 
   static Future<void> fetchMapChanges() async {

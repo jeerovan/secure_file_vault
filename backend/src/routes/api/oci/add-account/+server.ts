@@ -4,6 +4,7 @@ import { requireAuth } from '$lib/server/auth';
 import { ErrorCode, StorageProvider } from '$lib/server/db/keys';
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { addCredentials } from '$lib/server/db/api';
+import { getDb } from '$lib/server/db';
 
 async function verifyR2Credentials(
 	bucket: string,
@@ -35,8 +36,9 @@ async function verifyR2Credentials(
 	}
 }
 
-export const POST: RequestHandler = async ({ request }) => {
-	const authUser = await requireAuth(request);
+export const POST: RequestHandler = async ({ request, platform }) => {
+	const db = getDb(platform);
+	const authUser = await requireAuth(db, request);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -63,7 +65,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			region: region
 		};
 		const providerId = StorageProvider.OCI;
-		await addCredentials(authUser.userId!, credentials, providerId);
+		await addCredentials(db, authUser.userId!, credentials, providerId);
 		return json({ success: 1 });
 	} else {
 		// TODO flag user with attempt count
