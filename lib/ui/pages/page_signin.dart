@@ -182,7 +182,6 @@ class _PageSigninState extends State<PageSignin> {
         // login to revenuecat
         if (revenueCatSupported) {
           await Purchases.logIn(userId!);
-          await Purchases.setEmail(savedEmail);
         }
 
         if (!mounted) return;

@@ -1,5 +1,6 @@
 import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class SubscriptionPage extends StatefulWidget {
 }
 
 class _SubscriptionPageState extends State<SubscriptionPage> {
+  final AppLogger logger = AppLogger(prefixes: ["Subscription"]);
   static const String entitlementId = 'pro';
 
   bool _isLoading = false;
@@ -75,6 +77,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         if (offerings.current != null && offerings.current!.annual != null) {
           setState(() {
             _proPackage = offerings.current!.annual;
+            logger.debug("Package: $_proPackage");
           });
         }
       }
@@ -87,12 +90,13 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
   Future<void> _purchasePlan() async {
     if (_proPackage == null) return;
-
+    String? userEmail = getSignedInEmailId();
     setState(() => _isLoading = true);
     try {
-      final params = PurchaseParams.package(_proPackage!);
+      final params =
+          PurchaseParams.package(_proPackage!, customerEmail: userEmail);
       final purchaseResult = await Purchases.purchase(params);
-
+      logger.debug(purchaseResult.toString());
       final isEntitled = purchaseResult
               .customerInfo.entitlements.all[entitlementId]?.isActive ??
           false;

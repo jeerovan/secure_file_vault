@@ -73,11 +73,6 @@ class SyncUtils {
 
   static void waitAndSyncChanges() {
     logger.info("wait and sync (Foreground)");
-    EventStream().publish(AppEvent(
-        type: EventType.syncStatus,
-        id: "",
-        key: EventKey.running,
-        value: null));
     _instance._handleChange();
   }
 
@@ -104,6 +99,11 @@ class SyncUtils {
       logger.warning("Sync already in progress, skipping in $mode.");
       return;
     }
+    EventStream().publish(AppEvent(
+        type: EventType.syncStatus,
+        id: "",
+        key: EventKey.running,
+        value: null));
     await ModelSetting.set(
         AppString.lastRunningAt.string, startedAt.toString());
     // set timer to update running state every seconds

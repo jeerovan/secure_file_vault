@@ -22,18 +22,18 @@
 			]
 		},
 		{
-			title: 'Company',
+			title: 'Developer',
 			links: [
 				{ title: 'About', url: '/' },
-				{ title: 'GitHub', url: '/' },
-				{ title: 'Contact', url: '/' }
+				{ title: 'GitHub', url: 'https://github.com/jeerovan/secure_file_vault' },
+				{ title: 'Contact', url: 'mailto:jeerovan@gmail.com' }
 			]
 		},
 		{
 			title: 'Legal',
 			links: [
-				{ title: 'Privacy', url: '/' },
-				{ title: 'Terms', url: '/' },
+				{ title: 'Privacy', url: '/privacy' },
+				{ title: 'Terms', url: '/terms' },
 				{ title: 'Cookies', url: '/' }
 			]
 		}

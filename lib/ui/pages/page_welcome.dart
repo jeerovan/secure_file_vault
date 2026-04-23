@@ -358,7 +358,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
             icon: LucideIcons.key,
             title: "Bring Your Own Key (BYOK)",
             description:
-                "Maintain complete sovereignty over your data across all cloud storage providers. Keep encrypted storage using your own direct accounts.",
+                "Maintain complete sovereignty over your data across all cloud storage providers. Keep encrypted storage using your own accounts.",
           ),
           const SizedBox(height: 24),
           _buildBenefitItem(
@@ -366,7 +366,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
             icon: LucideIcons.dollarSign,
             title: "Pay-as-you-go for storage.",
             description:
-                "Pay for used storage with compatible providers. No middleman, no data lock-in.",
+                "Pay for used storage only with compatible providers. No middleman, no data lock-in.",
           ),
         ],
       ),
