@@ -152,6 +152,7 @@ class _FilePaneState extends State<FilePane> {
 
   Future<void> _loadFiles() async {
     if (currentItem == null) {
+      logger.info("current Item is null");
       deviceHash = await getDeviceHash();
       ModelItem? rootFife = await ModelItem.get("fife");
       if (rootFife != null) {
@@ -160,21 +161,25 @@ class _FilePaneState extends State<FilePane> {
       currentItem = await ModelItem.get(deviceHash!);
       if (currentItem != null) parentChilds.add(currentItem!);
     }
-    if (currentItem == null) return;
+    if (currentItem == null) {
+      logger.debug("current Item is null, returning");
+      return;
+    }
 
-    if (!mounted) return;
-    setState(() => _isLoading = true);
-
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
     final items = await ModelItem.getDisplayItems(currentItem);
     _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
     String deviceRootHash = await getDeviceHash();
     _isDeviceRoot = currentItem?.id == deviceRootHash;
-
     if (mounted) {
       setState(() {
         _itemsNotifier.value = items;
         _isLoading = false;
       });
+    } else {
+      logger.debug("not mounted, could not set items");
     }
   }
 
