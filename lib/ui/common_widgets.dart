@@ -84,7 +84,6 @@ class AppSetupState extends ChangeNotifier {
     }
 
     // All setup complete
-    SyncUtils.waitAndSyncChanges();
     _currentStep = SetupStep.explorer;
     notifyListeners();
   }
@@ -134,7 +133,6 @@ class AppSetupState extends ChangeNotifier {
   }
 
   Future<void> showExplorer() async {
-    SyncUtils().syncRootFolders();
     _currentStep = SetupStep.explorer;
     notifyListeners();
   }

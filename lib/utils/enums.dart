@@ -92,10 +92,13 @@ enum AppString {
   otpSentTo,
   otpSentAt,
 
+  // Recon
+  lastReconRunningAt,
+
   // Sync
   encryptionKeyType,
   hasEncryptionKeys,
-  lastRunningAt,
+  lastSyncRunningAt,
   pushedLocalContentForSync,
   lastChangeTS,
   lastProfileTS,
@@ -127,6 +130,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.lastReconRunningAt:
+        return "last_recon_running_at";
       case AppString.theme:
         return "theme";
       case AppString.onboarding:
@@ -151,7 +156,7 @@ extension AppStringExtension on AppString {
         return "signed_in";
       case AppString.loggingEnabled:
         return "logging_enabled";
-      case AppString.lastRunningAt:
+      case AppString.lastSyncRunningAt:
         return "sync_running_at";
       case AppString.fcmId:
         return "fcm_id";

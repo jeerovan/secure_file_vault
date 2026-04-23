@@ -43,7 +43,7 @@ void backgroundTaskDispatcher() {
     try {
       switch (taskName) {
         case DataSync.syncTaskId:
-          await SyncUtils().syncRootFolders(inBackground: true);
+          await SyncUtils().reconFolders(inBackground: true);
           break;
       }
       return Future.value(true);

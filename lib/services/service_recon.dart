@@ -287,25 +287,25 @@ class ReconciliationService {
     }
 
     final candidates = dbFilesBySize[fsFile.size] ?? [];
-    ModelItem? matchedDbFile;
+    ModelItem? matchedDbItem;
 
     if (candidates.isNotEmpty) {
       // Compute hash only when needed
       final currentHash = await _computeFileHash(fsPath);
       for (final candidate in candidates) {
         if (candidate.fileHash == currentHash) {
-          matchedDbFile = candidate;
+          matchedDbItem = candidate;
           break;
         }
       }
     }
     bool matched = false;
-    if (matchedDbFile != null) {
+    if (matchedDbItem != null) {
       matched = true;
-      matchedDbFile.name = fsFile.name;
-      matchedDbFile.scanState = 2;
-      matchedDbFile.archivedAt = 0;
-      await matchedDbFile.update(["name", "scan_state", "archived_at"]);
+      matchedDbItem.name = fsFile.name;
+      matchedDbItem.scanState = 2;
+      matchedDbItem.archivedAt = 0;
+      await matchedDbItem.update(["name", "scan_state", "archived_at"]);
     }
     return matched;
   }
@@ -314,19 +314,21 @@ class ReconciliationService {
 
   Future<void> _handleModifiedFile(ModelItem dbItem, FSItem fsItem,
       String fsPath, String fsHash, int timestamp) async {
-    // decrement reference count for old file
-    ModelFile? oldModelFile = await ModelFile.get(dbItem.fileHash!);
-    if (oldModelFile != null) {
-      int currentItemCount =
-          await ModelItem.getItemCountForFileHash(dbItem.fileHash!);
-      await oldModelFile.updateCount(currentItemCount - 1);
-    }
+    // old file hash
+    String oldFileHash = dbItem.fileHash!;
 
     // update item
     dbItem.fileHash = fsHash;
     dbItem.size = fsItem.size!;
     dbItem.archivedAt = 0;
     await dbItem.update(["file_hash", "size", "archived_at"]);
+
+    // update item count on oldfile
+    ModelFile? oldModelFile = await ModelFile.get(oldFileHash);
+    if (oldModelFile != null) {
+      int newItemCount = await ModelItem.getItemCountForFileHash(oldFileHash);
+      await oldModelFile.updateCount(newItemCount);
+    }
 
     await checkCreateUploadTask(dbItem.id, fsPath, fsHash);
     logger.info('  ~ Modified: ${fsItem.name}');

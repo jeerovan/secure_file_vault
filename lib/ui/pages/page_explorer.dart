@@ -185,13 +185,8 @@ class _FilePaneState extends State<FilePane> {
     setState(() {
       _syncInProgress = true;
     });
-    List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
-    for (ModelItem syncFolder in syncFolders) {
-      await ReconciliationService().reconcile(syncFolder.id);
-    }
+    await SyncUtils().reconFolders();
     _loadFiles();
-    // Issue server sync irrespective of items change
-    SyncUtils.waitAndSyncChanges();
   }
 
   Future<void> _onTap(ModelItem item) async {
@@ -432,12 +427,12 @@ class _FilePaneState extends State<FilePane> {
             onTap: _onTap, // Ensure _onTap matches the expected signature
           ),
           actions: [
+            if (_isDeviceRoot && !_syncInProgress)
+              IconButton(
+                  icon: const Icon(LucideIcons.plus), onPressed: addSyncFolder),
             if (_isLocalPath)
               AnimatedSyncButton(
                   isSyncing: _syncInProgress, onPressed: _syncRootFolders),
-            if (_isDeviceRoot)
-              IconButton(
-                  icon: const Icon(LucideIcons.plus), onPressed: addSyncFolder),
             PopupMenuButton<int>(
               icon: const Icon(LucideIcons.moreVertical),
               onSelected: (value) {
@@ -550,6 +545,12 @@ class _FilePaneState extends State<FilePane> {
       "is_folder": 1,
     });
     await syncFolderItem.insert();
+
+    if (mounted) {
+      setState(() {
+        _syncInProgress = true;
+      });
+    }
     final reconService = ReconciliationService();
     await reconService.reconcile(syncFolderItem.id);
     _loadFiles();

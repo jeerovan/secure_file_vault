@@ -31,37 +31,64 @@ class SyncUtils {
   SyncUtils._internal();
 
   Timer? _debounceTimer;
-  Timer? _syncTimer;
-  Timer? _processTimer;
+  Timer? _foregroundSyncTimer;
+  Timer? _syncProcessTimer;
+  Timer? _reconProcessTimer;
 
   bool _hasPendingChanges = false;
 
   static final logger = AppLogger(prefixes: ["Sync"]);
 
   void startAutoSync() {
-    _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
-      syncRootFolders(inBackground: false);
+    _foregroundSyncTimer?.cancel();
+    _foregroundSyncTimer = Timer.periodic(const Duration(minutes: 10), (timer) {
+      reconFolders(inBackground: false);
     });
   }
 
   void stopAutoSync() {
-    _syncTimer?.cancel();
-    _syncTimer = null;
+    _foregroundSyncTimer?.cancel();
+    _foregroundSyncTimer = null;
   }
 
   // Pass inBackground flag to determine if we should await everything
-  Future<void> syncRootFolders({bool inBackground = false}) async {
+  Future<void> reconFolders({bool inBackground = false}) async {
     String? userId = getSignedInUserId();
     if (userId == null) {
       return;
     }
     String mode = inBackground ? "Background" : "Foreground";
+
+    int startedAt = DateTime.now().millisecondsSinceEpoch;
+    String lastRunningAtString =
+        ModelSetting.get(AppString.lastReconRunningAt.string);
+    int? lastRunningAt =
+        lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
+    if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
+      logger.warning("Recon already in progress, skipping in $mode.");
+      return;
+    }
+    EventStream().publish(AppEvent(
+        type: EventType.syncStatus,
+        id: "",
+        key: EventKey.running,
+        value: null));
+    await ModelSetting.set(
+        AppString.lastReconRunningAt.string, startedAt.toString());
+    // set timer to update running state every seconds
+    _reconProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+      await ModelSetting.set(AppString.lastReconRunningAt.string,
+          DateTime.now().millisecondsSinceEpoch.toString());
+    });
+
     logger.info("Start recon in $mode");
     List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
     for (ModelItem syncFolder in syncFolders) {
       await ReconciliationService().reconcile(syncFolder.id);
     }
+
+    _reconProcessTimer?.cancel();
+    _reconProcessTimer = null;
 
     // If in background, await directly to prevent isolate termination
     if (inBackground) {
@@ -79,7 +106,7 @@ class SyncUtils {
   void _handleChange() {
     _hasPendingChanges = true;
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(seconds: 2), () {
+    _debounceTimer = Timer(const Duration(seconds: 1), () {
       if (_hasPendingChanges) {
         _hasPendingChanges = false;
         triggerSync(inBackground: false); // Fire and forget for foreground
@@ -92,23 +119,21 @@ class SyncUtils {
     // Drop the request if a sync is already actively running
     int startedAt = DateTime.now().millisecondsSinceEpoch;
     String lastRunningAtString =
-        ModelSetting.get(AppString.lastRunningAt.string);
+        ModelSetting.get(AppString.lastSyncRunningAt.string);
     int? lastRunningAt =
         lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
     if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
       logger.warning("Sync already in progress, skipping in $mode.");
       return;
     }
-    EventStream().publish(AppEvent(
-        type: EventType.syncStatus,
-        id: "",
-        key: EventKey.running,
-        value: null));
-    await ModelSetting.set(
-        AppString.lastRunningAt.string, startedAt.toString());
     // set timer to update running state every seconds
-    _processTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      await ModelSetting.set(AppString.lastRunningAt.string,
+    _syncProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
+      EventStream().publish(AppEvent(
+          type: EventType.syncStatus,
+          id: "",
+          key: EventKey.running,
+          value: null));
+      await ModelSetting.set(AppString.lastSyncRunningAt.string,
           DateTime.now().millisecondsSinceEpoch.toString());
     });
 
@@ -134,8 +159,8 @@ class SyncUtils {
       // If this is a background task, you might want to rethrow so Workmanager can retry
       if (inBackground) rethrow;
     } finally {
-      _processTimer?.cancel();
-      _processTimer = null;
+      _syncProcessTimer?.cancel();
+      _syncProcessTimer = null;
       EventStream().publish(AppEvent(
           type: EventType.syncStatus,
           id: "",
@@ -150,11 +175,17 @@ class SyncUtils {
     try {
       bool removed = await checkDeviceStatus();
       if (!removed) {
-        await fetchMapChanges(); // fetch server changes first
-        await pushMapChanges(); // send items/files changes before client uploads them
-        await TaskManager.init(
-            inBackground: inBackground); // upload actual files
-        await pushMapChanges(); // send upload changes to server
+        bool allfetched = await fetchMapChanges(); // fetch server changes first
+        bool allpushed = false;
+        if (allfetched) {
+          allpushed =
+              await pushMapChanges(); // send items/files changes before client uploads them
+        }
+        if (allpushed) {
+          await TaskManager.init(
+              inBackground: inBackground); // upload actual files
+          bool _ = await pushMapChanges(); // send upload changes to server
+        }
       }
     } catch (e, s) {
       logger.error("⚠ Sync failed", error: e.toString(), stackTrace: s);
@@ -262,13 +293,16 @@ class SyncUtils {
     }
   }
 
-  static Future<void> pushMapChanges() async {
+  static Future<bool> pushMapChanges() async {
     logger.info("Push Map Changes");
     String? masterKeyBase64 = await getMasterKey();
-    if (masterKeyBase64 == null || simulateTesting()) return;
+    if (simulateTesting()) {
+      return true;
+    }
     final api = BackendApi();
+    bool allpushed = true;
     bool changesAvailable = true;
-    Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
+    Uint8List masterKeyBytes = base64Decode(masterKeyBase64!);
     while (changesAvailable) {
       changesAvailable = false;
       List<Map<String, dynamic>> tableMaps = [];
@@ -325,23 +359,23 @@ class SyncUtils {
             }
           }
         } else {
-          changesAvailable = false;
+          allpushed = false;
+          break;
         }
       }
     }
     logger.info("Pushed Map Changes");
+    return allpushed;
   }
 
-  static Future<void> fetchMapChanges() async {
+  static Future<bool> fetchMapChanges() async {
     String? masterKeyBase64 = await getMasterKey();
-    if (await canSync() == false ||
-        masterKeyBase64 == null ||
-        simulateTesting()) {
-      return;
+    if (simulateTesting()) {
+      return true;
     }
     logger.info("Fetch Map Changes");
     final api = BackendApi();
-    Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
+    Uint8List masterKeyBytes = base64Decode(masterKeyBase64!);
     SodiumSumo sodium = await SodiumSumoInit.init();
     CryptoUtils cryptoUtils = CryptoUtils(sodium);
     // process in the order
@@ -351,7 +385,7 @@ class SyncUtils {
       Tables.items.string,
       Tables.parts.string
     ];
-
+    bool allFetched = true;
     bool changesAvailable = true;
     while (changesAvailable) {
       changesAvailable = false;
@@ -374,7 +408,10 @@ class SyncUtils {
         };
         final responseData =
             await api.get(endpoint: '/sync', queryParameters: requestData);
-        if (responseData["success"] <= 0) break;
+        if (responseData["success"] <= 0) {
+          allFetched = false;
+          break;
+        }
         Map<String, dynamic> tableChanges = responseData["data"];
         for (String table in tables) {
           if (!tableChanges.containsKey(table)) continue;
@@ -464,5 +501,6 @@ class SyncUtils {
         logger.error("fetchMapChanges", error: e, stackTrace: s);
       }
     }
+    return allFetched;
   }
 }

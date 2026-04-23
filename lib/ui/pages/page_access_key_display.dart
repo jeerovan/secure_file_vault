@@ -140,28 +140,24 @@ class _PageAccessKeyState extends State<PageAccessKey> {
             ),
             SizedBox(height: 30.0),
             // Button to copy
-            ElevatedButton.icon(
+            FilledButton.icon(
               onPressed: () => copyToClipboard(),
               icon: Icon(
                 LucideIcons.copy,
-                color: Colors.black,
               ),
               label: Text(
                 "Copy",
-                style: TextStyle(color: Colors.black),
               ),
             ),
             SizedBox(height: 20.0),
             // Button to Download and Save as Text File
-            ElevatedButton.icon(
+            FilledButton.icon(
               onPressed: () => _downloadTextFile(sentence),
               icon: Icon(
                 LucideIcons.download,
-                color: Colors.black,
               ),
               label: Text(
                 "Download as Text File",
-                style: TextStyle(color: Colors.black),
               ),
             ),
             SizedBox(height: 20.0),
@@ -171,7 +167,7 @@ class _PageAccessKeyState extends State<PageAccessKey> {
               onPressed: continueToNext,
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 16.0),
-                side: BorderSide(color: Theme.of(context).primaryColor),
+                side: BorderSide(color: Theme.of(context).primaryColorLight),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),

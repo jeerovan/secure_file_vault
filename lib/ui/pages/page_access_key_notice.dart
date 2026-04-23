@@ -48,7 +48,9 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
     Map<String, dynamic> serverKeys = keys[AppString.serverKeys.string];
     try {
       bool showKeys = true;
-      if (!simulateTesting()) {
+      if (simulateTesting()) {
+        await Future.delayed(const Duration(seconds: 1));
+      } else {
         final result = await api.post(endpoint: '/keys', jsonBody: serverKeys);
         final status = result["success"];
         if (status <= 0) {
@@ -103,7 +105,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
             ),
             SizedBox(height: 30),
-            ElevatedButton(
+            FilledButton(
               onPressed: generateKeys,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -116,17 +118,16 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
                         width: 16, // Set width and height for the indicator
                         height: 16,
                         child: CircularProgressIndicator(
-                          color: Colors.black,
                           strokeWidth: 2, // Set color to white
+                          color: DefaultTextStyle.of(context).style.color,
                         ),
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
                     child: Text(
                       textAlign: TextAlign.center,
                       'I understand.\nShow me the key.',
-                      style: TextStyle(color: Colors.black),
                     ),
                   ),
                 ],

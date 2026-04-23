@@ -44,7 +44,6 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
 
     try {
       PermissionStatus status;
-
       if (Platform.isAndroid) {
         final deviceInfo = DeviceInfoPlugin();
         final androidInfo = await deviceInfo.androidInfo;
@@ -87,7 +86,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Permission Required'),
         content: const Text(
-          'To encrypt and sync your local files securely, full storage access is required. Please enable it in your device settings.',
+          "To automatically back up, manage, and secure your files in the background, we need access to your device storage. Your data is encrypted locally, ensuring total privacy. Please allow access to continue.",
         ),
         actions: [
           TextButton(

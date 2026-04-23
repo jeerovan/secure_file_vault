@@ -434,7 +434,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                 decoration: BoxDecoration(
                   color: _currentPage == index
                       ? theme.colorScheme.primary
-                      : theme.colorScheme.primary.withOpacity(0.2),
+                      : theme.colorScheme.primary.withAlpha(30),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
