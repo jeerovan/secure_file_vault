@@ -1,4 +1,5 @@
 import { json, error } from '@sveltejs/kit';
+import { REVENUECAT_SECRET_KEY } from '$env/static/private';
 import {
 	user,
 	userDevice,
@@ -121,7 +122,7 @@ export async function syncPlanExpiry(db: Db | Tx, userId: number, supaId: string
 	const rcResponse = await fetch(`https://api.revenuecat.com/v1/subscribers/${supaId}`, {
 		method: 'GET',
 		headers: {
-			Authorization: `Bearer ${process.env.REVENUECAT_SECRET_KEY}`,
+			Authorization: `Bearer ${REVENUECAT_SECRET_KEY}`,
 			'Content-Type': 'application/json'
 		}
 	});
@@ -157,9 +158,15 @@ export async function syncPlanExpiry(db: Db | Tx, userId: number, supaId: string
 
 export async function updatePlanExpiryFromWebhook(
 	db: Db | Tx,
-	userId: number,
+	supaId: string,
 	newExpiresAt: number
 ) {
+	const user = await getUserBySupabaseId(db, supaId);
+	if (!user) {
+		console.error(`RC Webhook, user: ${supaId} not found`);
+		return;
+	}
+	const userId = user[UserKeys.ID];
 	const planData = await getUserData(db, userId);
 	let currentPlanExpiresAt = 0;
 
@@ -169,7 +176,7 @@ export async function updatePlanExpiryFromWebhook(
 
 	// Logic: Webhooks dictate the absolute state (including downgrades/refunds).
 	// Update if the value is different to ensure sync.
-	// Note: If your provider sends out-of-order webhooks, you may also want to
+	// Note: If revenuecat sends out-of-order webhooks, you may also want to
 	// compare an `eventTimestamp` payload to `planData.updatedAt` to ignore stale webhooks.
 	const update = newExpiresAt !== currentPlanExpiresAt;
 
