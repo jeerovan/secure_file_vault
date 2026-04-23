@@ -1,4 +1,5 @@
 import 'package:file_vault_bb/storage/storage_secure.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -36,25 +37,31 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
       _isLoading = true;
       _errorMessage = null;
     });
-
-    final response = await api.get(endpoint: '/keys');
-    final status = response["success"];
-    if (status == -1) {
-      _errorMessage = response["message"];
-    } else if (status == 1) {
-      final data = response["data"];
-      if (data.containsKey("cipher") && data.containsKey("nonce")) {
-        await storage.write(
-            key: AppString.keyCipher.string, value: data["cipher"]);
-        await storage.write(
-            key: AppString.keyNonce.string, value: data["nonce"]);
-        if (mounted) {
-          await context.read<AppSetupState>().decodeAccessKey();
-        }
-      }
-    } else {
+    if (simulateTesting()) {
+      await Future.delayed(const Duration(seconds: 1));
       if (mounted) {
         await context.read<AppSetupState>().generateAccessKey();
+      }
+    } else {
+      final response = await api.get(endpoint: '/keys');
+      final status = response["success"];
+      if (status == -1) {
+        _errorMessage = response["message"];
+      } else if (status == 1) {
+        final data = response["data"];
+        if (data.containsKey("cipher") && data.containsKey("nonce")) {
+          await storage.write(
+              key: AppString.keyCipher.string, value: data["cipher"]);
+          await storage.write(
+              key: AppString.keyNonce.string, value: data["nonce"]);
+          if (mounted) {
+            await context.read<AppSetupState>().decodeAccessKey();
+          }
+        }
+      } else {
+        if (mounted) {
+          await context.read<AppSetupState>().generateAccessKey();
+        }
       }
     }
     // Check mounted before updating state or calling callbacks

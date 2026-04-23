@@ -87,9 +87,6 @@ enum AppString {
   simulateTesting,
   theme,
 
-  // Supabase
-  supabaseInitialized,
-
   //sign-in
   signedIn,
   otpSentTo,
@@ -154,8 +151,6 @@ extension AppStringExtension on AppString {
         return "signed_in";
       case AppString.loggingEnabled:
         return "logging_enabled";
-      case AppString.supabaseInitialized:
-        return "supabase_initialized";
       case AppString.lastRunningAt:
         return "sync_running_at";
       case AppString.fcmId:
@@ -245,7 +240,15 @@ extension ScanStateExtension on ScanState {
   }
 }
 
-enum StorageProvider { none, fife, backblaze, cloudflare, oracle, idrive }
+enum StorageProvider {
+  none,
+  fife,
+  backblaze,
+  cloudflare,
+  oracle,
+  idrive,
+  local
+}
 
 extension StorageProviderExtension on StorageProvider {
   int get value {
@@ -262,6 +265,8 @@ extension StorageProviderExtension on StorageProvider {
         return 4;
       case StorageProvider.idrive:
         return 5;
+      case StorageProvider.local:
+        return 99;
     }
   }
 
@@ -279,6 +284,8 @@ extension StorageProviderExtension on StorageProvider {
         return "Oracle Object Storage";
       case 5:
         return "IDrive E2";
+      case 99:
+        return "Local";
       default:
         return "Unknown";
     }

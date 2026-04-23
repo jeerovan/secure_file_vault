@@ -36,16 +36,29 @@ class _PageDevicesState extends State<PageDevices> {
       processing = true;
     });
     try {
-      final response = await api.get(endpoint: '/devices');
-      final status = response["success"];
-      if (status <= 0) {
-        _errorMessage = response["message"].toString();
-      } else if (status == 1) {
-        if (mounted) {
-          setState(() {
-            devices = List<Map<String, dynamic>>.from(response["data"]);
-            processing = false;
-          });
+      if (simulateTesting()) {
+        String deviceId = await getDeviceUuid();
+        String deviceName = await getDeviceName();
+        devices = [
+          {
+            "id": deviceId,
+            "lastAt": DateTime.now().toUtc().millisecondsSinceEpoch,
+            "title": deviceName,
+            "active": 1
+          }
+        ];
+      } else {
+        final response = await api.get(endpoint: '/devices');
+        final status = response["success"];
+        if (status <= 0) {
+          _errorMessage = response["message"].toString();
+        } else if (status == 1) {
+          if (mounted) {
+            setState(() {
+              devices = List<Map<String, dynamic>>.from(response["data"]);
+              processing = false;
+            });
+          }
         }
       }
     } catch (e, s) {
@@ -64,17 +77,26 @@ class _PageDevicesState extends State<PageDevices> {
       processing = true;
     });
     try {
-      final response = await api.delete(
-          endpoint: '/devices', queryParameters: {'device_uuid': deviceUuid});
-      final status = response["success"];
-      if (status <= 0) {
-        logger.error("Error signing out",
-            error: response["message"].toString());
+      if (simulateTesting()) {
+        await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
-          displaySnackBar(context, message: 'Please try again!', seconds: 2);
+          setState(() {
+            devices = [];
+          });
         }
-      } else if (status == 1) {
-        fetchDevices();
+      } else {
+        final response = await api.delete(
+            endpoint: '/devices', queryParameters: {'device_uuid': deviceUuid});
+        final status = response["success"];
+        if (status <= 0) {
+          logger.error("Error signing out",
+              error: response["message"].toString());
+          if (mounted) {
+            displaySnackBar(context, message: 'Please try again!', seconds: 2);
+          }
+        } else if (status == 1) {
+          fetchDevices();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -91,7 +113,10 @@ class _PageDevicesState extends State<PageDevices> {
 
   Future<void> showLogoutDialog(String deviceUuid) async {
     String thisDeviceUuid = await getDeviceUuid();
-    if (thisDeviceUuid.isNotEmpty && deviceUuid == thisDeviceUuid && mounted) {
+    if (thisDeviceUuid.isNotEmpty &&
+        deviceUuid == thisDeviceUuid &&
+        mounted &&
+        !simulateTesting()) {
       displaySnackBar(context, message: "Not this device!", seconds: 2);
       return;
     }

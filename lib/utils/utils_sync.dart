@@ -148,7 +148,7 @@ class SyncUtils {
     String mode = inBackground ? "Background" : "Foreground";
     logger.info("$mode|Sync|------------------START----------------");
     try {
-      bool removed = await SyncUtils.checkDeviceStatus();
+      bool removed = await checkDeviceStatus();
       if (!removed) {
         await fetchMapChanges(); // fetch server changes first
         await pushMapChanges(); // send items/files changes before client uploads them
@@ -171,34 +171,33 @@ class SyncUtils {
 
   static Future<bool> checkDeviceStatus() async {
     bool removed = false;
-    if (simulateTesting()) {
-      return removed;
-    }
-    final api = BackendApi();
-    try {
-      String deviceId = await getDeviceUuid();
-      final response = await api.get(
-          endpoint: '/devices', queryParameters: {'device_uuid': deviceId});
-      final status = response["success"];
-      if (status == -1) {
-        logger.error("checkDeviceStatus", error: response["message"]);
-      } else if (status == 1) {
-        final data = response["data"];
-        removed = data == null || data.isEmpty || data["active"] == 0;
-      }
+    if (!simulateTesting()) {
+      final api = BackendApi();
+      try {
+        String deviceId = await getDeviceUuid();
+        final response = await api.get(
+            endpoint: '/devices', queryParameters: {'device_uuid': deviceId});
+        final status = response["success"];
+        if (status == -1) {
+          logger.error("checkDeviceStatus", error: response["message"]);
+        } else if (status == 1) {
+          final data = response["data"];
+          removed = data == null || data.isEmpty || data["active"] == 0;
+        }
 
-      if (removed) {
-        // signout
-        await signout();
+        if (removed) {
+          // signout
+          await signout();
+        }
+      } catch (e, s) {
+        logger.error("checkDeviceStatus", error: e, stackTrace: s);
       }
-      logger.info("device Status Checked");
-    } catch (e, s) {
-      logger.error("checkDeviceStatus", error: e, stackTrace: s);
     }
+    logger.info("device Status Checked");
     return removed;
   }
 
-  static Future<bool> signout({bool alreadySignedOut = false}) async {
+  static Future<bool> signout() async {
     bool success = false;
     bool hasInternet = await InternetConnection().hasInternetAccess;
     if (!hasInternet) return false;
@@ -218,10 +217,8 @@ class SyncUtils {
           } else {
             return false;
           }
-          if (!alreadySignedOut) {
-            await Supabase.instance.client.auth
-                .signOut(scope: SignOutScope.local);
-          }
+          await Supabase.instance.client.auth
+              .signOut(scope: SignOutScope.local);
           if (revenueCatSupported) {
             final isAnonymous = await Purchases.isAnonymous;
             if (!isAnonymous) {
@@ -252,7 +249,7 @@ class SyncUtils {
       {int deleteTask = 0}) async {
     String? masterKeyBase64 = await getMasterKey();
     String? userId = getSignedInUserId();
-    if (masterKeyBase64 != null && userId != null) {
+    if (masterKeyBase64 != null && userId != null && !simulateTesting()) {
       String table = map["table"];
       String rowId = map['id'];
       String changeId = '$table|$rowId';

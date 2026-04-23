@@ -1,4 +1,5 @@
 import 'package:file_vault_bb/models/model_profile.dart';
+import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -50,9 +51,9 @@ class _PageSigninState extends State<PageSignin> {
 
   void _setupGestureRecognizers() {
     _termsRecognizer = TapGestureRecognizer()
-      ..onTap = () => openURL('https://fife.jeero.one/policy/terms');
+      ..onTap = () => openURL('https://fife.jeero.one/terms');
     _privacyRecognizer = TapGestureRecognizer()
-      ..onTap = () => openURL('https://fife.jeero.one/policy/privacy');
+      ..onTap = () => openURL('https://fife.jeero.one/privacy');
   }
 
   void _checkInitialAuthState() {
@@ -144,6 +145,7 @@ class _PageSigninState extends State<PageSignin> {
       Session? session;
 
       if (simulateTesting()) {
+        await Future.delayed(const Duration(seconds: 1));
       } else {
         final AuthResponse response = await supabase.auth.verifyOTP(
           email: savedEmail,
@@ -180,7 +182,7 @@ class _PageSigninState extends State<PageSignin> {
         logger.info("Login Successful");
 
         // login to revenuecat
-        if (revenueCatSupported) {
+        if (revenueCatSupported && !simulateTesting()) {
           await Purchases.logIn(userId!);
         }
 
@@ -190,10 +192,10 @@ class _PageSigninState extends State<PageSignin> {
       }
     } on AuthException catch (error) {
       logger.debug('Auth Failure: ${error.message}');
-      _handleVerifyError();
+      _showOtpVerifyError();
     } catch (e, s) {
       logger.error("verifyOtp", error: e, stackTrace: s);
-      _handleVerifyError();
+      _showOtpVerifyError();
     } finally {
       if (mounted) {
         setState(() {
@@ -203,7 +205,7 @@ class _PageSigninState extends State<PageSignin> {
     }
   }
 
-  void _handleVerifyError() {
+  void _showOtpVerifyError() {
     if (!mounted) return;
     setState(() {
       errorVerifyingOtp = true;
@@ -224,7 +226,7 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> signout() async {
-    await supabase.auth.signOut();
+    await SyncUtils.signout();
     setState(() {
       signedIn = false;
       otpSent = false;

@@ -268,6 +268,7 @@ class _FilePaneState extends State<FilePane> {
     final toRemove = [];
     final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
     logger.log('Trashing ${selectedItems.length} items');
+    bool locallyExists = false;
     if (await ModelItem.isLocalPath(currentItem!.id)) {
       for (ModelItem modelItem in selectedItems) {
         bool isFolder = modelItem.isFolder;
@@ -277,10 +278,14 @@ class _FilePaneState extends State<FilePane> {
           Directory directory = Directory(localPath);
           if (!directory.existsSync()) {
             addToRemove = true;
+          } else {
+            locallyExists = true;
           }
         } else {
           if (!File(localPath).existsSync()) {
             addToRemove = true;
+          } else {
+            locallyExists = true;
           }
         }
         if (addToRemove) {
@@ -300,6 +305,10 @@ class _FilePaneState extends State<FilePane> {
     currentItems.removeWhere((item) => toRemove.contains(item));
     _itemsNotifier.value = currentItems;
     _cancelMultiSelect();
+    if (locallyExists && mounted) {
+      displaySnackBar(context,
+          message: "Few items exists locally.", seconds: 2);
+    }
   }
 
   Future<void> downloadItems() async {
@@ -544,6 +553,7 @@ class _FilePaneState extends State<FilePane> {
     final reconService = ReconciliationService();
     await reconService.reconcile(syncFolderItem.id);
     _loadFiles();
+    SyncUtils.waitAndSyncChanges();
   }
 
   void addFolderConfirm(String folderPath) {

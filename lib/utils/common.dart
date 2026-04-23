@@ -776,12 +776,10 @@ Future<void> initializeSupabase(
   ByteData certData = await PlatformAssetBundle().load('assets/cacert.pem');
   SecurityContext.defaultContext
       .setTrustedCertificatesBytes(certData.buffer.asUint8List());
-  await ModelSetting.set(AppString.supabaseInitialized.string, "no");
   final String supaUrl = const String.fromEnvironment("SUPABASE_URL");
   final String supaKey = const String.fromEnvironment("SUPABASE_KEY");
   if (supaUrl.isNotEmpty && supaKey.isNotEmpty) {
     Supabase _ = await Supabase.initialize(url: supaUrl, anonKey: supaKey);
-    await ModelSetting.set(AppString.supabaseInitialized.string, "yes");
     AppLogger(prefixes: [mode.string]).info("Initialized Supabase");
   }
 }
@@ -795,14 +793,6 @@ String? getSignedInUserId() {
       return null;
     }
   }
-  bool supabaseInitialized = ModelSetting.get(
-          AppString.supabaseInitialized.string,
-          defaultValue: "no") ==
-      "yes";
-  if (!supabaseInitialized) {
-    AppLogger(prefixes: ["Common"]).error("Supabase not initialized");
-    return null;
-  }
   SupabaseClient supabaseClient = Supabase.instance.client;
   User? currentUser = supabaseClient.auth.currentUser;
   if (currentUser != null) {
@@ -814,13 +804,13 @@ String? getSignedInUserId() {
 
 String? getSignedInEmailId() {
   if (simulateTesting()) {
-    return testEmailId;
+    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+        "yes") {
+      return testEmailId;
+    } else {
+      return null;
+    }
   }
-  bool supabaseInitialized = ModelSetting.get(
-          AppString.supabaseInitialized.string,
-          defaultValue: "no") ==
-      "yes";
-  if (!supabaseInitialized) return null;
   SupabaseClient supabaseClient = Supabase.instance.client;
   User? currentUser = supabaseClient.auth.currentUser;
   if (currentUser != null) {

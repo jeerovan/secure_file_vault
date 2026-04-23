@@ -211,47 +211,55 @@ class TaskManager {
     // handle storage providers
     if (modelFile.storageId == null) {
       // check server if already uploaded and get file+parts
-      final filePartResult = await api.post(
-          endpoint: '/get-file-parts', jsonBody: {"file_hash": modelFile.id});
-      final fileStatus = filePartResult["success"];
-      if (fileStatus == 1) {
-        final filePartData = filePartResult["data"];
-        final fileMap = filePartData["file"];
-        final partMapList = filePartData["parts"];
-        final newFileModel = await ModelFile.fromServerMap(fileMap);
-        await newFileModel.upcertFromServer(overwrite: true);
-        for (Map<String, dynamic> partMap in partMapList) {
-          final partModel = await ModelPart.fromServerMap(partMap);
-          await partModel.upcertFromServer(overwrite: true);
-        }
-        return true;
-      } else {
-        final errorMessageCode =
-            int.tryParse(filePartResult["message"].toString());
-        if (errorMessageCode == null) {
-          return false;
-        } else if (errorMessageCode != 13) {
-          return true;
-        }
-      }
-      // call Api and set
-      int fileSize = inFile.lengthSync();
-      int bufferSize = 1000;
-      int chunks = (fileSize / 4096).ceil();
-      int expectedSize = fileSize + 24 + (chunks * 17) + bufferSize;
-      final providerResult = await api.post(
-          endpoint: '/get-upload-storage-provider',
-          jsonBody: {"file_hash": modelFile.id, "file_size": expectedSize});
-      final status = providerResult["success"];
-      if (status <= 0) {
-        logger.error('Get storage provider: ${jsonEncode(providerResult)}');
-        return false;
-      } else {
-        final providerData = providerResult["data"];
-        modelFile.storageId = providerData["storage_id"];
-        modelFile.providerId = providerData["provider_id"];
+      if (simulateTesting()) {
+        modelFile.storageId = 99;
+        modelFile.providerId = 99;
         List<String> attrs = ["storage_id", "provider_id"];
         await modelFile.update(attrs);
+      } else {
+        final filePartResult = await api.post(
+            endpoint: '/get-file-parts', jsonBody: {"file_hash": modelFile.id});
+        final fileStatus = filePartResult["success"];
+        if (fileStatus == 1) {
+          final filePartData = filePartResult["data"];
+          final fileMap = filePartData["file"];
+          final partMapList = filePartData["parts"];
+          final newFileModel = await ModelFile.fromServerMap(fileMap);
+          await newFileModel.upcertFromServer(overwrite: true);
+          for (Map<String, dynamic> partMap in partMapList) {
+            final partModel = await ModelPart.fromServerMap(partMap);
+            await partModel.upcertFromServer(overwrite: true);
+          }
+          return true;
+        } else {
+          final errorMessageCode =
+              int.tryParse(filePartResult["message"].toString());
+          if (errorMessageCode == null) {
+            return false;
+          } else if (errorMessageCode != 13) {
+            return true;
+          }
+        }
+
+        // call Api and set
+        int fileSize = inFile.lengthSync();
+        int bufferSize = 1000;
+        int chunks = (fileSize / 4096).ceil();
+        int expectedSize = fileSize + 24 + (chunks * 17) + bufferSize;
+        final providerResult = await api.post(
+            endpoint: '/get-upload-storage-provider',
+            jsonBody: {"file_hash": modelFile.id, "file_size": expectedSize});
+        final status = providerResult["success"];
+        if (status <= 0) {
+          logger.error('Get storage provider: ${jsonEncode(providerResult)}');
+          return false;
+        } else {
+          final providerData = providerResult["data"];
+          modelFile.storageId = providerData["storage_id"];
+          modelFile.providerId = providerData["provider_id"];
+          List<String> attrs = ["storage_id", "provider_id"];
+          await modelFile.update(attrs);
+        }
       }
     }
     if (modelFile.providerId == 0) {
@@ -295,6 +303,27 @@ class TaskManager {
         uploadInfo["provider"] = "s3";
         uploadInfo["url"] = urlResult["data"];
       }
+    } else {
+      // simulation
+      String fileHashPart = '${modelFile.id}_$partToUpload';
+      Map<String, dynamic> partData = {
+        "id": fileHashPart,
+        "data": {"sha1": ""},
+        "size": 0,
+        "uploaded": 1,
+        AppString.cipher.string: "",
+        AppString.nonce.string: ""
+      };
+      ModelPart modelPart = await ModelPart.fromMap(partData);
+      await modelPart.insert();
+      // simulate progress
+      int parts = modelFile.parts;
+      int partsUploaded = partToUpload;
+      final int percent = parts > 0 ? (partsUploaded * 100 ~/ parts) : 0;
+      final int uploaded = percent.clamp(0, 100);
+      itemTask.progress = uploaded;
+      await itemTask.update(["progress"]);
+      await Future.delayed(const Duration(seconds: 1));
     }
     if (uploadInfo.containsKey("provider")) {
       return await uploadFilePart(

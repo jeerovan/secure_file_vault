@@ -25,6 +25,15 @@ class StorageProviderConfig {
 
 // Global configuration map
 final Map<StorageProvider, StorageProviderConfig> providerConfigurations = {
+  StorageProvider.fife: StorageProviderConfig(
+    type: StorageProvider.fife,
+    title: 'FiFe',
+    fields: [
+      StorageProviderField(key: 'app_id', label: 'Key ID'),
+      StorageProviderField(
+          key: 'app_key', label: 'Application Key', isObscured: true),
+    ],
+  ),
   StorageProvider.oracle: StorageProviderConfig(
     type: StorageProvider.oracle,
     title: 'Oracle Object Storage',

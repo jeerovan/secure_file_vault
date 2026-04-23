@@ -1,4 +1,5 @@
 import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -43,6 +44,15 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
     String? result;
     String? endpoint;
     try {
+      if (simulateTesting()) {
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          displaySnackBar(context,
+              message: "Storage added successfully", seconds: 1);
+          Navigator.pop(context, true);
+          return;
+        }
+      }
       if (widget.storageProvider == StorageProvider.backblaze) {
         endpoint = "/b2/add-account";
         result = await StorageValidationService.validateBackblaze(
