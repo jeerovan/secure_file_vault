@@ -112,6 +112,8 @@ enum AppString {
   accessKey,
   serverKeys,
   privateKeys,
+  fileHashKey,
+  fileHashKeyContext,
   key,
   cipher,
   nonce,
@@ -130,6 +132,10 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.fileHashKeyContext:
+        return "FileHash";
+      case AppString.fileHashKey:
+        return "file_hash_key";
       case AppString.lastReconRunningAt:
         return "last_recon_running_at";
       case AppString.theme:

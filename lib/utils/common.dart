@@ -826,6 +826,13 @@ Future<String?> getMasterKey() async {
   return masterKeyBase64;
 }
 
+Future<String?> getFileHashKey() async {
+  SecureStorage storage = SecureStorage();
+  String? fileHashKeyBase64 =
+      await storage.read(key: AppString.fileHashKey.string);
+  return fileHashKeyBase64;
+}
+
 void safeParseJson(
     String responseBody, Map<String, dynamic> data, AppLogger logger) {
   if (responseBody.isEmpty) return;

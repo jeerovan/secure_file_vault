@@ -1,6 +1,7 @@
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/ui/pages/page_logs.dart';
 import 'package:file_vault_bb/ui/pages/page_subscription.dart';
+import 'package:sodium/sodium_sumo.dart';
 
 import '../../ui/pages/page_devices.dart';
 import '../../ui/pages/page_file_info.dart';
@@ -556,7 +557,8 @@ class _FilePaneState extends State<FilePane> {
         _syncInProgress = true;
       });
     }
-    final reconService = ReconciliationService();
+    SodiumSumo sodium = await SodiumSumoInit.init();
+    final reconService = ReconciliationService(sodium);
     await reconService.reconcile(syncFolderItem.id);
     _loadFiles();
     SyncUtils.waitAndSyncChanges();

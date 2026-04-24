@@ -82,9 +82,10 @@ class SyncUtils {
     });
 
     logger.info("Start recon in $mode");
+    SodiumSumo sodium = await SodiumSumoInit.init();
     List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
     for (ModelItem syncFolder in syncFolders) {
-      await ReconciliationService().reconcile(syncFolder.id);
+      await ReconciliationService(sodium).reconcile(syncFolder.id);
     }
 
     _reconProcessTimer?.cancel();
@@ -259,6 +260,7 @@ class SyncUtils {
         }
         await storage.delete(key: AppString.masterKey.string);
         await storage.delete(key: AppString.accessKey.string);
+        await storage.delete(key: AppString.fileHashKey.string);
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
         ModelSetting.clear();

@@ -5,14 +5,11 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../utils/common.dart';
 import '../services/service_logger.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sodium/sodium_sumo.dart';
 import 'enums.dart';
 
-import 'package:http/http.dart' as http_lib;
-
 class CryptoUtils {
-  final logger = AppLogger(prefixes: ["utils_crypto"]);
+  final logger = AppLogger(prefixes: ["CryptoUtils"]);
   final SodiumSumo _sodium;
   CryptoUtils(this._sodium);
 
@@ -30,6 +27,37 @@ class CryptoUtils {
 
   Uint8List generateNonce() {
     return _sodium.randombytes.buf(_sodium.crypto.secretBox.nonceBytes);
+  }
+
+  String getHashingKeyFromMasterKey(
+      String masterKeyBase64, String hashingContext, int keyId) {
+    // CRITICAL: libsodium strictly requires the context to be exactly 8 characters.
+    // If it's not 8 characters, the FFI call will throw an exception.
+    if (hashingContext.length != 8) {
+      throw ArgumentError('hashingContext must be exactly 8 characters long.');
+    }
+
+    final masterKeyBytes = base64Decode(masterKeyBase64);
+    final masterSecureKey = _sodium.secureCopy(masterKeyBytes);
+    SecureKey? hashingSecureKey;
+
+    try {
+      // Derive a sub-key specifically and ONLY for hashing files
+      hashingSecureKey = _sodium.crypto.kdf.deriveFromKey(
+        masterKey: masterSecureKey,
+        context: hashingContext,
+        subkeyId: BigInt.from(keyId), // Convert standard int to BigInt
+        subkeyLen: _sodium.crypto.genericHash.bytes,
+      );
+
+      // Extract the raw bytes from the SecureKey and convert to Base64
+      final derivedBytes = hashingSecureKey.extractBytes();
+      return base64Encode(derivedBytes);
+    } finally {
+      // Always dispose of SecureKeys immediately to wipe them from memory
+      masterSecureKey.dispose();
+      hashingSecureKey?.dispose();
+    }
   }
 
   ExecutionResult encryptBytes(
@@ -120,57 +148,6 @@ class CryptoUtils {
       secretKey.dispose();
     }
     return executionResult;
-  }
-
-  Future<bool> downloadDecryptFile(Map<String, dynamic> data) async {
-    bool downloadDecrypted = false;
-    String fileName = data["name"];
-    Map<String, dynamic> serverData = {};
-    String? masterKeyBase64 = await getMasterKey();
-    if (serverData.containsKey("url") && serverData["url"].isNotEmpty) {
-      String downloadUrl = serverData["url"];
-      Directory tempDir = await getTemporaryDirectory();
-      String fileInPath = "${tempDir.path}/$fileName";
-      File fileIn = File(fileInPath);
-      IOSink fileInSink = fileIn.openWrite();
-      try {
-        var request = http_lib.Request("GET", Uri.parse(downloadUrl));
-        http_lib.StreamedResponse response = await request.send();
-        if (response.statusCode == 200) {
-          // Stream file data to avoid memory overuse
-          await response.stream.forEach((chunk) => fileInSink.add(chunk));
-          await fileInSink.close();
-          // decrypt file
-          String fileOutPath = "removed_getFile";
-          await checkAndCreateDirectory(fileOutPath);
-          String keyCipherBase64 = serverData[AppString.key.string];
-          String keyNonceBase64 = serverData[AppString.nonce.string];
-          Uint8List? fileEncryptionKeyBytes = getFileEncryptionKeyBytes(
-              keyCipherBase64, keyNonceBase64, masterKeyBase64!);
-          if (fileEncryptionKeyBytes != null) {
-            ExecutionResult decryptionResult = await decryptFile(
-                fileInPath, fileOutPath, fileEncryptionKeyBytes);
-            if (decryptionResult.isSuccess) {
-              downloadDecrypted = true;
-              logger.info("Fetched & decrypted");
-            } else {
-              String error = decryptionResult.failureReason ?? "";
-              logger.error("Fetched but decryption failed", error: error);
-            }
-          } else {
-            logger.error("failed to getFileEncryptionKeyBytes:$fileName");
-          }
-        } else {
-          logger.error(
-              "Request to fetch:$downloadUrl; NOT OK:${response.statusCode} -> ${response.reasonPhrase ?? ''}");
-        }
-      } catch (e, s) {
-        logger.error("Error Fetching File", error: e, stackTrace: s);
-      } finally {
-        await fileInSink.close();
-      }
-    }
-    return downloadDecrypted;
   }
 
   Map<String, dynamic> getEncryptedBytesMap(
@@ -275,6 +252,9 @@ class CryptoUtils {
     accessKey.dispose();
     String accessKeyBase64 = base64Encode(accessKeyBytes);
 
+    String fileHashKeyBase64 = getHashingKeyFromMasterKey(
+        masterKeyBase64, AppString.fileHashKeyContext.string, 1);
+
     ExecutionResult masterKeyEncryptedWithAccessKeyResult =
         encryptBytes(plainBytes: masterKeyBytes, key: accessKeyBytes);
     Uint8List masterKeyEncryptedWithAccessKeyBytes =
@@ -295,7 +275,8 @@ class CryptoUtils {
 
     Map<String, dynamic> privateKeysBase64 = {
       AppString.masterKey.string: masterKeyBase64,
-      AppString.accessKey.string: accessKeyBase64
+      AppString.accessKey.string: accessKeyBase64,
+      AppString.fileHashKey.string: fileHashKeyBase64
     };
     return ExecutionResult.success({
       AppString.serverKeys.string: serverKeysBase64,

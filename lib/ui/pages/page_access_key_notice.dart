@@ -63,10 +63,13 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
       if (showKeys) {
         String masterKeyBase64 = privateKeys[AppString.masterKey.string];
         String accessKeyBase64 = privateKeys[AppString.accessKey.string];
+        String fileHashKeyBase64 = privateKeys[AppString.fileHashKey.string];
         await secureStorage.write(
             key: AppString.masterKey.string, value: masterKeyBase64);
         await secureStorage.write(
             key: AppString.accessKey.string, value: accessKeyBase64);
+        await secureStorage.write(
+            key: AppString.fileHashKey.string, value: fileHashKeyBase64);
         // navigate to display key
         if (mounted) {
           await context.read<AppSetupState>().showAccessKeys();

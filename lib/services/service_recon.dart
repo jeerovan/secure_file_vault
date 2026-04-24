@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
+import 'dart:typed_data';
 import 'package:file_vault_bb/models/model_item_task.dart';
 
 import '../utils/enums.dart';
@@ -9,17 +9,17 @@ import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../services/service_logger.dart';
 import '../utils/common.dart';
-import 'package:crypto/crypto.dart';
 import '../utils/utils_file.dart';
-import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path_lib;
+import 'package:uuid/uuid.dart';
+import 'package:sodium/sodium_sumo.dart';
 
 class ReconciliationService {
   final AppLogger logger = AppLogger(prefixes: ["RECON"]);
   final Uuid uuid;
   static const double jaccardSimilarityThreshold = 0.7;
-
-  ReconciliationService() : uuid = Uuid();
+  final SodiumSumo _sodium;
+  ReconciliationService(this._sodium) : uuid = const Uuid();
 
   /// Main entry point: reconcile a root synced folder
   Future<void> reconcile(String rootItemId) async {
@@ -27,11 +27,18 @@ class ReconciliationService {
     if (rootItem == null) return;
     // initialize scan
     await ModelItem.resetScanState(rootItemId);
+    //time to calculate hashes
+    final stopwatch = Stopwatch()..start();
+    Map<String, String> fileHashes = await _computeFileHashes(rootItem.path!);
+    stopwatch.stop();
+    final secondsTaken = stopwatch.elapsedMilliseconds / 1000.0;
+    logger
+        .info('Computed ${fileHashes.length} hashes in $secondsTaken seconds');
     await _reconcileNode(
-      rootItemId: rootItemId,
-      dbParentId: rootItemId,
-      fsPath: rootItem.path!,
-    );
+        rootItemId: rootItemId,
+        dbParentId: rootItemId,
+        fsPath: rootItem.path!,
+        hashes: fileHashes);
 
     // Mark remaining DB items as deleted
     final remainingDbItems =
@@ -58,6 +65,7 @@ class ReconciliationService {
     required String rootItemId,
     required String dbParentId,
     required String fsPath,
+    required Map<String, String> hashes,
   }) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     logger.info('📁 Reconciling: $fsPath');
@@ -85,21 +93,24 @@ class ReconciliationService {
         if (fsChild.isFolder) {
           // Recurse into matched folder
           await _reconcileNode(
-            rootItemId: rootItemId,
-            dbParentId: dbChild.id,
-            fsPath: childPath,
-          );
+              rootItemId: rootItemId,
+              dbParentId: dbChild.id,
+              fsPath: childPath,
+              hashes: hashes);
         } else {
           // Check if the file was modified based on hash
-          String fsHash = await _computeFileHash(childPath);
-          bool fileModified = dbChild.fileHash != fsHash;
+          if (hashes.containsKey(childPath)) {
+            String fsHash = hashes[childPath]!;
+            bool fileModified = dbChild.fileHash != fsHash;
 
-          if (fileModified) {
-            await ModelItem.setScanState(dbChild.id, ScanState.modified.value);
-            await _handleModifiedFile(
-                dbChild, fsChild, childPath, fsHash, timestamp);
-          } else {
-            await checkCreateUploadTask(dbChild.id, fsPath, fsHash);
+            if (fileModified) {
+              await ModelItem.setScanState(
+                  dbChild.id, ScanState.modified.value);
+              await _handleModifiedFile(
+                  dbChild, fsChild, childPath, fsHash, timestamp);
+            } else {
+              await checkCreateUploadTask(dbChild.id, fsPath, fsHash);
+            }
           }
         }
       } else {
@@ -108,10 +119,13 @@ class ReconciliationService {
         //3.a check if item was renamed
         if (fsChild.isFolder) {
           renamed = await _handleRenamedFolder(
-              rootItemId, fsChild, dbChildren, childPath);
+              rootItemId, fsChild, dbChildren, childPath, hashes);
         } else {
-          renamed = await _handleRenamedFile(
-              rootItemId, fsChild, dbChildren, childPath);
+          if (hashes.containsKey(childPath)) {
+            String fsHash = hashes[childPath]!;
+            renamed = await _handleRenamedFile(
+                rootItemId, fsChild, dbChildren, childPath, fsHash);
+          }
         }
         if (renamed) {
           logger.info("  ~ Renamed: $childPath");
@@ -121,7 +135,11 @@ class ReconciliationService {
             movedDbItem =
                 await _findMovedFolder(rootItemId, fsChild, childPath);
           } else {
-            movedDbItem = await _findMovedFile(rootItemId, fsChild, childPath);
+            if (hashes.containsKey(childPath)) {
+              String fsHash = hashes[childPath]!;
+              movedDbItem =
+                  await _findMovedFile(rootItemId, fsChild, childPath, fsHash);
+            }
           }
 
           if (movedDbItem != null) {
@@ -139,17 +157,21 @@ class ReconciliationService {
               await _reconcileNode(
                   rootItemId: rootItemId,
                   dbParentId: movedDbItem.id,
-                  fsPath: childPath);
+                  fsPath: childPath,
+                  hashes: hashes);
             }
           } else {
             // 4. Create NEW ITEM
             // No move was detected, so this is a genuinely new item.
             if (fsChild.isFolder) {
               await _handleFolderCreation(
-                  rootItemId, fsChild, dbParentId, childPath);
+                  rootItemId, fsChild, dbParentId, childPath, hashes);
             } else {
-              await _handleFileCreation(
-                  rootItemId, fsChild, dbParentId, childPath);
+              if (hashes.containsKey(childPath)) {
+                String fsHash = hashes[childPath]!;
+                await _handleFileCreation(
+                    rootItemId, fsChild, dbParentId, childPath, fsHash);
+              }
             }
           }
         }
@@ -207,7 +229,7 @@ class ReconciliationService {
 
   // ON-DEMAND GLOBAL SEARCH: Finds a moved file. A moved file in db will not be available at its fsPath.
   Future<ModelItem?> _findMovedFile(
-      String rootItemId, FSItem fsFile, String fsPath) async {
+      String rootItemId, FSItem fsFile, String fsPath, String fsHash) async {
     // first search matching files with size
     final dbCandidatesMatchingSize =
         await ModelItem.getAllUnScannedFilesForRootItemIdMatchingSize(
@@ -215,10 +237,9 @@ class ReconciliationService {
     if (dbCandidatesMatchingSize.isEmpty) {
       return null;
     }
-    final hash = await _computeFileHash(fsPath);
     // match hash to confirm
     for (final candidate in dbCandidatesMatchingSize) {
-      if (candidate.fileHash == hash) {
+      if (candidate.fileHash == fsHash) {
         String filePath = await ModelItem.getPathForLocalItem(candidate.id);
         bool fileExist = await fileExistAtPath(filePath);
         if (!fileExist) return candidate;
@@ -229,11 +250,11 @@ class ReconciliationService {
 
   /// Detects renamed folders by comparing children sets
   Future<bool> _handleRenamedFolder(
-    String rootItemId,
-    FSItem fsItem,
-    List<ModelItem> dbChildren,
-    String fsPath,
-  ) async {
+      String rootItemId,
+      FSItem fsItem,
+      List<ModelItem> dbChildren,
+      String fsPath,
+      Map<String, String> hashses) async {
     final fsSizes =
         (await _scanFileSystemChildren(fsPath)).map((c) => c.size ?? 0).toSet();
     final dbChildrenFolders =
@@ -261,10 +282,10 @@ class ReconciliationService {
       await bestMatch.update(["name", "scan_state", "archived_at"]);
       // Recurse into the now-matched folder
       await _reconcileNode(
-        rootItemId: rootItemId,
-        dbParentId: bestMatch.id,
-        fsPath: fsPath,
-      );
+          rootItemId: rootItemId,
+          dbParentId: bestMatch.id,
+          fsPath: fsPath,
+          hashes: hashses);
     }
     return matched;
   }
@@ -275,6 +296,7 @@ class ReconciliationService {
     FSItem fsFile,
     List<ModelItem> dbChildren,
     String fsPath,
+    String fsHash,
   ) async {
     final unmatchedDbFiles =
         dbChildren.where((c) => !c.isFolder && c.scanState == 0).toList();
@@ -290,10 +312,8 @@ class ReconciliationService {
     ModelItem? matchedDbItem;
 
     if (candidates.isNotEmpty) {
-      // Compute hash only when needed
-      final currentHash = await _computeFileHash(fsPath);
       for (final candidate in candidates) {
-        if (candidate.fileHash == currentHash) {
+        if (candidate.fileHash == fsHash) {
           matchedDbItem = candidate;
           break;
         }
@@ -339,31 +359,26 @@ class ReconciliationService {
     FSItem fsItem,
     String parentId,
     String fsPath,
+    String fsHash,
   ) async {
-    final hash = await _computeFileHash(fsPath);
-
     final modelItem = await ModelItem.fromMap({
       'root_id': rootItemId,
       'parent_id': parentId,
       'is_folder': 0,
       'name': fsItem.name,
-      'file_hash': hash,
+      'file_hash': fsHash,
       'size': fsItem.size,
       'scan_state': 1,
     });
     await modelItem.insert();
     String itemId = modelItem.id;
 
-    await checkCreateUploadTask(itemId, fsPath, hash);
+    await checkCreateUploadTask(itemId, fsPath, fsHash);
     logger.info('  + Created File: ${fsItem.name}');
   }
 
-  Future<void> _handleFolderCreation(
-    String rootItemId,
-    FSItem fsItem,
-    String parentId,
-    String fsPath,
-  ) async {
+  Future<void> _handleFolderCreation(String rootItemId, FSItem fsItem,
+      String parentId, String fsPath, Map<String, String> hashses) async {
     final itemId = uuid.v4();
     final modelItem = await ModelItem.fromMap({
       'id': itemId,
@@ -378,7 +393,10 @@ class ReconciliationService {
 
     // Recurse into the newly created folder to process its children
     await _reconcileNode(
-        rootItemId: rootItemId, dbParentId: itemId, fsPath: fsPath);
+        rootItemId: rootItemId,
+        dbParentId: itemId,
+        fsPath: fsPath,
+        hashes: hashses);
   }
 
   Future<void> _handleDeletion(ModelItem item) async {
@@ -435,18 +453,78 @@ class ReconciliationService {
     return union == 0 ? 0 : intersection / union;
   }
 
-  Future<String> _computeFileHash(String path) async {
-    String? masterKey = await getMasterKey();
-    if (masterKey == null) throw Exception("Key missing");
+  Future<Map<String, String>> _computeFileHashes(String directoryPath) async {
+    String? fileHashKey = await getFileHashKey();
+    if (fileHashKey == null) throw Exception("Key missing");
 
-    return await Isolate.run(() => _calculateHashInIsolate(path, masterKey));
-  }
+    final keyBytes = base64Decode(fileHashKey);
+    final secureKey = _sodium.secureCopy(keyBytes);
 
-  static Future<String> _calculateHashInIsolate(String path, String key) async {
-    final file = File(path);
-    final hmac = Hmac(sha256, base64Decode(key));
-    final digest = await hmac.bind(file.openRead()).first;
-    return digest.toString();
+    try {
+      // Spawn exactly ONE isolate for the entire directory.
+      // The directoryPath string is automatically captured by the isolate closure.
+      return await _sodium.runIsolated<Map<String, String>>(
+        (List<SecureKey> isolatedSecureKeys, List<KeyPair> _) async {
+          final isolateSecureKey = isolatedSecureKeys.first;
+          final dir = Directory(directoryPath);
+          final resultMap = <String, String>{};
+
+          if (!await dir.exists()) {
+            return resultMap; // Return empty if directory is missing
+          }
+
+          // Recursively traverse directory.
+          // followLinks: false prevents infinite loops from symlinks.
+          await for (final entity
+              in dir.list(recursive: true, followLinks: false)) {
+            if (entity is File) {
+              final path = entity.path;
+
+              try {
+                final fileSize = await entity.length();
+                Uint8List digest;
+
+                if (fileSize < 10 * 1024 * 1024) {
+                  // Fast path (< 10 MB)
+                  final bytes = await entity.readAsBytes();
+                  digest = _sodium.crypto.genericHash(
+                    message: bytes,
+                    key: isolateSecureKey,
+                    outLen: _sodium.crypto.genericHash.bytes,
+                  );
+                } else {
+                  // Memory-safe stream path (>= 10 MB)
+                  final hashConsumer =
+                      _sodium.crypto.genericHash.createConsumer(
+                    key: isolateSecureKey,
+                    outLen: _sodium.crypto.genericHash.bytes,
+                  );
+
+                  final byteStream = entity.openRead().map((chunk) =>
+                      chunk is Uint8List ? chunk : Uint8List.fromList(chunk));
+
+                  await byteStream.pipe(hashConsumer);
+                  digest = await hashConsumer.hash;
+                }
+
+                resultMap[path] = base64Encode(digest);
+              } catch (e) {
+                // If a single file fails (e.g., OS permission denied, file locked),
+                // skip it so the rest of the directory can successfully sync.
+                // In a production app, you might want to log this via a SendPort.
+                //print('Failed to hash file: $path - $e');
+              }
+            }
+          }
+
+          return resultMap;
+        },
+        secureKeys: [secureKey],
+      );
+    } finally {
+      // Dispose the key on the main thread to prevent memory leaks
+      secureKey.dispose();
+    }
   }
 
   // --- Data Loading ---

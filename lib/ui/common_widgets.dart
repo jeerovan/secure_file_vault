@@ -1138,7 +1138,8 @@ class _FileListItemState extends State<FileListItem> {
                       heightFactor: 1.0,
                       child: Container(
                         // Using a subtle primary container color for the progress fill
-                        color: theme.colorScheme.primaryContainer.withAlpha(70),
+                        color:
+                            theme.colorScheme.primaryContainer.withAlpha(100),
                       ),
                     );
                   },

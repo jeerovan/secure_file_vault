@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Added for Clipboard
 import 'package:file_picker/file_picker.dart';
@@ -93,12 +92,17 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
             masterKeyDecryptionResult.getResult()!["decrypted"];
         String decryptedMasterKeyBase64 = base64Encode(decryptedMasterKeyBytes);
 
+        String fileHashKeyBase64 = cryptoUtils.getHashingKeyFromMasterKey(
+            decryptedMasterKeyBase64, AppString.fileHashKeyContext.string, 1);
+
         // Save keys to secure storage
         await secureStorage.write(
             key: AppString.masterKey.string, value: decryptedMasterKeyBase64);
         await secureStorage.write(
             key: AppString.accessKey.string,
             value: base64Encode(accessKeyBytes));
+        await secureStorage.write(
+            key: AppString.fileHashKey.string, value: fileHashKeyBase64);
 
         // Delete keycipher and keynonce
         await secureStorage.delete(key: AppString.keyCipher.string);
