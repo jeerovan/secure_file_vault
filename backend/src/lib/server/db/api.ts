@@ -906,7 +906,7 @@ export async function updateStorageUsedSize(
 ) {
 	const newBytes = add
 		? sql`${storage[StorageKeys.USED_BYTES]} + ${bytes}`
-		: sql`MAX(0, ${storage[StorageKeys.USED_BYTES]} - ${bytes})`;
+		: sql`GREATEST(0, ${storage[StorageKeys.USED_BYTES]} - ${bytes})`;
 
 	await db
 		.update(storage)
@@ -933,7 +933,7 @@ export async function updateTempStorageSize(
 		)
 		.limit(1);
 
-	const newBytes = sql`MAX(0, ${tempStorage[TempStorageKeys.SIZE]} - ${bytes})`;
+	const newBytes = sql`GREATEST(0, ${tempStorage[TempStorageKeys.SIZE]} - ${bytes})`;
 
 	if (row) {
 		await db

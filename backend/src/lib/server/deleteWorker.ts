@@ -45,10 +45,10 @@ export async function deleteFileFromStorage(db: Db | Tx, fileRow: any) {
 					fileId: b2_id
 				});
 				const result = await response.json();
-				if (result['success'] == 1) {
+				if (result.success === 1) {
 					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
 					await resetUserFilePart(db, userId, fileId, partNumber);
-				} else if (result['message'] == 'file_not_found') {
+				} else if (result.message == 'file_not_found') {
 					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
 					await resetUserFilePart(db, userId, fileId, partNumber);
 				} else {

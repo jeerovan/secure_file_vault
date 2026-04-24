@@ -91,7 +91,7 @@ class _FilePaneState extends State<FilePane> {
     super.initState();
     EventStream().notifier.addListener(_handleAppEvents);
     _loadFiles();
-    SyncUtils.waitAndSyncChanges();
+    _syncRootFolders();
   }
 
   @override
