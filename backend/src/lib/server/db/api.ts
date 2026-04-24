@@ -159,6 +159,7 @@ export async function syncPlanExpiry(db: Db | Tx, userId: number, supaId: string
 export async function updatePlanExpiryFromWebhook(
 	db: Db | Tx,
 	supaId: string,
+	rcId: string,
 	newExpiresAt: number
 ) {
 	const user = await getUserBySupabaseId(db, supaId);
@@ -183,7 +184,7 @@ export async function updatePlanExpiryFromWebhook(
 	if (update) {
 		await db
 			.update(userData)
-			.set({ [UserDataKeys.PLAN_EXPIRES_AT]: newExpiresAt })
+			.set({ [UserDataKeys.PLAN_EXPIRES_AT]: newExpiresAt, [UserDataKeys.PRO_ID]: rcId })
 			.where(eq(userData[UserDataKeys.USER_ID], userId));
 	}
 }

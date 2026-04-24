@@ -69,8 +69,6 @@ class _PageSigninState extends State<PageSignin> {
       }
     } else {
       signedIn = true;
-      String? accessToken = supabase.auth.currentSession?.accessToken;
-      logger.info("Access Token: $accessToken");
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) context.read<AppSetupState>().completeSignin();
       });

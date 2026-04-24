@@ -91,6 +91,7 @@ class _FilePaneState extends State<FilePane> {
     super.initState();
     EventStream().notifier.addListener(_handleAppEvents);
     _loadFiles();
+    SyncUtils.waitAndSyncChanges();
   }
 
   @override
@@ -153,7 +154,6 @@ class _FilePaneState extends State<FilePane> {
 
   Future<void> _loadFiles() async {
     if (currentItem == null) {
-      logger.info("current Item is null");
       deviceHash = await getDeviceHash();
       ModelItem? rootFife = await ModelItem.get("fife");
       if (rootFife != null) {
@@ -163,7 +163,6 @@ class _FilePaneState extends State<FilePane> {
       if (currentItem != null) parentChilds.add(currentItem!);
     }
     if (currentItem == null) {
-      logger.debug("current Item is null, returning");
       return;
     }
 
@@ -179,8 +178,6 @@ class _FilePaneState extends State<FilePane> {
         _itemsNotifier.value = items;
         _isLoading = false;
       });
-    } else {
-      logger.debug("not mounted, could not set items");
     }
   }
 

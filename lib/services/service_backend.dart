@@ -25,7 +25,7 @@ class BackendApi {
     SupabaseClient? supabase,
     http.Client? httpClient,
     String? baseUrlOverride,
-    this.timeout = const Duration(seconds: 30),
+    this.timeout = const Duration(seconds: 20),
   })  : _supabase = supabase ?? Supabase.instance.client,
         _http = httpClient ?? http.Client(),
         _base = Uri.parse(
@@ -240,12 +240,13 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
+      String? signedEmailId = getSignedInEmailId();
+      bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
       logger.info('DELETE $endpoint ${queryParameters.toString()}');
       final res = await _http
           .delete(
             _buildUri(endpoint, queryParameters: queryParameters),
-            headers: await _headers(
-                withAuth: getSignedInEmailId() != testEmailId, extra: headers),
+            headers: await _headers(withAuth: withAuth, extra: headers),
           )
           .timeout(timeout);
       return _formatResponse(res);

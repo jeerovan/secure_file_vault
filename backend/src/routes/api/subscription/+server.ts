@@ -39,11 +39,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			return json({ error: 'Bad Request: Missing event data' }, { status: 400 });
 		}
 
-		const { expiration_at_ms, original_app_user_id } = event;
+		const { expiration_at_ms, app_user_id, original_app_user_id } = event;
 
 		// 3. Process the Data (Update your database)
 		// Ensure you handle this robustly, perhaps in a try/catch if interacting with a DB
-		await updatePlanExpiryFromWebhook(db, original_app_user_id, expiration_at_ms);
+		await updatePlanExpiryFromWebhook(db, app_user_id, original_app_user_id, expiration_at_ms);
 
 		// 4. Return a Success Response
 		// RevenueCat expects a 200 OK status code. If it doesn't receive this,
