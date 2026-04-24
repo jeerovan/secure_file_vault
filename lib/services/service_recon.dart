@@ -507,7 +507,7 @@ class ReconciliationService {
                   digest = await hashConsumer.hash;
                 }
 
-                resultMap[path] = base64Encode(digest);
+                resultMap[path] = base64UrlEncode(digest).replaceAll('=', '');
               } catch (e) {
                 // If a single file fails (e.g., OS permission denied, file locked),
                 // skip it so the rest of the directory can successfully sync.
