@@ -44,10 +44,21 @@ class BackendApi {
     return trimmed.endsWith('/') ? trimmed : '$trimmed/';
   }
 
-  String _accessTokenOrThrow() {
+  Future<String?> _getAccessToken() async {
     final session = _supabase.auth.currentSession;
-    if (session == null) throw StateError('No active Supabase session.');
-    return session.accessToken; // Session exposes accessToken
+    if (session == null) {
+      return null;
+    }
+    final expiresAt =
+        DateTime.fromMillisecondsSinceEpoch(session.expiresAt! * 1000);
+
+    // Refresh manually if the token expires in less than 60 seconds
+    if (expiresAt.difference(DateTime.now()).inSeconds < 60) {
+      final response = await Supabase.instance.client.auth.refreshSession();
+      return response.session?.accessToken;
+    }
+
+    return session.accessToken;
   }
 
   Uri _buildUri(String endpoint, {Map<String, dynamic>? queryParameters}) {
@@ -67,9 +78,11 @@ class BackendApi {
     required bool withAuth,
     Map<String, String>? extra,
   }) async {
+    String? accessToken = await _getAccessToken();
     final h = <String, String>{
       'Content-Type': 'application/json',
-      if (withAuth) 'Authorization': 'Bearer ${_accessTokenOrThrow()}',
+      if (withAuth && accessToken != null)
+        'Authorization': 'Bearer $accessToken',
     };
     if (extra != null) h.addAll(extra);
     final deviceUuid = await getDeviceUuid();
