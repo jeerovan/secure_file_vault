@@ -548,7 +548,8 @@ export async function savePartChanges(
 	for (const change of changes) {
 		const filePartId = change['id'];
 		const partData = filePartId.split('_');
-		fileHashesSet.add(partData[0]);
+		partData.pop();
+		fileHashesSet.add(partData.join('_'));
 	}
 
 	const fileHashes = Array.from(fileHashesSet);
@@ -587,13 +588,13 @@ export async function savePartChanges(
 		for (const change of changes) {
 			const filePartId = change['id'];
 			const partData = filePartId.split('_');
-			const fileHash = partData[0];
+			const partNumber = parseInt(partData.pop());
+			const fileHash = partData.join('_');
 
 			const fileEntry = fileMap.get(fileHash);
 			if (!fileEntry) continue;
 
 			const fileId = fileEntry[FileKeys.ID];
-			const partNumber = parseInt(partData[1]);
 			const incomingUpdatedAt = change['updated_at'] || 0;
 			const changeString = change['data'];
 
