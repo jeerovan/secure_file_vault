@@ -109,7 +109,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
             ),
             SizedBox(height: 30),
             FilledButton(
-              onPressed: generateKeys,
+              onPressed: processing ? null : generateKeys,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

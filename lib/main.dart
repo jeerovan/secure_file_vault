@@ -53,7 +53,7 @@ void backgroundTaskDispatcher() {
   });
 }
 
-bool showDbPage = true;
+bool showDbPage = false;
 
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {

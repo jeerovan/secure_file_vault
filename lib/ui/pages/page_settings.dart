@@ -124,7 +124,7 @@ class SettingsPageState extends State<SettingsPage> {
                     onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
                   ),
                 ),
-                ListTile(
+                /* ListTile(
                   leading: const Icon(LucideIcons.star, color: Colors.grey),
                   title: const Text('Leave a review'),
                   horizontalTitleGap: 24.0,
@@ -145,7 +145,7 @@ class SettingsPageState extends State<SettingsPage> {
                     title: const Text('Desktop App'),
                     horizontalTitleGap: 24.0,
                     onTap: () => _redirectToDesktopApp(),
-                  ),
+                  ), */
                 ListTile(
                   leading: const Icon(LucideIcons.list, color: Colors.grey),
                   title: const Text("Logging"),

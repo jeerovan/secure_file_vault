@@ -466,16 +466,17 @@ class _FilePaneState extends State<FilePane> {
                     ],
                   ),
                 ),
-                const PopupMenuItem<int>(
-                  value: 7,
-                  child: Row(
-                    children: [
-                      Icon(LucideIcons.dollarSign, color: Colors.grey),
-                      SizedBox(width: 16),
-                      Text('FiFe Pro'),
-                    ],
+                if (!simulateTesting())
+                  const PopupMenuItem<int>(
+                    value: 7,
+                    child: Row(
+                      children: [
+                        Icon(LucideIcons.dollarSign, color: Colors.grey),
+                        SizedBox(width: 16),
+                        Text('FiFe Pro'),
+                      ],
+                    ),
                   ),
-                ),
                 if (_loggingEnabled)
                   const PopupMenuItem<int>(
                     value: 6,
