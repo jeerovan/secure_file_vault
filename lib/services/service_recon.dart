@@ -30,6 +30,7 @@ class ReconciliationService {
     //time to calculate hashes
     final stopwatch = Stopwatch()..start();
     Map<String, String> fileHashes = await _computeFileHashes(rootItem.path!);
+    logger.debug("fileHashes: $fileHashes");
     stopwatch.stop();
     final secondsTaken = stopwatch.elapsedMilliseconds / 1000.0;
     logger
@@ -72,19 +73,41 @@ class ReconciliationService {
 
     // 1. Get current state from File System and Database
     final fsChildren = await _scanFileSystemChildren(fsPath);
-
+    logger.debug("fsChildren:$fsChildren");
     ModelItem? dbParent = await ModelItem.get(dbParentId);
     final dbChildren = await ModelItem.getAllInFolder(dbParent);
+    logger.debug("dbChildren:$dbChildren");
 
-    final dbChildrenByName = {for (var c in dbChildren) c.name: c};
+    final dbChildrenByName = <String, List<ModelItem>>{};
+    for (var c in dbChildren) {
+      dbChildrenByName.putIfAbsent(c.name, () => []).add(c);
+    }
 
     //2. Find directly matched and modified items
     for (final fsChild in fsChildren) {
-      final dbChildItem = dbChildrenByName[fsChild.name];
+      final dbChildItems = dbChildrenByName[fsChild.name];
       ModelItem? dbChild;
-      if (dbChildItem?.isFolder == fsChild.isFolder &&
-          dbChildItem?.scanState == 0) {
-        dbChild = dbChildItem;
+      if (dbChildItems != null && dbChildItems.isNotEmpty) {
+        final validCandidates = dbChildItems
+            .where((item) =>
+                item.isFolder == fsChild.isFolder && item.scanState == 0)
+            .toList();
+
+        if (validCandidates.isNotEmpty) {
+          // 2. The first item is our active matched DB child
+          dbChild = validCandidates.first;
+
+          // 3. Any remaining valid candidates are guaranteed duplicates
+          if (validCandidates.length > 1) {
+            final duplicates = validCandidates.skip(1);
+
+            for (final duplicate in duplicates) {
+              logger.info(
+                  '🗑️ Removing duplicate DB item: ${duplicate.name} (${duplicate.id})');
+              await duplicate.remove();
+            }
+          }
+        }
       }
       final childPath = path_lib.join(fsPath, fsChild.name);
       if (dbChild != null) {
@@ -183,7 +206,8 @@ class ReconciliationService {
   Future<ModelItem?> _findMovedFolder(
       String rootItemId, FSItem fsFolder, String fsPath) async {
     final fsChildren = await _scanFileSystemChildren(fsPath);
-    final fsSizes = fsChildren.map((c) => c.size ?? 0).toSet();
+    final fsSizes = fsChildren.map((c) => c.size ?? 0).toList();
+    final fsSizeFrequency = _generateSizeFrequency(fsSizes);
     final candidateDbFolders =
         await ModelItem.getAllUnScannedFolderForRootItemId(rootItemId);
     ModelItem? bestMatch;
@@ -191,15 +215,17 @@ class ReconciliationService {
     for (final candidate in candidateDbFolders) {
       // Fetch children once
       final dbChildren = await ModelItem.getAllInFolder(candidate);
-
+      final dbSizes = dbChildren.map((c) => c.size).toList();
+      final dbSizeFrequency = _generateSizeFrequency(dbSizes);
       // If the folder is massive, checking name similarity is cheap.
 
       // Score 1: Name Match (Strongest signal)
       if (candidate.name == fsFolder.name) {
-        // Lower the threshold if the folder name is identical.
-        // Even a small content overlap indicates a move if the name is same.
-        double score = _calculateJaccardSimilarity(
-            fsSizes, dbChildren.map((c) => c.size).toSet());
+        if (fsSizes.isEmpty && dbSizes.isEmpty) {
+          return candidate;
+        }
+        double score =
+            _calculateJaccardSimilarity(fsSizeFrequency, dbSizeFrequency);
         if (score > 0.3 && score > bestScore) {
           bestScore = score;
           bestMatch = candidate;
@@ -207,9 +233,17 @@ class ReconciliationService {
         continue;
       }
 
+      // If names DO NOT match, do not attempt to match empty folders
+      // or folders containing only empty subdirectories
+      if (fsSizes.isEmpty ||
+          dbSizes.isEmpty ||
+          (fsSizes.every((s) => s == 0))) {
+        continue;
+      }
+
       // Score 2: Content Match
-      final dbSizes = dbChildren.map((c) => c.size).toSet();
-      double score = _calculateJaccardSimilarity(fsSizes, dbSizes);
+      double score =
+          _calculateJaccardSimilarity(fsSizeFrequency, dbSizeFrequency);
 
       if (score > bestScore) {
         bestScore = score;
@@ -255,8 +289,9 @@ class ReconciliationService {
       List<ModelItem> dbChildren,
       String fsPath,
       Map<String, String> hashses) async {
-    final fsSizes =
-        (await _scanFileSystemChildren(fsPath)).map((c) => c.size ?? 0).toSet();
+    final fsChildren = await _scanFileSystemChildren(fsPath);
+    final fsSizes = fsChildren.map((c) => c.size ?? 0).toList();
+    final fsSizeFrequency = _generateSizeFrequency(fsSizes);
     final dbChildrenFolders =
         dbChildren.where((c) => c.isFolder && c.scanState == 0).toList();
 
@@ -264,9 +299,13 @@ class ReconciliationService {
     double bestScore = 0.0;
 
     for (final dbFolder in dbChildrenFolders) {
-      final dbSizes =
-          (await ModelItem.getAllInFolder(dbFolder)).map((c) => c.size).toSet();
-      final score = _calculateJaccardSimilarity(fsSizes, dbSizes);
+      final dbChildren = await ModelItem.getAllInFolder(dbFolder);
+      final dbSizes = dbChildren.map((c) => c.size).toList();
+      // Skip renaming detection for purely empty folders or subfolder-only trees
+      if (fsSizes.isEmpty && dbSizes.isEmpty) continue;
+      final dbSizeFrequency = _generateSizeFrequency(dbSizes);
+      final score =
+          _calculateJaccardSimilarity(fsSizeFrequency, dbSizeFrequency);
 
       if (score > bestScore) {
         bestScore = score;
@@ -445,12 +484,32 @@ class ReconciliationService {
   }
 
   // --- Helpers ---
+  Map<int, int> _generateSizeFrequency(Iterable<int> sizes) {
+    final map = <int, int>{};
+    for (final size in sizes) {
+      map[size] = (map[size] ?? 0) + 1;
+    }
+    return map;
+  }
 
-  double _calculateJaccardSimilarity(Set<int> set1, Set<int> set2) {
-    if (set1.isEmpty && set2.isEmpty) return 1.0;
-    final intersection = set1.intersection(set2).length;
-    final union = set1.union(set2).length;
-    return union == 0 ? 0 : intersection / union;
+  double _calculateJaccardSimilarity(Map<int, int> freq1, Map<int, int> freq2) {
+    if (freq1.isEmpty && freq2.isEmpty)
+      return 0.0; // Do not default empty matches to 1.0
+
+    int intersection = 0;
+    int union = 0;
+
+    final allKeys = {...freq1.keys, ...freq2.keys};
+    for (final key in allKeys) {
+      final count1 = freq1[key] ?? 0;
+      final count2 = freq2[key] ?? 0;
+
+      // Minimum count is the intersection, Maximum count is the union
+      intersection += count1 < count2 ? count1 : count2;
+      union += count1 > count2 ? count1 : count2;
+    }
+
+    return union == 0 ? 0.0 : intersection / union;
   }
 
   Future<Map<String, String>> _computeFileHashes(String directoryPath) async {
@@ -535,14 +594,14 @@ class ReconciliationService {
 
     if (!await dir.exists()) return children;
 
-    await for (var entity in dir.list(recursive: false)) {
+    await for (var entity in dir.list(recursive: false, followLinks: false)) {
       try {
         final name = path_lib.basename(entity.path);
         final stats = await entity.stat();
         final isFolder = entity is Directory;
 
         children.add(FSItem(
-          name: name,
+          name: name.trim(),
           isFolder: isFolder,
           size: isFolder ? 0 : stats.size,
         ));
@@ -566,4 +625,8 @@ class FSItem {
     required this.isFolder,
     this.size,
   });
+  @override
+  String toString() {
+    return name;
+  }
 }

@@ -63,6 +63,10 @@ class ModelItem {
     };
   }
 
+  @override
+  String toString() {
+    return name;
+  }
   // -- Examples --
   // DeviceFolder: id:DeviceId,name:DeviceName
   // SyncFolder: itemId:DeviceFolderId,Path:FolderPath,name:path.basename(FolderPath)

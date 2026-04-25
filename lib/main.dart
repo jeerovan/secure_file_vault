@@ -53,6 +53,8 @@ void backgroundTaskDispatcher() {
   });
 }
 
+bool showDbPage = true;
+
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
