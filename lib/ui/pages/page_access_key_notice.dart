@@ -4,7 +4,6 @@ import '../../services/service_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sodium/sodium_sumo.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../utils/common.dart';
 import '../common_widgets.dart';
@@ -21,7 +20,6 @@ class PageAccessKeyNotice extends StatefulWidget {
 
 class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   AppLogger logger = AppLogger(prefixes: ["PageAccessKeyNotice"]);
-  SupabaseClient supabaseClient = Supabase.instance.client;
   SecureStorage secureStorage = SecureStorage();
   final api = BackendApi();
   bool processing = false;
@@ -33,7 +31,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   }
 
   Future<void> generateKeys() async {
-    String? userId = getSignedInUserId();
+    String? userId = await getSignedInUserId();
     if (userId == null) return;
     setState(() {
       processing = true;

@@ -1,11 +1,12 @@
+import 'dart:convert';
+
 import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:http/http.dart' as http_lib;
 import '../../models/model_item.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_logger.dart';
@@ -30,7 +31,6 @@ class _PageSigninState extends State<PageSignin> {
   final emailController = TextEditingController();
   final otpController = TextEditingController();
   final SecureStorage storage = SecureStorage();
-  final SupabaseClient supabase = Supabase.instance.client;
 
   late TapGestureRecognizer _termsRecognizer;
   late TapGestureRecognizer _privacyRecognizer;
@@ -41,6 +41,7 @@ class _PageSigninState extends State<PageSignin> {
   bool errorVerifyingOtp = false;
   bool signedIn = false;
   String email = ModelSetting.get(AppString.otpSentTo.string);
+  String neonAuthUrl = AppEnv.neonAuthUrl;
 
   @override
   void initState() {
@@ -57,14 +58,15 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   void _checkInitialAuthState() {
-    if (supabase.auth.currentSession == null) {
+    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+        "no") {
       logger.info("Not signed in");
       int sentOtpAt = int.parse(
           ModelSetting.get(AppString.otpSentAt.string, defaultValue: "0"));
       int nowUtc = DateTime.now().toUtc().millisecondsSinceEpoch;
 
-      // 15 minutes (900000 ms) expiry check
-      if (sentOtpAt > 0 && nowUtc - sentOtpAt < 900000) {
+      // 10 minutes (600000 ms) expiry check
+      if (sentOtpAt > 0 && nowUtc - sentOtpAt < 600000) {
         otpSent = true;
       }
     } else {
@@ -99,7 +101,19 @@ class _PageSigninState extends State<PageSignin> {
         await Future.delayed(const Duration(seconds: 1));
         await ModelSetting.set(AppString.simulateTesting.string, "yes");
       } else {
-        await supabase.auth.signInWithOtp(email: email);
+        Uri otpUrl = Uri.parse('$neonAuthUrl/email-otp/send-verification-otp');
+        final response = await http_lib.post(
+          otpUrl,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email,
+            'type':
+                'sign-in' // Specifying 'sign-in' triggers the passwordless flow
+          }),
+        );
+        if (response.statusCode != 200) {
+          throw Exception('Failed to send OTP: ${response.body}');
+        }
       }
 
       int nowUtc = DateTime.now().toUtc().millisecondsSinceEpoch;
@@ -138,36 +152,48 @@ class _PageSigninState extends State<PageSignin> {
       processing = true;
       errorVerifyingOtp = false;
     });
-
+    logger.debug("$savedEmail:$otp");
     try {
-      Session? session;
+      String? jwtToken;
+      Map<String, dynamic>? user;
 
       if (simulateTesting()) {
         await Future.delayed(const Duration(seconds: 1));
       } else {
-        final AuthResponse response = await supabase.auth.verifyOTP(
-          email: savedEmail,
-          token: otp,
-          type: OtpType.email,
+        final url = Uri.parse('$neonAuthUrl/sign-in/email-otp');
+
+        final response = await http_lib.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': savedEmail,
+            'otp': otp,
+            // Optional: Pass 'name' or 'image' here if you want to set them during auto-registration
+          }),
         );
 
-        if (response.session != null) {
-          session = response.session;
-          logger.debug(
-              'Success: Sign-in complete. User ID: ${response.user?.id}');
+        if (response.statusCode == 200) {
+          // Neon returns the JWT. Extract it from the response body or cookies.
+          final data = jsonDecode(response.body);
+          jwtToken = data[
+              'token']; // Ensure this matches Neon's specific response structure
+          user = data['user'];
+          logger.debug(jwtToken.toString());
         } else {
-          throw Exception('OTP verified, but no session was established.');
+          logger.debug(response.body);
         }
       }
 
-      if (session != null || simulateTesting()) {
+      if (jwtToken != null || simulateTesting()) {
         await ModelSetting.delete(AppString.otpSentTo.string);
         await ModelSetting.delete(AppString.otpSentAt.string);
+        if (jwtToken != null) {
+          await storage.write(key: AppString.jwtToken.string, value: jwtToken);
+        }
         await ModelSetting.set(AppString.signedIn.string, "yes");
 
-        String? userId = getSignedInUserId();
-        ModelProfile profile =
-            await ModelProfile.fromMap({"id": userId, "email": savedEmail});
+        ModelProfile profile = await ModelProfile.fromMap(
+            {"id": user?['id'], "email": user?['email']});
         await profile.insert();
 
         ModelItem deviceItem = await ModelItem.fromMap({
@@ -181,16 +207,13 @@ class _PageSigninState extends State<PageSignin> {
 
         // login to revenuecat
         if (revenueCatSupported && !simulateTesting()) {
-          await Purchases.logIn(userId!);
+          await Purchases.logIn(user?['id']);
         }
 
         if (!mounted) return;
         final appSetup = context.read<AppSetupState>();
         await appSetup.completeSignin();
       }
-    } on AuthException catch (error) {
-      logger.debug('Auth Failure: ${error.message}');
-      _showOtpVerifyError();
     } catch (e, s) {
       logger.error("verifyOtp", error: e, stackTrace: s);
       _showOtpVerifyError();

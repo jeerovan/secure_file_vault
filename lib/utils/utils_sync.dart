@@ -21,7 +21,7 @@ import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import '../utils/utils_crypto.dart';
 import 'package:sodium/sodium_sumo.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http_lib;
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 class SyncUtils {
@@ -53,7 +53,7 @@ class SyncUtils {
 
   // Pass inBackground flag to determine if we should await everything
   Future<void> reconFolders({bool inBackground = false}) async {
-    String? userId = getSignedInUserId();
+    String? userId = await getSignedInUserId();
     if (userId == null) {
       return;
     }
@@ -233,7 +233,7 @@ class SyncUtils {
     bool success = false;
     bool hasInternet = await InternetConnection().hasInternetAccess;
     if (!hasInternet) return false;
-    String? userId = getSignedInUserId();
+    String? userId = await getSignedInUserId();
     if (userId != null) {
       String deviceUuid = await getDeviceUuid();
       SecureStorage storage = SecureStorage();
@@ -249,8 +249,19 @@ class SyncUtils {
           } else {
             return false;
           }
-          await Supabase.instance.client.auth
-              .signOut(scope: SignOutScope.local);
+          // Neon signout
+          String? jwtToken = await storage.read(key: AppString.jwtToken.string);
+          if (jwtToken != null) {
+            String neonAuthUrl = AppEnv.neonAuthUrl;
+            Uri url = Uri.parse('$neonAuthUrl/sign-out');
+            await http_lib.post(
+              url,
+              headers: {
+                'Authorization': 'Bearer $jwtToken',
+                'Content-Type': 'application/json'
+              },
+            );
+          }
           if (revenueCatSupported) {
             final isAnonymous = await Purchases.isAnonymous;
             if (!isAnonymous) {
@@ -261,16 +272,12 @@ class SyncUtils {
         await storage.delete(key: AppString.masterKey.string);
         await storage.delete(key: AppString.accessKey.string);
         await storage.delete(key: AppString.fileHashKey.string);
+        await storage.delete(key: AppString.jwtToken.string);
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
         ModelSetting.clear();
         await clearFiFeDirectory();
         success = true;
-      } on FunctionException catch (e) {
-        Map<String, dynamic> errorMap =
-            e.details is String ? jsonDecode(e.details) : e.details;
-        dynamic error = errorMap.containsKey("error") ? errorMap["error"] : "";
-        logger.error("signout", error: error);
       } catch (e, s) {
         logger.error("signout", error: e, stackTrace: s);
       }
@@ -278,10 +285,12 @@ class SyncUtils {
     return success;
   }
 
+  static Future<void> neonSignOut() async {}
+
   static Future<void> logChangeToPush(Map<String, dynamic> map,
       {int deleteTask = 0}) async {
     String? masterKeyBase64 = await getMasterKey();
-    String? userId = getSignedInUserId();
+    String? userId = await getSignedInUserId();
     if (masterKeyBase64 != null && userId != null && !simulateTesting()) {
       String table = map["table"];
       String rowId = map['id'];

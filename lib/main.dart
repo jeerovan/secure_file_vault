@@ -85,9 +85,9 @@ Future<void> initializePurchases() async {
   if (revenueCatSupported) {
     String rcKey = "";
     if (Platform.isAndroid) {
-      rcKey = const String.fromEnvironment("RC_KEY_ANDROID");
+      rcKey = AppEnv.rcAndroidKey;
     } else if (Platform.isIOS) {
-      rcKey = const String.fromEnvironment("RC_KEY_IOS");
+      rcKey = AppEnv.rcIosKey;
     }
     if (rcKey.isNotEmpty) {
       if (isDebugEnabled) {

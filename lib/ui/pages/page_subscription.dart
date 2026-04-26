@@ -36,13 +36,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   }
 
   Future<void> loadFromLocal() async {
-    String? userId = getSignedInUserId();
-    if (userId != null) {
-      ModelProfile? profile = await ModelProfile.get(userId);
-      if (profile != null) {
-        if (profile.planExpiresAt! > 0) {
-          _isActive = true;
-        }
+    ModelProfile? profile = await ModelProfile.get();
+    if (profile != null) {
+      if (profile.planExpiresAt! > 0) {
+        _isActive = true;
       }
     }
   }
@@ -90,7 +87,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
   Future<void> _purchasePlan() async {
     if (_proPackage == null) return;
-    String? userEmail = getSignedInEmailId();
+    String? userEmail = await getSignedInEmailId();
     setState(() => _isLoading = true);
     try {
       final params =

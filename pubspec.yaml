@@ -31,7 +31,6 @@ dependencies:
   flutter:
     sdk: flutter
 
-  supabase_flutter: ^2.12.2
   http: ^1.6.0
   path: ^1.9.1
   path_provider: ^2.1.5

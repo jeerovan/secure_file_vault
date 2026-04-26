@@ -3,30 +3,24 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
+import 'package:file_vault_bb/utils/enums.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-class AppEnv {
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: '',
-  ); // set via --dart-define=API_BASE_URL=
-}
 
 class BackendApi {
-  final SupabaseClient _supabase;
+  final SecureStorage _storage;
   final http.Client _http;
   final Uri _base;
   final Duration timeout;
   final logger = AppLogger(prefixes: ["BackendAPI"]);
 
   BackendApi({
-    SupabaseClient? supabase,
+    SecureStorage? storage,
     http.Client? httpClient,
     String? baseUrlOverride,
     this.timeout = const Duration(seconds: 20),
-  })  : _supabase = supabase ?? Supabase.instance.client,
+  })  : _storage = storage ?? SecureStorage(),
         _http = httpClient ?? http.Client(),
         _base = Uri.parse(
             _normalizeBaseUrl(baseUrlOverride ?? '${AppEnv.apiBaseUrl}/api')) {
@@ -45,20 +39,7 @@ class BackendApi {
   }
 
   Future<String?> _getAccessToken() async {
-    final session = _supabase.auth.currentSession;
-    if (session == null) {
-      return null;
-    }
-    final expiresAt =
-        DateTime.fromMillisecondsSinceEpoch(session.expiresAt! * 1000);
-
-    // Refresh manually if the token expires in less than 60 seconds
-    if (expiresAt.difference(DateTime.now()).inSeconds < 60) {
-      final response = await Supabase.instance.client.auth.refreshSession();
-      return response.session?.accessToken;
-    }
-
-    return session.accessToken;
+    return _storage.read(key: AppString.jwtToken.string);
   }
 
   Uri _buildUri(String endpoint, {Map<String, dynamic>? queryParameters}) {
@@ -83,6 +64,7 @@ class BackendApi {
       'Content-Type': 'application/json',
       if (withAuth && accessToken != null)
         'Authorization': 'Bearer $accessToken',
+      'Service': 'neon'
     };
     if (extra != null) h.addAll(extra);
     final deviceUuid = await getDeviceUuid();
@@ -189,7 +171,7 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
-      String? signedEmailId = getSignedInEmailId();
+      String? signedEmailId = await getSignedInEmailId();
       bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
       logger.info('GET $endpoint ${queryParameters.toString()}');
       final res = await _http
@@ -214,7 +196,7 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
-      String? signedEmailId = getSignedInEmailId();
+      String? signedEmailId = await getSignedInEmailId();
       bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
       logger.info('POST $endpoint ${jsonEncode(jsonBody)}');
       final res = await _http
@@ -240,7 +222,7 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
-      String? signedEmailId = getSignedInEmailId();
+      String? signedEmailId = await getSignedInEmailId();
       bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
       logger.info('DELETE $endpoint ${queryParameters.toString()}');
       final res = await _http

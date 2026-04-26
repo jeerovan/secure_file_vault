@@ -381,7 +381,7 @@ class TaskManager {
     int contentLength = fileBytes.length;
     String method = 'POST';
     if (uploadInfo["provider"] == "b2") {
-      String? userId = getSignedInUserId();
+      String? userId = await getSignedInUserId();
       headers = {
         "authorization": uploadInfo["token"],
         "X-Bz-Content-Sha1": sha1Hash,

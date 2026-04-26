@@ -5,6 +5,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/utils/utils_crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -20,10 +21,22 @@ import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as path_lib;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 final String testEmailId = "fife@jeero.one";
+
+class AppEnv {
+  static const String apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  ); // set via --dart-define=API_BASE_URL=
+  static const String neonAuthUrl =
+      String.fromEnvironment('NEON_AUTH', defaultValue: '');
+  static const String rcAndroidKey =
+      String.fromEnvironment('RC_KEY_ANDROID', defaultValue: '');
+  static const String rcIosKey =
+      String.fromEnvironment('RC_KEY_IOS', defaultValue: '');
+}
 
 bool canUseVideoPlayer =
     Platform.isAndroid || Platform.isIOS || Platform.isMacOS || kIsWeb;
@@ -745,21 +758,11 @@ Future<PermissionStatus> getStoragePermissionStatus() async {
   }
 }
 
-SupabaseClient? getSupabaseClient() {
-  try {
-    return Supabase.instance.client;
-  } catch (e, s) {
-    AppLogger(prefixes: ["Common"])
-        .error("Supaclient", error: e, stackTrace: s);
-    return null;
-  }
-}
-
 Future<void> initializeDependencies(
     {ExecutionMode mode = ExecutionMode.appForeground}) async {
   // initialize in parallel
   await Future.wait(([
-    initializeSupabase(mode: mode),
+    addTrustedCertificates(mode: mode),
     initializePackages(mode: mode),
   ]));
   AppLogger(prefixes: [mode.string]).info("Initialized Dependencies");
@@ -770,21 +773,15 @@ Future<void> initializePackages(
   CryptoUtils.init();
 }
 
-Future<void> initializeSupabase(
+Future<void> addTrustedCertificates(
     {ExecutionMode mode = ExecutionMode.appForeground}) async {
   // load certificate
   ByteData certData = await PlatformAssetBundle().load('assets/cacert.pem');
   SecurityContext.defaultContext
       .setTrustedCertificatesBytes(certData.buffer.asUint8List());
-  final String supaUrl = const String.fromEnvironment("SUPABASE_URL");
-  final String supaKey = const String.fromEnvironment("SUPABASE_KEY");
-  if (supaUrl.isNotEmpty && supaKey.isNotEmpty) {
-    Supabase _ = await Supabase.initialize(url: supaUrl, anonKey: supaKey);
-    AppLogger(prefixes: [mode.string]).info("Initialized Supabase");
-  }
 }
 
-String? getSignedInUserId() {
+Future<String?> getSignedInUserId() async {
   if (simulateTesting()) {
     if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
         "yes") {
@@ -793,16 +790,15 @@ String? getSignedInUserId() {
       return null;
     }
   }
-  SupabaseClient supabaseClient = Supabase.instance.client;
-  User? currentUser = supabaseClient.auth.currentUser;
-  if (currentUser != null) {
-    return currentUser.id;
+  ModelProfile? profile = await ModelProfile.get();
+  if (profile != null) {
+    return profile.id;
   } else {
     return null;
   }
 }
 
-String? getSignedInEmailId() {
+Future<String?> getSignedInEmailId() async {
   if (simulateTesting()) {
     if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
         "yes") {
@@ -811,10 +807,9 @@ String? getSignedInEmailId() {
       return null;
     }
   }
-  SupabaseClient supabaseClient = Supabase.instance.client;
-  User? currentUser = supabaseClient.auth.currentUser;
-  if (currentUser != null) {
-    return currentUser.email;
+  ModelProfile? profile = await ModelProfile.get();
+  if (profile != null) {
+    return profile.email;
   } else {
     return null;
   }

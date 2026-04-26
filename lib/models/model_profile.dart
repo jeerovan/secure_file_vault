@@ -56,10 +56,10 @@ class ModelProfile {
     return await Future.wait(rows.map((map) => fromMap(map)));
   }
 
-  static Future<ModelProfile?> get(String id) async {
+  static Future<ModelProfile?> get() async {
     final dbHelper = StorageSqlite.instance;
     List<Map<String, dynamic>> list =
-        await dbHelper.getWithId(Tables.profiles.string, id);
+        await dbHelper.getAll(Tables.profiles.string);
     if (list.isNotEmpty) {
       Map<String, dynamic> map = list.first;
       return await fromMap(map);

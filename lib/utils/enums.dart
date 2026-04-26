@@ -91,6 +91,7 @@ enum AppString {
   signedIn,
   otpSentTo,
   otpSentAt,
+  jwtToken,
 
   // Recon
   lastReconRunningAt,
@@ -132,6 +133,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.jwtToken:
+        return "jwt_token";
       case AppString.fileHashKeyContext:
         return "FileHash";
       case AppString.fileHashKey:
