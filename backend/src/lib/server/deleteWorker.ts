@@ -23,7 +23,7 @@ export async function deleteFileFromStorage(db: Db | Tx, fileRow: any) {
 	const userRow = await getUser(db, userId);
 	if (storageId == null || userRow == undefined) return;
 	const credential = await getCredentialByStorageId(db, userId, storageId);
-	const supabaseId = userRow[UserKeys.SUPABASE_ID];
+	const supabaseId = userRow[UserKeys.REMOTE_AUTH_ID];
 	let allRemoved = true;
 	for (const index in partNumbers) {
 		const partNumber = partNumbers[index];

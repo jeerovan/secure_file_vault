@@ -36,7 +36,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		appKey: string;
 		bucketName: string;
 	};
-	const file_path = `${authUser.supabaseId}/${file_id}`;
+	const file_path = `${authUser.remoteAuthId}/${file_id}`;
 	const s3Endpoint = `https://${credsData.accountId}.r2.cloudflarestorage.com`;
 	const region = 'auto';
 	const s3Client = new S3Client({

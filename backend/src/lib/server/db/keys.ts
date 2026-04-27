@@ -2,7 +2,7 @@ export const UserKeys = {
 	ID: '1',
 	SERVER_CREATED_AT: '2',
 	SERVER_UPDATED_AT: '3',
-	SUPABASE_ID: '4',
+	REMOTE_AUTH_ID: '4',
 	EMAIL: '5',
 	CIPHER: '6',
 	NONCE: '7'

@@ -34,7 +34,7 @@ export async function getUserBySupabaseId(db: Db | Tx, supabaseId: string) {
 	const [res] = await db
 		.select()
 		.from(user)
-		.where(eq(user[UserKeys.SUPABASE_ID], supabaseId))
+		.where(eq(user[UserKeys.REMOTE_AUTH_ID], supabaseId))
 		.limit(1);
 	return res;
 }
@@ -55,7 +55,7 @@ export async function addUser(
 		const [newUser] = await tx
 			.insert(user)
 			.values({
-				[UserKeys.SUPABASE_ID]: supabaseId,
+				[UserKeys.REMOTE_AUTH_ID]: supabaseId,
 				[UserKeys.EMAIL]: email,
 				[UserKeys.CIPHER]: cipher,
 				[UserKeys.NONCE]: nonce
@@ -347,7 +347,7 @@ export async function fetchChanges(
 	const profileRows = await db
 		.select({
 			...getTableColumns(userData),
-			[UserDataKeys.USER_ID]: user[UserKeys.SUPABASE_ID]
+			[UserDataKeys.USER_ID]: user[UserKeys.REMOTE_AUTH_ID]
 		})
 		.from(userData)
 		.innerJoin(user, eq(userData[UserDataKeys.USER_ID], user[UserKeys.ID]))

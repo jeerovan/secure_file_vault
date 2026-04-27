@@ -38,7 +38,7 @@ export const user = pgTable('user', {
 	[UserKeys.SERVER_UPDATED_AT]: bigint(UserKeys.SERVER_UPDATED_AT, { mode: 'number' })
 		.$defaultFn(() => Date.now())
 		.$onUpdate(() => Date.now()),
-	[UserKeys.SUPABASE_ID]: text(UserKeys.SUPABASE_ID).notNull().unique(),
+	[UserKeys.REMOTE_AUTH_ID]: text(UserKeys.REMOTE_AUTH_ID).notNull().unique(),
 	[UserKeys.EMAIL]: text(UserKeys.EMAIL).notNull().unique(),
 	[UserKeys.CIPHER]: text(UserKeys.CIPHER).notNull(),
 	[UserKeys.NONCE]: text(UserKeys.NONCE).notNull()

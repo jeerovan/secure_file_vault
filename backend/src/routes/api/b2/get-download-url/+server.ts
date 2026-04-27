@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	if (!authData) {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
-	const file_path = `${authUser.supabaseId}/${file_id}`;
+	const file_path = `${authUser.remoteAuthId}/${file_id}`;
 	const s3Endpoint = authData.s3ApiUrl;
 	const region = extractRegion(s3Endpoint);
 	const s3Client = new S3Client({

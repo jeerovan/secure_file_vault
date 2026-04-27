@@ -37,7 +37,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		namespace: string;
 		region: string;
 	};
-	const file_path = `${authUser.supabaseId}/${file_id}`;
+	const file_path = `${authUser.remoteAuthId}/${file_id}`;
 	const s3Endpoint = `https://${credsData.namespace}.compat.objectstorage.${credsData.region}.oraclecloud.com`;
 	const s3Client = new S3Client({
 		region: credsData.region,

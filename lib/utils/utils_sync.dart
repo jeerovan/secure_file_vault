@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../models/model_change.dart';
@@ -21,7 +22,6 @@ import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import '../utils/utils_crypto.dart';
 import 'package:sodium/sodium_sumo.dart';
-import 'package:http/http.dart' as http_lib;
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
 class SyncUtils {
@@ -250,18 +250,7 @@ class SyncUtils {
             return false;
           }
           // Neon signout
-          String? jwtToken = await storage.read(key: AppString.jwtToken.string);
-          if (jwtToken != null) {
-            String neonAuthUrl = AppEnv.neonAuthUrl;
-            Uri url = Uri.parse('$neonAuthUrl/sign-out');
-            await http_lib.post(
-              url,
-              headers: {
-                'Authorization': 'Bearer $jwtToken',
-                'Content-Type': 'application/json'
-              },
-            );
-          }
+          await NeonAuth().signOut();
           if (revenueCatSupported) {
             final isAnonymous = await Purchases.isAnonymous;
             if (!isAnonymous) {
@@ -269,10 +258,7 @@ class SyncUtils {
             }
           }
         }
-        await storage.delete(key: AppString.masterKey.string);
-        await storage.delete(key: AppString.accessKey.string);
-        await storage.delete(key: AppString.fileHashKey.string);
-        await storage.delete(key: AppString.jwtToken.string);
+        await storage.clear();
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
         ModelSetting.clear();

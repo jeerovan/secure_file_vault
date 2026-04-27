@@ -41,7 +41,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	const result = await addUser(db, authUser.supabaseId!, authUser.email!, cipher, nonce);
+	const result = await addUser(db, authUser.remoteAuthId!, authUser.email!, cipher, nonce);
 
 	return json({ success: 1, data: result });
 };

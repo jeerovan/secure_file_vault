@@ -50,7 +50,8 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    if (getSignedInUserId() == null) {
+    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+        "no") {
       logger.info("Signin");
       _currentStep = SetupStep.signin;
       notifyListeners();

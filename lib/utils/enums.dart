@@ -92,6 +92,7 @@ enum AppString {
   otpSentTo,
   otpSentAt,
   jwtToken,
+  sessionCookie,
 
   // Recon
   lastReconRunningAt,
@@ -133,6 +134,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.sessionCookie:
+        return "session_cookie";
       case AppString.jwtToken:
         return "jwt_token";
       case AppString.fileHashKeyContext:

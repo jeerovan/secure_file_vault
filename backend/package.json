@@ -54,6 +54,7 @@
 		"@fontsource-variable/inter": "^5.2.8",
 		"@neondatabase/serverless": "^1.1.0",
 		"@supabase/supabase-js": "^2.97.0",
+		"jose": "^6.2.2",
 		"lucide-svelte": "^1.0.1",
 		"postgres": "^3.4.9",
 		"undici": "^8.0.2",

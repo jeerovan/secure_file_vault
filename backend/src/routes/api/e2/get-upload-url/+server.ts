@@ -36,7 +36,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		bucketName: string;
 		region: string;
 	};
-	const file_path = `${authUser.supabaseId}/${file_id}`;
+	const file_path = `${authUser.remoteAuthId}/${file_id}`;
 	const s3Endpoint = `https://s3.${credsData.region}.idrivee2.com`;
 	const s3Client = new S3Client({
 		region: credsData.region,

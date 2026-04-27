@@ -1,6 +1,6 @@
 import 'dotenv/config';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/neon-http';
+import { neon } from '@neondatabase/serverless';
 import * as schema from '../src/lib/server/db/schema';
 import { ProviderKeys, UserKeys } from '../src/lib/server/db/keys';
 
@@ -11,7 +11,7 @@ const main = async () => {
 		throw new Error('DATABASE_URL is not defined in the .env file');
 	}
 
-	const client = postgres(dbUrl);
+	const client = neon(dbUrl);
 	const db = drizzle(client, { schema });
 
 	console.log('🌱 Seeding database...');

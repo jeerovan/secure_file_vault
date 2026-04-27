@@ -11,7 +11,7 @@ export const GET: RequestHandler = async ({ request, platform }) => {
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
-	syncPlanExpiry(db, authUser.userId!, authUser.supabaseId!); // no wait
+	syncPlanExpiry(db, authUser.userId!, authUser.remoteAuthId!); // no wait
 	return json({ success: 1 });
 };
 

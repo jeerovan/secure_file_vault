@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/models/model_profile.dart';
+import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/utils/utils_crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -764,6 +765,7 @@ Future<void> initializeDependencies(
   await Future.wait(([
     addTrustedCertificates(mode: mode),
     initializePackages(mode: mode),
+    refreshNeonAuth()
   ]));
   AppLogger(prefixes: [mode.string]).info("Initialized Dependencies");
 }
@@ -779,6 +781,13 @@ Future<void> addTrustedCertificates(
   ByteData certData = await PlatformAssetBundle().load('assets/cacert.pem');
   SecurityContext.defaultContext
       .setTrustedCertificatesBytes(certData.buffer.asUint8List());
+}
+
+Future<void> refreshNeonAuth() async {
+  if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+      "yes") {
+    await NeonAuth().refreshSessionAndGetJWT();
+  }
 }
 
 Future<String?> getSignedInUserId() async {

@@ -1,13 +1,9 @@
-import 'dart:convert';
-
-import 'package:file_vault_bb/models/model_profile.dart';
+import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:http/http.dart' as http_lib;
-import '../../models/model_item.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_logger.dart';
 import '../../storage/storage_secure.dart';
@@ -101,16 +97,7 @@ class _PageSigninState extends State<PageSignin> {
         await Future.delayed(const Duration(seconds: 1));
         await ModelSetting.set(AppString.simulateTesting.string, "yes");
       } else {
-        Uri otpUrl = Uri.parse('$neonAuthUrl/email-otp/send-verification-otp');
-        final response = await http_lib.post(
-          otpUrl,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'email': email,
-            'type':
-                'sign-in' // Specifying 'sign-in' triggers the passwordless flow
-          }),
-        );
+        final response = await NeonAuth().sendOTP(email);
         if (response.statusCode != 200) {
           throw Exception('Failed to send OTP: ${response.body}');
         }
@@ -154,60 +141,23 @@ class _PageSigninState extends State<PageSignin> {
     });
     logger.debug("$savedEmail:$otp");
     try {
-      String? jwtToken;
-      Map<String, dynamic>? user;
-
+      bool verified = false;
       if (simulateTesting()) {
         await Future.delayed(const Duration(seconds: 1));
       } else {
-        final url = Uri.parse('$neonAuthUrl/sign-in/email-otp');
-
-        final response = await http_lib.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'email': savedEmail,
-            'otp': otp,
-            // Optional: Pass 'name' or 'image' here if you want to set them during auto-registration
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          // Neon returns the JWT. Extract it from the response body or cookies.
-          final data = jsonDecode(response.body);
-          jwtToken = data[
-              'token']; // Ensure this matches Neon's specific response structure
-          user = data['user'];
-          logger.debug(jwtToken.toString());
-        } else {
-          logger.debug(response.body);
-        }
+        verified = await NeonAuth().verifyOTP(email, otp);
       }
 
-      if (jwtToken != null || simulateTesting()) {
+      if (verified || simulateTesting()) {
         await ModelSetting.delete(AppString.otpSentTo.string);
         await ModelSetting.delete(AppString.otpSentAt.string);
-        if (jwtToken != null) {
-          await storage.write(key: AppString.jwtToken.string, value: jwtToken);
-        }
-        await ModelSetting.set(AppString.signedIn.string, "yes");
-
-        ModelProfile profile = await ModelProfile.fromMap(
-            {"id": user?['id'], "email": user?['email']});
-        await profile.insert();
-
-        ModelItem deviceItem = await ModelItem.fromMap({
-          "id": "fife",
-          "name": "FiFe",
-          "is_folder": 1,
-        });
-        await deviceItem.insert();
 
         logger.info("Login Successful");
 
         // login to revenuecat
-        if (revenueCatSupported && !simulateTesting()) {
-          await Purchases.logIn(user?['id']);
+        String? userId = await getSignedInUserId();
+        if (userId != null && revenueCatSupported && !simulateTesting()) {
+          await Purchases.logIn(userId);
         }
 
         if (!mounted) return;
@@ -232,9 +182,7 @@ class _PageSigninState extends State<PageSignin> {
       errorVerifyingOtp = true;
     });
     displaySnackBar(context,
-        message:
-            'OTP verification failed. Please check the code and try again.',
-        seconds: 3);
+        message: 'OTP verification failed. Please try again.', seconds: 3);
   }
 
   Future<void> changeEmail() async {

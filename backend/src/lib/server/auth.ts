@@ -1,13 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
-import { SUPABASE_URL, SUPABASE_KEY } from '$env/static/private';
-import { getUserBySupabaseId } from './db/api';
+import { SUPABASE_URL, SUPABASE_KEY, NEON_JWKS } from '$env/static/private';
+import { getUserBySupabaseId as getUserByRemoteAuthId } from './db/api';
 import { ErrorCode, UserKeys } from './db/keys';
 import type { Db, Tx } from './db/index';
+import * as jose from 'jose';
 
 export interface AuthUser {
 	authorized: boolean;
 	userId?: number;
-	supabaseId?: string;
+	remoteAuthId?: string;
 	email?: string;
 	deviceUuid?: string;
 	message?: number;
@@ -27,28 +28,52 @@ export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUs
 
 	const token = authHeader.split(' ')[1];
 
-	// Use service role client ONLY for verifying the token — never expose this key
-	const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-	const {
-		data: { user },
-		error: authError
-	} = await supabase.auth.getUser(token);
+	const serviceHeader = request.headers.get('service');
+	if (serviceHeader == 'neon') {
+		try {
+			// 2. Validate the JWT using Neon's JWKS Endpoint
+			const JWKS = jose.createRemoteJWKSet(new URL(NEON_JWKS));
+			const { payload } = await jose.jwtVerify(token, JWKS);
+			console.log(payload);
+			// 3. Success, fetch user
+			const userId = payload.sub!;
+			const userEntry = await getUserByRemoteAuthId(db, userId);
 
-	if (authError || !user) {
-		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+			return {
+				authorized: true,
+				remoteAuthId: userId,
+				email: userEntry?.[UserKeys.EMAIL],
+				deviceUuid: device_uuid,
+				userId: userEntry?.[UserKeys.ID]
+			};
+		} catch (err) {
+			console.log(err);
+			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+		}
+	} else {
+		// Use service role client ONLY for verifying the token — never expose this key
+		const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+		const {
+			data: { user },
+			error: authError
+		} = await supabase.auth.getUser(token);
+
+		if (authError || !user) {
+			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+		}
+
+		if (!user.email) {
+			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+		}
+
+		const userEntry = await getUserByRemoteAuthId(db, user.id);
+
+		return {
+			authorized: true,
+			remoteAuthId: user.id,
+			email: user.email,
+			deviceUuid: device_uuid,
+			userId: userEntry?.[UserKeys.ID]
+		};
 	}
-
-	if (!user.email) {
-		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
-	}
-
-	const userEntry = await getUserBySupabaseId(db, user.id);
-
-	return {
-		authorized: true,
-		supabaseId: user.id,
-		email: user.email,
-		deviceUuid: device_uuid,
-		userId: userEntry?.[UserKeys.ID]
-	};
 }
