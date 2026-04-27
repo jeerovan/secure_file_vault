@@ -246,11 +246,12 @@ class SyncUtils {
             if (response["success"] == 0) {
               return false;
             }
-          } else {
-            return false;
           }
           // Neon signout
-          await NeonAuth().signOut();
+          bool success = await NeonAuth().signOut();
+          if (!success) {
+            return false;
+          }
           if (revenueCatSupported) {
             final isAnonymous = await Purchases.isAnonymous;
             if (!isAnonymous) {

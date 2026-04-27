@@ -40,7 +40,7 @@ class BackendApi {
   }
 
   Future<String?> _getAccessToken() async {
-    return _storage.read(key: AppString.jwtToken.string);
+    return await _storage.read(key: AppString.jwtToken.string);
   }
 
   Uri _buildUri(String endpoint, {Map<String, dynamic>? queryParameters}) {

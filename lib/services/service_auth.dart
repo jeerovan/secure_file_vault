@@ -114,13 +114,14 @@ class NeonAuth {
         await _storage.write(key: AppString.jwtToken.string, value: jwt);
         logger.info("Refreshed jwtToken");
       }
+    } else {
+      // If it fails, the session is dead. Clear storage and force re-login.
+      await SyncUtils.signout();
     }
-
-    // If it fails, the session is dead. Clear storage and force re-login.
-    await SyncUtils.signout();
   }
 
-  Future<void> signOut() async {
+  Future<bool> signOut() async {
+    bool success = false;
     String? sessionCookie =
         await _storage.read(key: AppString.sessionCookie.string);
     if (sessionCookie != null) {
@@ -128,24 +129,27 @@ class NeonAuth {
         final url = Uri.parse('$_neonAuthUrl/sign-out');
 
         // 2. Call the sign-out endpoint to invalidate the session on the server
-        final response = await _http.post(
-          url,
-          headers: {
-            // Provide the session cookie so the server knows what to destroy
-            'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
-            'Content-Type': 'application/json',
-          },
-        );
+        final response = await _http.post(url,
+            headers: {
+              // Provide the session cookie so the server knows what to destroy
+              'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
+              'Content-Type': 'application/json',
+              'Origin': _neonAuthUrl
+            },
+            body: '{}');
 
         if (response.statusCode != 200) {
           // Log the error, but continue to clear local storage anyway
           logger.error(
               'Server sign-out warning: ${response.statusCode} - ${response.body}');
+        } else {
+          success = true;
         }
       } catch (e) {
         // Handle network errors gracefully
         logger.error('Failed to reach auth server during sign-out: $e');
       }
     }
+    return success;
   }
 }
