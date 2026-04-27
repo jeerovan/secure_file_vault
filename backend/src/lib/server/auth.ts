@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_URL, SUPABASE_KEY, NEON_JWKS } from '$env/static/private';
-import { getUserBySupabaseId as getUserByRemoteAuthId } from './db/api';
+import { getUserByRemoteId as getUserByRemoteAuthId } from './db/api';
 import { ErrorCode, UserKeys } from './db/keys';
 import type { Db, Tx } from './db/index';
 import * as jose from 'jose';
@@ -34,10 +34,14 @@ export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUs
 			// 2. Validate the JWT using Neon's JWKS Endpoint
 			const JWKS = jose.createRemoteJWKSet(new URL(NEON_JWKS));
 			const { payload } = await jose.jwtVerify(token, JWKS);
-			console.log(payload);
 			// 3. Success, fetch user
-			const userId = payload.sub!;
-			const userEntry = await getUserByRemoteAuthId(db, userId);
+			const userId = payload['sub']!;
+			const email = payload['email']! as string;
+			const userEntry = await getUserByRemoteAuthId(db, userId, email);
+
+			if (!userEntry) {
+				return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+			}
 
 			return {
 				authorized: true,
@@ -67,6 +71,10 @@ export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUs
 		}
 
 		const userEntry = await getUserByRemoteAuthId(db, user.id);
+
+		if (!userEntry) {
+			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+		}
 
 		return {
 			authorized: true,

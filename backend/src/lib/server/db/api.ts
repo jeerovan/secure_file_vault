@@ -30,13 +30,30 @@ import {
 import { deleteFileFromStorage } from '../deleteWorker';
 import type { Db, Tx } from '.';
 
-export async function getUserBySupabaseId(db: Db | Tx, supabaseId: string) {
-	const [res] = await db
-		.select()
-		.from(user)
-		.where(eq(user[UserKeys.REMOTE_AUTH_ID], supabaseId))
-		.limit(1);
-	return res;
+export async function getUserByRemoteId(
+	db: Db | Tx,
+	remoteId: string,
+	email: string | undefined = undefined
+) {
+	if (email) {
+		const [res] = await db.select().from(user).where(eq(user[UserKeys.EMAIL], email)).limit(1);
+		if (res) {
+			if (res[UserKeys.REMOTE_AUTH_ID] != remoteId) {
+				await db
+					.update(user)
+					.set({ [UserKeys.REMOTE_AUTH_ID]: remoteId })
+					.where(eq(user[UserKeys.EMAIL], email));
+			}
+		}
+		return res;
+	} else {
+		const [res] = await db
+			.select()
+			.from(user)
+			.where(eq(user[UserKeys.REMOTE_AUTH_ID], remoteId))
+			.limit(1);
+		return res;
+	}
 }
 
 export async function getUser(db: Db | Tx, userId: number) {
@@ -68,7 +85,7 @@ export async function addUser(
 		});
 
 		// add default fife storage for this user
-		const fifeUser = await getUserBySupabaseId(tx, 'fife');
+		const fifeUser = await getUserByRemoteId(tx, 'fife');
 		if (!fifeUser) {
 			return;
 		}
@@ -158,13 +175,13 @@ export async function syncPlanExpiry(db: Db | Tx, userId: number, supaId: string
 
 export async function updatePlanExpiryFromWebhook(
 	db: Db | Tx,
-	supaId: string,
+	remoteId: string,
 	rcId: string,
 	newExpiresAt: number
 ) {
-	const user = await getUserBySupabaseId(db, supaId);
+	const user = await getUserByRemoteId(db, remoteId);
 	if (!user) {
-		console.error(`RC Webhook, user: ${supaId} not found`);
+		console.error(`RC Webhook, user: ${remoteId} not found`);
 		return;
 	}
 	const userId = user[UserKeys.ID];
@@ -1068,7 +1085,7 @@ export async function getProviders(db: Db | Tx) {
 }
 
 export async function getUserStorage(db: Db | Tx, userId: number) {
-	const fifeUser = await getUserBySupabaseId(db, 'fife');
+	const fifeUser = await getUserByRemoteId(db, 'fife');
 	if (!fifeUser) {
 		return [];
 	}
