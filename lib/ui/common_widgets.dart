@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 
 import '../models/model_file.dart';
@@ -322,6 +323,72 @@ Widget tryFailedRequestAgain(
       ),
     ),
   );
+}
+
+class PrivacyTermsWidget extends StatefulWidget {
+  const PrivacyTermsWidget({super.key});
+
+  @override
+  State<PrivacyTermsWidget> createState() => _PrivacyTermsWidgetState();
+}
+
+class _PrivacyTermsWidgetState extends State<PrivacyTermsWidget> {
+  late TapGestureRecognizer termsRecognizer;
+
+  late TapGestureRecognizer privacyRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _setupGestureRecognizers();
+  }
+
+  @override
+  void dispose() {
+    termsRecognizer.dispose();
+    privacyRecognizer.dispose();
+    super.dispose();
+  }
+
+  void _setupGestureRecognizers() {
+    termsRecognizer = TapGestureRecognizer()
+      ..onTap = () => openURL('https://fife.jeero.one/terms');
+    privacyRecognizer = TapGestureRecognizer()
+      ..onTap = () => openURL('https://fife.jeero.one/privacy');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text.rich(
+      TextSpan(
+        text: 'By continuing, you agree to our ',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+        children: [
+          TextSpan(
+            text: 'Terms of Service',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+            recognizer: termsRecognizer,
+          ),
+          const TextSpan(text: ' and '),
+          TextSpan(
+            text: 'Privacy Policy',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
+            ),
+            recognizer: privacyRecognizer,
+          ),
+          const TextSpan(text: '.'),
+        ],
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
 }
 
 class CrossPlatformBackHandler extends StatelessWidget {

@@ -225,7 +225,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                               buttonAction:
                                   revenueCatSupported ? _purchasePlan : null,
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
+                            if (revenueCatSupported) PrivacyTermsWidget(),
+                            const SizedBox(height: 24),
                             if (revenueCatSupported)
                               TextButton(
                                 onPressed: _restorePurchases,

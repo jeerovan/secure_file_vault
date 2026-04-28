@@ -1,6 +1,5 @@
 import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -28,9 +27,6 @@ class _PageSigninState extends State<PageSignin> {
   final otpController = TextEditingController();
   final SecureStorage storage = SecureStorage();
 
-  late TapGestureRecognizer _termsRecognizer;
-  late TapGestureRecognizer _privacyRecognizer;
-
   bool processing = false;
   bool otpSent = false;
   bool errorSendingOtp = false;
@@ -42,15 +38,7 @@ class _PageSigninState extends State<PageSignin> {
   @override
   void initState() {
     super.initState();
-    _setupGestureRecognizers();
     _checkInitialAuthState();
-  }
-
-  void _setupGestureRecognizers() {
-    _termsRecognizer = TapGestureRecognizer()
-      ..onTap = () => openURL('https://fife.jeero.one/terms');
-    _privacyRecognizer = TapGestureRecognizer()
-      ..onTap = () => openURL('https://fife.jeero.one/privacy');
   }
 
   void _checkInitialAuthState() {
@@ -77,8 +65,6 @@ class _PageSigninState extends State<PageSignin> {
   void dispose() {
     emailController.dispose();
     otpController.dispose();
-    _termsRecognizer.dispose();
-    _privacyRecognizer.dispose();
     super.dispose();
   }
 
@@ -354,7 +340,7 @@ class _PageSigninState extends State<PageSignin> {
           },
         ),
         const SizedBox(height: 24),
-        _buildTermsText(),
+        PrivacyTermsWidget(),
       ],
     );
   }
@@ -485,38 +471,6 @@ class _PageSigninState extends State<PageSignin> {
               label,
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
-    );
-  }
-
-  Widget _buildTermsText() {
-    return Text.rich(
-      TextSpan(
-        text: 'By continuing, you agree to our ',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-        children: [
-          TextSpan(
-            text: 'Terms of Service',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-            recognizer: _termsRecognizer,
-          ),
-          const TextSpan(text: ' and '),
-          TextSpan(
-            text: 'Privacy Policy',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-            recognizer: _privacyRecognizer,
-          ),
-          const TextSpan(text: '.'),
-        ],
-      ),
-      textAlign: TextAlign.center,
     );
   }
 }
