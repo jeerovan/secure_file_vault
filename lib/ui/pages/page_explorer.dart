@@ -151,6 +151,11 @@ class _FilePaneState extends State<FilePane> {
           _loggingEnabled = event.id == "yes";
         }
         break;
+      case EventType.system:
+        if (event.key == EventKey.signout) {
+          context.read<AppSetupState>().recheckStatus();
+        }
+        break;
     }
   }
 

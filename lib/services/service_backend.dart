@@ -20,7 +20,7 @@ class BackendApi {
     SecureStorage? storage,
     http.Client? httpClient,
     String? baseUrlOverride,
-    this.timeout = const Duration(seconds: 20),
+    this.timeout = const Duration(seconds: 30),
   })  : _storage = storage ?? SecureStorage(),
         _http = httpClient ?? http.Client(),
         _base = Uri.parse(
@@ -40,7 +40,11 @@ class BackendApi {
   }
 
   Future<String?> _getAccessToken() async {
-    return await _storage.read(key: AppString.jwtToken.string);
+    String? jwtToken = await _storage.read(key: AppString.jwtToken.string);
+    if (jwtToken != null) {
+      logger.info(jwtToken);
+    }
+    return jwtToken;
   }
 
   Uri _buildUri(String endpoint, {Map<String, dynamic>? queryParameters}) {

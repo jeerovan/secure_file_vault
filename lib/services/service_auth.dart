@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
@@ -95,31 +96,55 @@ class NeonAuth {
   }
 
   Future<void> refreshSessionAndGetJWT() async {
-    final sessionCookie =
-        await _storage.read(key: AppString.sessionCookie.string);
-    if (sessionCookie == null) {
-      logger.error("session cookie not found while refreshing jwt");
-      return;
-    }
+    try {
+      final sessionCookie =
+          await _storage.read(key: AppString.sessionCookie.string);
 
-    final response = await _http.get(
-      Uri.parse('$_neonAuthUrl/get-session'),
-      headers: {
-        'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
-        'Content-Type': 'application/json'
-      },
-    );
-
-    if (response.statusCode == 200) {
-      // Extract the JWT from the headers
-      final jwt = response.headers['set-auth-jwt'];
-      if (jwt != null) {
-        await _storage.write(key: AppString.jwtToken.string, value: jwt);
-        logger.info("Refreshed jwtToken");
+      if (sessionCookie == null) {
+        logger.error("Session cookie not found while refreshing JWT.");
+        await SyncUtils.signout();
+        return;
       }
-    } else {
-      // If it fails, the session is dead. Clear storage and force re-login.
-      await SyncUtils.signout();
+
+      final response = await _http.get(
+        Uri.parse('$_neonAuthUrl/get-session'),
+        headers: {
+          'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
+          'Content-Type': 'application/json'
+        },
+      ).timeout(const Duration(seconds: 20)); // Prevents hanging network calls
+
+      if (response.statusCode == 200) {
+        final jwt = response.headers['set-auth-jwt'];
+        if (jwt != null && jwt.isNotEmpty) {
+          await _storage.write(key: AppString.jwtToken.string, value: jwt);
+          logger.info("Successfully refreshed jwtToken.");
+        } else {
+          logger.warning(
+              "Server returned 200 but 'set-auth-jwt' header was missing.");
+        }
+      }
+      // Legit situations to sign out: Session is definitively invalid or expired
+      else if (response.statusCode == 401 || response.statusCode == 403) {
+        logger.warning(
+            "Session invalid or expired (Status: ${response.statusCode}). Forcing sign-out.");
+        await SyncUtils.signout();
+      }
+      // 5xx (Server Errors), 429 (Rate Limit), etc. Do NOT sign out.
+      else {
+        logger.error(
+            "Failed to refresh session. Server returned status: ${response.statusCode}. Retrying later.");
+      }
+    } on SocketException catch (e) {
+      // Standard exception for no internet connection or DNS lookup failure
+      logger.warning("No internet connection while refreshing JWT: $e");
+    } on TimeoutException catch (e) {
+      // Request took too long (poor network conditions)
+      logger.warning("Timeout while refreshing JWT: $e");
+    } catch (e, stackTrace) {
+      // Catch-all for formatting errors, parse errors, etc.
+      logger.error("Unexpected error during JWT refresh",
+          error: e, stackTrace: stackTrace);
     }
   }
 

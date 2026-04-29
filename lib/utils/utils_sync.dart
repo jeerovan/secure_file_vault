@@ -266,6 +266,8 @@ class SyncUtils {
         await dbHelper.clearDb();
         ModelSetting.clear();
         await clearFiFeDirectory();
+        EventStream().publish(AppEvent(
+            type: EventType.system, id: "signout", key: EventKey.signout));
         success = true;
       } catch (e, s) {
         logger.error("signout", error: e, stackTrace: s);
