@@ -30,7 +30,7 @@ class ReconciliationService {
     //time to calculate hashes
     final stopwatch = Stopwatch()..start();
     Map<String, String> fileHashes = await _computeFileHashes(rootItem.path!);
-    logger.debug("fileHashes: $fileHashes");
+    //logger.debug("fileHashes: $fileHashes");
     stopwatch.stop();
     final secondsTaken = stopwatch.elapsedMilliseconds / 1000.0;
     logger
@@ -69,14 +69,14 @@ class ReconciliationService {
     required Map<String, String> hashes,
   }) async {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
-    logger.info('📁 Reconciling: $fsPath');
+    //logger.info('📁 Reconciling: $fsPath');
 
     // 1. Get current state from File System and Database
     final fsChildren = await _scanFileSystemChildren(fsPath);
-    logger.debug("fsChildren:$fsChildren");
+    //logger.debug("fsChildren:$fsChildren");
     ModelItem? dbParent = await ModelItem.get(dbParentId);
     final dbChildren = await ModelItem.getAllInFolder(dbParent);
-    logger.debug("dbChildren:$dbChildren");
+    //logger.debug("dbChildren:$dbChildren");
 
     final dbChildrenByName = <String, List<ModelItem>>{};
     for (var c in dbChildren) {
@@ -451,9 +451,9 @@ class ReconciliationService {
         ModelItemTask? uploadTask = await ModelItemTask.get(item.id);
         if (uploadTask == null) {
           await item.remove();
+          logger.info('  - Deleted File: ${item.name}');
         }
       }
-      logger.info('  - Deleted File: ${item.name}');
     }
   }
 
@@ -493,8 +493,9 @@ class ReconciliationService {
   }
 
   double _calculateJaccardSimilarity(Map<int, int> freq1, Map<int, int> freq2) {
-    if (freq1.isEmpty && freq2.isEmpty)
+    if (freq1.isEmpty && freq2.isEmpty) {
       return 0.0; // Do not default empty matches to 1.0
+    }
 
     int intersection = 0;
     int union = 0;

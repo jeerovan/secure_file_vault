@@ -137,7 +137,9 @@ export const ErrorCode = {
 	NAMEPREFIX_EXIST: 11,
 	BUCKET_INFO: 12,
 	NO_DATA: 13,
-	UNAUTHORIZED: 14
+	UNAUTHORIZED: 14,
+	INVALID_DATA: 15,
+	NO_PRO: 16
 } as const;
 
 export const StorageProvider = {

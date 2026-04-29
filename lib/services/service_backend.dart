@@ -144,6 +144,12 @@ class BackendApi {
               // refresh jwt
               unawaited(NeonAuth().refreshSessionAndGetJWT());
               break;
+            case "15":
+              mappedMessage = "Invalid Data";
+              break;
+            case "16":
+              mappedMessage = "Requires FiFe Pro";
+              break;
             default:
               mappedMessage = "Unknown Error";
               break;

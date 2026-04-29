@@ -97,7 +97,10 @@ class NeonAuth {
   Future<void> refreshSessionAndGetJWT() async {
     final sessionCookie =
         await _storage.read(key: AppString.sessionCookie.string);
-    if (sessionCookie == null) return;
+    if (sessionCookie == null) {
+      logger.error("session cookie not found while refreshing jwt");
+      return;
+    }
 
     final response = await _http.get(
       Uri.parse('$_neonAuthUrl/get-session'),

@@ -3,8 +3,11 @@ import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_add_storage.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 
+import '../../models/model_profile.dart';
 import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
 import '../../utils/enums.dart';
@@ -20,13 +23,49 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
   AppLogger logger = AppLogger(prefixes: ["Storage"]);
   List<Map<String, dynamic>> storages = [];
   bool processing = true;
+  bool _isActive = false;
   String? _errorMessage;
+  static const String entitlementId = 'pro';
   final api = BackendApi();
 
   @override
   void initState() {
     super.initState();
     fetchStorage();
+    if (revenueCatSupported) {
+      _initializeData();
+    } else {
+      loadFromLocal();
+    }
+  }
+
+  Future<void> loadFromLocal() async {
+    ModelProfile? profile = await ModelProfile.get();
+    if (profile != null) {
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      if (profile.planExpiresAt! > now) {
+        if (mounted) {
+          setState(() {
+            _isActive = true;
+          });
+        }
+      }
+    }
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      bool isActive =
+          customerInfo.entitlements.all[entitlementId]?.isActive ?? false;
+      if (mounted) {
+        setState(() {
+          _isActive = isActive;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error initializing purchases: $e");
+    }
   }
 
   Future<void> fetchStorage() async {
@@ -88,6 +127,53 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
         .then((value) {
       fetchStorage();
     });
+  }
+
+  Future<void> modifyStorage(int providerId, int sizeGb) async {
+    setState(() {
+      processing = true;
+    });
+    int sizeBytes = sizeGb * 1024 * 1024 * 1024;
+    try {
+      final response = await api.post(
+          endpoint: '/storages/modify',
+          jsonBody: {'provider_id': providerId, 'bytes': sizeBytes});
+      final status = response["success"];
+      if (status == 1) {
+        fetchStorage();
+        if (mounted) {
+          setState(() {
+            processing = false;
+          });
+        }
+      }
+    } catch (e, s) {
+      logger.error("fetching Devices", error: e, stackTrace: s);
+    } finally {
+      if (mounted) {
+        setState(() {
+          processing = false;
+        });
+      }
+    }
+  }
+
+  void _checkAndModify(BuildContext context, int providerId) async {
+    if (!_isActive) {
+      displaySnackBar(context, message: "Requires FiFe Pro.", seconds: 2);
+      return;
+    }
+    // 1. Await the result from the dialog
+    final int? newSize = await showDialog<int>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => const _SizeInputDialog(),
+    );
+
+    // 2. Process the value if the user submitted it
+    if (newSize != null && newSize > 1 && mounted) {
+      modifyStorage(providerId, newSize);
+    }
   }
 
   @override
@@ -172,45 +258,46 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
         ),
       ),
       // Using InkWell for a subtle tap effect if the user interacts with added providers
-      child: InkWell(
-        onTap: isAdded
-            ? () {
-                // TODO: Navigate to provider details/files
-              }
-            : null,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  _buildProviderIcon(provider['id'], theme),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      provider['title'],
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _buildProviderIcon(provider['id'], theme),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    provider['title'],
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (isAdded)
-                    Icon(
-                      Icons.check_circle,
-                      color: theme.colorScheme.primary,
-                      size: 20,
+                ),
+                if (isAdded && providerId > 1)
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      _checkAndModify(context, providerId);
+                    },
+                    icon: const Icon(Icons.edit, size: 18),
+                    label: const Text('Modify'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 0),
                     ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              if (isAdded)
-                _buildUsageIndicator(context, usedBytes, totalBytes)
-              else
-                _buildUnaddedState(context, providerId, totalBytes),
-            ],
-          ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (isAdded)
+              _buildUsageIndicator(context, usedBytes, totalBytes)
+            else
+              _buildUnaddedState(context, providerId, totalBytes),
+          ],
         ),
       ),
     );
@@ -359,5 +446,92 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
       ),
       child: iconData,
     );
+  }
+}
+
+class _SizeInputDialog extends StatefulWidget {
+  const _SizeInputDialog();
+
+  @override
+  State<_SizeInputDialog> createState() => _SizeInputDialogState();
+}
+
+class _SizeInputDialogState extends State<_SizeInputDialog> {
+  late final TextEditingController _sizeController;
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _sizeController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    // The framework calls this safely AFTER the closing animation completes
+    _sizeController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Modify Storage Capacity'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter the new storage limit for this provider.',
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _sizeController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              autofocus: true,
+              decoration: const InputDecoration(
+                prefixText: 'Size: ',
+                suffixText: ' GB',
+                border: OutlineInputBorder(),
+                filled: true,
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Please enter a size';
+                }
+                if (int.tryParse(value) == null || int.parse(value) <= 1) {
+                  return 'Enter a valid number greater than 1';
+                }
+                return null;
+              },
+              // Allow submitting via keyboard "Done" / "Enter" key
+              onFieldSubmitted: (_) => _submit(),
+            ),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(), // Returns null
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Submit'),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    if (_formKey.currentState?.validate() ?? false) {
+      final size = int.parse(_sizeController.text);
+      // Return the validated integer back to the caller
+      Navigator.of(context).pop(size);
+    }
   }
 }

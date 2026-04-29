@@ -6,6 +6,7 @@ import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
+import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -147,17 +148,20 @@ class TaskManager {
       if (_inBackground) {
         if (Platform.isIOS && taskDuration.inSeconds >= 30) {
           logger.info(
-              'Background process exceeded 1 minute limit. Ending queue.');
+              'Background process exceeded 30 second limit. Ending queue.');
           queueNext = false;
         } else if (Platform.isAndroid && taskDuration.inMinutes >= 3) {
           logger.info(
-              'Background process exceeded 2 minute limit. Ending queue.');
+              'Background process exceeded 3 minute limit. Ending queue.');
           queueNext = false;
         }
       }
 
       // Call dispatcher function to enqueue new task process
       if (queueNext) {
+        if (taskDuration.inMinutes > 5) {
+          await NeonAuth().refreshSessionAndGetJWT();
+        }
         start(_inBackground);
       } else {
         // If we shouldn't queue next, verify if all remaining concurrent tasks are also done

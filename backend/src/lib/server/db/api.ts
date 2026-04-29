@@ -284,7 +284,7 @@ export async function addUpdateDevice(
 				planExpiresAt = planData.planExpiresAt;
 			}
 			const hasPlan = planExpiresAt > Date.now();
-			const deviceLimit = hasPlan ? 10 : 5;
+			const deviceLimit = hasPlan ? 10 : 3;
 
 			const [activeDeviceRows] = await tx
 				.select({ count: count() })
@@ -931,6 +931,38 @@ export async function updateStorageUsedSize(
 			[StorageKeys.USED_BYTES]: newBytes
 		})
 		.where(and(eq(storage[StorageKeys.USER_ID], userId), eq(storage[StorageKeys.ID], storageId)));
+}
+
+export async function updateStorageLimit(
+	db: Db | Tx,
+	userId: number,
+	providerId: number,
+	limitBytes: number
+) {
+	// check if credential exists
+	const [creds] = await db
+		.select()
+		.from(credential)
+		.where(
+			and(
+				eq(credential[CredentialKeys.USER_ID], userId),
+				eq(credential[CredentialKeys.PROVIDER_ID], providerId)
+			)
+		)
+		.limit(1);
+	if (creds) {
+		await db
+			.update(storage)
+			.set({
+				[StorageKeys.LIMIT_BYTES]: limitBytes
+			})
+			.where(
+				and(
+					eq(storage[StorageKeys.USER_ID], userId),
+					eq(storage[StorageKeys.CREDENTIAL_ID], creds[CredentialKeys.ID])
+				)
+			);
+	}
 }
 
 export async function updateTempStorageSize(

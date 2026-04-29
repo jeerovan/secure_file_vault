@@ -153,6 +153,8 @@ class SyncUtils {
         logger.info("No internet, in: $mode");
         return;
       }
+      // refresh jwt first
+      await NeonAuth().refreshSessionAndGetJWT();
 
       await _performSyncOperations(inBackground);
     } catch (e, stack) {

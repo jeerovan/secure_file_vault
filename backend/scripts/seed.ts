@@ -18,7 +18,7 @@ const main = async () => {
 
 	try {
 		await db.insert(schema.user).values({
-			[UserKeys.SUPABASE_ID]: 'fife',
+			[UserKeys.REMOTE_AUTH_ID]: 'fife',
 			[UserKeys.EMAIL]: 'fife@jeero.one',
 			[UserKeys.CIPHER]: 'None',
 			[UserKeys.NONCE]: 'None'
