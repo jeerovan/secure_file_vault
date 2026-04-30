@@ -3,6 +3,8 @@ import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import '../../models/model_item.dart';
+import '../../models/model_profile.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_logger.dart';
 import '../../storage/storage_secure.dart';
@@ -127,21 +129,32 @@ class _PageSigninState extends State<PageSignin> {
     });
     logger.debug("$savedEmail:$otp");
     try {
-      bool verified = false;
+      String? userId;
       if (simulateTesting()) {
         await Future.delayed(const Duration(seconds: 1));
+        userId = 'fife';
       } else {
-        verified = await NeonAuth().verifyOTP(email, otp);
+        userId = await NeonAuth().verifyOTP(email, otp);
       }
 
-      if (verified || simulateTesting()) {
+      if (userId != null || simulateTesting()) {
         await ModelSetting.delete(AppString.otpSentTo.string);
         await ModelSetting.delete(AppString.otpSentAt.string);
 
         logger.info("Login Successful");
 
-        // login to revenuecat
-        String? userId = await getSignedInUserId();
+        ModelProfile profile =
+            await ModelProfile.fromMap({"id": userId, "email": email});
+        await profile.insert();
+
+        ModelItem deviceItem = await ModelItem.fromMap({
+          "id": "fife",
+          "name": "FiFe",
+          "is_folder": 1,
+        });
+        await deviceItem.insert();
+        await ModelSetting.set(AppString.signedIn.string, "yes");
+
         if (userId != null && revenueCatSupported && !simulateTesting()) {
           await Purchases.logIn(userId);
         }

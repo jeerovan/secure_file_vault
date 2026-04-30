@@ -49,7 +49,7 @@ class NeonAuth {
     return response;
   }
 
-  Future<bool> verifyOTP(String email, String otp) async {
+  Future<String?> verifyOTP(String email, String otp) async {
     final url = Uri.parse('$_neonAuthUrl/sign-in/email-otp');
     final response = await _http.post(
       url,
@@ -60,7 +60,7 @@ class NeonAuth {
         // Optional: Pass 'name' or 'image' here if you want to set them during auto-registration
       }),
     );
-    bool success = false;
+    String? userId;
     if (response.statusCode == 200) {
       // Extract the full cookie string from the header
       final rawCookie = response.headers['set-cookie'];
@@ -75,26 +75,13 @@ class NeonAuth {
 
           // create profile before fetch jwtToken
           final data = jsonDecode(response.body);
-          final user = data['user'];
-
-          ModelProfile profile = await ModelProfile.fromMap(
-              {"id": user['id'], "email": user['email']});
-          await profile.insert();
-
-          ModelItem deviceItem = await ModelItem.fromMap({
-            "id": "fife",
-            "name": "FiFe",
-            "is_folder": 1,
-          });
-          await deviceItem.insert();
-          await ModelSetting.set(AppString.signedIn.string, "yes");
-          success = true;
+          userId = data['user']['id'];
           // Immediately fetch the JWT
           await refreshSessionAndGetJWT();
         }
       }
     }
-    return success;
+    return userId;
   }
 
   bool _isTokenExpiringSoon(String token, Duration buffer) {
