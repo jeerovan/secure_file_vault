@@ -134,35 +134,38 @@ class _PageSigninState extends State<PageSignin> {
         await Future.delayed(const Duration(seconds: 1));
         userId = 'fife';
       } else {
-        userId = await NeonAuth().verifyOTP(email, otp);
-      }
-
-      if (userId != null || simulateTesting()) {
-        await ModelSetting.delete(AppString.otpSentTo.string);
-        await ModelSetting.delete(AppString.otpSentAt.string);
-
-        logger.info("Login Successful");
-
-        ModelProfile profile =
-            await ModelProfile.fromMap({"id": userId, "email": email});
-        await profile.insert();
-
-        ModelItem deviceItem = await ModelItem.fromMap({
-          "id": "fife",
-          "name": "FiFe",
-          "is_folder": 1,
-        });
-        await deviceItem.insert();
-        await ModelSetting.set(AppString.signedIn.string, "yes");
-
-        if (userId != null && revenueCatSupported && !simulateTesting()) {
-          await Purchases.logIn(userId);
+        String? authId = await NeonAuth().verifyOTP(email, otp);
+        if (authId == null) {
+          throw Exception("OTP verification failed");
+        } else {
+          userId = authId;
         }
-
-        if (!mounted) return;
-        final appSetup = context.read<AppSetupState>();
-        await appSetup.completeSignin();
       }
+
+      await ModelSetting.delete(AppString.otpSentTo.string);
+      await ModelSetting.delete(AppString.otpSentAt.string);
+
+      logger.info("Login Successful");
+
+      ModelProfile profile =
+          await ModelProfile.fromMap({"id": userId, "email": email});
+      await profile.insert();
+
+      ModelItem deviceItem = await ModelItem.fromMap({
+        "id": "fife",
+        "name": "FiFe",
+        "is_folder": 1,
+      });
+      await deviceItem.insert();
+      await ModelSetting.set(AppString.signedIn.string, "yes");
+
+      if (revenueCatSupported && !simulateTesting()) {
+        await Purchases.logIn(userId);
+      }
+
+      if (!mounted) return;
+      final appSetup = context.read<AppSetupState>();
+      await appSetup.completeSignin();
     } catch (e, s) {
       logger.error("verifyOtp", error: e, stackTrace: s);
       _showOtpVerifyError();

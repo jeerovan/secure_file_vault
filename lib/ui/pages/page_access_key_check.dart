@@ -47,6 +47,14 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
       final status = response["success"];
       if (status == -1) {
         _errorMessage = response["message"];
+      } else if (status == 0) {
+        if (response["message"].toString() == "1") {
+          if (mounted) {
+            await context.read<AppSetupState>().generateAccessKey();
+          }
+        } else {
+          _errorMessage = "Unauthorized";
+        }
       } else if (status == 1) {
         final data = response["data"];
         if (data.containsKey("cipher") && data.containsKey("nonce")) {
@@ -57,10 +65,6 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
           if (mounted) {
             await context.read<AppSetupState>().decodeAccessKey();
           }
-        }
-      } else {
-        if (mounted) {
-          await context.read<AppSetupState>().generateAccessKey();
         }
       }
     }

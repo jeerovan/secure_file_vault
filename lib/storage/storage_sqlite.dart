@@ -324,6 +324,7 @@ class StorageSqlite {
 
   Future<void> clearDb() async {
     List<String> tables = [
+      "profiles",
       "files",
       "parts",
       "items",
