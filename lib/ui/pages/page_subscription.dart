@@ -74,7 +74,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         if (offerings.current != null && offerings.current!.annual != null) {
           setState(() {
             _proPackage = offerings.current!.annual;
-            logger.debug("Package: $_proPackage");
           });
         }
       }

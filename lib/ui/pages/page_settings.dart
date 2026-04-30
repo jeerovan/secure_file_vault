@@ -124,7 +124,7 @@ class SettingsPageState extends State<SettingsPage> {
                     onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
                   ),
                 ),
-                /* ListTile(
+                ListTile(
                   leading: const Icon(LucideIcons.star, color: Colors.grey),
                   title: const Text('Leave a review'),
                   horizontalTitleGap: 24.0,
@@ -145,7 +145,7 @@ class SettingsPageState extends State<SettingsPage> {
                     title: const Text('Desktop App'),
                     horizontalTitleGap: 24.0,
                     onTap: () => _redirectToDesktopApp(),
-                  ), */
+                  ),
                 ListTile(
                   leading: const Icon(LucideIcons.list, color: Colors.grey),
                   title: const Text("Logging"),
@@ -214,14 +214,15 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   void _redirectToFeedback() {
-    const url = 'https://play.google.com/store/apps/details?id=one.jeero.fife';
+    const url =
+        'https://play.google.com/store/apps/details?id=com.jeerovan.fife';
     // Use your package name
     openURL(url);
   }
 
   Future<void> _share() async {
     const String appLink =
-        'https://play.google.com/store/apps/details?id=one.jeero.fife';
+        'https://play.google.com/store/apps/details?id=com.jeerovan.fife';
     SharePlus.instance.share(ShareParams(uri: Uri.parse(appLink)));
   }
 }
