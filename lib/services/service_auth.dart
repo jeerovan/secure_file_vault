@@ -13,6 +13,8 @@ import '../models/model_item.dart';
 import '../models/model_profile.dart';
 import '../models/model_setting.dart';
 
+Completer<void>? _refreshJwtCompleter;
+
 class NeonAuth {
   final SecureStorage _storage;
   final http.Client _http;
@@ -95,8 +97,56 @@ class NeonAuth {
     return success;
   }
 
-  Future<void> refreshSessionAndGetJWT() async {
+  bool _isTokenExpiringSoon(String token, Duration buffer) {
     try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true; // Malformed token, force refresh
+
+      final payload = parts[1];
+      final normalized = base64Url.normalize(payload);
+      final String decodedString = utf8.decode(base64Url.decode(normalized));
+      final Map<String, dynamic> payloadMap = jsonDecode(decodedString);
+
+      if (!payloadMap.containsKey('exp')) return true;
+
+      // 'exp' is in seconds since epoch
+      final expSeconds = payloadMap['exp'] as int;
+      final expiryDate = DateTime.fromMillisecondsSinceEpoch(expSeconds * 1000);
+
+      // Check if the current time + 2 minutes is past the expiration date
+      final timeWithBuffer = DateTime.now().add(buffer);
+      return timeWithBuffer.isAfter(expiryDate);
+    } catch (e) {
+      logger.error("Failed to decode JWT to check expiry: $e");
+      return true; // Fail safe: refresh the token if we can't parse it
+    }
+  }
+
+  Future<void> refreshSessionAndGetJWT() async {
+    if (_refreshJwtCompleter != null) {
+      logger.info("JWT refresh already in progress. Waiting...");
+      return _refreshJwtCompleter!.future;
+    }
+
+    _refreshJwtCompleter = Completer<void>();
+    try {
+      final currentJwtToken =
+          await _storage.read(key: AppString.jwtToken.string);
+
+      if (currentJwtToken != null) {
+        final needsRefresh = _isTokenExpiringSoon(
+          currentJwtToken,
+          const Duration(minutes: 2),
+        );
+
+        if (!needsRefresh) {
+          // Token is still valid and not within the 2-minute buffer. Abort refresh.
+          return;
+        }
+        logger.info(
+            "JWT is missing or expiring within 2 minutes. Proceeding with refresh.");
+      }
+
       final sessionCookie =
           await _storage.read(key: AppString.sessionCookie.string);
 
@@ -145,6 +195,12 @@ class NeonAuth {
       // Catch-all for formatting errors, parse errors, etc.
       logger.error("Unexpected error during JWT refresh",
           error: e, stackTrace: stackTrace);
+    } finally {
+      // Always complete and reset the lock, regardless of success or failure
+      if (!_refreshJwtCompleter!.isCompleted) {
+        _refreshJwtCompleter!.complete();
+      }
+      _refreshJwtCompleter = null;
     }
   }
 

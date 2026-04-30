@@ -158,6 +158,14 @@ class SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                 ),
+                ListTile(
+                  leading: const Icon(LucideIcons.github, color: Colors.grey),
+                  trailing:
+                      const Icon(LucideIcons.chevronRight, color: Colors.grey),
+                  title: const Text('Source Code'),
+                  horizontalTitleGap: 24.0,
+                  onTap: () => _redirectToGithub(),
+                ),
                 FutureBuilder<PackageInfo>(
                   future: PackageInfo.fromPlatform(),
                   builder: (context, snapshot) {
@@ -193,6 +201,11 @@ class SettingsPageState extends State<SettingsPage> {
         ],
       )),
     );
+  }
+
+  void _redirectToGithub() {
+    const url = "https://github.com/jeerovan/secure_file_vault";
+    openURL(url);
   }
 
   void _redirectToDesktopApp() {

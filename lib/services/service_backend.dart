@@ -41,9 +41,9 @@ class BackendApi {
 
   Future<String?> _getAccessToken() async {
     String? jwtToken = await _storage.read(key: AppString.jwtToken.string);
-    if (jwtToken != null) {
+    /* if (jwtToken != null) {
       logger.info(jwtToken);
-    }
+    } */
     return jwtToken;
   }
 

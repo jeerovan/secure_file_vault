@@ -159,10 +159,10 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
   }
 
   void _checkAndModify(BuildContext context, int providerId) async {
-    /* if (!_isActive) {
+    if (!_isActive) {
       displaySnackBar(context, message: "Requires FiFe Pro.", seconds: 2);
       return;
-    } */
+    }
     // 1. Await the result from the dialog
     final int? newSize = await showDialog<int>(
       context: context,
