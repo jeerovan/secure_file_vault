@@ -9,10 +9,6 @@ import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:http/http.dart' as http;
 
-import '../models/model_item.dart';
-import '../models/model_profile.dart';
-import '../models/model_setting.dart';
-
 Completer<void>? _refreshJwtCompleter;
 
 class NeonAuth {
@@ -110,6 +106,9 @@ class NeonAuth {
   }
 
   Future<void> refreshSessionAndGetJWT() async {
+    if (simulateTesting()) {
+      return;
+    }
     if (_refreshJwtCompleter != null) {
       logger.info("JWT refresh already in progress. Waiting...");
       return _refreshJwtCompleter!.future;
