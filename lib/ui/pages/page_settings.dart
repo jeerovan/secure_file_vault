@@ -144,7 +144,15 @@ class SettingsPageState extends State<SettingsPage> {
                         const Icon(LucideIcons.monitor, color: Colors.grey),
                     title: const Text('Desktop App'),
                     horizontalTitleGap: 24.0,
-                    onTap: () => _redirectToDesktopApp(),
+                    onTap: () => _redirectToOtherApps(),
+                  ),
+                if (Platform.isLinux || Platform.isWindows || Platform.isMacOS)
+                  ListTile(
+                    leading:
+                        const Icon(LucideIcons.monitor, color: Colors.grey),
+                    title: const Text('Mobile App'),
+                    horizontalTitleGap: 24.0,
+                    onTap: () => _redirectToOtherApps(),
                   ),
                 ListTile(
                   leading: const Icon(LucideIcons.list, color: Colors.grey),
@@ -208,8 +216,8 @@ class SettingsPageState extends State<SettingsPage> {
     openURL(url);
   }
 
-  void _redirectToDesktopApp() {
-    const url = "https://github.com/jeerovan/secure_file_vault/releases";
+  void _redirectToOtherApps() {
+    const url = "https://fife.jeero.one";
     openURL(url);
   }
 
