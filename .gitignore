@@ -146,6 +146,7 @@ pubspec.lock
 # Windows related
 **/windows/flutter/ephemeral/
 **/windows/flutter/generated_plugin*
+/Output/
 
 # Linux related
 **/linux/flutter/ephemeral/
