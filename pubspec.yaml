@@ -89,6 +89,7 @@ flutter:
   assets:
     - assets/cacert.pem
     - assets/logo.png
+    - assets/logo-256.png
     - assets/splash-logo.png
     - assets/monochrome-logo.png
     - assets/foreground-logo.png
