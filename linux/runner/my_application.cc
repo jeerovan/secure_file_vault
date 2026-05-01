@@ -46,7 +46,7 @@ static void my_application_activate(GApplication* application) {
   } else {
     gtk_window_set_title(window, "FiFe");
   }
-
+  gtk_window_set_icon_name(window,"secure_file_vault");
   gtk_window_set_default_size(window, 680, 720);
   gtk_widget_show(GTK_WIDGET(window));
 
