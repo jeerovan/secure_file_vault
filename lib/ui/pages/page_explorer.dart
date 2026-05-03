@@ -1,4 +1,3 @@
-import 'package:file_vault_bb/main.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/ui/pages/page_logs.dart';
 import 'package:file_vault_bb/ui/pages/page_sqlite.dart';
@@ -543,7 +542,7 @@ class _FilePaneState extends State<FilePane> {
                     ],
                   ),
                 ),
-                if (showDbPage)
+                if (isDebugEnabled)
                   const PopupMenuItem<int>(
                     value: 8,
                     child: Row(

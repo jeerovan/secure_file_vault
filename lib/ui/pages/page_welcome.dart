@@ -172,10 +172,10 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
               shape: BoxShape.circle,
             ),
             child: Image.asset(
-              'assets/logo.png', // Replace with your actual asset path
+              'assets/logo.png',
               width: 100,
               height: 100,
-              color: theme.colorScheme.primary, // Applies the theme color tint
+              color: theme.colorScheme.primary,
             ),
           ),
           const SizedBox(height: 48),
@@ -327,50 +327,52 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
   Widget _buildBenefitsPage(ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.all(24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            "Why Use FiFe?",
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              "Why Use FiFe?",
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              ),
             ),
-          ),
-          const SizedBox(height: 32),
-          _buildBenefitItem(
-            theme,
-            icon: LucideIcons.boxes,
-            title: "Claim Free Cloud Storage",
-            description:
-                "Maximize your space by connecting multiple cloud providers. Securely take advantage of their free storage tiers in one unified app.",
-          ),
-          const SizedBox(height: 24),
-          _buildBenefitItem(
-            theme,
-            icon: LucideIcons.fileLock2,
-            title: "Top-Notch Security",
-            description:
-                "Powered by advanced Sodium cryptography. All encryption and decryption happens entirely locally on your device.",
-          ),
-          const SizedBox(height: 24),
-          _buildBenefitItem(
-            theme,
-            icon: LucideIcons.key,
-            title: "Bring Your Own Key (BYOK)",
-            description:
-                "Maintain complete sovereignty over your data across all cloud storage providers. Keep encrypted storage using your own accounts.",
-          ),
-          const SizedBox(height: 24),
-          _buildBenefitItem(
-            theme,
-            icon: LucideIcons.dollarSign,
-            title: "Pay-as-you-go for storage.",
-            description:
-                "Pay for used storage only with compatible providers. No middleman, no data lock-in.",
-          ),
-        ],
+            const SizedBox(height: 32),
+            _buildBenefitItem(
+              theme,
+              icon: LucideIcons.boxes,
+              title: "Claim Free Cloud Storage",
+              description:
+                  "Maximize your space by connecting multiple cloud providers. Securely take advantage of their free storage tiers in one unified app.",
+            ),
+            const SizedBox(height: 24),
+            _buildBenefitItem(
+              theme,
+              icon: LucideIcons.fileLock2,
+              title: "Top-Notch Security",
+              description:
+                  "Powered by advanced Sodium cryptography. All encryption and decryption happens entirely locally on your device.",
+            ),
+            const SizedBox(height: 24),
+            _buildBenefitItem(
+              theme,
+              icon: LucideIcons.key,
+              title: "Bring Your Own Key (BYOK)",
+              description:
+                  "Maintain complete sovereignty over your data across all cloud storage providers. Keep encrypted storage using your own accounts.",
+            ),
+            const SizedBox(height: 24),
+            _buildBenefitItem(
+              theme,
+              icon: LucideIcons.dollarSign,
+              title: "Pay-as-you-go for storage.",
+              description:
+                  "Pay for used storage only with compatible providers. No middleman, no data lock-in.",
+            ),
+          ],
+        ),
       ),
     );
   }

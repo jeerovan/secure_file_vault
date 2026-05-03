@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 
 import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
@@ -52,8 +51,6 @@ void backgroundTaskDispatcher() {
     }
   });
 }
-
-bool showDbPage = false;
 
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {

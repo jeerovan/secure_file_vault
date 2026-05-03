@@ -40,8 +40,9 @@ class SyncUtils {
   static final logger = AppLogger(prefixes: ["Sync"]);
 
   void startAutoSync() {
+    final minutes = isDebugEnabled ? 2 : 10;
     _foregroundSyncTimer?.cancel();
-    _foregroundSyncTimer = Timer.periodic(const Duration(minutes: 10), (timer) {
+    _foregroundSyncTimer = Timer.periodic(Duration(minutes: minutes), (timer) {
       reconFolders(inBackground: false);
     });
   }

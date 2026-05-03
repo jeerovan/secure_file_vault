@@ -742,7 +742,7 @@ Future<PermissionStatus> getStoragePermissionStatus() async {
     return await Permission.photos.status;
   } else if (Platform.isMacOS) {
     // macOS distinguishes photo and file system access
-    return await Permission.photos.status; // For Photos
+    return PermissionStatus.granted;
     // For file access, you must use file dialogs as explicit permission model does not exist
   } else if (Platform.isWindows) {
     // No explicit storage permission, always granted
