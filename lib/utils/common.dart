@@ -739,7 +739,8 @@ Future<PermissionStatus> getStoragePermissionStatus() async {
     }
   } else if (Platform.isIOS) {
     // iOS does not have a direct 'storage' permission, only photo library access
-    return await Permission.photos.status;
+    //return await Permission.photos.status;
+    return PermissionStatus.granted;
   } else if (Platform.isMacOS) {
     // macOS distinguishes photo and file system access
     return PermissionStatus.granted;
