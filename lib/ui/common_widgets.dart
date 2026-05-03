@@ -129,11 +129,6 @@ class AppSetupState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deviceRegistered() async {
-    _currentStep = SetupStep.storagePermission;
-    notifyListeners();
-  }
-
   Future<void> showExplorer() async {
     _currentStep = SetupStep.explorer;
     notifyListeners();

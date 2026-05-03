@@ -77,7 +77,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
       });
       await deviceItem.insert();
       if (mounted) {
-        await context.read<AppSetupState>().deviceRegistered();
+        await context.read<AppSetupState>().recheckStatus();
       }
     }
     // Check mounted before updating state or calling callbacks

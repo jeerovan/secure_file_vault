@@ -267,6 +267,7 @@ class SyncUtils {
         await dbHelper.clearDb();
         ModelSetting.clear();
         await clearFiFeDirectory();
+        await ModelSetting.set(AppString.onboarding.string, "yes");
         EventStream().publish(AppEvent(
             type: EventType.system, id: "signout", key: EventKey.signout));
         success = true;
