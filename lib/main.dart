@@ -44,6 +44,11 @@ void backgroundTaskDispatcher() {
         case DataSync.syncTaskId:
           await SyncUtils().reconFolders(inBackground: true);
           break;
+        case Workmanager.iOSBackgroundTask:
+          await SyncUtils().reconFolders(inBackground: true);
+          break;
+        default:
+          AppLogger(prefixes: ["Background"]).debug(taskName);
       }
       return Future.value(true);
     } catch (e) {
@@ -235,7 +240,7 @@ class AppNavigator extends StatelessWidget {
 }
 
 class DataSync {
-  static const String syncTaskId = 'dataSync';
+  static const String syncTaskId = 'com.jeerovan.fife.data_sync';
   static final logger = AppLogger(prefixes: ["DataSync"]);
   // Initialize background sync based on platform
   static Future<void> initialize() async {
