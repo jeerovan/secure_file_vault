@@ -54,7 +54,8 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
         if (status <= 0) {
           showKeys = false;
           if (mounted) {
-            displaySnackBar(context, message: result["message"], seconds: 2);
+            displaySnackBar(context,
+                message: result["message"].toString(), seconds: 2);
           }
         }
       }
