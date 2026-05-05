@@ -28,6 +28,7 @@ class ModelItem {
   String? fileHash;
   int size;
   Map<String, dynamic> data;
+  String? bookmark;
   int archivedAt;
   int updatedAt;
 
@@ -40,6 +41,7 @@ class ModelItem {
     this.rootId,
     required this.scanState,
     this.fileHash,
+    this.bookmark,
     required this.data,
     required this.size,
     required this.archivedAt,
@@ -58,6 +60,7 @@ class ModelItem {
       'file_hash': fileHash,
       'size': size,
       'data': data is String ? data : jsonEncode(data),
+      'bookmark': bookmark,
       'archived_at': archivedAt,
       'updated_at': updatedAt
     };
@@ -87,6 +90,7 @@ class ModelItem {
       fileHash: getValueFromMap(map, "file_hash", defaultValue: null),
       size: getValueFromMap(map, "size", defaultValue: 0),
       data: data is String ? jsonDecode(data) : data,
+      bookmark: getValueFromMap(map, "bookmark", defaultValue: ""),
       archivedAt: getValueFromMap(map, "archived_at", defaultValue: 0),
       updatedAt: getValueFromMap(map, "updated_at", defaultValue: utcNow),
     );
@@ -404,6 +408,7 @@ class ModelItem {
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert(Tables.items.string, map);
     map["table"] = Tables.items.string;
+    map["bookmark"] = "";
     SyncUtils.logChangeToPush(
       map,
     );
@@ -422,6 +427,7 @@ class ModelItem {
     if (pushToSync) {
       map["updated_at"] = utcNow;
       map["table"] = Tables.items.string;
+      map["bookmark"] = "";
       SyncUtils.logChangeToPush(
         map,
       );
@@ -467,6 +473,7 @@ class ModelItem {
     if (pushToSync) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
       map["table"] = Tables.items.string;
+      map["bookmark"] = "";
       SyncUtils.logChangeToPush(
         map,
         deleteTask: deleteTask,

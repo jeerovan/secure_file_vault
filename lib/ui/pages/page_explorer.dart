@@ -4,6 +4,7 @@ import 'package:file_vault_bb/ui/pages/page_sqlite.dart';
 import 'package:file_vault_bb/ui/pages/page_subscription.dart';
 import 'package:sodium/sodium_sumo.dart';
 
+import '../../storage/storage_channel.dart';
 import '../../ui/pages/page_devices.dart';
 import '../../ui/pages/page_file_info.dart';
 import '../../ui/pages/page_search.dart';
@@ -561,7 +562,7 @@ class _FilePaneState extends State<FilePane> {
     );
   }
 
-  Future<void> _addSyncFolder(String folderPath) async {
+  Future<void> _addSyncFolder(String folderPath, String? bookmark) async {
     String folderName = path_lib.basename(folderPath);
     String deviceRoot = await getDeviceHash();
     ModelItem syncFolderItem = await ModelItem.fromMap({
@@ -569,6 +570,7 @@ class _FilePaneState extends State<FilePane> {
       "path": folderPath,
       "name": folderName,
       "is_folder": 1,
+      "bookmark": bookmark
     });
     await syncFolderItem.insert();
 
@@ -584,7 +586,7 @@ class _FilePaneState extends State<FilePane> {
     SyncUtils.waitAndSyncChanges();
   }
 
-  void addFolderConfirm(String folderPath) {
+  void addFolderConfirm(String folderPath, String? bookmark) {
     String folderName = path_lib.basename(folderPath);
     showDialog(
       context: context,
@@ -598,7 +600,7 @@ class _FilePaneState extends State<FilePane> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              _addSyncFolder(folderPath);
+              _addSyncFolder(folderPath, bookmark);
             },
             child: Text('Confirm'),
           ),
@@ -608,11 +610,22 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Future<void> addSyncFolder() async {
-    String? folderPath = await getSelectFolderWithReadWritePermission();
+    String? folderPath;
+    String? bookmark;
+    if (Platform.isIOS) {
+      final result = await ChannelStorage.pickDirectory();
+      if (result != null) {
+        logger.debug(result.toString());
+        folderPath = result["path"];
+        bookmark = result["bookmark"];
+      }
+    } else {
+      folderPath = await getSelectFolderWithReadWritePermission();
+    }
     if (folderPath != null) {
       bool folderPathExists = await ModelItem.syncFolderExists(folderPath);
       if (!folderPathExists) {
-        addFolderConfirm(folderPath);
+        addFolderConfirm(folderPath, bookmark);
       }
     }
   }

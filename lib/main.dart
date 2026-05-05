@@ -30,6 +30,7 @@ import 'utils/utils_sync.dart';
 @pragma('vm:entry-point')
 void backgroundTaskDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
+    AppLogger(prefixes: ["Background"]).info("Task Triggered: $taskName");
     WidgetsFlutterBinding.ensureInitialized();
     try {
       await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
@@ -40,16 +41,7 @@ void backgroundTaskDispatcher() {
       return Future.value(false);
     }
     try {
-      switch (taskName) {
-        case DataSync.syncTaskId:
-          await SyncUtils().reconFolders(inBackground: true);
-          break;
-        case Workmanager.iOSBackgroundTask:
-          await SyncUtils().reconFolders(inBackground: true);
-          break;
-        default:
-          AppLogger(prefixes: ["Background"]).debug(taskName);
-      }
+      await SyncUtils().reconFolders(inBackground: true);
       return Future.value(true);
     } catch (e) {
       return Future.value(false);

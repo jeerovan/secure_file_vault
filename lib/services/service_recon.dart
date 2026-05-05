@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:file_vault_bb/models/model_item_task.dart';
+import 'package:file_vault_bb/storage/storage_channel.dart';
 
 import '../utils/enums.dart';
 
@@ -29,8 +30,25 @@ class ReconciliationService {
     await ModelItem.resetScanState(rootItemId);
     //time to calculate hashes
     final stopwatch = Stopwatch()..start();
-    Map<String, String> fileHashes = await _computeFileHashes(rootItem.path!);
-    //logger.debug("fileHashes: $fileHashes");
+    String? directoryPath = rootItem.path;
+    logger.info("Directory Path: $directoryPath");
+    String? bookmark;
+    if (Platform.isIOS) {
+      bookmark = rootItem.bookmark;
+      if (bookmark != null) {
+        String? accessPath = await ChannelStorage.startAccessing(bookmark);
+        if (accessPath != null) {
+          directoryPath = accessPath;
+          logger.info("iOS Path: $directoryPath");
+        }
+      }
+    }
+    if (directoryPath == null) {
+      return;
+    }
+    Map<String, String> fileHashes = await _computeFileHashes(directoryPath);
+
+    logger.debug("fileHashes: $fileHashes");
     stopwatch.stop();
     final secondsTaken = stopwatch.elapsedMilliseconds / 1000.0;
     logger
@@ -38,9 +56,11 @@ class ReconciliationService {
     await _reconcileNode(
         rootItemId: rootItemId,
         dbParentId: rootItemId,
-        fsPath: rootItem.path!,
+        fsPath: directoryPath,
         hashes: fileHashes);
-
+    if (Platform.isIOS && bookmark != null) {
+      await ChannelStorage.stopAccessing(bookmark);
+    }
     // Mark remaining DB items as deleted
     final remainingDbItems =
         await ModelItem.getAllUnScannedItemsForRootItemId(rootItemId);

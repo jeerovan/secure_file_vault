@@ -195,6 +195,7 @@ class StorageSqlite {
         size INTEGER DEFAULT 0,
         archived_at INTEGER,
         data TEXT,
+        bookmark TEXT,
         updated_at INTEGER
       )
     ''');
