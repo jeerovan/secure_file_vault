@@ -40,7 +40,12 @@ export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUs
 			const userEntry = await getUserByRemoteAuthId(db, userId, email);
 
 			if (!userEntry) {
-				return { authorized: false, message: ErrorCode.NO_USER };
+				return {
+					authorized: false,
+					remoteAuthId: userId,
+					email: email,
+					message: ErrorCode.NO_USER
+				};
 			}
 
 			return {
@@ -73,7 +78,12 @@ export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUs
 		const userEntry = await getUserByRemoteAuthId(db, user.id);
 
 		if (!userEntry) {
-			return { authorized: false, message: ErrorCode.NO_USER };
+			return {
+				authorized: false,
+				remoteAuthId: user.id,
+				email: user.email,
+				message: ErrorCode.NO_USER
+			};
 		}
 
 		return {
