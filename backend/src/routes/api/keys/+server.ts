@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ request, platform }) => {
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
 	const authUser = await requireAuth(db, request);
-	if (!authUser.authorized) {
+	if (authUser.message == ErrorCode.UNAUTHORIZED) {
 		return json({ success: 0, message: authUser.message });
 	}
 	let body: { cipher?: string; nonce?: string };
