@@ -54,10 +54,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
         } else {
           status = await Permission.storage.request();
         }
-      } else if (Platform.isIOS) {
-        status = await Permission.photos.request();
       } else {
-        // Desktop OS bypass
         status = PermissionStatus.granted;
       }
 
