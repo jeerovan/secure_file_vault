@@ -86,7 +86,7 @@ class SyncUtils {
     SodiumSumo sodium = await SodiumSumoInit.init();
     List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
     for (ModelItem syncFolder in syncFolders) {
-      await ReconciliationService(sodium).reconcile(syncFolder.id);
+      await ReconciliationService(sodium).reconcile(syncFolder);
     }
 
     _reconProcessTimer?.cancel();

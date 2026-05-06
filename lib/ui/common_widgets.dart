@@ -301,7 +301,7 @@ Widget tryFailedRequestAgain(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 48, color: Colors.grey),
+          const Icon(LucideIcons.wifiOff, size: 48, color: Colors.grey),
           const SizedBox(height: 16),
           Text(
             message,
@@ -311,7 +311,7 @@ Widget tryFailedRequestAgain(
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: onPressed,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(LucideIcons.rotateCw),
             label: const Text("Try Again"),
           ),
         ],
@@ -602,7 +602,7 @@ class _ColorPickerDialogState extends State<ColorPickerDialog> {
                     backgroundColor: color,
                     radius: 15, // Fixed size for the circles
                     child: selectedColor == color
-                        ? Icon(Icons.check, color: Colors.white, size: 16)
+                        ? Icon(LucideIcons.check, color: Colors.white, size: 16)
                         : null,
                   ),
                 );
@@ -869,7 +869,7 @@ class UploadDownloadIndicatorState extends State<UploadDownloadIndicator>
       child: Opacity(
         opacity: 0.6,
         child: Icon(
-          widget.uploading ? Icons.arrow_upward : Icons.arrow_downward,
+          widget.uploading ? LucideIcons.moveUp : LucideIcons.moveDown,
           size: widget.size,
         ),
       ),
@@ -907,7 +907,7 @@ class _DownloadButtonState extends State<DownloadButton> {
         icon: Opacity(
           opacity: 0.5,
           child: Icon(
-            Icons.arrow_downward,
+            LucideIcons.moveUp,
             size: widget.iconSize,
           ),
         ),
@@ -947,7 +947,7 @@ class VideoPlayDownloadButton extends StatelessWidget {
           : IconButton(
               tooltip: "Download",
               icon: Icon(
-                Icons.arrow_downward,
+                LucideIcons.moveDown,
                 color: Colors.white,
                 size: iconSize / 2,
               ),
@@ -984,7 +984,7 @@ class _ImageDownloadButtonState extends State<ImageDownloadButton> {
       child: IconButton(
         tooltip: "Download",
         icon: Icon(
-          Icons.arrow_downward,
+          LucideIcons.moveDown,
           color: Colors.white,
           size: widget.iconSize / 2,
         ),
@@ -1019,6 +1019,7 @@ class _FileListItemState extends State<FileListItem> {
   bool? _isUploaded;
   bool _isUploading = false;
   bool _isDownloading = false;
+  bool _requiresBookmark = false;
   int transferProgress = 0;
   AppLogger logger = AppLogger(prefixes: ["FileListItem"]);
 
@@ -1090,6 +1091,20 @@ class _FileListItemState extends State<FileListItem> {
     }
   }
 
+  Future<bool> requiresBookmark(ModelItem item) async {
+    if (Platform.isIOS || Platform.isMacOS) {
+      String deviceHash = await getDeviceHash();
+      if (item.parentId == deviceHash) {
+        if (item.bookmark == null) {
+          return true;
+        } else if (item.bookmark!.isEmpty) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   Future<bool> fileExistsLocally(ModelItem item) async {
     String path = await ModelItem.getPathForItem(item.id);
     return await File(path).exists();
@@ -1128,6 +1143,7 @@ class _FileListItemState extends State<FileListItem> {
       widget.item.isFolder
           ? Future.value(false)
           : fileUploadedToCloud(widget.item),
+      widget.item.isFolder ? requiresBookmark(widget.item) : Future.value(false)
     ]);
 
     final transferResults = await Future.wait(
@@ -1139,6 +1155,7 @@ class _FileListItemState extends State<FileListItem> {
     setState(() {
       _isLocal = stateResults[0];
       _isUploaded = stateResults[1];
+      _requiresBookmark = stateResults[2];
       if (transferResults[0] > -1) {
         _isUploading = true;
         transferProgress = transferResults[0];
@@ -1164,12 +1181,18 @@ class _FileListItemState extends State<FileListItem> {
 
     if (_isUploaded!) {
       return Icon(
-        Icons.check,
+        LucideIcons.check,
         size: 16,
         color: Theme.of(context).colorScheme.primary.withAlpha(150),
       );
     }
-
+    if (_requiresBookmark) {
+      return Icon(
+        LucideIcons.alertCircle,
+        size: 16,
+        color: Theme.of(context).colorScheme.primary.withAlpha(150),
+      );
+    }
     return SizedBox.shrink();
   }
 

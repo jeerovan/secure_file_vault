@@ -303,7 +303,7 @@ class ModelItem {
     return isLocalPath;
   }
 
-  static Future<bool> syncFolderExists(String path) async {
+  static Future<String?> syncFolderExists(String path) async {
     String deviceRootPathHash = await getDeviceHash();
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
@@ -312,7 +312,7 @@ class ModelItem {
       where: "path = ? AND parent_id = ?",
       whereArgs: [path, deviceRootPathHash],
     );
-    return rows.isNotEmpty;
+    return rows.isNotEmpty ? rows.first['id'] : null;
   }
 
   static Future<void> resetScanState(String rootItemId) async {
@@ -327,6 +327,13 @@ class ModelItem {
     final db = await dbHelper.database;
     await db.update(
         Tables.items.string, {"scan_state": state, "archived_at": 0},
+        where: "id = ?", whereArgs: [itemId]);
+  }
+
+  static Future<void> updateBookmark(String itemId, String bookmark) async {
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.database;
+    await db.update(Tables.items.string, {"bookmark": bookmark},
         where: "id = ?", whereArgs: [itemId]);
   }
 

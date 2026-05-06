@@ -23,11 +23,18 @@ class ReconciliationService {
   ReconciliationService(this._sodium) : uuid = const Uuid();
 
   /// Main entry point: reconcile a root synced folder
-  Future<void> reconcile(String rootItemId) async {
-    final rootItem = await ModelItem.get(rootItemId);
-    if (rootItem == null) return;
+  Future<void> reconcile(ModelItem rootItem) async {
+    if (Platform.isIOS || Platform.isMacOS) {
+      if (rootItem.bookmark != null) {
+        if (rootItem.bookmark!.isEmpty) {
+          return;
+        }
+      } else {
+        return;
+      }
+    }
     // initialize scan
-    await ModelItem.resetScanState(rootItemId);
+    await ModelItem.resetScanState(rootItem.id);
     //time to calculate hashes
     final stopwatch = Stopwatch()..start();
     String? directoryPath = rootItem.path;
@@ -54,8 +61,8 @@ class ReconciliationService {
     logger
         .info('Computed ${fileHashes.length} hashes in $secondsTaken seconds');
     await _reconcileNode(
-        rootItemId: rootItemId,
-        dbParentId: rootItemId,
+        rootItemId: rootItem.id,
+        dbParentId: rootItem.id,
         fsPath: directoryPath,
         hashes: fileHashes);
     if (Platform.isIOS && bookmark != null) {
@@ -63,7 +70,7 @@ class ReconciliationService {
     }
     // Mark remaining DB items as deleted
     final remainingDbItems =
-        await ModelItem.getAllUnScannedItemsForRootItemId(rootItemId);
+        await ModelItem.getAllUnScannedItemsForRootItemId(rootItem.id);
     // first delete all files if they are not uploaded yet
     for (final dbChild in remainingDbItems) {
       if (!dbChild.isFolder) {

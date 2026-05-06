@@ -200,6 +200,19 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Future<void> _onTap(ModelItem item) async {
+    if (Platform.isIOS || Platform.isMacOS) {
+      String deviceHash = await getDeviceHash();
+      if (item.parentId == deviceHash) {
+        if (item.bookmark == null ||
+            (item.bookmark != null && item.bookmark!.isEmpty)) {
+          if (item.path != null) {
+            addSyncFolder(initialDirectory: item.path);
+            return;
+          }
+        }
+      }
+    }
+
     if (_isMultiSelectNotifier.value) {
       _toggleSelection(item);
       return;
@@ -581,7 +594,7 @@ class _FilePaneState extends State<FilePane> {
     }
     SodiumSumo sodium = await SodiumSumoInit.init();
     final reconService = ReconciliationService(sodium);
-    await reconService.reconcile(syncFolderItem.id);
+    await reconService.reconcile(syncFolderItem);
     _loadFiles();
     SyncUtils.waitAndSyncChanges();
   }
@@ -609,23 +622,29 @@ class _FilePaneState extends State<FilePane> {
     );
   }
 
-  Future<void> addSyncFolder() async {
+  Future<void> addSyncFolder({String? initialDirectory}) async {
     String? folderPath;
     String? bookmark;
     if (Platform.isIOS) {
-      final result = await ChannelStorage.pickDirectory();
+      final result = await ChannelStorage.pickDirectory(
+          initialDirectory: initialDirectory);
       if (result != null) {
         logger.debug(result.toString());
         folderPath = result["path"];
         bookmark = result["bookmark"];
       }
     } else {
-      folderPath = await getSelectFolderWithReadWritePermission();
+      folderPath = await getSelectFolderWithReadWritePermission(
+          initialDirectory: initialDirectory);
+      bookmark = "sandboxed";
     }
     if (folderPath != null) {
-      bool folderPathExists = await ModelItem.syncFolderExists(folderPath);
-      if (!folderPathExists) {
+      String? existingFolderId = await ModelItem.syncFolderExists(folderPath);
+      if (existingFolderId == null) {
         addFolderConfirm(folderPath, bookmark);
+      } else {
+        bookmark ??= "sandboxed";
+        await ModelItem.updateBookmark(existingFolderId, bookmark);
       }
     }
   }
@@ -784,39 +803,25 @@ class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
   }
 }
 
-Future<String?> getSelectFolderWithReadWritePermission() async {
-  // Request storage permission for Android
-  if (Platform.isAndroid) {
-    return await FilePicker.platform.getDirectoryPath();
-  }
+Future<String?> getSelectFolderWithReadWritePermission(
+    {String? initialDirectory}) async {
+  try {
+    final String? selectedDirectory = await FilePicker.platform
+        .getDirectoryPath(initialDirectory: initialDirectory);
 
-  // iOS doesn't require explicit permissions for user-selected directories
-  if (Platform.isIOS) {
-    return await FilePicker.platform.getDirectoryPath();
-  }
+    if (selectedDirectory != null) {
+      // Test write access by attempting to create a temp file
+      final testFile = File('$selectedDirectory/.test_write_access');
+      await testFile.writeAsString('test');
+      await testFile.delete();
 
-  // Desktop platforms (Windows, macOS, Linux) don't use runtime permissions
-  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-    try {
-      final String? selectedDirectory =
-          await FilePicker.platform.getDirectoryPath();
-
-      if (selectedDirectory != null) {
-        // Test write access by attempting to create a temp file
-        final testFile = File('$selectedDirectory/.test_write_access');
-        await testFile.writeAsString('test');
-        await testFile.delete();
-
-        return selectedDirectory;
-      } else {
-        return null;
-      }
-    } on FileSystemException catch (e, s) {
-      AppLogger(prefixes: ["GetFolderWithPermission"])
-          .error("Permission denied or access error", error: e, stackTrace: s);
+      return selectedDirectory;
+    } else {
       return null;
     }
+  } on FileSystemException catch (e, s) {
+    AppLogger(prefixes: ["GetFolderWithPermission"])
+        .error("Permission denied or access error", error: e, stackTrace: s);
+    return null;
   }
-
-  return null;
 }

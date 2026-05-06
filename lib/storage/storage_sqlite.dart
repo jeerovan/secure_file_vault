@@ -49,7 +49,7 @@ class StorageSqlite {
 
       return await openDatabase(
         dbPath,
-        version: 1,
+        version: 2,
         // CRITICAL: Prevent isolate clashes. Use separate native instances in background.
         singleInstance: _currentMode == ExecutionMode.appForeground,
         onConfigure: _onConfigure,
@@ -132,7 +132,9 @@ class StorageSqlite {
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // await dbMigration_N(db);
+    if (oldVersion == 1) {
+      await dbMigration_2(db);
+    }
     logger.info('Database upgraded from version $oldVersion to $newVersion');
   }
 
@@ -273,6 +275,10 @@ class StorageSqlite {
       )
     ''');
     logger.info("Tables Created");
+  }
+
+  Future<void> dbMigration_2(Database db) async {
+    await db.execute("ALTER TABLE items ADD COLUMN bookmark TEXT");
   }
 
   Future<Uint8List> loadImageAsUint8List(String assetPath) async {

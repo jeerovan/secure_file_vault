@@ -47,7 +47,9 @@ class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
         channel.setMethodCallHandler { (call, result) in
             switch call.method {
             case "pickDirectory":
-                SecureStorageManager.shared.pickDirectory(result: result)
+                let args = call.arguments as? [String: Any]
+                let initialPath = args?["path"] as? String
+                SecureStorageManager.shared.pickDirectory(initialPath: initialPath, result: result)
             case "startAccessing":
                 if let args = call.arguments as? [String: Any], let bookmarkBase64 = args["bookmark"] as? String {
                     SecureStorageManager.shared.startAccessing(bookmarkBase64: bookmarkBase64, result: result)
@@ -68,11 +70,14 @@ class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
     
     // MARK: - Directory Picker Logic
     
-    func pickDirectory(result: @escaping FlutterResult) {
+    func pickDirectory(initialPath: String?,result: @escaping FlutterResult) {
         // Must run on main thread since it's a UI operation
         DispatchQueue.main.async {
             self.pendingResult = result
             let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
+            if let path = initialPath {
+                documentPicker.directoryURL = URL(fileURLWithPath: path)
+            }
             documentPicker.delegate = self
             
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,

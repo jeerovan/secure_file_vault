@@ -4,8 +4,11 @@ class ChannelStorage {
   static const MethodChannel _channel =
       MethodChannel('com.jeerovan.fife/channel_storage');
 
-  static Future<Map<String, String>?> pickDirectory() async {
-    final result = await _channel.invokeMethod('pickDirectory');
+  static Future<Map<String, String>?> pickDirectory(
+      {String? initialDirectory}) async {
+    final Map<String, dynamic>? args =
+        initialDirectory != null ? {'path': initialDirectory} : null;
+    final result = await _channel.invokeMethod('pickDirectory', args);
     if (result != null) {
       return Map<String, String>.from(result);
     }
