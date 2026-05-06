@@ -75,11 +75,15 @@ class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
             let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
             documentPicker.delegate = self
             
-            if let rootVC = UIApplication.shared.windows.first?.rootViewController {
-                rootVC.present(documentPicker, animated: true)
-            } else {
-                result(FlutterError(code: "UI_ERROR", message: "No root view controller found", details: nil))
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+                
+                result(FlutterError(code: "UI_ERROR", message: "Cannot present UI from a background headless isolate", details: nil))
+                self.pendingResult = nil
+                return
             }
+            
+            rootVC.present(documentPicker, animated: true)
         }
     }
     
