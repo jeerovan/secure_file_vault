@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:file_vault_bb/storage/storage_channel.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for Clipboard
-import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
@@ -127,13 +127,10 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
   /// Handles file selection and validation
   Future<void> _selectFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['txt'],
-      );
+      final result = await ChannelStorage.pickFile();
 
-      if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
+      if (result != null && result["path"] != null) {
+        final file = File(result["path"]!);
         final content = await file.readAsString();
 
         if (_validateWordCount(content)) {

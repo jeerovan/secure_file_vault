@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import workmanager_apple
+import UniformTypeIdentifiers
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -46,6 +47,8 @@ class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
         
         channel.setMethodCallHandler { (call, result) in
             switch call.method {
+            case "pickFile":
+                SecureStorageManager.shared.pickFile(result: result)
             case "pickDirectory":
                 let args = call.arguments as? [String: Any]
                 let initialPath = args?["path"] as? String
@@ -91,6 +94,28 @@ class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
             rootVC.present(documentPicker, animated: true)
         }
     }
+
+    func pickFile(result: @escaping FlutterResult) {
+        // Must run on main thread since it's a UI operation
+        DispatchQueue.main.async {
+            self.pendingResult = result
+            
+            // Use UTType.item to allow all file types, or specify types like .pdf, .image, .text
+            let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.item], asCopy: true)
+            documentPicker.delegate = self
+            documentPicker.allowsMultipleSelection = false 
+            
+            guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                let rootVC = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController else {
+                
+                result(FlutterError(code: "UI_ERROR", message: "Cannot present UI from a background headless isolate", details: nil))
+                self.pendingResult = nil
+                return
+            }
+            
+            rootVC.present(documentPicker, animated: true)
+        }
+    }
     
     // UIDocumentPickerDelegate Callback
     func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
@@ -101,12 +126,24 @@ class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
         }
         
         do {
-            let bookmarkData = try url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
-            let base64String = bookmarkData.base64EncodedString()
-            pendingResult?(["path": url.path, "bookmark": base64String])
+            // Determine if the selected URL is a directory
+            let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey])
+            let isDirectory = resourceValues.isDirectory ?? false
+            
+            if isDirectory {
+                // Generate bookmark for folders to maintain persistent access
+                let bookmarkData = try url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
+                let base64String = bookmarkData.base64EncodedString()
+                pendingResult?(["path": url.path, "bookmark": base64String])
+            } else {
+                // It's a file, return just the path
+                pendingResult?(["path": url.path])
+            }
         } catch {
-            pendingResult?(FlutterError(code: "BOOKMARK_ERROR", message: error.localizedDescription, details: nil))
+            // Handle errors for both resource value retrieval and bookmark creation
+            pendingResult?(FlutterError(code: "FILE_SYSTEM_ERROR", message: error.localizedDescription, details: nil))
         }
+        
         pendingResult = nil
     }
     

@@ -26,7 +26,6 @@ import 'package:flutter/material.dart';
 import 'package:path/path.dart' as path_lib;
 
 import 'dart:io';
-import 'package:file_picker/file_picker.dart';
 
 import '../../utils/utils_tasks.dart';
 import '../common_widgets.dart';
@@ -628,18 +627,12 @@ class _FilePaneState extends State<FilePane> {
   Future<void> addSyncFolder({String? initialDirectory}) async {
     String? folderPath;
     String? bookmark;
-    if (Platform.isIOS) {
-      final result = await ChannelStorage.pickDirectory(
-          initialDirectory: initialDirectory);
-      if (result != null) {
-        logger.debug(result.toString());
-        folderPath = result["path"];
-        bookmark = result["bookmark"];
-      }
-    } else {
-      folderPath = await getSelectFolderWithReadWritePermission(
-          initialDirectory: initialDirectory);
-      bookmark = "sandboxed";
+    final result =
+        await ChannelStorage.pickDirectory(initialDirectory: initialDirectory);
+    if (result != null) {
+      logger.debug(result.toString());
+      folderPath = result["path"];
+      bookmark = result["bookmark"];
     }
     if (folderPath != null) {
       ModelItem? existingFolder = await ModelItem.syncFolderExists(folderPath);
@@ -804,28 +797,5 @@ class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
         ),
       ),
     );
-  }
-}
-
-Future<String?> getSelectFolderWithReadWritePermission(
-    {String? initialDirectory}) async {
-  try {
-    final String? selectedDirectory = await FilePicker.platform
-        .getDirectoryPath(initialDirectory: initialDirectory);
-
-    if (selectedDirectory != null) {
-      // Test write access by attempting to create a temp file
-      final testFile = File('$selectedDirectory/.test_write_access');
-      await testFile.writeAsString('test');
-      await testFile.delete();
-
-      return selectedDirectory;
-    } else {
-      return null;
-    }
-  } on FileSystemException catch (e, s) {
-    AppLogger(prefixes: ["GetFolderWithPermission"])
-        .error("Permission denied or access error", error: e, stackTrace: s);
-    return null;
   }
 }

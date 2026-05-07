@@ -15,6 +15,14 @@ class ChannelStorage {
     return null;
   }
 
+  static Future<Map<String, String>?> pickFile() async {
+    final result = await _channel.invokeMethod('pickFile');
+    if (result != null) {
+      return Map<String, String>.from(result);
+    }
+    return null;
+  }
+
   static Future<String?> startAccessing(String bookmarkBase64) async {
     return await _channel
         .invokeMethod('startAccessing', {'bookmark': bookmarkBase64});
