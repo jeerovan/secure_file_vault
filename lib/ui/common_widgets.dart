@@ -15,7 +15,6 @@ import '../utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/service_logger.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../utils/common.dart';
 
@@ -73,14 +72,6 @@ class AppSetupState extends ChangeNotifier {
     if (deviceId.isEmpty) {
       logger.info("Registration");
       _currentStep = SetupStep.registerDevice;
-      notifyListeners();
-      return;
-    }
-
-    PermissionStatus storagePermission = await getStoragePermissionStatus();
-    if (!storagePermission.isGranted) {
-      logger.info("Storage Permission");
-      _currentStep = SetupStep.storagePermission;
       notifyListeners();
       return;
     }

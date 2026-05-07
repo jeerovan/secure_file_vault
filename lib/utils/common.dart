@@ -19,7 +19,6 @@ import '../storage/storage_secure.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path/path.dart' as path_lib;
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 final String testEmailId = "fife@jeero.one";
@@ -687,40 +686,6 @@ Future<String> getDeviceHash() async {
 
 Future<String> getDeviceUuid() async {
   return ModelSetting.get(AppString.deviceUuid.string);
-}
-
-// storage permission
-Future<PermissionStatus> getStoragePermissionStatus() async {
-  if (Platform.isAndroid) {
-    final deviceInfo = DeviceInfoPlugin();
-    final androidInfo = await deviceInfo.androidInfo;
-    // Android 11 (API 30): MANAGE_EXTERNAL_STORAGE permission
-    if (androidInfo.version.sdkInt >= 30) {
-      return await Permission.manageExternalStorage.status;
-    } else {
-      return await Permission.storage.status;
-    }
-  } else if (Platform.isIOS) {
-    // iOS does not have a direct 'storage' permission, only photo library access
-    //return await Permission.photos.status;
-    return PermissionStatus.granted;
-  } else if (Platform.isMacOS) {
-    // macOS distinguishes photo and file system access
-    return PermissionStatus.granted;
-    // For file access, you must use file dialogs as explicit permission model does not exist
-  } else if (Platform.isWindows) {
-    // No explicit storage permission, always granted
-    return PermissionStatus.granted;
-  } else if (Platform.isLinux) {
-    // No explicit storage permission, always granted
-    return PermissionStatus.granted;
-  } else if (kIsWeb) {
-    // Web: storage access is managed by the browser, always granted
-    return PermissionStatus.granted;
-  } else {
-    // Default fallback
-    return PermissionStatus.granted;
-  }
 }
 
 Future<void> initializeDependencies(

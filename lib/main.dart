@@ -18,7 +18,6 @@ import '../ui/pages/page_devices.dart';
 import '../ui/pages/page_explorer.dart';
 import '../ui/pages/page_loading.dart';
 import '../ui/pages/page_signin.dart';
-import '../ui/pages/page_storage_permission.dart';
 import '../ui/themes.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
@@ -219,8 +218,6 @@ class AppNavigator extends StatelessWidget {
             return const PageDevices(
               onStack: false,
             );
-          case SetupStep.storagePermission:
-            return const StoragePermissionPage();
           case SetupStep.explorer:
             return PageExplorer(
               onThemeChange: onThemeChange,

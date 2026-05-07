@@ -8,7 +8,6 @@ enum SetupStep {
   showAccessKey,
   registerDevice,
   manageDevices,
-  storagePermission,
   explorer,
 }
 
