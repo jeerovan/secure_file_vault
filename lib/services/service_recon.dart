@@ -542,7 +542,7 @@ class ReconciliationService {
 
   Future<Map<String, String>> _computeFileHashes(String directoryPath) async {
     String? fileHashKey = await getFileHashKey();
-    if (fileHashKey == null) throw Exception("Key missing");
+    if (fileHashKey == null) throw Exception("Failed to fetch file hash key");
 
     final keyBytes = base64Decode(fileHashKey);
     final secureKey = _sodium.secureCopy(keyBytes);
@@ -598,8 +598,7 @@ class ReconciliationService {
               } catch (e) {
                 // If a single file fails (e.g., OS permission denied, file locked),
                 // skip it so the rest of the directory can successfully sync.
-                // In a production app, you might want to log this via a SendPort.
-                //print('Failed to hash file: $path - $e');
+                logger.error("failed to read: $path");
               }
             }
           }

@@ -586,7 +586,10 @@ class _FilePaneState extends State<FilePane> {
       "bookmark": bookmark
     });
     await syncFolderItem.insert();
+    await reconFolder(syncFolderItem);
+  }
 
+  Future<void> reconFolder(ModelItem item) async {
     if (mounted) {
       setState(() {
         _syncInProgress = true;
@@ -594,7 +597,7 @@ class _FilePaneState extends State<FilePane> {
     }
     SodiumSumo sodium = await SodiumSumoInit.init();
     final reconService = ReconciliationService(sodium);
-    await reconService.reconcile(syncFolderItem);
+    await reconService.reconcile(item);
     _loadFiles();
     SyncUtils.waitAndSyncChanges();
   }
@@ -639,12 +642,13 @@ class _FilePaneState extends State<FilePane> {
       bookmark = "sandboxed";
     }
     if (folderPath != null) {
-      String? existingFolderId = await ModelItem.syncFolderExists(folderPath);
-      if (existingFolderId == null) {
+      ModelItem? existingFolder = await ModelItem.syncFolderExists(folderPath);
+      if (existingFolder == null) {
         addFolderConfirm(folderPath, bookmark);
       } else {
         bookmark ??= "sandboxed";
-        await ModelItem.updateBookmark(existingFolderId, bookmark);
+        await ModelItem.updateBookmark(existingFolder.id, bookmark);
+        await reconFolder(existingFolder);
       }
     }
   }

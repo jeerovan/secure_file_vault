@@ -1026,9 +1026,7 @@ class _FileListItemState extends State<FileListItem> {
   @override
   void initState() {
     super.initState();
-    if (!widget.item.isFolder) {
-      _checkFileStates();
-    }
+    _checkFileStates();
     EventStream().notifier.addListener(_handleItemUpdateEvent);
   }
 
@@ -1036,7 +1034,7 @@ class _FileListItemState extends State<FileListItem> {
   void didUpdateWidget(covariant FileListItem oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Re-check statuses if the underlying item changes (e.g., during recycling in ListView)
-    if (oldWidget.item.id != widget.item.id && !widget.item.isFolder) {
+    if (oldWidget.item != widget.item) {
       _checkFileStates();
     }
   }
@@ -1139,15 +1137,19 @@ class _FileListItemState extends State<FileListItem> {
   Future<void> _checkFileStates() async {
     // Run both async tasks concurrently for optimal performance
     final stateResults = await Future.wait([
-      fileExistsLocally(widget.item),
+      widget.item.isFolder
+          ? Future.value(false)
+          : fileExistsLocally(widget.item),
       widget.item.isFolder
           ? Future.value(false)
           : fileUploadedToCloud(widget.item),
       widget.item.isFolder ? requiresBookmark(widget.item) : Future.value(false)
     ]);
 
-    final transferResults = await Future.wait(
-        [getUploadProgress(widget.item), getDownloadProgress(widget.item)]);
+    final transferResults = await Future.wait([
+      widget.item.isFolder ? Future.value(-1) : getUploadProgress(widget.item),
+      widget.item.isFolder ? Future.value(-1) : getDownloadProgress(widget.item)
+    ]);
 
     // Always check if the widget is still in the tree before calling setState
     if (!mounted) return;
@@ -1361,7 +1363,7 @@ class _FileListItemState extends State<FileListItem> {
                       const SizedBox(width: 8),
 
                       // 4. State Indicators (Cloud / Local)
-                      if (!widget.item.isFolder) _buildTrailingIndicator()
+                      _buildTrailingIndicator()
                     ],
                   ),
                 ),

@@ -58,6 +58,10 @@ class SyncUtils {
     if (userId == null) {
       return;
     }
+    bool canAccessSecureStorage = await canSync();
+    if (!canAccessSecureStorage) {
+      return;
+    }
     String mode = inBackground ? "Background" : "Foreground";
 
     int startedAt = DateTime.now().millisecondsSinceEpoch;
@@ -83,12 +87,15 @@ class SyncUtils {
     });
 
     logger.info("Start recon in $mode");
-    SodiumSumo sodium = await SodiumSumoInit.init();
-    List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
-    for (ModelItem syncFolder in syncFolders) {
-      await ReconciliationService(sodium).reconcile(syncFolder);
+    try {
+      SodiumSumo sodium = await SodiumSumoInit.init();
+      List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
+      for (ModelItem syncFolder in syncFolders) {
+        await ReconciliationService(sodium).reconcile(syncFolder);
+      }
+    } catch (e) {
+      logger.error("Recon failed", error: e);
     }
-
     _reconProcessTimer?.cancel();
     _reconProcessTimer = null;
 

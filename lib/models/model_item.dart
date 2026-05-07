@@ -303,7 +303,7 @@ class ModelItem {
     return isLocalPath;
   }
 
-  static Future<String?> syncFolderExists(String path) async {
+  static Future<ModelItem?> syncFolderExists(String path) async {
     String deviceRootPathHash = await getDeviceHash();
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.database;
@@ -312,7 +312,7 @@ class ModelItem {
       where: "path = ? AND parent_id = ?",
       whereArgs: [path, deviceRootPathHash],
     );
-    return rows.isNotEmpty ? rows.first['id'] : null;
+    return rows.isNotEmpty ? await fromMap(rows.first) : null;
   }
 
   static Future<void> resetScanState(String rootItemId) async {

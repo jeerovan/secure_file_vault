@@ -11,7 +11,6 @@ import 'package:file_vault_bb/utils/utils_crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as image_lib;
 import 'package:intl/intl.dart';
 import 'package:mime/mime.dart';
 import '../utils/enums.dart';
@@ -356,26 +355,6 @@ int mediaFileDurationFromString(String duration) {
 }
 
 /* date/time conversion -- ends */
-
-Uint8List? getImageThumbnail(Uint8List bytes) {
-  int maxSize = 200;
-  image_lib.Image? src = image_lib.decodeImage(bytes);
-  if (src != null) {
-    image_lib.Image resized = image_lib.copyResize(src, width: maxSize);
-    return Uint8List.fromList(image_lib.encodePng(resized));
-  }
-  return null;
-}
-
-Map<String, int> getImageDimension(Uint8List bytes) {
-  image_lib.Image? src = image_lib.decodeImage(bytes);
-  if (src != null) {
-    int srcWidth = src.width;
-    int srcHeight = src.height;
-    return {"width": srcWidth, "height": srcHeight};
-  }
-  return {"width": 0, "height": 0};
-}
 
 String readableFileSizeFromBytes(int bytes, [int decimals = 2]) {
   if (bytes <= 0) return "0 B";
@@ -827,7 +806,12 @@ Future<String?> getSignedInEmailId() async {
 
 Future<String?> getMasterKey() async {
   SecureStorage storage = SecureStorage();
-  String? masterKeyBase64 = await storage.read(key: AppString.masterKey.string);
+  String? masterKeyBase64;
+  try {
+    masterKeyBase64 = await storage.read(key: AppString.masterKey.string);
+  } catch (e) {
+    AppLogger(prefixes: ["Common"]).error("Failed to fetch masterKey");
+  }
   return masterKeyBase64;
 }
 

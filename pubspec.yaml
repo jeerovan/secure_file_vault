@@ -47,14 +47,12 @@ dependencies:
   uuid: ^4.5.3
   workmanager: ^0.9.0+3
   url_launcher: ^6.3.2
-  image: ^4.8.0
   intl: ^0.20.2
   device_info_plus: ^12.4.0
   lucide_icons: ^0.257.0
   bip39: ^1.0.6
   share_plus: ^12.0.2
   internet_connection_checker_plus: ^2.9.1+2
-  synchronized: ^3.4.0
   change_app_package_name: ^1.5.0
   flutter_native_splash: ^2.4.7
   flutter_launcher_icons: ^0.14.4
