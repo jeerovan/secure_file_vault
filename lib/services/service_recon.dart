@@ -566,7 +566,10 @@ class ReconciliationService {
               in dir.list(recursive: true, followLinks: false)) {
             if (entity is File) {
               final path = entity.path;
-
+              String fileName = path_lib.basename(path);
+              if (fileName.startsWith(".")) {
+                continue;
+              }
               try {
                 final fileSize = await entity.length();
                 Uint8List digest;
@@ -624,6 +627,9 @@ class ReconciliationService {
     await for (var entity in dir.list(recursive: false, followLinks: false)) {
       try {
         final name = path_lib.basename(entity.path);
+        if (name.startsWith(".")) {
+          continue;
+        }
         final stats = await entity.stat();
         final isFolder = entity is Directory;
 
