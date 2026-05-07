@@ -310,10 +310,13 @@ class SyncUtils {
     if (simulateTesting()) {
       return true;
     }
+    if (masterKeyBase64 == null) {
+      return false;
+    }
     final api = BackendApi();
     bool allpushed = true;
     bool changesAvailable = true;
-    Uint8List masterKeyBytes = base64Decode(masterKeyBase64!);
+    Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
     while (changesAvailable) {
       changesAvailable = false;
       List<Map<String, dynamic>> tableMaps = [];
@@ -384,9 +387,12 @@ class SyncUtils {
     if (simulateTesting()) {
       return true;
     }
+    if (masterKeyBase64 == null) {
+      return false;
+    }
     logger.info("Fetch Map Changes");
     final api = BackendApi();
-    Uint8List masterKeyBytes = base64Decode(masterKeyBase64!);
+    Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
     SodiumSumo sodium = await SodiumSumoInit.init();
     CryptoUtils cryptoUtils = CryptoUtils(sodium);
     // process in the order

@@ -411,7 +411,10 @@ class TaskManager {
         String encryptionKeyBase64 = fileEncryptionResult.getResult()!["key"];
         Uint8List encryptionKeyBytes = base64Decode(encryptionKeyBase64);
         String? masterKeyBase64 = await getMasterKey();
-        Uint8List masterKeyBytes = base64Decode(masterKeyBase64!);
+        if (masterKeyBase64 == null) {
+          return false;
+        }
+        Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
         Map<String, dynamic> encryptionKeyCipher = cryptoUtils
             .getFileEncryptionKeyCipher(encryptionKeyBytes, masterKeyBytes);
         File encryptedFile = File(encryptedFilePath);
@@ -560,9 +563,12 @@ class TaskManager {
           SodiumSumo sodium = await SodiumSumoInit.init();
           CryptoUtils cryptoUtils = CryptoUtils(sodium);
           String? masterKeyBase64 = await getMasterKey();
+          if (masterKeyBase64 == null) {
+            return;
+          }
           Uint8List? fileEncryptionKeyBytes =
               cryptoUtils.getFileEncryptionKeyBytes(
-                  keyCipherBase64, keyNonceBase64, masterKeyBase64!);
+                  keyCipherBase64, keyNonceBase64, masterKeyBase64);
           if (fileEncryptionKeyBytes != null) {
             ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
                 tempFilePath, filePath, fileEncryptionKeyBytes);
