@@ -12,7 +12,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:mime/mime.dart';
 import '../utils/enums.dart';
 import '../models/model_setting.dart';
 import '../services/service_logger.dart';
@@ -513,21 +512,6 @@ Future<void> moveFileSafely(String sourcePath, String destPath) async {
 
 Future<String> getHashOfString(String stringForHash) async {
   return sha256.convert(utf8.encode(stringForHash)).toString();
-}
-
-Future<String?> getFileMime(String filePath) async {
-  File file = File(filePath);
-  if (!file.existsSync()) {
-    return null;
-  }
-  String mime = "application/unknown";
-  String? fileMime = lookupMimeType(filePath);
-  if (fileMime == null) {
-    return null;
-  } else {
-    mime = fileMime;
-  }
-  return mime;
 }
 
 Map<String, String> getMapUrls(double lat, double lng) {

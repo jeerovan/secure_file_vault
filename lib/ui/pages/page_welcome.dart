@@ -433,11 +433,11 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withAlpha(20),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: theme.colorScheme.primary.withOpacity(0.2),
+                      color: theme.colorScheme.primary.withAlpha(40),
                       blurRadius: 30,
                       spreadRadius: 10,
                     ),
@@ -468,7 +468,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
               child: Text(
                 'Your data is locked on your device before it ever leaves. We cannot see, read, or scan your files.',
                 style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  color: theme.colorScheme.onSurface.withAlpha(140),
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -521,10 +521,10 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surfaceContainerHighest
-                        .withOpacity(0.5),
+                        .withAlpha(130),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                      color: theme.colorScheme.outlineVariant.withAlpha(130),
                     ),
                   ),
                   child: Row(
@@ -549,8 +549,8 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                             Text(
                               '100% Open Source. You can inspect the code to see exactly how your files are encrypted.',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurface
-                                    .withOpacity(0.7),
+                                color:
+                                    theme.colorScheme.onSurface.withAlpha(150),
                               ),
                             ),
                           ],
@@ -559,7 +559,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                       const SizedBox(width: 8),
                       Icon(
                         Icons.arrow_forward_ios_rounded,
-                        color: theme.colorScheme.onSurface.withOpacity(0.5),
+                        color: theme.colorScheme.onSurface.withAlpha(110),
                         size: 16,
                       ),
                     ],
@@ -595,7 +595,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                   color: theme.colorScheme.surface,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: theme.colorScheme.primary.withOpacity(0.2),
+                    color: theme.colorScheme.primary.withAlpha(45),
                     width: 2,
                   ),
                 ),
@@ -609,7 +609,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: theme.colorScheme.primary.withOpacity(0.15),
+                    color: theme.colorScheme.primary.withAlpha(35),
                     margin: const EdgeInsets.symmetric(vertical: 4),
                   ),
                 ),
@@ -633,7 +633,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                   Text(
                     description,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withAlpha(145),
                       height: 1.4,
                     ),
                   ),

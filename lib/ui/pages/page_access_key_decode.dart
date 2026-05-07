@@ -203,8 +203,8 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                     filled: true,
                     fillColor: Theme.of(context)
                         .colorScheme
-                        .surfaceVariant
-                        .withOpacity(0.3),
+                        .surfaceContainerHighest
+                        .withAlpha(60),
 
                     // GUARANTEED TO UPDATE: ValueListenableBuilder listens directly to the controller
                     counter: ValueListenableBuilder<TextEditingValue>(
