@@ -85,6 +85,9 @@ class _FilePaneState extends State<FilePane> {
   bool _loggingEnabled =
       ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
           "yes";
+  bool _storageFull =
+      ModelSetting.get(AppString.storageFull.string, defaultValue: "no") ==
+          "yes";
   List<ModelItem> parentChilds = [];
   String? deviceHash;
   @override
@@ -142,6 +145,10 @@ class _FilePaneState extends State<FilePane> {
             setState(() {
               _syncInProgress = false;
             });
+          }
+        } else if (event.key == EventKey.storageFull) {
+          if (mounted) {
+            _storageFull = event.id == "yes";
           }
         }
         break;
@@ -460,7 +467,24 @@ class _FilePaneState extends State<FilePane> {
               AnimatedSyncButton(
                   isSyncing: _syncInProgress, onPressed: _syncRootFolders),
             PopupMenuButton<int>(
-              icon: const Icon(LucideIcons.moreVertical),
+              icon: Stack(
+                children: [
+                  const Icon(LucideIcons.moreVertical),
+                  if (_storageFull)
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               onSelected: (value) {
                 if (value == 0) signout();
                 if (value == 1) showArchives();
@@ -534,11 +558,13 @@ class _FilePaneState extends State<FilePane> {
                     ],
                   ),
                 ),
-                const PopupMenuItem<int>(
+                PopupMenuItem<int>(
                   value: 3,
                   child: Row(
                     children: [
-                      Icon(LucideIcons.hardDrive, color: Colors.grey),
+                      _storageFull
+                          ? Icon(LucideIcons.alertTriangle, color: Colors.red)
+                          : Icon(LucideIcons.hardDrive, color: Colors.grey),
                       SizedBox(width: 16),
                       Text('Storage'),
                     ],

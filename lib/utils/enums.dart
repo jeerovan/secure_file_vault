@@ -107,6 +107,7 @@ enum AppString {
   lastItemTS,
   lastPartTS,
   hideSyncButton,
+  storageFull,
 
   // Cipher
   masterKey,
@@ -133,6 +134,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.storageFull:
+        return "storage_full";
       case AppString.sessionCookie:
         return "session_cookie";
       case AppString.jwtToken:
