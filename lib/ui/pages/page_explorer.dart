@@ -293,10 +293,11 @@ class _FilePaneState extends State<FilePane> {
     if (!_isLocalPath) {
       for (ModelItem modelItem in selectedItems) {
         String localPath = await ModelItem.getPathForItem(modelItem.id);
-        clearPathContents(localPath);
+        await clearPathContents(localPath);
       }
     }
     _cancelMultiSelect();
+    _loadFiles();
   }
 
   Future<void> trashItems() async {
