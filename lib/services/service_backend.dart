@@ -146,7 +146,7 @@ class BackendApi {
             case "14":
               mappedMessage = "Unauthorized";
               // refresh jwt
-              unawaited(NeonAuth().refreshSessionAndGetJWT());
+              unawaited(refreshNeonAuth());
               break;
             case "15":
               mappedMessage = "Invalid Data";

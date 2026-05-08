@@ -148,7 +148,7 @@ class NeonAuth {
           'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
           'Content-Type': 'application/json'
         },
-      ).timeout(const Duration(seconds: 20)); // Prevents hanging network calls
+      ).timeout(const Duration(seconds: 30)); // Prevents hanging network calls
 
       if (response.statusCode == 200) {
         final jwt = response.headers['set-auth-jwt'];

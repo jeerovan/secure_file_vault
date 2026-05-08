@@ -288,13 +288,25 @@ class _FilePaneState extends State<FilePane> {
     _selectedItemsNotifier.value = {};
   }
 
+  Future<void> deleteLocal() async {
+    final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
+    logger.log('Deleting local copy ${selectedItems.length} items');
+    if (!_isLocalPath) {
+      for (ModelItem modelItem in selectedItems) {
+        String localPath = await ModelItem.getPathForItem(modelItem.id);
+        clearPathContents(localPath);
+      }
+    }
+    _cancelMultiSelect();
+  }
+
   Future<void> trashItems() async {
     final currentItems = List<ModelItem>.from(_itemsNotifier.value);
     final toRemove = [];
     final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
     logger.log('Trashing ${selectedItems.length} items');
     bool locallyExists = false;
-    if (await ModelItem.isLocalPath(currentItem!.id)) {
+    if (_isLocalPath) {
       for (ModelItem modelItem in selectedItems) {
         bool isFolder = modelItem.isFolder;
         bool addToRemove = false;
@@ -325,6 +337,9 @@ class _FilePaneState extends State<FilePane> {
         modelItem.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
         await modelItem.update(["archived_at"]);
         toRemove.add(modelItem);
+        // Delete local copy
+        String localPath = await ModelItem.getPathForItem(modelItem.id);
+        clearPathContents(localPath);
       }
     }
     currentItems.removeWhere((item) => toRemove.contains(item));
@@ -428,6 +443,12 @@ class _FilePaneState extends State<FilePane> {
             ),
             title: Text('${selectedItems.length} Selected'),
             actions: [
+              if (!_isLocalPath)
+                IconButton(
+                  icon: const Icon(LucideIcons.trash),
+                  tooltip: 'Delete',
+                  onPressed: deleteLocal,
+                ),
               if (selectedItems.length == 1 && !selectedItems.first.isFolder)
                 IconButton(
                   icon: const Icon(LucideIcons.info),

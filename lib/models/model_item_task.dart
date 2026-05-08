@@ -118,8 +118,7 @@ class ModelItemTask {
   Future<int> update(List<String> attrs) async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int utcNow = DateTime.now().toUtc().millisecondsSinceEpoch;
-    Map<String, dynamic> updatedMap = {"updated_at": utcNow};
+    Map<String, dynamic> updatedMap = {};
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }

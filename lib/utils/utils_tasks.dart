@@ -8,7 +8,6 @@ import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
-import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/utils/common.dart';
@@ -217,9 +216,8 @@ class TaskManager {
 
       // Call dispatcher function to enqueue new task process
       if (queueNext) {
-        if (totalSessionDuration.inMinutes > 5) {
-          await NeonAuth().refreshSessionAndGetJWT();
-        }
+        // check jwtToken before requests
+        await refreshNeonAuth();
         start(_inBackground);
       } else {
         // If we shouldn't queue next, verify if all remaining concurrent tasks are also done

@@ -453,21 +453,30 @@ Future<void> checkAndCreateDirectory(String filePath) async {
 Future<void> clearFiFeDirectory() async {
   final Directory directory = await getApplicationDocumentsDirectory();
   String fifeRoot = path_lib.join(directory.path, 'FiFe');
-  await deleteDirectory(fifeRoot);
+  await clearPathContents(fifeRoot);
 }
 
-Future<void> deleteDirectory(String path) async {
+Future<void> clearPathContents(String path) async {
   try {
-    final directory = Directory(path);
+    // Determine the type of the entity at the given path
+    final entityType = await FileSystemEntity.type(path);
 
-    // Always check if it exists first to avoid unnecessary exceptions
-    if (await directory.exists()) {
-      // 'recursive: true' is mandatory if the directory contains any files or sub-folders.
-      await directory.delete(recursive: true);
+    if (entityType == FileSystemEntityType.file) {
+      // It's a file, delete it
+      final file = File(path);
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } else if (entityType == FileSystemEntityType.directory) {
+      // It's a directory, delete it recursively
+      final directory = Directory(path);
+      if (await directory.exists()) {
+        // recursive: true ensures all files and sub-directories inside are also deleted
+        await directory.delete(recursive: true);
+      }
     }
-  } catch (e, s) {
-    AppLogger(prefixes: ["Common"])
-        .error("Failed to delete FiFe directory.", error: e, stackTrace: s);
+  } on FileSystemException catch (e) {
+    AppLogger(prefixes: ["Common"]).error('Failed to delete: ${e.message}');
   }
 }
 
