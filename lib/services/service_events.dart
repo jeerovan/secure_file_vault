@@ -14,7 +14,8 @@ enum EventKey {
   running,
   stopped,
   logging,
-  signout
+  signout,
+  storageFull,
 }
 
 class AppEvent {
