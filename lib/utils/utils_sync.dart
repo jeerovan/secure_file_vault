@@ -162,7 +162,7 @@ class SyncUtils {
         return;
       }
       // refresh jwt first
-      await NeonAuth().refreshSessionAndGetJWT();
+      await refreshNeonAuth();
 
       await _performSyncOperations(inBackground);
     } catch (e, stack) {
