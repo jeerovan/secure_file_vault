@@ -79,7 +79,7 @@ Future<void> initializePurchases() async {
     String rcKey = "";
     if (Platform.isAndroid) {
       rcKey = AppEnv.rcAndroidKey;
-    } else if (Platform.isIOS) {
+    } else if (Platform.isIOS || Platform.isMacOS) {
       rcKey = AppEnv.rcIosKey;
     }
     if (rcKey.isNotEmpty) {
