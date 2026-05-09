@@ -14,12 +14,8 @@
 		AppWindowIcon,
 		AppWindowMacIcon,
 		SmartphoneIcon,
-
 		TerminalIcon,
-
 		ArrowRightIcon
-
-
 	} from 'lucide-svelte';
 
 	const providers = ['Oracle', 'Cloudflare R2', 'Backblaze B2', 'IDrive E2', 'S3 Compatible'];
@@ -326,60 +322,88 @@
 
 			<div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
 				<!-- Windows -->
-				<a href="https://github.com/jeerovan/secure_file_vault/releases" target="_blank" class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10">
+				<a
+					href="https://github.com/jeerovan/secure_file_vault/releases"
+					target="_blank"
+					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+				>
 					<div class="flex items-center gap-3">
 						<AppWindowIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="flex items-center gap-2 font-medium text-white">
 							Windows
-							<ArrowRightIcon class="h-4 w-4 text-white/50 transition-colors group-hover:text-white" />
+							<ArrowRightIcon
+								class="h-4 w-4 text-white/50 transition-colors group-hover:text-white"
+							/>
 						</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Native-feeling backup and explorer workflow.</p>
 				</a>
 
 				<!-- macOS -->
-				<a href="#macos" class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10">
+				<a
+					href="https://apps.apple.com/app/id6765812250"
+					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+				>
 					<div class="flex items-center gap-3">
 						<AppWindowMacIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="flex items-center gap-2 font-medium text-white">
 							macOS
-							<ArrowRightIcon class="h-4 w-4 text-white/50 transition-colors group-hover:text-white" />
+							<ArrowRightIcon
+								class="h-4 w-4 text-white/50 transition-colors group-hover:text-white"
+							/>
 						</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Minimal, polished, and optimized for daily use.</p>
 				</a>
 
 				<!-- Android -->
-				<a href="https://play.google.com/store/apps/details?id=com.jeerovan.fife" target="_blank" class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10">
+				<a
+					href="https://play.google.com/store/apps/details?id=com.jeerovan.fife"
+					target="_blank"
+					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+				>
 					<div class="flex items-center gap-3">
 						<SmartphoneIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="flex items-center gap-2 font-medium text-white">
 							Android
-							<ArrowRightIcon class="h-4 w-4 text-white/50 transition-colors group-hover:text-white" />
+							<ArrowRightIcon
+								class="h-4 w-4 text-white/50 transition-colors group-hover:text-white"
+							/>
 						</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Encrypted sync with a clean mobile-first UI.</p>
 				</a>
 
 				<!-- iOS -->
-				<a href="#ios" class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10">
+				<a
+					href="https://apps.apple.com/app/id6765812250"
+					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+				>
 					<div class="flex items-center gap-3">
 						<SmartphoneIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="flex items-center gap-2 font-medium text-white">
 							iOS
-							<ArrowRightIcon class="h-4 w-4 text-white/50 transition-colors group-hover:text-white" />
+							<ArrowRightIcon
+								class="h-4 w-4 text-white/50 transition-colors group-hover:text-white"
+							/>
 						</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Fast access to protected files on the go.</p>
 				</a>
 
 				<!-- Linux -->
-				<a href="https://github.com/jeerovan/secure_file_vault/releases" target="_blank" class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10">
+				<a
+					href="https://github.com/jeerovan/secure_file_vault/releases"
+					target="_blank"
+					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+				>
 					<div class="flex items-center gap-3">
 						<TerminalIcon class="h-5 w-5 text-[#FF6B6B]" />
 						<div class="flex items-center gap-2 font-medium text-white">
 							Linux
-							<ArrowRightIcon class="h-4 w-4 text-white/50 transition-colors group-hover:text-white" />
+							<ArrowRightIcon
+								class="h-4 w-4 text-white/50 transition-colors group-hover:text-white"
+							/>
 						</div>
 					</div>
 					<p class="mt-3 text-sm text-white/65">Powerful command-line and desktop sync support.</p>
