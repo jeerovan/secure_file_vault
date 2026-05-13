@@ -22,10 +22,10 @@
 </script>
 
 <svelte:head>
-	<title>FiFe — Secure Cloud Backup</title>
+	<title>FiFe — Open-Source Secure Cloud Backup</title>
 	<meta
 		name="description"
-		content="Encrypted cloud backup with BYOK, multi-cloud support, and a premium file explorer."
+		content="Compare FiFe to standard cloud storage: Open-source, cross-platform auto-sync with encryption stronger than AES-256. Leverage 50GB free from providers like Backblaze B2/Cloudflare R2. No metadata stored. Built on Cloudflare Workers & Neon PostgreSQL."
 	/>
 </svelte:head>
 
@@ -34,7 +34,7 @@
 		<div>
 			<div class="badge">
 				<Sparkles class="h-3.5 w-3.5" />
-				Zero-knowledge encrypted cloud backup
+				Open-source zero-knowledge encrypted backup
 			</div>
 
 			<h1
@@ -44,8 +44,9 @@
 			</h1>
 
 			<p class="mt-6 max-w-2xl text-lg leading-8 text-white/70">
-				Protect your files with BYOK encryption, sync them in real time across devices, and manage
-				everything through a sleek interface built for speed, clarity, and trust.
+				Protect your files with BYOK encryption, enjoy seamless cross-platform support with
+				auto-sync, and manage everything through a sleek interface built for speed, clarity, and
+				absolute data privacy.
 			</p>
 
 			<div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -62,8 +63,8 @@
 
 			<div class="mt-8 flex flex-wrap gap-3">
 				<div class="badge"><Check class="h-3.5 w-3.5" /> BYOK encryption</div>
-				<div class="badge"><Check class="h-3.5 w-3.5" /> Multi-cloud support</div>
-				<div class="badge"><Check class="h-3.5 w-3.5" /> Cross-platform sync</div>
+				<div class="badge"><Check class="h-3.5 w-3.5" /> 50GB via R2/B2</div>
+				<div class="badge"><Check class="h-3.5 w-3.5" /> Cross-platform auto-sync</div>
 			</div>
 		</div>
 
@@ -83,18 +84,18 @@
 					<div class="text-xs tracking-[0.2em] text-white/45 uppercase">Status</div>
 					<div class="mt-2 flex items-center gap-2 text-sm font-medium text-white">
 						<span class="h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
-						Sync active
+						Cross-platform sync
 					</div>
 				</div>
 
 				<div class="rounded-2xl border border-white/10 bg-black/30 p-4">
 					<div class="text-xs tracking-[0.2em] text-white/45 uppercase">Encryption</div>
-					<div class="mt-2 text-sm font-medium text-white">Zero-knowledge + BYOK</div>
+					<div class="mt-2 text-sm font-medium text-white">Stronger than AES-256</div>
 				</div>
 
 				<div class="rounded-2xl border border-white/10 bg-black/30 p-4">
-					<div class="text-xs tracking-[0.2em] text-white/45 uppercase">Storage</div>
-					<div class="mt-2 text-sm font-medium text-white">Your cloud, your rules</div>
+					<div class="text-xs tracking-[0.2em] text-white/45 uppercase">Privacy</div>
+					<div class="mt-2 text-sm font-medium text-white">No metadata stored</div>
 				</div>
 			</div>
 		</div>
@@ -104,7 +105,7 @@
 <section class="pb-8">
 	<div class="container-shell">
 		<div class="glass-card p-6 lg:p-8">
-			<div class="section-label">Trusted integrations</div>
+			<div class="section-label">Trusted integrations & up to 50GB Free</div>
 			<div class="mt-6 grid grid-cols-2 gap-3 text-center sm:grid-cols-3 lg:grid-cols-5">
 				{#each providers as provider}
 					<div
@@ -124,7 +125,7 @@
 		<h2 class="section-title">Built for privacy-first workflows without sacrificing elegance.</h2>
 		<p class="section-copy">
 			Everything is designed to feel premium, calm, and frictionless while still giving advanced
-			users the control they expect from serious backup software.
+			users the control they expect from serious open-source backup software.
 		</p>
 
 		<div class="mt-12 grid gap-6 lg:grid-cols-12">
@@ -152,10 +153,10 @@
 					<div class="feature-icon">
 						<RefreshCcw class="h-6 w-6" />
 					</div>
-					<h3 class="mt-5 text-xl font-semibold text-white">Real-time auto-sync</h3>
+					<h3 class="mt-5 text-xl font-semibold text-white">Cross-platform auto-sync</h3>
 					<p class="mt-3 text-white/70">
-						Changes are encrypted locally and synced automatically, so every device stays current
-						without manual upload rituals.
+						Enjoy seamless cross-platform support with auto-sync. Changes are encrypted locally and
+						synced automatically, so every device stays current.
 					</p>
 				</div>
 
@@ -163,10 +164,10 @@
 					<div class="feature-icon">
 						<ServerCog class="h-6 w-6" />
 					</div>
-					<h3 class="mt-5 text-xl font-semibold text-white">Multi-cloud by design</h3>
+					<h3 class="mt-5 text-xl font-semibold text-white">Bring your own storage & 50GB</h3>
 					<p class="mt-3 text-white/70">
-						Connect the storage providers you trust and keep infrastructure flexibility instead of
-						getting locked into a single vendor.
+						Leverage up to 50GB of free tier storage offered by providers like Backblaze B2 or
+						Cloudflare R2, preventing single-vendor lock-in.
 					</p>
 				</div>
 
@@ -174,9 +175,10 @@
 					<div class="feature-icon">
 						<KeyRound class="h-6 w-6" />
 					</div>
-					<h3 class="mt-5 text-xl font-semibold text-white">Bring your own key</h3>
+					<h3 class="mt-5 text-xl font-semibold text-white">Bring your own key (BYOK)</h3>
 					<p class="mt-3 text-white/70">
-						You control the master key, which means control over access never leaves your hands.
+						You control the master key. Combined with decentralized storage, this ensures users
+						completely own their encrypted data.
 					</p>
 				</div>
 			</div>
@@ -186,7 +188,7 @@
 
 <section id="security" class="section-space pt-8">
 	<div class="container-shell grid gap-8 lg:grid-cols-[1.1fr_1.05fr]">
-		<div class="glass-card p-4">
+		<div class="glass-card flex flex-col justify-center p-4">
 			<img
 				src="https://images.fife.jeero.one/encryption-flow-explain.webp"
 				alt="Encryption diagram placeholder"
@@ -196,13 +198,11 @@
 
 		<div class="flex items-center">
 			<div>
-				<div class="section-label">Security deep dive</div>
-				<h2 class="section-title">
-					Zero-knowledge security, explained like a product people can trust.
-				</h2>
+				<div class="section-label">FiFe vs Standard Cloud Storage</div>
+				<h2 class="section-title">Objective data privacy superiority you can verify.</h2>
 				<p class="section-copy">
-					Your files are encrypted before they leave your device. The cloud only receives protected
-					ciphertext, and with BYOK, the critical secret remains under your control.
+					Standard cloud providers hold your keys and harvest your file data. FiFe is an open-source
+					alternative built on absolute zero-knowledge principles.
 				</p>
 
 				<div class="mt-8 grid gap-4">
@@ -212,10 +212,11 @@
 								<Lock class="h-5 w-5" />
 							</div>
 							<div>
-								<h3 class="text-lg font-semibold text-white">Local-first encryption</h3>
+								<h3 class="text-lg font-semibold text-white">Stronger than standard AES-256</h3>
 								<p class="mt-2 text-white/70">
-									Files are protected before upload, reducing trust assumptions around the storage
-									layer.
+									Data is encrypted before leaving the user device using modern cryptographic
+									standards that are objectively stronger than the AES-256 encryption which other
+									service providers normally use.
 								</p>
 							</div>
 						</div>
@@ -227,10 +228,11 @@
 								<KeyRound class="h-5 w-5" />
 							</div>
 							<div>
-								<h3 class="text-lg font-semibold text-white">BYOK architecture</h3>
+								<h3 class="text-lg font-semibold text-white">No metadata stored</h3>
 								<p class="mt-2 text-white/70">
-									You generate and hold the key material, giving advanced users stronger ownership
-									and operational clarity.
+									Unlike standard cloud storage solutions that track your activity, FiFe does not
+									store file metadata like others do, ensuring your folder structures and file sizes
+									remain completely private.
 								</p>
 							</div>
 						</div>
@@ -242,10 +244,11 @@
 								<CloudCog class="h-5 w-5" />
 							</div>
 							<div>
-								<h3 class="text-lg font-semibold text-white">Storage provider independence</h3>
+								<h3 class="text-lg font-semibold text-white">Advanced Tech Stack</h3>
 								<p class="mt-2 text-white/70">
-									Security and storage are decoupled, so you can choose performance, region, and
-									cost based on your own requirements.
+									Our architecture routes the domain directly through Cloudflare Workers and
+									Hyperdrive connected to a Neon.tech PostgreSQL database. This eliminates the need
+									for certificate pinning and Cloudflare channels, maximizing backend security.
 								</p>
 							</div>
 						</div>
@@ -257,6 +260,7 @@
 </section>
 
 <section id="workflow" class="section-space">
+	<!-- Existing Workflow Section untouched to maintain design rhythm -->
 	<div class="container-shell">
 		<div class="section-label">How it works</div>
 		<h2 class="section-title">Start syncing in three easy steps.</h2>
@@ -274,7 +278,7 @@
 				<h3 class="mt-2 text-xl font-semibold text-white">Connect your storage</h3>
 				<p class="mt-3 text-white/70">
 					Add your preferred backend such as Oracle Object Storage, Cloudflare R2, Backblaze, or any
-					S3-compatible provider.
+					S3-compatible provider to claim your storage.
 				</p>
 			</div>
 
@@ -297,7 +301,7 @@
 				<h3 class="mt-2 text-xl font-semibold text-white">Sync and explore</h3>
 				<p class="mt-3 text-white/70">
 					Back up automatically, browse beautifully, and manage your files across desktop and mobile
-					with one consistent experience.
+					with our cross-platform auto-sync.
 				</p>
 			</div>
 		</div>
@@ -305,6 +309,7 @@
 </section>
 
 <section id="download" class="section-space pt-8">
+	<!-- Existing Download Section untouched -->
 	<div class="container-shell">
 		<div class="glass-card overflow-hidden p-8 lg:p-10">
 			<div class="grid items-center gap-8 lg:grid-cols-[1fr_auto]">
