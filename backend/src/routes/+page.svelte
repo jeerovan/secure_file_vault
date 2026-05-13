@@ -25,7 +25,7 @@
 	<title>FiFe — Open-Source Secure Cloud Backup</title>
 	<meta
 		name="description"
-		content="Compare FiFe to standard cloud storage: Open-source, cross-platform auto-sync with encryption stronger than AES-256. Leverage 50GB free from providers like Backblaze B2/Cloudflare R2. No metadata stored. Built on Cloudflare Workers & Neon PostgreSQL."
+		content="Compare FiFe to standard cloud storage: Open-source, cross-platform auto-sync with encryption superior than AES-256. Leverage 50GB free from providers like Backblaze B2/Cloudflare R2. No metadata stored. Built on Cloudflare Workers & Neon PostgreSQL."
 	/>
 </svelte:head>
 
@@ -90,7 +90,7 @@
 
 				<div class="rounded-2xl border border-white/10 bg-black/30 p-4">
 					<div class="text-xs tracking-[0.2em] text-white/45 uppercase">Encryption</div>
-					<div class="mt-2 text-sm font-medium text-white">Stronger than AES-256</div>
+					<div class="mt-2 text-sm font-medium text-white">Superior than AES-256</div>
 				</div>
 
 				<div class="rounded-2xl border border-white/10 bg-black/30 p-4">
@@ -212,10 +212,10 @@
 								<Lock class="h-5 w-5" />
 							</div>
 							<div>
-								<h3 class="text-lg font-semibold text-white">Stronger than standard AES-256</h3>
+								<h3 class="text-lg font-semibold text-white">Superior than standard AES-256</h3>
 								<p class="mt-2 text-white/70">
 									Data is encrypted before leaving the user device using modern cryptographic
-									standards that are objectively stronger than the AES-256 encryption which other
+									standards that are objectively superior than the AES-256 encryption which other
 									service providers normally use.
 								</p>
 							</div>
