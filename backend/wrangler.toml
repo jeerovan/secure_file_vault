@@ -26,3 +26,7 @@ invocation_logs = true
 enabled = false
 persist = true
 head_sampling_rate = 1
+
+[[kv_namespaces]]
+binding = "FIFE_AUTH_CACHE"
+id = "81039fb51fc3427a90d657d09cd6bae4"

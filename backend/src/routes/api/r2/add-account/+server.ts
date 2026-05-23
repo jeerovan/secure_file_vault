@@ -36,7 +36,8 @@ async function verifyR2Credentials(
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
-	const authUser = await requireAuth(db, request);
+	const kv = platform?.env.FIFE_AUTH_CACHE;
+	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
