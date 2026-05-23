@@ -7,7 +7,8 @@ import { getDb } from '$lib/server/db';
 
 export const GET: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
-	const authUser = await requireAuth(db, request);
+	const kv = platform?.env.FIFE_AUTH_CACHE;
+	const authUser = await requireAuth(db, request, kv!);
 	if (authUser.authorized) {
 		const result = await getUserStorage(db, authUser.userId!);
 		if (!result) {

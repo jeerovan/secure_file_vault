@@ -1,7 +1,7 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { authenticate, getDownloadAuthorization } from '$lib/server/backblaze';
+import { authenticate } from '$lib/server/backblaze';
 import { ErrorCode } from '$lib/server/db/keys';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -9,7 +9,8 @@ import { getDb } from '$lib/server/db';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
-	const authUser = await requireAuth(db, request);
+	const kv = platform?.env.FIFE_AUTH_CACHE;
+	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}

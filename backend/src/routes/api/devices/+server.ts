@@ -7,7 +7,8 @@ import { ErrorCode } from '$lib/server/db/keys';
 
 export const GET: RequestHandler = async ({ request, url, platform }) => {
 	const db = getDb(platform);
-	const authUser = await requireAuth(db, request);
+	const kv = platform?.env.FIFE_AUTH_CACHE;
+	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -19,7 +20,8 @@ export const GET: RequestHandler = async ({ request, url, platform }) => {
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
-	const authUser = await requireAuth(db, request);
+	const kv = platform?.env.FIFE_AUTH_CACHE;
+	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}
@@ -50,7 +52,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 export const DELETE: RequestHandler = async ({ request, url, platform }) => {
 	const db = getDb(platform);
-	const authUser = await requireAuth(db, request);
+	const kv = platform?.env.FIFE_AUTH_CACHE;
+	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
 		return json({ success: 0, message: authUser.message });
 	}

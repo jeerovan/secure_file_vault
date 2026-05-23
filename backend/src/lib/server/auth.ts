@@ -4,6 +4,7 @@ import { getUserByRemoteId as getUserByRemoteAuthId } from './db/api';
 import { ErrorCode, UserKeys } from './db/keys';
 import type { Db, Tx } from './db/index';
 import * as jose from 'jose';
+import type { KVNamespace } from '@cloudflare/workers-types';
 
 export interface AuthUser {
 	authorized: boolean;
@@ -15,28 +16,56 @@ export interface AuthUser {
 }
 
 /**
- * Extracts and validates the Bearer token from the request.
- * Throws a SvelteKit HTTP error if auth fails.
- * Use in any +server.ts route.
+ * Hashes the JWT to safely use as a KV key (KV keys have a 512 byte limit).
  */
-export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUser> {
+async function hashToken(token: string): Promise<string> {
+	const msgUint8 = new TextEncoder().encode(token);
+	const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Extracts and validates the Bearer token from the request.
+ * Caches successful validations in Cloudflare KV until the token expires.
+ */
+export async function requireAuth(
+	db: Db | Tx,
+	request: Request,
+	kv: KVNamespace // Pass the bound KV from event.platform?.env
+): Promise<AuthUser> {
 	const authHeader = request.headers.get('authorization');
 	const device_uuid = request.headers.get('device_uuid') || undefined;
+
 	if (!authHeader?.startsWith('Bearer ')) {
 		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
 	}
 
 	const token = authHeader.split(' ')[1];
+	const cacheKey = `auth:${await hashToken(token)}`;
+
+	// 1. Check KV Cache First
+	if (kv) {
+		const cachedAuth = await kv.get<AuthUser>(cacheKey, 'json');
+		if (cachedAuth) {
+			cachedAuth.deviceUuid = device_uuid;
+			return cachedAuth;
+		}
+	}
 
 	const serviceHeader = request.headers.get('service');
+	let authResult: AuthUser;
+	let expirationSeconds: number | undefined;
+
 	if (serviceHeader == 'neon') {
 		try {
-			// 2. Validate the JWT using Neon's JWKS Endpoint
 			const JWKS = jose.createRemoteJWKSet(new URL(NEON_JWKS));
 			const { payload } = await jose.jwtVerify(token, JWKS);
-			// 3. Success, fetch user
+
 			const userId = payload['sub']!;
 			const email = payload['email']! as string;
+			expirationSeconds = payload['exp']; // Extract exp for KV TTL
+
 			const userEntry = await getUserByRemoteAuthId(db, userId, email);
 
 			if (!userEntry) {
@@ -48,7 +77,7 @@ export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUs
 				};
 			}
 
-			return {
+			authResult = {
 				authorized: true,
 				remoteAuthId: userId,
 				email: email,
@@ -60,18 +89,13 @@ export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUs
 			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
 		}
 	} else {
-		// Use service role client ONLY for verifying the token — never expose this key
 		const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 		const {
 			data: { user },
 			error: authError
 		} = await supabase.auth.getUser(token);
 
-		if (authError || !user) {
-			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
-		}
-
-		if (!user.email) {
+		if (authError || !user || !user.email) {
 			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
 		}
 
@@ -86,12 +110,34 @@ export async function requireAuth(db: Db | Tx, request: Request): Promise<AuthUs
 			};
 		}
 
-		return {
+		authResult = {
 			authorized: true,
 			remoteAuthId: user.id,
 			email: user.email,
 			deviceUuid: device_uuid,
 			userId: userEntry?.[UserKeys.ID]
 		};
+
+		// Extract expiration synchronously since Supabase remote verify succeeded
+		try {
+			const decoded = jose.decodeJwt(token);
+			expirationSeconds = decoded.exp;
+		} catch (err) {
+			console.log('Failed to decode Supabase JWT', err);
+		}
 	}
+
+	// 2. Write to Cloudflare KV Cache
+	if (kv && authResult.authorized && expirationSeconds) {
+		const currentUnix = Math.floor(Date.now() / 1000);
+
+		// Cloudflare KV requires a minimum TTL of 60 seconds
+		if (expirationSeconds - currentUnix >= 60) {
+			await kv.put(cacheKey, JSON.stringify(authResult), {
+				expiration: expirationSeconds
+			});
+		}
+	}
+
+	return authResult;
 }
