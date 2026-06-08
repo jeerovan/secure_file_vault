@@ -5,6 +5,7 @@ import 'package:file_vault_bb/services/service_events.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../models/model_setting.dart';
@@ -33,6 +34,7 @@ class SettingsPageState extends State<SettingsPage> {
       ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
           "yes";
   late bool isDarkMode;
+  String? emailId = "";
 
   @override
   void initState() {
@@ -40,6 +42,16 @@ class SettingsPageState extends State<SettingsPage> {
         ? PlatformDispatcher.instance.platformBrightness == Brightness.dark
         : ModelSetting.get(AppString.theme.string) == "dark";
     super.initState();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    String? signedEmailId = await getSignedInEmailId();
+    setState(() {
+      if (signedEmailId != null) {
+        emailId = signedEmailId;
+      }
+    });
   }
 
   Future<void> setTheme(String theme) async {
@@ -77,6 +89,11 @@ class SettingsPageState extends State<SettingsPage> {
 
   Future<void> _navigateBack() async {
     Navigator.pop(context);
+  }
+
+  Future<void> signout() async {
+    context.read<AppSetupState>().logout();
+    _navigateBack();
   }
 
   @override
@@ -125,18 +142,30 @@ class SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.star, color: Colors.grey),
-                  title: const Text('Leave a review'),
+                  leading: const Icon(LucideIcons.list, color: Colors.grey),
+                  title: const Text("Logging"),
                   horizontalTitleGap: 24.0,
-                  onTap: () => _redirectToFeedback(),
+                  trailing: Transform.scale(
+                    scale: 0.7,
+                    child: Switch(
+                      value: loggingEnabled,
+                      onChanged: _setLogging,
+                    ),
+                  ),
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.share2, color: Colors.grey),
-                  title: const Text('Share'),
+                  leading: const Icon(LucideIcons.bug, color: Colors.grey),
+                  trailing:
+                      const Icon(LucideIcons.chevronRight, color: Colors.grey),
+                  title: const Text('Report Issue'),
                   horizontalTitleGap: 24.0,
-                  onTap: () {
-                    _share();
-                  },
+                  onTap: () => _redirectToIssues(),
+                ),
+                ListTile(
+                  leading: const Icon(LucideIcons.github, color: Colors.grey),
+                  title: const Text('Source Code'),
+                  horizontalTitleGap: 24.0,
+                  onTap: () => _redirectToGithub(),
                 ),
                 if (Platform.isAndroid || Platform.isIOS)
                   ListTile(
@@ -155,24 +184,18 @@ class SettingsPageState extends State<SettingsPage> {
                     onTap: () => _redirectToOtherApps(),
                   ),
                 ListTile(
-                  leading: const Icon(LucideIcons.list, color: Colors.grey),
-                  title: const Text("Logging"),
+                  leading: const Icon(LucideIcons.star, color: Colors.grey),
+                  title: const Text('Leave a review'),
                   horizontalTitleGap: 24.0,
-                  trailing: Transform.scale(
-                    scale: 0.7,
-                    child: Switch(
-                      value: loggingEnabled,
-                      onChanged: _setLogging,
-                    ),
-                  ),
+                  onTap: () => _redirectToFeedback(),
                 ),
                 ListTile(
-                  leading: const Icon(LucideIcons.github, color: Colors.grey),
-                  trailing:
-                      const Icon(LucideIcons.chevronRight, color: Colors.grey),
-                  title: const Text('Source Code'),
+                  leading: const Icon(LucideIcons.share2, color: Colors.grey),
+                  title: const Text('Share'),
                   horizontalTitleGap: 24.0,
-                  onTap: () => _redirectToGithub(),
+                  onTap: () {
+                    _share();
+                  },
                 ),
                 FutureBuilder<PackageInfo>(
                   future: PackageInfo.fromPlatform(),
@@ -195,6 +218,27 @@ class SettingsPageState extends State<SettingsPage> {
                     }
                   },
                 ),
+                ListTile(
+                  leading: const Icon(LucideIcons.user, color: Colors.grey),
+                  title: Text(emailId != null ? emailId! : ""),
+                  horizontalTitleGap: 24.0,
+                  trailing: OutlinedButton(
+                    onPressed: () {
+                      signout();
+                    },
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFBDBDBD)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 10),
+                      minimumSize: const Size(0, 40),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: const Text('Sign out'),
+                  ),
+                )
               ],
             ),
           ),
@@ -213,6 +257,11 @@ class SettingsPageState extends State<SettingsPage> {
 
   void _redirectToGithub() {
     const url = "https://github.com/jeerovan/secure_file_vault";
+    openURL(url);
+  }
+
+  void _redirectToIssues() {
+    const url = "https://github.com/jeerovan/secure_file_vault/issues";
     openURL(url);
   }
 

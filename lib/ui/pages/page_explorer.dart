@@ -382,10 +382,6 @@ class _FilePaneState extends State<FilePane> {
     }
   }
 
-  Future<void> signout() async {
-    context.read<AppSetupState>().logout();
-  }
-
   Future<void> showArchives() async {
     Navigator.of(context).push(AnimatedPageRoute(child: const PageTrash()));
   }
@@ -509,7 +505,6 @@ class _FilePaneState extends State<FilePane> {
                 ],
               ),
               onSelected: (value) {
-                if (value == 0) signout();
                 if (value == 1) showArchives();
                 if (value == 2) showDevices();
                 if (value == 3) showStorageProviders();
@@ -520,16 +515,6 @@ class _FilePaneState extends State<FilePane> {
                 if (value == 8) showDatabase();
               },
               itemBuilder: (context) => [
-                const PopupMenuItem<int>(
-                  value: 0,
-                  child: Row(
-                    children: [
-                      Icon(LucideIcons.logOut, color: Colors.grey),
-                      SizedBox(width: 16),
-                      Text('Signout'),
-                    ],
-                  ),
-                ),
                 const PopupMenuItem<int>(
                   value: 7,
                   child: Row(

@@ -472,7 +472,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 child: Text(
                     revenueCatSupported
                         ? 'Subscribe Now'
-                        : 'Subscribe on moile app',
+                        : 'Subscribe on mobile app',
                     style:
                         TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
