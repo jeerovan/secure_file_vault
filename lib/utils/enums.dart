@@ -86,6 +86,7 @@ enum AppString {
   loggingEnabled,
   simulateTesting,
   theme,
+  locale,
 
   //sign-in
   signedIn,
@@ -135,6 +136,8 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.locale:
+        return "locale";
       case AppString.storageFull:
         return "storage_full";
       case AppString.sessionCookie:

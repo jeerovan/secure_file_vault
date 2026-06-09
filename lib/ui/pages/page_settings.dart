@@ -8,7 +8,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/model_setting.dart';
+import '../../services/service_locale.dart';
 import '../../services/service_logger.dart';
 import '../../utils/common.dart';
 import '../../utils/enums.dart';
@@ -98,7 +100,10 @@ class SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(
+        context)!; // Extract localizations once for cleaner code
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
+
     return CrossPlatformBackHandler(
       canPop: true,
       onManualBack: _navigateBack,
@@ -112,16 +117,15 @@ class SettingsPageState extends State<SettingsPage> {
               children: <Widget>[
                 ListTile(
                   leading: const Icon(LucideIcons.sunMoon, color: Colors.grey),
-                  title: const Text("Theme"),
+                  title: Text(loc.theme), // Changed from "Theme"
                   horizontalTitleGap: 24.0,
                   onTap: () => setTheme(isDarkMode ? 'light' : 'dark'),
                   trailing: IconButton(
-                    tooltip: "Day/night theme",
+                    tooltip: loc.themeTooltip, // Changed from "Day/night theme"
                     icon: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 500),
                       transitionBuilder:
                           (Widget child, Animation<double> animation) {
-                        // Use both fade and rotation transitions
                         return FadeTransition(
                           opacity: animation,
                           child: RotationTransition(
@@ -134,7 +138,6 @@ class SettingsPageState extends State<SettingsPage> {
                       child: Icon(
                         isDarkMode ? Icons.light_mode : Icons.dark_mode,
                         key: ValueKey(isDarkMode ? 'dark' : 'light'),
-                        // Unique key for AnimatedSwitcher
                         color: isDarkMode ? Colors.orange : Colors.black,
                       ),
                     ),
@@ -143,7 +146,7 @@ class SettingsPageState extends State<SettingsPage> {
                 ),
                 ListTile(
                   leading: const Icon(LucideIcons.list, color: Colors.grey),
-                  title: const Text("Logging"),
+                  title: Text(loc.logging), // Changed from "Logging"
                   horizontalTitleGap: 24.0,
                   trailing: Transform.scale(
                     scale: 0.7,
@@ -154,16 +157,35 @@ class SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 ListTile(
+                  leading:
+                      const Icon(LucideIcons.languages, color: Colors.grey),
+                  title: TextButton(
+                      onPressed: () {
+                        final provider =
+                            Provider.of<LocaleProvider>(context, listen: false);
+                        provider.setLocale(const Locale('hi'));
+                      },
+                      child: Text("Hindi")),
+                  trailing: IconButton(
+                      onPressed: () {
+                        final provider =
+                            Provider.of<LocaleProvider>(context, listen: false);
+                        // Clear locale to fallback to device default system language
+                        provider.clearLocale();
+                      },
+                      icon: const Icon(LucideIcons.rotateCcw)),
+                ),
+                ListTile(
                   leading: const Icon(LucideIcons.bug, color: Colors.grey),
                   trailing:
                       const Icon(LucideIcons.chevronRight, color: Colors.grey),
-                  title: const Text('Report Issue'),
+                  title: Text(loc.reportIssue), // Changed from "Report Issue"
                   horizontalTitleGap: 24.0,
                   onTap: () => _redirectToIssues(),
                 ),
                 ListTile(
                   leading: const Icon(LucideIcons.github, color: Colors.grey),
-                  title: const Text('Source Code'),
+                  title: Text(loc.sourceCode), // Changed from "Source Code"
                   horizontalTitleGap: 24.0,
                   onTap: () => _redirectToGithub(),
                 ),
@@ -171,27 +193,27 @@ class SettingsPageState extends State<SettingsPage> {
                   ListTile(
                     leading:
                         const Icon(LucideIcons.monitor, color: Colors.grey),
-                    title: const Text('Desktop App'),
+                    title: Text(loc.desktopApp), // Changed from "Desktop App"
                     horizontalTitleGap: 24.0,
                     onTap: () => _redirectToOtherApps(),
                   ),
                 if (Platform.isLinux || Platform.isWindows || Platform.isMacOS)
                   ListTile(
                     leading:
-                        const Icon(LucideIcons.monitor, color: Colors.grey),
-                    title: const Text('Mobile App'),
+                        const Icon(LucideIcons.smartphone, color: Colors.grey),
+                    title: Text(loc.mobileApp), // Changed from "Mobile App"
                     horizontalTitleGap: 24.0,
                     onTap: () => _redirectToOtherApps(),
                   ),
                 ListTile(
                   leading: const Icon(LucideIcons.star, color: Colors.grey),
-                  title: const Text('Leave a review'),
+                  title: Text(loc.leaveReview), // Changed from "Leave a review"
                   horizontalTitleGap: 24.0,
                   onTap: () => _redirectToFeedback(),
                 ),
                 ListTile(
                   leading: const Icon(LucideIcons.share2, color: Colors.grey),
-                  title: const Text('Share'),
+                  title: Text(loc.share), // Changed from "Share"
                   horizontalTitleGap: 24.0,
                   onTap: () {
                     _share();
@@ -206,13 +228,14 @@ class SettingsPageState extends State<SettingsPage> {
                         leading:
                             const Icon(LucideIcons.info, color: Colors.grey),
                         horizontalTitleGap: 24.0,
-                        title: Text('Version: $version'),
+                        title: Text(
+                            "${loc.versionLabel}$version"), // Changed from "Version: $version"
                         onTap: null,
                       );
                     } else {
-                      return const ListTile(
+                      return ListTile(
                         leading: Icon(LucideIcons.info, color: Colors.grey),
-                        title: Text('Loading...'),
+                        title: Text(loc.loading), // Changed from "Loading..."
                         horizontalTitleGap: 24.0,
                       );
                     }
@@ -236,7 +259,7 @@ class SettingsPageState extends State<SettingsPage> {
                       minimumSize: const Size(0, 40),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text('Sign out'),
+                    child: Text(loc.signOut), // Changed from "Sign out"
                   ),
                 )
               ],
@@ -248,7 +271,7 @@ class SettingsPageState extends State<SettingsPage> {
                   tooltip: 'Back',
                   icon: const Icon(LucideIcons.arrowLeft),
                   onPressed: _navigateBack),
-              title: Text("Settings"),
+              title: Text(loc.settingsPageTitle), // Changed from "Settings"
               actions: [])
         ],
       )),

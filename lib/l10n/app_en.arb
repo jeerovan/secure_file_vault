@@ -1,0 +1,60 @@
+{
+  "@@locale": "en",
+  "appTitle": "FiFe",
+  "@appTitle": {
+    "description": "App title",
+    "comment": "Do not translate"
+  },
+  "theme": "Theme",
+  "@theme": {
+    "description": "The label for the theme selection option in settings"
+  },
+  "themeTooltip": "Day/night theme",
+  "@themeTooltip": {
+    "description": "Tooltip for the theme toggle button"
+  },
+  "logging": "Logging",
+  "@logging": {
+    "description": "The label for the system logging configuration"
+  },
+  "reportIssue": "Report Issue",
+  "@reportIssue": {
+    "description": "Action to navigate to the issue tracker"
+  },
+  "sourceCode": "Source Code",
+  "@sourceCode": {
+    "description": "Link to the project source code repository"
+  },
+  "desktopApp": "Desktop App",
+  "@desktopApp": {
+    "description": "Information for users on desktop platforms"
+  },
+  "mobileApp": "Mobile App",
+  "@mobileApp": {
+    "description": "Information for users on mobile platforms"
+  },
+  "leaveReview": "Leave a review",
+  "@leaveReview": {
+    "description": "Call to action to leave a store rating"
+  },
+  "share": "Share",
+  "@share": {
+    "description": "Option to share the application link with others"
+  },
+  "versionLabel": "Version: ",
+  "@versionLabel": {
+    "description": "Static prefix for the current version number display"
+  },
+  "loading": "Loading...",
+  "@loading": {
+    "description": "Status shown while fetching package information"
+  },
+  "signOut": "Sign out",
+  "@signOut": {
+    "description": "Button text to log out the user"
+  },
+  "settingsPageTitle": "Settings",
+  "@settingsPageTitle": {
+    "description": "Main title for the settings screen bottom bar"
+  }
+}

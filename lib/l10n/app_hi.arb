@@ -1,0 +1,60 @@
+{
+  "@@locale": "hi",
+  "appTitle": "FiFe",
+  "@appTitle": {
+    "description": "App title",
+    "comment": "Do not translate"
+  },
+  "theme": "थीम",
+  "@theme": {
+    "description": "The label for the theme selection option in settings"
+  },
+  "themeTooltip": "दिन/रात का मोड",
+  "@themeTooltip": {
+    "description": "Tooltip for the theme toggle button"
+  },
+  "logging": "लॉगिंग",
+  "@logging": {
+    "description": "The label for the system logging configuration"
+  },
+  "reportIssue": "समस्या की रिपोर्ट करें",
+  "@reportIssue": {
+    "description": "Action to navigate to the issue tracker"
+  },
+  "sourceCode": "सोर्स कोड",
+  "@sourceCode": {
+    "description": "Link to the project source code repository"
+  },
+  "desktopApp": "डेस्कटॉप ऐप",
+  "@desktopApp": {
+    "description": "Information for users on desktop platforms"
+  },
+  "mobileApp": "मोबाइल ऐप",
+  "@mobileApp": {
+    "description": "Information for users on mobile platforms"
+  },
+  "leaveReview": "अपनी राय दें",
+  "@leaveReview": {
+    "description": "Call to action to leave a store rating"
+  },
+  "share": "साझा करें",
+  "@share": {
+    "description": "Option to share the application link with others"
+  },
+  "versionLabel": "वर्जन: ",
+  "@versionLabel": {
+    "description": "Static prefix for the current version number display"
+  },
+  "loading": "लोड हो रहा है...",
+  "@loading": {
+    "description": "Status shown while fetching package information"
+  },
+  "signOut": "साइन आउट करें",
+  "@signOut": {
+    "description": "Button text to log out the user"
+  },
+  "settingsPageTitle": "सेटिंग्स",
+  "@settingsPageTitle": {
+    "description": "Main title for the settings screen bottom bar"
+  }
+}
