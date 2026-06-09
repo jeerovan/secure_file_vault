@@ -98,6 +98,12 @@ class SettingsPageState extends State<SettingsPage> {
     _navigateBack();
   }
 
+  Future<void> setLocale(String localeCode) async {
+    final provider = Provider.of<LocaleProvider>(context, listen: false);
+    provider.setLocale(const Locale('hi'));
+    await ModelSetting.set(AppString.locale.string, localeCode);
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(
@@ -161,19 +167,20 @@ class SettingsPageState extends State<SettingsPage> {
                       const Icon(LucideIcons.languages, color: Colors.grey),
                   title: TextButton(
                       onPressed: () {
-                        final provider =
-                            Provider.of<LocaleProvider>(context, listen: false);
-                        provider.setLocale(const Locale('hi'));
+                        setLocale('hi');
                       },
                       child: Text("Hindi")),
-                  trailing: IconButton(
-                      onPressed: () {
-                        final provider =
-                            Provider.of<LocaleProvider>(context, listen: false);
-                        // Clear locale to fallback to device default system language
-                        provider.clearLocale();
-                      },
-                      icon: const Icon(LucideIcons.rotateCcw)),
+                  trailing: ModelSetting.get(AppString.locale.string).isNotEmpty
+                      ? IconButton(
+                          onPressed: () {
+                            final provider = Provider.of<LocaleProvider>(
+                                context,
+                                listen: false);
+                            // Clear locale to fallback to device default system language
+                            provider.clearLocale();
+                          },
+                          icon: const Icon(LucideIcons.rotateCcw))
+                      : null,
                 ),
                 ListTile(
                   leading: const Icon(LucideIcons.bug, color: Colors.grey),
