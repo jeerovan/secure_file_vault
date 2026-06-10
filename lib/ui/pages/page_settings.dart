@@ -221,7 +221,7 @@ class SettingsPageState extends State<SettingsPage> {
     _AppLanguageOption(
       code: 'zh',
       nativeName: '简体中文',
-      locale: Locale.fromSubtags(languageCode: 'zh', countryCode: 'CN'),
+      locale: Locale('zh'),
     ),
   ];
 

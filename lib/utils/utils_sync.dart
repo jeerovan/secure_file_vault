@@ -277,7 +277,7 @@ class SyncUtils {
         await clearFiFeDirectory();
         // keep locale
         await ModelSetting.set(AppString.locale.string, locale);
-        //await ModelSetting.set(AppString.onboarding.string, "yes"); // TODO enable
+        await ModelSetting.set(AppString.onboarding.string, "yes");
         EventStream().publish(AppEvent(
             type: EventType.system, id: "signout", key: EventKey.signout));
         success = true;
