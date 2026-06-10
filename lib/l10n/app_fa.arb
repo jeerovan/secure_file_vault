@@ -1,0 +1,944 @@
+{
+  "@@locale": "fa",
+  "appTitle": "FiFe",
+  "@appTitle": {
+    "description": "App title",
+    "comment": "Do not translate"
+  },
+  "continueAgreementText": "با ادامه دادن، شما با {terms} و {privacy} ما موافقت می‌کنید.",
+  "@continueAgreementText": {
+    "description": "Consent text shown before continuing, with clickable Terms of Service and Privacy Policy links",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "termsOfService": "شرایط استفاده",
+  "@termsOfService": {
+    "description": "Clickable label for the terms of service link"
+  },
+  "privacyPolicy": "سیاست حریم خصوصی",
+  "@privacyPolicy": {
+    "description": "Clickable label for the privacy policy link"
+  },
+  "andLabel": " و ",
+  "@andLabel": {
+    "description": "Connector text between terms and privacy policy"
+  },
+  "theme": "تم",
+  "@theme": {
+    "description": "The label for the theme selection option in settings"
+  },
+  "themeTooltip": "تم روز/شب",
+  "@themeTooltip": {
+    "description": "Tooltip for the theme toggle button"
+  },
+  "logging": "گزارش‌ها",
+  "@logging": {
+    "description": "The label for the system logging configuration"
+  },
+  "reportIssue": "گزارش مشکل",
+  "@reportIssue": {
+    "description": "Action to navigate to the issue tracker"
+  },
+  "sourceCode": "کد منبع",
+  "@sourceCode": {
+    "description": "Link to the project source code repository"
+  },
+  "desktopApp": "نسخه دسکتاپ",
+  "@desktopApp": {
+    "description": "Information for users on desktop platforms"
+  },
+  "mobileApp": "نسخه موبایل",
+  "@mobileApp": {
+    "description": "Information for users on mobile platforms"
+  },
+  "leaveReview": "ثبت نظر",
+  "@leaveReview": {
+    "description": "Call to action to leave a store rating"
+  },
+  "share": "اشتراک‌گذاری",
+  "@share": {
+    "description": "Option to share the application link with others"
+  },
+  "versionLabel": "نسخه: ",
+  "@versionLabel": {
+    "description": "Static prefix for the current version number display"
+  },
+  "loading": "در حال بارگذاری...",
+  "@loading": {
+    "description": "Status shown while fetching package information"
+  },
+  "signOut": "خروج از حساب",
+  "@signOut": {
+    "description": "Button text to log out the user"
+  },
+  "settingsPageTitle": "تنظیمات",
+  "@settingsPageTitle": {
+    "description": "Main title for the settings screen bottom bar"
+  },
+  "language": "زبان",
+  "@language": {
+    "description": "Label for selecting the app language"
+  },
+  "tapToSelect": "برای انتخاب لمس کنید",
+  "@tapToSelect": {
+    "description": "Prompt text instructing the user to tap and choose an option"
+  },
+  "appTagline": "قایق خصوصی فایل‌های شما",
+  "@appTagline": {
+    "description": "Tagline displayed below the app name on the onboarding page"
+  },
+  "onboardingPurposeDescription": "یک سرویس متن‌باز ذخیره‌سازی ابری با معماری zero-trust. داده‌های شما پیش از خروج از دستگاه، به‌صورت محلی رمزگذاری می‌شوند.",
+  "@onboardingPurposeDescription": {
+    "description": "Description explaining the app purpose on the onboarding welcome page"
+  },
+  "failedToFetch": "دریافت اطلاعات ناموفق بود.",
+  "@failedToFetch": {
+    "description": "Error message shown when storage providers fail to load"
+  },
+  "supportedStorageTitle": "فضاهای ذخیره‌سازی پشتیبانی‌شده",
+  "@supportedStorageTitle": {
+    "description": "Title for the onboarding page listing supported storage providers"
+  },
+  "supportedStorageDescription": "ارائه‌دهنده‌های دلخواهتان را وصل کنید. همین حالا با 1 گیگابایت فضای امن و رایگان FiFe شروع کنید.",
+  "@supportedStorageDescription": {
+    "description": "Description for the supported storage onboarding page"
+  },
+  "fifeCloud": "FiFe Cloud",
+  "@fifeCloud": {
+    "description": "Name of the default FiFe storage provider card"
+  },
+  "startBackupsInstantly": "شروع فوری پشتیبان‌گیری",
+  "@startBackupsInstantly": {
+    "description": "Subtitle for the default FiFe cloud storage card"
+  },
+  "freeStorageSizeOneGb": "1.0 گیگابایت",
+  "@freeStorageSizeOneGb": {
+    "description": "Displayed free storage size for the built-in FiFe cloud"
+  },
+  "freeLabel": "رایگان",
+  "@freeLabel": {
+    "description": "Label indicating a storage plan is free"
+  },
+  "providerStorageDisclaimer": "* فضای رایگان طبق اطلاعات درج‌شده در وب‌سایت ارائه‌دهنده. پرداخت به‌ازای مصرف برای ارائه‌دهنده‌های سازگار.",
+  "@providerStorageDisclaimer": {
+    "description": "Disclaimer about provider free storage and pay-as-you-go support"
+  },
+  "whyUseFifeTitle": "چرا FiFe؟",
+  "@whyUseFifeTitle": {
+    "description": "Title for the onboarding benefits page"
+  },
+  "claimFreeCloudStorageTitle": "استفاده از فضای ابری رایگان",
+  "@claimFreeCloudStorageTitle": {
+    "description": "Benefit title about using free cloud storage from multiple providers"
+  },
+  "claimFreeCloudStorageDescription": "با اتصال چند ارائه‌دهنده ابری، فضای بیشتری در اختیار داشته باشید. از طرح‌های رایگان آن‌ها در یک برنامه یکپارچه و امن استفاده کنید.",
+  "@claimFreeCloudStorageDescription": {
+    "description": "Benefit description about aggregating free storage across providers"
+  },
+  "topNotchSecurityTitle": "امنیت در بالاترین سطح",
+  "@topNotchSecurityTitle": {
+    "description": "Benefit title highlighting strong security"
+  },
+  "topNotchSecurityDescription": "با استفاده از رمزنگاری پیشرفته Sodium. تمام فرایند رمزگذاری و رمزگشایی به‌طور کامل روی دستگاه شما انجام می‌شود.",
+  "@topNotchSecurityDescription": {
+    "description": "Benefit description explaining local encryption and decryption"
+  },
+  "bringYourOwnKeyTitle": "Bring Your Own Key (BYOK)",
+  "@bringYourOwnKeyTitle": {
+    "description": "Benefit title for bring your own key support"
+  },
+  "bringYourOwnKeyDescription": "کنترل کامل داده‌های خود را در همه ارائه‌دهنده‌های فضای ابری حفظ کنید. با حساب‌های خودتان از فضای رمزگذاری‌شده استفاده کنید.",
+  "@bringYourOwnKeyDescription": {
+    "description": "Benefit description for using your own accounts and keys"
+  },
+  "payAsYouGoStorageTitle": "پرداخت فقط به‌اندازه مصرف.",
+  "@payAsYouGoStorageTitle": {
+    "description": "Benefit title for pay-as-you-go storage support"
+  },
+  "payAsYouGoStorageDescription": "فقط برای فضای استفاده‌شده نزد ارائه‌دهنده‌های سازگار هزینه پرداخت کنید. بدون واسطه و بدون قفل شدن داده‌ها.",
+  "@payAsYouGoStorageDescription": {
+    "description": "Benefit description for pay-as-you-go compatible providers"
+  },
+  "zeroKnowledgePrivacyTitle": "حریم خصوصی Zero-Knowledge",
+  "@zeroKnowledgePrivacyTitle": {
+    "description": "Title for the onboarding security page"
+  },
+  "zeroKnowledgePrivacyDescription": "داده‌های شما پیش از خروج از دستگاه قفل می‌شوند. ما نمی‌توانیم فایل‌های شما را ببینیم، بخوانیم یا بررسی کنیم.",
+  "@zeroKnowledgePrivacyDescription": {
+    "description": "Subtitle describing zero-knowledge privacy guarantees"
+  },
+  "localSelectionTitle": "1. انتخاب محلی",
+  "@localSelectionTitle": {
+    "description": "Step title for local file selection in the security flow"
+  },
+  "localSelectionDescription": "شما یک پوشه را انتخاب می‌کنید. تمام پردازش‌ها با امنیت کامل روی دستگاه شما آغاز می‌شود.",
+  "@localSelectionDescription": {
+    "description": "Step description for local file selection in the security flow"
+  },
+  "metadataEncryptionTitle": "2. رمزگذاری فراداده",
+  "@metadataEncryptionTitle": {
+    "description": "Step title for metadata encryption in the security flow"
+  },
+  "metadataEncryptionDescription": "اطلاعات فایل مانند نام، نوع و اندازه، پیش از ارسال به سرور رمزگذاری می‌شوند.",
+  "@metadataEncryptionDescription": {
+    "description": "Step description for metadata encryption in the security flow"
+  },
+  "contentEncryptionTitle": "3. رمزگذاری محتوا",
+  "@contentEncryptionTitle": {
+    "description": "Step title for file content encryption in the security flow"
+  },
+  "contentEncryptionDescription": "محتوای اصلی فایل پیش از بارگذاری در فضای ابری، تکه‌تکه و رمزگذاری می‌شود.",
+  "@contentEncryptionDescription": {
+    "description": "Step description for file content encryption in the security flow"
+  },
+  "blindServerTitle": "4. سرور ناآگاه",
+  "@blindServerTitle": {
+    "description": "Step title for the zero-knowledge server step in the security flow"
+  },
+  "blindServerDescription": "سرورهای ما هیچ دانشی از داده‌های شما ندارند. ما فقط داده‌های رمزگذاری‌شده را می‌بینیم و این یعنی حریم خصوصی کامل.",
+  "@blindServerDescription": {
+    "description": "Step description explaining that servers only handle encrypted data"
+  },
+  "dontTrustVerifyTitle": "اعتماد نکنید، بررسی کنید.",
+  "@dontTrustVerifyTitle": {
+    "description": "Title for the open-source verification callout"
+  },
+  "openSourceVerificationDescription": "100٪ متن‌باز. می‌توانید کد را بررسی کنید و دقیقاً ببینید فایل‌هایتان چگونه رمزگذاری می‌شوند.",
+  "@openSourceVerificationDescription": {
+    "description": "Description for the open-source verification callout"
+  },
+  "getStarted": "شروع کنید",
+  "@getStarted": {
+    "description": "Primary button label shown on the final onboarding page"
+  },
+  "next": "بعدی",
+  "@next": {
+    "description": "Primary button label used to move to the next onboarding page"
+  },
+  "unauthorized": "غیرمجاز",
+  "@unauthorized": {
+    "description": "Error message shown when the user is not authorized to access the key"
+  },
+  "tryAgain": "تلاش دوباره",
+  "@tryAgain": {
+    "description": "Button label used to retry the failed access key check"
+  },
+  "errorTitle": "خطا",
+  "@errorTitle": {
+    "description": "Generic error dialog title"
+  },
+  "failureTitle": "ناموفق",
+  "@failureTitle": {
+    "description": "Dialog title shown when access key verification fails"
+  },
+  "invalidWordList": "فهرست واژه‌ها معتبر نیست",
+  "@invalidWordList": {
+    "description": "Error message shown when the entered recovery phrase is not a valid mnemonic"
+  },
+  "invalidAccessKey": "کلید دسترسی معتبر نیست",
+  "@invalidAccessKey": {
+    "description": "Error message shown when the provided recovery phrase cannot decrypt the stored key"
+  },
+  "unexpectedDecryptionError": "هنگام رمزگشایی یک خطای غیرمنتظره رخ داد.",
+  "@unexpectedDecryptionError": {
+    "description": "Error message shown when an unexpected exception occurs during access key decryption"
+  },
+  "fileMustContainExactly24Words": "فایل باید دقیقاً شامل 24 کلمه باشد.",
+  "@fileMustContainExactly24Words": {
+    "description": "Error message shown when the selected text file does not contain exactly 24 words"
+  },
+  "errorReadingFile": "خطا در خواندن فایل",
+  "@errorReadingFile": {
+    "description": "Snackbar message shown when reading the selected file fails"
+  },
+  "encryptionTitle": "رمزگذاری",
+  "@encryptionTitle": {
+    "description": "App bar title for the access key decode screen"
+  },
+  "accessKeyDecodeDescription": "عبارت بازیابی 24 کلمه‌ای خود را وارد کنید یا یک فایل .txt بارگذاری کنید تا همگام‌سازی ابری به‌صورت امن فعال شود.",
+  "@accessKeyDecodeDescription": {
+    "description": "Instruction text on the access key decode screen"
+  },
+  "recoveryPhraseLabel": "عبارت بازیابی",
+  "@recoveryPhraseLabel": {
+    "description": "Label for the recovery phrase input field"
+  },
+  "recoveryPhraseHint": "word1 word2 word3...",
+  "@recoveryPhraseHint": {
+    "description": "Hint text shown inside the recovery phrase input field"
+  },
+  "paste": "چسباندن",
+  "@paste": {
+    "description": "Button label used to paste clipboard text into the recovery phrase field"
+  },
+  "wordCountLabel": "{count} / 24 کلمه",
+  "@wordCountLabel": {
+    "description": "Live counter showing how many recovery words have been entered",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseEnterRecoveryPhrase": "لطفاً عبارت بازیابی را وارد کنید",
+  "@pleaseEnterRecoveryPhrase": {
+    "description": "Validation message shown when the recovery phrase field is empty"
+  },
+  "mustContainExactly24Words": "باید دقیقاً شامل 24 کلمه باشد",
+  "@mustContainExactly24Words": {
+    "description": "Validation message shown when the recovery phrase does not contain exactly 24 words"
+  },
+  "verify": "تأیید",
+  "@verify": {
+    "description": "Primary button label used to verify the recovery phrase"
+  },
+  "orLabel": "یا",
+  "@orLabel": {
+    "description": "Separator label between manual input and file upload actions"
+  },
+  "loadFromTxtFile": "بارگذاری از فایل .txt",
+  "@loadFromTxtFile": {
+    "description": "Button label used to load the recovery phrase from a text file"
+  },
+  "saveAccessKey": "ذخیره کلید دسترسی",
+  "@saveAccessKey": {
+    "description": "Title for the desktop save file dialog when saving the access key"
+  },
+  "fileSavedSuccessfully": "فایل با موفقیت ذخیره شد.",
+  "@fileSavedSuccessfully": {
+    "description": "Snackbar message shown after the access key file is saved successfully"
+  },
+  "accessKeyShareMessage": "این هم کلید دسترسی شما.",
+  "@accessKeyShareMessage": {
+    "description": "Text shared alongside the access key file in the mobile share sheet"
+  },
+  "pleaseTryAgain": "لطفاً دوباره تلاش کنید.",
+  "@pleaseTryAgain": {
+    "description": "Generic snackbar message shown after a failed file save or share operation"
+  },
+  "copiedToClipboard": "در کلیپ‌بورد کپی شد",
+  "@copiedToClipboard": {
+    "description": "Snackbar message shown after copying the access key to the clipboard"
+  },
+  "accessKeyTitle": "کلید دسترسی",
+  "@accessKeyTitle": {
+    "description": "App bar title for the access key screen"
+  },
+  "accessKeyDescription": "لطفاً این کلید را در جایی امن نگه دارید. فقط با این کلید می‌توانید به داده‌های رمزگذاری‌شده خود دسترسی داشته باشید.",
+  "@accessKeyDescription": {
+    "description": "Instruction text explaining the importance of safely storing the access key"
+  },
+  "copy": "کپی",
+  "@copy": {
+    "description": "Button label used to copy the access key to the clipboard"
+  },
+  "downloadAsTextFile": "دانلود به‌صورت فایل متنی",
+  "@downloadAsTextFile": {
+    "description": "Button label used to save the access key as a text file"
+  },
+  "continueLabel": "ادامه",
+  "@continueLabel": {
+    "description": "Button label used to proceed to the next step after viewing the access key"
+  },
+  "importantTitle": "مهم",
+  "@importantTitle": {
+    "description": "App bar title for the access key notice screen"
+  },
+  "accessKeyNoticePrimary": "در صفحه بعد، مجموعه‌ای از 24 کلمه را می‌بینید. این کلید رمزگذاری خصوصی و منحصربه‌فرد شماست و تنها راه بازیابی اطلاعات شما در صورت خروج از حساب، گم شدن دستگاه یا خرابی آن است.",
+  "@accessKeyNoticePrimary": {
+    "description": "Primary warning text explaining the importance of the 24-word recovery key"
+  },
+  "accessKeyNoticeResponsibility": "ما این کلید را ذخیره نمی‌کنیم. نگهداری آن در محلی امن و خارج از برنامه {appName} کاملاً بر عهده شماست.",
+  "@accessKeyNoticeResponsibility": {
+    "description": "Warning text reminding the user to store the recovery key outside the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "showKeyConfirmation": "متوجه شدم.\nکلید را به من نشان بده.",
+  "@showKeyConfirmation": {
+    "description": "Confirmation button label acknowledging the warning before showing the access key"
+  },
+  "storageAddedSuccessfully": "فضای ذخیره‌سازی با موفقیت اضافه شد",
+  "@storageAddedSuccessfully": {
+    "description": "Snackbar message shown when a storage provider is added successfully"
+  },
+  "networkErrorDuringValidation": "هنگام اعتبارسنجی خطای شبکه رخ داد.",
+  "@networkErrorDuringValidation": {
+    "description": "Error message shown when provider validation fails because of a network error"
+  },
+  "verifyAndConnect": "تأیید و اتصال",
+  "@verifyAndConnect": {
+    "description": "Primary button label used to validate credentials and connect a storage provider"
+  },
+  "requiredField": "ضروری",
+  "@requiredField": {
+    "description": "Validation message shown when a required input field is empty"
+  },
+  "providerKeysVerifiedLocally": "کلیدهای شما به‌صورت محلی بررسی و پیش از ارسال رمزگذاری می‌شوند.",
+  "@providerKeysVerifiedLocally": {
+    "description": "Informational text explaining local verification and encryption of credentials"
+  },
+  "enterYourCredentials": "اطلاعات ورود خود را وارد کنید",
+  "@enterYourCredentials": {
+    "description": "Section title prompting the user to enter provider credentials"
+  },
+  "connectProvider": "اتصال {provider}",
+  "@connectProvider": {
+    "description": "Bottom app bar title for connecting a specific storage provider",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLimitReached": "به سقف تعداد دستگاه‌ها رسیده‌اید",
+  "@deviceLimitReached": {
+    "description": "Snackbar message shown when the user has reached the maximum allowed number of registered devices"
+  },
+  "pleaseTryAgainWithExclamation": "لطفاً دوباره تلاش کنید!",
+  "@pleaseTryAgainWithExclamation": {
+    "description": "Snackbar message shown when signing out a device fails"
+  },
+  "notThisDevice": "نه این دستگاه!",
+  "@notThisDevice": {
+    "description": "Snackbar message shown when the user tries to sign out the current device from the device list"
+  },
+  "confirmSignoutDeviceTitle": "تأیید خروج دستگاه",
+  "@confirmSignoutDeviceTitle": {
+    "description": "Dialog title shown before signing out a device"
+  },
+  "areYouSure": "مطمئن هستید؟",
+  "@areYouSure": {
+    "description": "Confirmation dialog message asking whether the user wants to proceed"
+  },
+  "cancel": "انصراف",
+  "@cancel": {
+    "description": "Button label used to cancel a dialog action"
+  },
+  "ok": "باشه",
+  "@ok": {
+    "description": "Button label used to confirm a dialog action"
+  },
+  "noDeviceFound": "دستگاهی پیدا نشد",
+  "@noDeviceFound": {
+    "description": "Empty state message shown when no devices are available"
+  },
+  "backTooltip": "بازگشت",
+  "@backTooltip": {
+    "description": "Tooltip for the back navigation button"
+  },
+  "devicesTitle": "دستگاه‌ها",
+  "@devicesTitle": {
+    "description": "Title for the devices screen"
+  },
+  "longPressToDownload": "برای دانلود، لمس طولانی کنید",
+  "@longPressToDownload": {
+    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+  },
+  "fewItemsExistLocally": "بعضی از موارد هنوز به‌صورت محلی وجود دارند.",
+  "@fewItemsExistLocally": {
+    "description": "Snackbar message shown when some selected items still exist locally during archive action"
+  },
+  "selectedItemsCount": "{count} مورد انتخاب شد",
+  "@selectedItemsCount": {
+    "description": "Title shown in the multi-select app bar with the number of selected items",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "حذف",
+  "@delete": {
+    "description": "Tooltip label for deleting selected items"
+  },
+  "info": "اطلاعات",
+  "@info": {
+    "description": "Tooltip label for viewing file information"
+  },
+  "download": "دانلود",
+  "@download": {
+    "description": "Tooltip label for downloading selected items"
+  },
+  "archive": "بایگانی",
+  "@archive": {
+    "description": "Tooltip label for archiving selected items"
+  },
+  "appPro": "{appName} Pro",
+  "@appPro": {
+    "description": "Popup menu item label for the premium subscription page using the non-translated app name",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "logs": "گزارش‌ها",
+  "@logs": {
+    "description": "Popup menu item label for the logs page"
+  },
+  "settings": "تنظیمات",
+  "@settings": {
+    "description": "Popup menu item label for the settings page"
+  },
+  "trash": "زباله‌دان",
+  "@trash": {
+    "description": "Popup menu item label for the trash page"
+  },
+  "storage": "فضای ذخیره‌سازی",
+  "@storage": {
+    "description": "Popup menu item label for the storage providers page"
+  },
+  "search": "جستجو",
+  "@search": {
+    "description": "Popup menu item label for the search page"
+  },
+  "database": "پایگاه داده",
+  "@database": {
+    "description": "Popup menu item label for the database debug page"
+  },
+  "addFolderTitle": "افزودن پوشه",
+  "@addFolderTitle": {
+    "description": "Dialog title shown when confirming addition of a sync folder"
+  },
+  "confirm": "تأیید",
+  "@confirm": {
+    "description": "Button label used to confirm an action in a dialog"
+  },
+  "tapPlusToAddSyncFolder": "برای افزودن پوشه همگام‌سازی، + را لمس کنید.",
+  "@tapPlusToAddSyncFolder": {
+    "description": "Empty state message shown at the device root when no sync folders have been added"
+  },
+  "thisFolderIsEmpty": "این پوشه خالی است.",
+  "@thisFolderIsEmpty": {
+    "description": "Empty state message shown when the current folder has no items"
+  },
+  "fileNotFound": "فایل پیدا نشد",
+  "@fileNotFound": {
+    "description": "Error message shown when the requested file metadata cannot be found"
+  },
+  "filePartsTitle": "بخش‌های فایل ({count})",
+  "@filePartsTitle": {
+    "description": "Section title showing the number of encrypted file parts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileDetailsTitle": "جزئیات فایل",
+  "@fileDetailsTitle": {
+    "description": "Bottom app bar title for the file details screen"
+  },
+  "encryptedBackup": "نسخه پشتیبان رمزگذاری‌شده",
+  "@encryptedBackup": {
+    "description": "Subtitle shown below the file name on the file details screen"
+  },
+  "sizeLabel": "اندازه",
+  "@sizeLabel": {
+    "description": "Metadata label showing the file size"
+  },
+  "providerLabel": "ارائه‌دهنده",
+  "@providerLabel": {
+    "description": "Metadata label showing the storage provider"
+  },
+  "uploadedAtLabel": "تاریخ بارگذاری",
+  "@uploadedAtLabel": {
+    "description": "Metadata label showing when the file was uploaded"
+  },
+  "statusLabel": "وضعیت",
+  "@statusLabel": {
+    "description": "Metadata label showing the file upload status"
+  },
+  "uploadedStatus": "بارگذاری شد",
+  "@uploadedStatus": {
+    "description": "Status value shown when the file upload completed successfully"
+  },
+  "errorWithMessage": "خطا: {message}",
+  "@errorWithMessage": {
+    "description": "Error text shown when loading logs fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "noLogsAvailable": "گزارشی موجود نیست",
+  "@noLogsAvailable": {
+    "description": "Empty state text shown when there are no logs to display"
+  },
+  "searchLogsHint": "جستجو در گزارش‌ها...",
+  "@searchLogsHint": {
+    "description": "Hint text for the log search field"
+  },
+  "clearLogs": "پاک کردن گزارش‌ها",
+  "@clearLogs": {
+    "description": "Tooltip for the button that clears all logs"
+  },
+  "searchWithMinThreeCharacters": "با حداقل 3 حرف جستجو کنید",
+  "@searchWithMinThreeCharacters": {
+    "description": "Hint text shown in the search field requiring at least three characters"
+  },
+  "typeBelowToSearch": "برای جستجو، پایین بنویسید",
+  "@typeBelowToSearch": {
+    "description": "Empty state message shown before the user starts typing in the search screen"
+  },
+  "noResults": "نتیجه‌ای پیدا نشد.",
+  "@noResults": {
+    "description": "Empty state message shown when the search returns no items"
+  },
+  "welcomeTitle": "خوش آمدید",
+  "@welcomeTitle": {
+    "description": "Title shown on the sign in screen"
+  },
+  "signInToContinue": "برای ادامه در {appName} وارد شوید",
+  "@signInToContinue": {
+    "description": "Subtitle on the sign in screen prompting the user to continue into the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterYourEmail": "لطفاً ایمیل خود را وارد کنید",
+  "@pleaseEnterYourEmail": {
+    "description": "Validation message shown when the email field is empty"
+  },
+  "pleaseEnterValidEmailAddress": "لطفاً یک آدرس ایمیل معتبر وارد کنید",
+  "@pleaseEnterValidEmailAddress": {
+    "description": "Validation message shown when the email format is invalid"
+  },
+  "emailAddressLabel": "آدرس ایمیل",
+  "@emailAddressLabel": {
+    "description": "Label for the email input field"
+  },
+  "emailAddressHint": "your.email@example.com",
+  "@emailAddressHint": {
+    "description": "Hint text shown in the email input field"
+  },
+  "retrySendingOtp": "ارسال دوباره OTP",
+  "@retrySendingOtp": {
+    "description": "Button label shown when sending OTP failed and the user can retry"
+  },
+  "sendOtp": "ارسال OTP",
+  "@sendOtp": {
+    "description": "Primary button label used to request an OTP"
+  },
+  "checkYourEmail": "ایمیل خود را بررسی کنید",
+  "@checkYourEmail": {
+    "description": "Title shown on the OTP verification step"
+  },
+  "sentSixDigitCodeTo": "یک کد 6 رقمی به\n{email}\nارسال کردیم",
+  "@sentSixDigitCodeTo": {
+    "description": "Message shown after sending the OTP to the user's email",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterOtp": "لطفاً OTP را وارد کنید",
+  "@pleaseEnterOtp": {
+    "description": "Validation message shown when the OTP field is empty"
+  },
+  "otpMustBeSixDigits": "OTP باید 6 رقمی باشد",
+  "@otpMustBeSixDigits": {
+    "description": "Validation message shown when the OTP is shorter than six digits"
+  },
+  "enterOtpLabel": "وارد کردن OTP",
+  "@enterOtpLabel": {
+    "description": "Label for the OTP input field"
+  },
+  "otpHint": "000000",
+  "@otpHint": {
+    "description": "Hint text shown in the OTP input field"
+  },
+  "retryVerification": "تلاش دوباره برای تأیید",
+  "@retryVerification": {
+    "description": "Button label shown when OTP verification failed and the user can retry"
+  },
+  "verifyOtp": "تأیید OTP",
+  "@verifyOtp": {
+    "description": "Primary button label used to verify the OTP"
+  },
+  "useDifferentEmail": "استفاده از ایمیل دیگر",
+  "@useDifferentEmail": {
+    "description": "Button label used to go back and enter a different email address"
+  },
+  "alreadySignedIn": "قبلاً وارد شده‌اید",
+  "@alreadySignedIn": {
+    "description": "Title shown when the user is already signed in"
+  },
+  "sendingOtpFailedPleaseTryAgain": "ارسال OTP ناموفق بود. لطفاً دوباره تلاش کنید!",
+  "@sendingOtpFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when sending the OTP fails"
+  },
+  "otpVerificationFailedPleaseTryAgain": "تأیید OTP ناموفق بود. لطفاً دوباره تلاش کنید.",
+  "@otpVerificationFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when verifying the OTP fails"
+  },
+  "dbViewerTitle": "نمایشگر پایگاه داده",
+  "@dbViewerTitle": {
+    "description": "App bar title for the SQLite database viewer screen"
+  },
+  "selectTableToViewData": "برای دیدن داده‌ها، یک جدول انتخاب کنید",
+  "@selectTableToViewData": {
+    "description": "Empty state message shown before a database table is selected"
+  },
+  "selectTable": "انتخاب جدول",
+  "@selectTable": {
+    "description": "Hint text for the table selection dropdown"
+  },
+  "permissionRequiredTitle": "نیاز به مجوز",
+  "@permissionRequiredTitle": {
+    "description": "Dialog title shown when storage permission is permanently denied"
+  },
+  "storagePermissionSettingsDescription": "برای پشتیبان‌گیری خودکار، مدیریت و محافظت از فایل‌ها در پس‌زمینه، به دسترسی فضای ذخیره‌سازی دستگاه شما نیاز داریم. داده‌های شما به‌صورت محلی رمزگذاری می‌شوند تا حریم خصوصی کامل حفظ شود. برای ادامه، لطفاً دسترسی را فعال کنید.",
+  "@storagePermissionSettingsDescription": {
+    "description": "Dialog description explaining why storage permission is needed and asking the user to open settings"
+  },
+  "openSettings": "باز کردن تنظیمات",
+  "@openSettings": {
+    "description": "Button label used to open the system app settings screen"
+  },
+  "storagePermissionRequiredToContinue": "برای ادامه، مجوز دسترسی به فضای ذخیره‌سازی لازم است",
+  "@storagePermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies storage permission"
+  },
+  "secureLocalAccessTitle": "دسترسی محلی امن",
+  "@secureLocalAccessTitle": {
+    "description": "Main title on the storage permission onboarding screen"
+  },
+  "storagePermissionPageDescription": "برای مرور، رمزگذاری و پشتیبان‌گیری خودکار از فایل‌ها، به دسترسی فضای ذخیره‌سازی دستگاه شما نیاز داریم.",
+  "@storagePermissionPageDescription": {
+    "description": "Description on the storage permission page explaining why access is needed"
+  },
+  "verifying": "در حال بررسی...",
+  "@verifying": {
+    "description": "Button loading label shown while permission status is being checked"
+  },
+  "grantAccess": "اعطای دسترسی",
+  "@grantAccess": {
+    "description": "Primary button label used to request storage permission"
+  },
+  "zeroKnowledgeEncryptedStorage": "فضای ذخیره‌سازی رمزگذاری‌شده Zero-Knowledge",
+  "@zeroKnowledgeEncryptedStorage": {
+    "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
+  },
+  "requiresAppPro": "نیاز به {appName} Pro دارد.",
+  "@requiresAppPro": {
+    "description": "Snackbar message shown when a Pro subscription is required for modifying storage",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "noStorageFound": "فضای ذخیره‌سازی پیدا نشد",
+  "@noStorageFound": {
+    "description": "Empty state message shown when no storage providers are available"
+  },
+  "howToConnect": "روش اتصال",
+  "@howToConnect": {
+    "description": "Button label that opens help about connecting a storage provider"
+  },
+  "modify": "ویرایش",
+  "@modify": {
+    "description": "Button label used to modify a connected storage provider"
+  },
+  "storageUsed": "{used} / {total} استفاده شده",
+  "@storageUsed": {
+    "description": "Storage usage label showing used and total storage",
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "percentageLabel": "%{value}",
+  "@percentageLabel": {
+    "description": "Percentage label showing storage usage percent",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "upToFree": "تا {size} رایگان",
+  "@upToFree": {
+    "description": "Label showing the maximum free storage available for an unconnected provider",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "notConnected": "متصل نشده",
+  "@notConnected": {
+    "description": "Status label shown for a storage provider that has not been connected"
+  },
+  "connect": "اتصال",
+  "@connect": {
+    "description": "Button label used to connect a storage provider"
+  },
+  "modifyStorageCapacityTitle": "ویرایش ظرفیت فضای ذخیره‌سازی",
+  "@modifyStorageCapacityTitle": {
+    "description": "Dialog title for changing the storage capacity of a provider"
+  },
+  "enterNewStorageLimitForProvider": "مقدار جدید فضای ذخیره‌سازی این ارائه‌دهنده را وارد کنید.",
+  "@enterNewStorageLimitForProvider": {
+    "description": "Helper text in the modify storage dialog"
+  },
+  "sizePrefix": "اندازه: ",
+  "@sizePrefix": {
+    "description": "Prefix text shown before the numeric storage size input"
+  },
+  "gbSuffix": " گیگابایت",
+  "@gbSuffix": {
+    "description": "Suffix text shown after the numeric storage size input"
+  },
+  "pleaseEnterSize": "لطفاً یک مقدار وارد کنید",
+  "@pleaseEnterSize": {
+    "description": "Validation message shown when the storage size field is empty"
+  },
+  "enterValidNumberGreaterThanOne": "یک عدد معتبر بزرگ‌تر از 1 وارد کنید",
+  "@enterValidNumberGreaterThanOne": {
+    "description": "Validation message shown when the entered storage size is invalid"
+  },
+  "submit": "ثبت",
+  "@submit": {
+    "description": "Button label used to submit the storage size dialog"
+  },
+  "successfullySubscribedToAppPro": "اشتراک {appName} Pro با موفقیت فعال شد!",
+  "@successfullySubscribedToAppPro": {
+    "description": "Snackbar message shown after a successful subscription purchase",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseCancelledOrFailed": "خرید لغو شد یا انجام نشد.",
+  "@purchaseCancelledOrFailed": {
+    "description": "Snackbar message shown when the purchase flow is cancelled or fails"
+  },
+  "purchasesRestoredSuccessfully": "خریدهای قبلی با موفقیت بازیابی شدند!",
+  "@purchasesRestoredSuccessfully": {
+    "description": "Snackbar message shown when previous purchases are restored successfully"
+  },
+  "noActiveSubscriptionsFound": "اشتراک فعالی پیدا نشد.",
+  "@noActiveSubscriptionsFound": {
+    "description": "Snackbar message shown when restore purchases finds no active subscription"
+  },
+  "manageSubscriptionsInDeviceSettings": "لطفاً اشتراک‌ها را از تنظیمات دستگاه خود مدیریت کنید.",
+  "@manageSubscriptionsInDeviceSettings": {
+    "description": "Snackbar message shown when no management URL is available"
+  },
+  "freePlanTitle": "رایگان",
+  "@freePlanTitle": {
+    "description": "Title of the free subscription plan card"
+  },
+  "freeForeverPrice": "$0.00 / همیشگی",
+  "@freeForeverPrice": {
+    "description": "Price label for the free plan"
+  },
+  "freeBenefitProviderStorage": "استفاده از فضای رایگان ارائه‌دهنده‌ها",
+  "@freeBenefitProviderStorage": {
+    "description": "Benefit listed under the free plan"
+  },
+  "freeBenefitSyncThreeDevices": "همگام‌سازی امن تا 3 دستگاه",
+  "@freeBenefitSyncThreeDevices": {
+    "description": "Benefit listed under the free plan"
+  },
+  "appProYearlyTitle": "{appName} Pro - سالانه",
+  "@appProYearlyTitle": {
+    "description": "Title of the yearly pro subscription plan",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "proBenefitModifyStorageLimit": "ویرایش محدودیت فضای هر ارائه‌دهنده",
+  "@proBenefitModifyStorageLimit": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "proBenefitSyncTenDevices": "همگام‌سازی تا 10 دستگاه",
+  "@proBenefitSyncTenDevices": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "restorePurchases": "بازیابی خریدها",
+  "@restorePurchases": {
+    "description": "Button label used to restore previous purchases"
+  },
+  "subscriptionAssociatedWithEmailNotDevice": "* اشتراک به حساب ایمیل شما متصل است، نه به دستگاه",
+  "@subscriptionAssociatedWithEmailNotDevice": {
+    "description": "Footnote explaining that the subscription is tied to the email account rather than a device"
+  },
+  "subscriptionExpiredTitle": "اشتراک منقضی شده است",
+  "@subscriptionExpiredTitle": {
+    "description": "Title shown in the expired subscription banner"
+  },
+  "subscriptionExpiredDescription": "مزایای {appName} Pro شما فعلاً متوقف شده‌اند. برای بازگرداندن محدودیت‌های فضا و همگام‌سازی دستگاه‌ها، در پایین اشتراک خود را تمدید کنید.",
+  "@subscriptionExpiredDescription": {
+    "description": "Description shown in the expired subscription banner",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "appProIsActive": "{appName} Pro فعال است",
+  "@appProIsActive": {
+    "description": "Title shown when the user has an active Pro subscription",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "activePlanBenefitsSummary": "✓ ویرایش محدودیت فضای هر ارائه‌دهنده\n✓ همگام‌سازی بین دستگاه‌ها تا 10 دستگاه",
+  "@activePlanBenefitsSummary": {
+    "description": "Summary of active Pro subscription benefits"
+  },
+  "manageSubscription": "مدیریت اشتراک",
+  "@manageSubscription": {
+    "description": "Button label used to open subscription management"
+  },
+  "currentPlanBadge": "فعلی",
+  "@currentPlanBadge": {
+    "description": "Badge shown on the current active plan"
+  },
+  "subscribeNow": "همین حالا مشترک شوید",
+  "@subscribeNow": {
+    "description": "Primary call to action for purchasing the Pro plan"
+  },
+  "subscribeOnMobileApp": "از نسخه موبایل مشترک شوید",
+  "@subscribeOnMobileApp": {
+    "description": "Call to action shown when subscription purchase is not supported on the current platform"
+  },
+  "recover": "بازیابی",
+  "@recover": {
+    "description": "Tooltip label for recovering selected items from the trash"
+  },
+  "empty": "خالی کردن",
+  "@empty": {
+    "description": "Tooltip label for emptying the trash"
+  },
+  "noItems": "موردی وجود ندارد.",
+  "@noItems": {
+    "description": "Empty state text shown when the trash has no items"
+  }
+}

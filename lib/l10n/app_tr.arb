@@ -1,0 +1,944 @@
+{
+  "@@locale": "tr",
+  "appTitle": "FiFe",
+  "@appTitle": {
+    "description": "App title",
+    "comment": "Do not translate"
+  },
+  "continueAgreementText": "Devam ederek {terms} ve {privacy} koşullarımızı kabul etmiş olursunuz.",
+  "@continueAgreementText": {
+    "description": "Consent text shown before continuing, with clickable Terms of Service and Privacy Policy links",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "termsOfService": "Hizmet Şartları",
+  "@termsOfService": {
+    "description": "Clickable label for the terms of service link"
+  },
+  "privacyPolicy": "Gizlilik Politikası",
+  "@privacyPolicy": {
+    "description": "Clickable label for the privacy policy link"
+  },
+  "andLabel": " ve ",
+  "@andLabel": {
+    "description": "Connector text between terms and privacy policy"
+  },
+  "theme": "Tema",
+  "@theme": {
+    "description": "The label for the theme selection option in settings"
+  },
+  "themeTooltip": "Aydınlık/karanlık tema",
+  "@themeTooltip": {
+    "description": "Tooltip for the theme toggle button"
+  },
+  "logging": "Günlükleme",
+  "@logging": {
+    "description": "The label for the system logging configuration"
+  },
+  "reportIssue": "Sorun bildir",
+  "@reportIssue": {
+    "description": "Action to navigate to the issue tracker"
+  },
+  "sourceCode": "Kaynak kod",
+  "@sourceCode": {
+    "description": "Link to the project source code repository"
+  },
+  "desktopApp": "Masaüstü uygulaması",
+  "@desktopApp": {
+    "description": "Information for users on desktop platforms"
+  },
+  "mobileApp": "Mobil uygulama",
+  "@mobileApp": {
+    "description": "Information for users on mobile platforms"
+  },
+  "leaveReview": "Yorum bırak",
+  "@leaveReview": {
+    "description": "Call to action to leave a store rating"
+  },
+  "share": "Paylaş",
+  "@share": {
+    "description": "Option to share the application link with others"
+  },
+  "versionLabel": "Sürüm: ",
+  "@versionLabel": {
+    "description": "Static prefix for the current version number display"
+  },
+  "loading": "Yükleniyor...",
+  "@loading": {
+    "description": "Status shown while fetching package information"
+  },
+  "signOut": "Çıkış yap",
+  "@signOut": {
+    "description": "Button text to log out the user"
+  },
+  "settingsPageTitle": "Ayarlar",
+  "@settingsPageTitle": {
+    "description": "Main title for the settings screen bottom bar"
+  },
+  "language": "Dil",
+  "@language": {
+    "description": "Label for selecting the app language"
+  },
+  "tapToSelect": "Seçmek için dokunun",
+  "@tapToSelect": {
+    "description": "Prompt text instructing the user to tap and choose an option"
+  },
+  "appTagline": "Özel Dosya Taşıyıcınız",
+  "@appTagline": {
+    "description": "Tagline displayed below the app name on the onboarding page"
+  },
+  "onboardingPurposeDescription": "Zero-trust mimarisiyle oluşturulmuş açık kaynaklı bir bulut depolama hizmeti. Verileriniz cihazınızdan çıkmadan önce yerel olarak şifrelenir.",
+  "@onboardingPurposeDescription": {
+    "description": "Description explaining the app purpose on the onboarding welcome page"
+  },
+  "failedToFetch": "Alınamadı.",
+  "@failedToFetch": {
+    "description": "Error message shown when storage providers fail to load"
+  },
+  "supportedStorageTitle": "Desteklenen Depolama",
+  "@supportedStorageTitle": {
+    "description": "Title for the onboarding page listing supported storage providers"
+  },
+  "supportedStorageDescription": "Sevdiğiniz sağlayıcıları bağlayın. FiFe'in yerleşik 1 GB ücretsiz güvenli depolamasıyla hemen başlayın.",
+  "@supportedStorageDescription": {
+    "description": "Description for the supported storage onboarding page"
+  },
+  "fifeCloud": "FiFe Cloud",
+  "@fifeCloud": {
+    "description": "Name of the default FiFe storage provider card"
+  },
+  "startBackupsInstantly": "Anında yedeklemeye başlayın",
+  "@startBackupsInstantly": {
+    "description": "Subtitle for the default FiFe cloud storage card"
+  },
+  "freeStorageSizeOneGb": "1.0 GB",
+  "@freeStorageSizeOneGb": {
+    "description": "Displayed free storage size for the built-in FiFe cloud"
+  },
+  "freeLabel": "Ücretsiz",
+  "@freeLabel": {
+    "description": "Label indicating a storage plan is free"
+  },
+  "providerStorageDisclaimer": "* Ücretsiz depolama miktarı sağlayıcının web sitesinde belirtilene göredir. Uyumlu sağlayıcılarda kullandıkça öde modeli geçerlidir.",
+  "@providerStorageDisclaimer": {
+    "description": "Disclaimer about provider free storage and pay-as-you-go support"
+  },
+  "whyUseFifeTitle": "Neden FiFe?",
+  "@whyUseFifeTitle": {
+    "description": "Title for the onboarding benefits page"
+  },
+  "claimFreeCloudStorageTitle": "Ücretsiz Bulut Depolamadan Yararlanın",
+  "@claimFreeCloudStorageTitle": {
+    "description": "Benefit title about using free cloud storage from multiple providers"
+  },
+  "claimFreeCloudStorageDescription": "Birden fazla bulut sağlayıcısını bağlayarak alanınızı en verimli şekilde kullanın. Ücretsiz depolama kotalarından tek bir uygulamada güvenle yararlanın.",
+  "@claimFreeCloudStorageDescription": {
+    "description": "Benefit description about aggregating free storage across providers"
+  },
+  "topNotchSecurityTitle": "Üst Düzey Güvenlik",
+  "@topNotchSecurityTitle": {
+    "description": "Benefit title highlighting strong security"
+  },
+  "topNotchSecurityDescription": "Gelişmiş Sodium kriptografisiyle güçlendirilmiştir. Tüm şifreleme ve çözme işlemleri tamamen cihazınızda gerçekleşir.",
+  "@topNotchSecurityDescription": {
+    "description": "Benefit description explaining local encryption and decryption"
+  },
+  "bringYourOwnKeyTitle": "Bring Your Own Key (BYOK)",
+  "@bringYourOwnKeyTitle": {
+    "description": "Benefit title for bring your own key support"
+  },
+  "bringYourOwnKeyDescription": "Tüm bulut depolama sağlayıcılarında verileriniz üzerinde tam kontrol sahibi olun. Kendi hesaplarınızla şifreli depolamayı kullanın.",
+  "@bringYourOwnKeyDescription": {
+    "description": "Benefit description for using your own accounts and keys"
+  },
+  "payAsYouGoStorageTitle": "Yalnızca kullandığınız depolama için ödeme yapın.",
+  "@payAsYouGoStorageTitle": {
+    "description": "Benefit title for pay-as-you-go storage support"
+  },
+  "payAsYouGoStorageDescription": "Uyumlu sağlayıcılarda yalnızca kullandığınız kadar ödeme yapın. Aracı yok, veri kilidi yok.",
+  "@payAsYouGoStorageDescription": {
+    "description": "Benefit description for pay-as-you-go compatible providers"
+  },
+  "zeroKnowledgePrivacyTitle": "Zero-Knowledge Gizliliği",
+  "@zeroKnowledgePrivacyTitle": {
+    "description": "Title for the onboarding security page"
+  },
+  "zeroKnowledgePrivacyDescription": "Verileriniz cihazınızdan çıkmadan önce kilitlenir. Dosyalarınızı göremeyiz, okuyamayız veya tarayamayız.",
+  "@zeroKnowledgePrivacyDescription": {
+    "description": "Subtitle describing zero-knowledge privacy guarantees"
+  },
+  "localSelectionTitle": "1. Yerel Seçim",
+  "@localSelectionTitle": {
+    "description": "Step title for local file selection in the security flow"
+  },
+  "localSelectionDescription": "Bir klasör seçersiniz. Tüm işlemler güvenli şekilde cihazınızda başlar.",
+  "@localSelectionDescription": {
+    "description": "Step description for local file selection in the security flow"
+  },
+  "metadataEncryptionTitle": "2. Meta Verilerin Şifrelenmesi",
+  "@metadataEncryptionTitle": {
+    "description": "Step title for metadata encryption in the security flow"
+  },
+  "metadataEncryptionDescription": "Dosya bilgileri (adlar, türler ve boyutlar) sunucuya gönderilmeden önce şifrelenir.",
+  "@metadataEncryptionDescription": {
+    "description": "Step description for metadata encryption in the security flow"
+  },
+  "contentEncryptionTitle": "3. İçeriğin Şifrelenmesi",
+  "@contentEncryptionTitle": {
+    "description": "Step title for file content encryption in the security flow"
+  },
+  "contentEncryptionDescription": "Gerçek dosya içeriği, bulut depolamaya yüklenmeden önce parçalara ayrılır ve şifrelenir.",
+  "@contentEncryptionDescription": {
+    "description": "Step description for file content encryption in the security flow"
+  },
+  "blindServerTitle": "4. Görmeyen Sunucu",
+  "@blindServerTitle": {
+    "description": "Step title for the zero-knowledge server step in the security flow"
+  },
+  "blindServerDescription": "Sunucularımız verileriniz hakkında hiçbir bilgiye sahip değildir. Yalnızca şifrelenmiş veri bloklarını görür, böylece tam gizlilik sağlanır.",
+  "@blindServerDescription": {
+    "description": "Step description explaining that servers only handle encrypted data"
+  },
+  "dontTrustVerifyTitle": "Körü körüne güvenmeyin, doğrulayın.",
+  "@dontTrustVerifyTitle": {
+    "description": "Title for the open-source verification callout"
+  },
+  "openSourceVerificationDescription": "%100 açık kaynak. Dosyalarınızın nasıl şifrelendiğini görmek için kodu inceleyebilirsiniz.",
+  "@openSourceVerificationDescription": {
+    "description": "Description for the open-source verification callout"
+  },
+  "getStarted": "Başlayın",
+  "@getStarted": {
+    "description": "Primary button label shown on the final onboarding page"
+  },
+  "next": "İleri",
+  "@next": {
+    "description": "Primary button label used to move to the next onboarding page"
+  },
+  "unauthorized": "Yetkisiz",
+  "@unauthorized": {
+    "description": "Error message shown when the user is not authorized to access the key"
+  },
+  "tryAgain": "Tekrar dene",
+  "@tryAgain": {
+    "description": "Button label used to retry the failed access key check"
+  },
+  "errorTitle": "Hata",
+  "@errorTitle": {
+    "description": "Generic error dialog title"
+  },
+  "failureTitle": "Başarısız",
+  "@failureTitle": {
+    "description": "Dialog title shown when access key verification fails"
+  },
+  "invalidWordList": "Geçersiz kelime listesi",
+  "@invalidWordList": {
+    "description": "Error message shown when the entered recovery phrase is not a valid mnemonic"
+  },
+  "invalidAccessKey": "Geçersiz erişim anahtarı",
+  "@invalidAccessKey": {
+    "description": "Error message shown when the provided recovery phrase cannot decrypt the stored key"
+  },
+  "unexpectedDecryptionError": "Şifre çözme sırasında beklenmeyen bir hata oluştu.",
+  "@unexpectedDecryptionError": {
+    "description": "Error message shown when an unexpected exception occurs during access key decryption"
+  },
+  "fileMustContainExactly24Words": "Dosya tam olarak 24 kelime içermelidir.",
+  "@fileMustContainExactly24Words": {
+    "description": "Error message shown when the selected text file does not contain exactly 24 words"
+  },
+  "errorReadingFile": "Dosya okunurken hata oluştu",
+  "@errorReadingFile": {
+    "description": "Snackbar message shown when reading the selected file fails"
+  },
+  "encryptionTitle": "Şifreleme",
+  "@encryptionTitle": {
+    "description": "App bar title for the access key decode screen"
+  },
+  "accessKeyDecodeDescription": "Bulut eşitlemesini güvenli şekilde etkinleştirmek için 24 kelimelik kurtarma ifadenizi girin veya bir .txt dosyası yükleyin.",
+  "@accessKeyDecodeDescription": {
+    "description": "Instruction text on the access key decode screen"
+  },
+  "recoveryPhraseLabel": "Kurtarma ifadesi",
+  "@recoveryPhraseLabel": {
+    "description": "Label for the recovery phrase input field"
+  },
+  "recoveryPhraseHint": "kelime1 kelime2 kelime3...",
+  "@recoveryPhraseHint": {
+    "description": "Hint text shown inside the recovery phrase input field"
+  },
+  "paste": "Yapıştır",
+  "@paste": {
+    "description": "Button label used to paste clipboard text into the recovery phrase field"
+  },
+  "wordCountLabel": "{count} / 24 kelime",
+  "@wordCountLabel": {
+    "description": "Live counter showing how many recovery words have been entered",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseEnterRecoveryPhrase": "Lütfen kurtarma ifadenizi girin",
+  "@pleaseEnterRecoveryPhrase": {
+    "description": "Validation message shown when the recovery phrase field is empty"
+  },
+  "mustContainExactly24Words": "Tam olarak 24 kelime içermelidir",
+  "@mustContainExactly24Words": {
+    "description": "Validation message shown when the recovery phrase does not contain exactly 24 words"
+  },
+  "verify": "Doğrula",
+  "@verify": {
+    "description": "Primary button label used to verify the recovery phrase"
+  },
+  "orLabel": "VEYA",
+  "@orLabel": {
+    "description": "Separator label between manual input and file upload actions"
+  },
+  "loadFromTxtFile": ".txt dosyasından yükle",
+  "@loadFromTxtFile": {
+    "description": "Button label used to load the recovery phrase from a text file"
+  },
+  "saveAccessKey": "Erişim anahtarını kaydet",
+  "@saveAccessKey": {
+    "description": "Title for the desktop save file dialog when saving the access key"
+  },
+  "fileSavedSuccessfully": "Dosya başarıyla kaydedildi.",
+  "@fileSavedSuccessfully": {
+    "description": "Snackbar message shown after the access key file is saved successfully"
+  },
+  "accessKeyShareMessage": "Erişim anahtarınız burada.",
+  "@accessKeyShareMessage": {
+    "description": "Text shared alongside the access key file in the mobile share sheet"
+  },
+  "pleaseTryAgain": "Lütfen tekrar deneyin.",
+  "@pleaseTryAgain": {
+    "description": "Generic snackbar message shown after a failed file save or share operation"
+  },
+  "copiedToClipboard": "Panoya kopyalandı",
+  "@copiedToClipboard": {
+    "description": "Snackbar message shown after copying the access key to the clipboard"
+  },
+  "accessKeyTitle": "Erişim Anahtarı",
+  "@accessKeyTitle": {
+    "description": "App bar title for the access key screen"
+  },
+  "accessKeyDescription": "Lütfen bu anahtarı güvenli bir yerde saklayın. Şifrelenmiş verilerinize yalnızca bununla erişebilirsiniz.",
+  "@accessKeyDescription": {
+    "description": "Instruction text explaining the importance of safely storing the access key"
+  },
+  "copy": "Kopyala",
+  "@copy": {
+    "description": "Button label used to copy the access key to the clipboard"
+  },
+  "downloadAsTextFile": "Metin dosyası olarak indir",
+  "@downloadAsTextFile": {
+    "description": "Button label used to save the access key as a text file"
+  },
+  "continueLabel": "Devam et",
+  "@continueLabel": {
+    "description": "Button label used to proceed to the next step after viewing the access key"
+  },
+  "importantTitle": "Önemli",
+  "@importantTitle": {
+    "description": "App bar title for the access key notice screen"
+  },
+  "accessKeyNoticePrimary": "Sonraki sayfada 24 kelimeden oluşan bir dizi göreceksiniz. Bu, size özel ve gizli şifreleme anahtarınızdır ve çıkış yapmanız, cihazınızı kaybetmeniz veya arıza yaşanması durumunda verilerinizi kurtarmanın TEK yoludur.",
+  "@accessKeyNoticePrimary": {
+    "description": "Primary warning text explaining the importance of the 24-word recovery key"
+  },
+  "accessKeyNoticeResponsibility": "Bu anahtarı biz saklamıyoruz. Onu {appName} uygulaması dışında güvenli bir yerde saklamak sizin sorumluluğunuzdadır.",
+  "@accessKeyNoticeResponsibility": {
+    "description": "Warning text reminding the user to store the recovery key outside the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "showKeyConfirmation": "Anladım.\nAnahtarı göster.",
+  "@showKeyConfirmation": {
+    "description": "Confirmation button label acknowledging the warning before showing the access key"
+  },
+  "storageAddedSuccessfully": "Depolama başarıyla eklendi",
+  "@storageAddedSuccessfully": {
+    "description": "Snackbar message shown when a storage provider is added successfully"
+  },
+  "networkErrorDuringValidation": "Doğrulama sırasında ağ hatası oluştu.",
+  "@networkErrorDuringValidation": {
+    "description": "Error message shown when provider validation fails because of a network error"
+  },
+  "verifyAndConnect": "Doğrula ve bağlan",
+  "@verifyAndConnect": {
+    "description": "Primary button label used to validate credentials and connect a storage provider"
+  },
+  "requiredField": "Zorunlu",
+  "@requiredField": {
+    "description": "Validation message shown when a required input field is empty"
+  },
+  "providerKeysVerifiedLocally": "Anahtarlarınız yerel olarak doğrulanır ve gönderilmeden önce şifrelenir.",
+  "@providerKeysVerifiedLocally": {
+    "description": "Informational text explaining local verification and encryption of credentials"
+  },
+  "enterYourCredentials": "Bilgilerinizi girin",
+  "@enterYourCredentials": {
+    "description": "Section title prompting the user to enter provider credentials"
+  },
+  "connectProvider": "{provider} bağla",
+  "@connectProvider": {
+    "description": "Bottom app bar title for connecting a specific storage provider",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLimitReached": "Cihaz sınırına ulaşıldı",
+  "@deviceLimitReached": {
+    "description": "Snackbar message shown when the user has reached the maximum allowed number of registered devices"
+  },
+  "pleaseTryAgainWithExclamation": "Lütfen tekrar deneyin!",
+  "@pleaseTryAgainWithExclamation": {
+    "description": "Snackbar message shown when signing out a device fails"
+  },
+  "notThisDevice": "Bu cihaz değil!",
+  "@notThisDevice": {
+    "description": "Snackbar message shown when the user tries to sign out the current device from the device list"
+  },
+  "confirmSignoutDeviceTitle": "Cihazdan çıkışı onayla",
+  "@confirmSignoutDeviceTitle": {
+    "description": "Dialog title shown before signing out a device"
+  },
+  "areYouSure": "Emin misiniz?",
+  "@areYouSure": {
+    "description": "Confirmation dialog message asking whether the user wants to proceed"
+  },
+  "cancel": "İptal",
+  "@cancel": {
+    "description": "Button label used to cancel a dialog action"
+  },
+  "ok": "Tamam",
+  "@ok": {
+    "description": "Button label used to confirm a dialog action"
+  },
+  "noDeviceFound": "Cihaz bulunamadı",
+  "@noDeviceFound": {
+    "description": "Empty state message shown when no devices are available"
+  },
+  "backTooltip": "Geri",
+  "@backTooltip": {
+    "description": "Tooltip for the back navigation button"
+  },
+  "devicesTitle": "Cihazlar",
+  "@devicesTitle": {
+    "description": "Title for the devices screen"
+  },
+  "longPressToDownload": "İndirmek için uzun basın",
+  "@longPressToDownload": {
+    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+  },
+  "fewItemsExistLocally": "Bazı öğeler hâlâ yerel olarak mevcut.",
+  "@fewItemsExistLocally": {
+    "description": "Snackbar message shown when some selected items still exist locally during archive action"
+  },
+  "selectedItemsCount": "{count} seçildi",
+  "@selectedItemsCount": {
+    "description": "Title shown in the multi-select app bar with the number of selected items",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "Sil",
+  "@delete": {
+    "description": "Tooltip label for deleting selected items"
+  },
+  "info": "Bilgi",
+  "@info": {
+    "description": "Tooltip label for viewing file information"
+  },
+  "download": "İndir",
+  "@download": {
+    "description": "Tooltip label for downloading selected items"
+  },
+  "archive": "Arşivle",
+  "@archive": {
+    "description": "Tooltip label for archiving selected items"
+  },
+  "appPro": "{appName} Pro",
+  "@appPro": {
+    "description": "Popup menu item label for the premium subscription page using the non-translated app name",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "logs": "Günlükler",
+  "@logs": {
+    "description": "Popup menu item label for the logs page"
+  },
+  "settings": "Ayarlar",
+  "@settings": {
+    "description": "Popup menu item label for the settings page"
+  },
+  "trash": "Çöp Kutusu",
+  "@trash": {
+    "description": "Popup menu item label for the trash page"
+  },
+  "storage": "Depolama",
+  "@storage": {
+    "description": "Popup menu item label for the storage providers page"
+  },
+  "search": "Ara",
+  "@search": {
+    "description": "Popup menu item label for the search page"
+  },
+  "database": "Veritabanı",
+  "@database": {
+    "description": "Popup menu item label for the database debug page"
+  },
+  "addFolderTitle": "Klasör ekle",
+  "@addFolderTitle": {
+    "description": "Dialog title shown when confirming addition of a sync folder"
+  },
+  "confirm": "Onayla",
+  "@confirm": {
+    "description": "Button label used to confirm an action in a dialog"
+  },
+  "tapPlusToAddSyncFolder": "Eşitleme klasörü eklemek için + simgesine dokunun.",
+  "@tapPlusToAddSyncFolder": {
+    "description": "Empty state message shown at the device root when no sync folders have been added"
+  },
+  "thisFolderIsEmpty": "Bu klasör boş.",
+  "@thisFolderIsEmpty": {
+    "description": "Empty state message shown when the current folder has no items"
+  },
+  "fileNotFound": "Dosya bulunamadı",
+  "@fileNotFound": {
+    "description": "Error message shown when the requested file metadata cannot be found"
+  },
+  "filePartsTitle": "Dosya Parçaları ({count})",
+  "@filePartsTitle": {
+    "description": "Section title showing the number of encrypted file parts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileDetailsTitle": "Dosya Ayrıntıları",
+  "@fileDetailsTitle": {
+    "description": "Bottom app bar title for the file details screen"
+  },
+  "encryptedBackup": "Şifreli Yedek",
+  "@encryptedBackup": {
+    "description": "Subtitle shown below the file name on the file details screen"
+  },
+  "sizeLabel": "Boyut",
+  "@sizeLabel": {
+    "description": "Metadata label showing the file size"
+  },
+  "providerLabel": "Sağlayıcı",
+  "@providerLabel": {
+    "description": "Metadata label showing the storage provider"
+  },
+  "uploadedAtLabel": "Yüklenme Tarihi",
+  "@uploadedAtLabel": {
+    "description": "Metadata label showing when the file was uploaded"
+  },
+  "statusLabel": "Durum",
+  "@statusLabel": {
+    "description": "Metadata label showing the file upload status"
+  },
+  "uploadedStatus": "Yüklendi",
+  "@uploadedStatus": {
+    "description": "Status value shown when the file upload completed successfully"
+  },
+  "errorWithMessage": "Hata: {message}",
+  "@errorWithMessage": {
+    "description": "Error text shown when loading logs fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "noLogsAvailable": "Günlük yok",
+  "@noLogsAvailable": {
+    "description": "Empty state text shown when there are no logs to display"
+  },
+  "searchLogsHint": "Günlüklerde ara...",
+  "@searchLogsHint": {
+    "description": "Hint text for the log search field"
+  },
+  "clearLogs": "Günlükleri temizle",
+  "@clearLogs": {
+    "description": "Tooltip for the button that clears all logs"
+  },
+  "searchWithMinThreeCharacters": "En az 3 karakterle arama yapın",
+  "@searchWithMinThreeCharacters": {
+    "description": "Hint text shown in the search field requiring at least three characters"
+  },
+  "typeBelowToSearch": "Aramak için aşağıya yazın",
+  "@typeBelowToSearch": {
+    "description": "Empty state message shown before the user starts typing in the search screen"
+  },
+  "noResults": "Sonuç yok.",
+  "@noResults": {
+    "description": "Empty state message shown when the search returns no items"
+  },
+  "welcomeTitle": "Hoş geldiniz",
+  "@welcomeTitle": {
+    "description": "Title shown on the sign in screen"
+  },
+  "signInToContinue": "{appName} uygulamasına devam etmek için giriş yapın",
+  "@signInToContinue": {
+    "description": "Subtitle on the sign in screen prompting the user to continue into the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterYourEmail": "Lütfen e-posta adresinizi girin",
+  "@pleaseEnterYourEmail": {
+    "description": "Validation message shown when the email field is empty"
+  },
+  "pleaseEnterValidEmailAddress": "Lütfen geçerli bir e-posta adresi girin",
+  "@pleaseEnterValidEmailAddress": {
+    "description": "Validation message shown when the email format is invalid"
+  },
+  "emailAddressLabel": "E-posta Adresi",
+  "@emailAddressLabel": {
+    "description": "Label for the email input field"
+  },
+  "emailAddressHint": "eposta@ornek.com",
+  "@emailAddressHint": {
+    "description": "Hint text shown in the email input field"
+  },
+  "retrySendingOtp": "OTP'yi Tekrar Gönder",
+  "@retrySendingOtp": {
+    "description": "Button label shown when sending OTP failed and the user can retry"
+  },
+  "sendOtp": "OTP Gönder",
+  "@sendOtp": {
+    "description": "Primary button label used to request an OTP"
+  },
+  "checkYourEmail": "E-postanızı kontrol edin",
+  "@checkYourEmail": {
+    "description": "Title shown on the OTP verification step"
+  },
+  "sentSixDigitCodeTo": "6 haneli kodu şu adrese gönderdik:\n{email}",
+  "@sentSixDigitCodeTo": {
+    "description": "Message shown after sending the OTP to the user's email",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterOtp": "Lütfen OTP'yi girin",
+  "@pleaseEnterOtp": {
+    "description": "Validation message shown when the OTP field is empty"
+  },
+  "otpMustBeSixDigits": "OTP 6 haneli olmalıdır",
+  "@otpMustBeSixDigits": {
+    "description": "Validation message shown when the OTP is shorter than six digits"
+  },
+  "enterOtpLabel": "OTP girin",
+  "@enterOtpLabel": {
+    "description": "Label for the OTP input field"
+  },
+  "otpHint": "000000",
+  "@otpHint": {
+    "description": "Hint text shown in the OTP input field"
+  },
+  "retryVerification": "Doğrulamayı Tekrar Dene",
+  "@retryVerification": {
+    "description": "Button label shown when OTP verification failed and the user can retry"
+  },
+  "verifyOtp": "OTP'yi Doğrula",
+  "@verifyOtp": {
+    "description": "Primary button label used to verify the OTP"
+  },
+  "useDifferentEmail": "Farklı bir e-posta kullan",
+  "@useDifferentEmail": {
+    "description": "Button label used to go back and enter a different email address"
+  },
+  "alreadySignedIn": "Zaten Giriş Yapıldı",
+  "@alreadySignedIn": {
+    "description": "Title shown when the user is already signed in"
+  },
+  "sendingOtpFailedPleaseTryAgain": "OTP gönderilemedi. Lütfen tekrar deneyin!",
+  "@sendingOtpFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when sending the OTP fails"
+  },
+  "otpVerificationFailedPleaseTryAgain": "OTP doğrulaması başarısız oldu. Lütfen tekrar deneyin.",
+  "@otpVerificationFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when verifying the OTP fails"
+  },
+  "dbViewerTitle": "Veritabanı Görüntüleyici",
+  "@dbViewerTitle": {
+    "description": "App bar title for the SQLite database viewer screen"
+  },
+  "selectTableToViewData": "Verileri görüntülemek için bir tablo seçin",
+  "@selectTableToViewData": {
+    "description": "Empty state message shown before a database table is selected"
+  },
+  "selectTable": "Tablo seçin",
+  "@selectTable": {
+    "description": "Hint text for the table selection dropdown"
+  },
+  "permissionRequiredTitle": "İzin Gerekli",
+  "@permissionRequiredTitle": {
+    "description": "Dialog title shown when storage permission is permanently denied"
+  },
+  "storagePermissionSettingsDescription": "Dosyalarınızı arka planda otomatik olarak yedeklemek, yönetmek ve korumak için cihaz depolamasına erişmemiz gerekiyor. Verileriniz yerel olarak şifrelenir ve tam gizlilik sağlanır. Devam etmek için lütfen erişim izni verin.",
+  "@storagePermissionSettingsDescription": {
+    "description": "Dialog description explaining why storage permission is needed and asking the user to open settings"
+  },
+  "openSettings": "Ayarları Aç",
+  "@openSettings": {
+    "description": "Button label used to open the system app settings screen"
+  },
+  "storagePermissionRequiredToContinue": "Devam etmek için depolama izni gereklidir",
+  "@storagePermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies storage permission"
+  },
+  "secureLocalAccessTitle": "Güvenli Yerel Erişim",
+  "@secureLocalAccessTitle": {
+    "description": "Main title on the storage permission onboarding screen"
+  },
+  "storagePermissionPageDescription": "Dosyalarınızı görüntülemek, şifrelemek ve otomatik olarak yedeklemek için cihaz depolamasına erişmemiz gerekiyor.",
+  "@storagePermissionPageDescription": {
+    "description": "Description on the storage permission page explaining why access is needed"
+  },
+  "verifying": "Doğrulanıyor...",
+  "@verifying": {
+    "description": "Button loading label shown while permission status is being checked"
+  },
+  "grantAccess": "Erişim Ver",
+  "@grantAccess": {
+    "description": "Primary button label used to request storage permission"
+  },
+  "zeroKnowledgeEncryptedStorage": "Zero-knowledge şifreli depolama",
+  "@zeroKnowledgeEncryptedStorage": {
+    "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
+  },
+  "requiresAppPro": "{appName} Pro gerektirir.",
+  "@requiresAppPro": {
+    "description": "Snackbar message shown when a Pro subscription is required for modifying storage",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "noStorageFound": "Depolama bulunamadı",
+  "@noStorageFound": {
+    "description": "Empty state message shown when no storage providers are available"
+  },
+  "howToConnect": "Nasıl bağlanır",
+  "@howToConnect": {
+    "description": "Button label that opens help about connecting a storage provider"
+  },
+  "modify": "Düzenle",
+  "@modify": {
+    "description": "Button label used to modify a connected storage provider"
+  },
+  "storageUsed": "{used} / {total} kullanıldı",
+  "@storageUsed": {
+    "description": "Storage usage label showing used and total storage",
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "percentageLabel": "%{value}",
+  "@percentageLabel": {
+    "description": "Percentage label showing storage usage percent",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "upToFree": "{size} değerine kadar ücretsiz",
+  "@upToFree": {
+    "description": "Label showing the maximum free storage available for an unconnected provider",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "notConnected": "Bağlı değil",
+  "@notConnected": {
+    "description": "Status label shown for a storage provider that has not been connected"
+  },
+  "connect": "Bağlan",
+  "@connect": {
+    "description": "Button label used to connect a storage provider"
+  },
+  "modifyStorageCapacityTitle": "Depolama Kapasitesini Düzenle",
+  "@modifyStorageCapacityTitle": {
+    "description": "Dialog title for changing the storage capacity of a provider"
+  },
+  "enterNewStorageLimitForProvider": "Bu sağlayıcı için yeni depolama sınırını girin.",
+  "@enterNewStorageLimitForProvider": {
+    "description": "Helper text in the modify storage dialog"
+  },
+  "sizePrefix": "Boyut: ",
+  "@sizePrefix": {
+    "description": "Prefix text shown before the numeric storage size input"
+  },
+  "gbSuffix": " GB",
+  "@gbSuffix": {
+    "description": "Suffix text shown after the numeric storage size input"
+  },
+  "pleaseEnterSize": "Lütfen bir boyut girin",
+  "@pleaseEnterSize": {
+    "description": "Validation message shown when the storage size field is empty"
+  },
+  "enterValidNumberGreaterThanOne": "1'den büyük geçerli bir sayı girin",
+  "@enterValidNumberGreaterThanOne": {
+    "description": "Validation message shown when the entered storage size is invalid"
+  },
+  "submit": "Gönder",
+  "@submit": {
+    "description": "Button label used to submit the storage size dialog"
+  },
+  "successfullySubscribedToAppPro": "{appName} Pro aboneliği başarıyla başlatıldı!",
+  "@successfullySubscribedToAppPro": {
+    "description": "Snackbar message shown after a successful subscription purchase",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseCancelledOrFailed": "Satın alma iptal edildi veya başarısız oldu.",
+  "@purchaseCancelledOrFailed": {
+    "description": "Snackbar message shown when the purchase flow is cancelled or fails"
+  },
+  "purchasesRestoredSuccessfully": "Satın alımlar başarıyla geri yüklendi!",
+  "@purchasesRestoredSuccessfully": {
+    "description": "Snackbar message shown when previous purchases are restored successfully"
+  },
+  "noActiveSubscriptionsFound": "Etkin abonelik bulunamadı.",
+  "@noActiveSubscriptionsFound": {
+    "description": "Snackbar message shown when restore purchases finds no active subscription"
+  },
+  "manageSubscriptionsInDeviceSettings": "Lütfen aboneliklerinizi cihaz ayarlarından yönetin.",
+  "@manageSubscriptionsInDeviceSettings": {
+    "description": "Snackbar message shown when no management URL is available"
+  },
+  "freePlanTitle": "Ücretsiz",
+  "@freePlanTitle": {
+    "description": "Title of the free subscription plan card"
+  },
+  "freeForeverPrice": "$0.00 / sonsuza kadar",
+  "@freeForeverPrice": {
+    "description": "Price label for the free plan"
+  },
+  "freeBenefitProviderStorage": "Sağlayıcıların ücretsiz depolamasından yararlanın",
+  "@freeBenefitProviderStorage": {
+    "description": "Benefit listed under the free plan"
+  },
+  "freeBenefitSyncThreeDevices": "En fazla 3 cihazı güvenli şekilde eşitleyin",
+  "@freeBenefitSyncThreeDevices": {
+    "description": "Benefit listed under the free plan"
+  },
+  "appProYearlyTitle": "{appName} Pro - Yıllık",
+  "@appProYearlyTitle": {
+    "description": "Title of the yearly pro subscription plan",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "proBenefitModifyStorageLimit": "Her sağlayıcı için depolama sınırını değiştirin",
+  "@proBenefitModifyStorageLimit": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "proBenefitSyncTenDevices": "En fazla 10 cihazı eşitleyin",
+  "@proBenefitSyncTenDevices": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "restorePurchases": "Satın Alımları Geri Yükle",
+  "@restorePurchases": {
+    "description": "Button label used to restore previous purchases"
+  },
+  "subscriptionAssociatedWithEmailNotDevice": "* Abonelik cihazla değil, e-posta hesabıyla ilişkilidir",
+  "@subscriptionAssociatedWithEmailNotDevice": {
+    "description": "Footnote explaining that the subscription is tied to the email account rather than a device"
+  },
+  "subscriptionExpiredTitle": "Abonelik Süresi Doldu",
+  "@subscriptionExpiredTitle": {
+    "description": "Title shown in the expired subscription banner"
+  },
+  "subscriptionExpiredDescription": "{appName} Pro avantajlarınız duraklatıldı. Depolama sınırlarınızı ve cihaz eşitlemelerinizi geri yüklemek için aşağıdan yenileyin.",
+  "@subscriptionExpiredDescription": {
+    "description": "Description shown in the expired subscription banner",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "appProIsActive": "{appName} Pro Etkin",
+  "@appProIsActive": {
+    "description": "Title shown when the user has an active Pro subscription",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "activePlanBenefitsSummary": "✓ Her sağlayıcı için depolama sınırlarını değiştirin\n✓ En fazla 10 cihaz arasında çapraz eşitleme",
+  "@activePlanBenefitsSummary": {
+    "description": "Summary of active Pro subscription benefits"
+  },
+  "manageSubscription": "Aboneliği Yönet",
+  "@manageSubscription": {
+    "description": "Button label used to open subscription management"
+  },
+  "currentPlanBadge": "MEVCUT",
+  "@currentPlanBadge": {
+    "description": "Badge shown on the current active plan"
+  },
+  "subscribeNow": "Hemen abone olun",
+  "@subscribeNow": {
+    "description": "Primary call to action for purchasing the Pro plan"
+  },
+  "subscribeOnMobileApp": "Mobil uygulamada abone olun",
+  "@subscribeOnMobileApp": {
+    "description": "Call to action shown when subscription purchase is not supported on the current platform"
+  },
+  "recover": "Geri yükle",
+  "@recover": {
+    "description": "Tooltip label for recovering selected items from the trash"
+  },
+  "empty": "Boşalt",
+  "@empty": {
+    "description": "Tooltip label for emptying the trash"
+  },
+  "noItems": "Öğe yok.",
+  "@noItems": {
+    "description": "Empty state text shown when the trash has no items"
+  }
+}
