@@ -3,6 +3,7 @@ import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/model_item.dart';
 import '../../models/model_profile.dart';
 import '../../models/model_setting.dart';
@@ -48,10 +49,10 @@ class _PageSigninState extends State<PageSignin> {
         "no") {
       logger.info("Not signed in");
       int sentOtpAt = int.parse(
-          ModelSetting.get(AppString.otpSentAt.string, defaultValue: "0"));
+        ModelSetting.get(AppString.otpSentAt.string, defaultValue: "0"),
+      );
       int nowUtc = DateTime.now().toUtc().millisecondsSinceEpoch;
 
-      // 10 minutes (600000 ms) expiry check
       if (sentOtpAt > 0 && nowUtc - sentOtpAt < 600000) {
         otpSent = true;
       }
@@ -105,8 +106,11 @@ class _PageSigninState extends State<PageSignin> {
       setState(() {
         errorSendingOtp = true;
       });
-      displaySnackBar(context,
-          message: 'Sending OTP failed. Please try again!', seconds: 2);
+      displaySnackBar(
+        context,
+        message: AppLocalizations.of(context)!.sendingOtpFailedPleaseTryAgain,
+        seconds: 2,
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -183,8 +187,12 @@ class _PageSigninState extends State<PageSignin> {
     setState(() {
       errorVerifyingOtp = true;
     });
-    displaySnackBar(context,
-        message: 'OTP verification failed. Please try again.', seconds: 3);
+    displaySnackBar(
+      context,
+      message:
+          AppLocalizations.of(context)!.otpVerificationFailedPleaseTryAgain,
+      seconds: 3,
+    );
   }
 
   Future<void> changeEmail() async {
@@ -250,7 +258,10 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   InputDecoration _buildInputDecoration(
-      String label, String hint, IconData icon) {
+    String label,
+    String hint,
+    IconData icon,
+  ) {
     final colors = Theme.of(context).colorScheme;
     return InputDecoration(
       labelText: label,
@@ -296,11 +307,14 @@ class _PageSigninState extends State<PageSignin> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.lock_person_outlined,
-            size: 48, color: Theme.of(context).colorScheme.primary),
+        Icon(
+          Icons.lock_person_outlined,
+          size: 48,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         const SizedBox(height: 24),
         Text(
-          'Welcome',
+          AppLocalizations.of(context)!.welcomeTitle,
           textAlign: TextAlign.center,
           style: Theme.of(context)
               .textTheme
@@ -309,7 +323,8 @@ class _PageSigninState extends State<PageSignin> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Sign in to continue to FiFe',
+          AppLocalizations.of(context)!
+              .signInToContinue(AppString.appName.string),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -323,17 +338,21 @@ class _PageSigninState extends State<PageSignin> {
             controller: emailController,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter your email';
+                return AppLocalizations.of(context)!.pleaseEnterYourEmail;
               }
               final emailRegex =
                   RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
               if (!emailRegex.hasMatch(value)) {
-                return 'Please enter a valid email address';
+                return AppLocalizations.of(context)!
+                    .pleaseEnterValidEmailAddress;
               }
               return null;
             },
-            decoration: _buildInputDecoration('Email Address',
-                'your.email@example.com', Icons.email_outlined),
+            decoration: _buildInputDecoration(
+              AppLocalizations.of(context)!.emailAddressLabel,
+              AppLocalizations.of(context)!.emailAddressHint,
+              Icons.email_outlined,
+            ),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -348,7 +367,9 @@ class _PageSigninState extends State<PageSignin> {
         ),
         const SizedBox(height: 24),
         _buildActionButton(
-          label: errorSendingOtp ? 'Retry Sending OTP' : 'Send OTP',
+          label: errorSendingOtp
+              ? AppLocalizations.of(context)!.retrySendingOtp
+              : AppLocalizations.of(context)!.sendOtp,
           onPressed: () {
             if (_emailFormKey.currentState!.validate()) {
               sendOtp(emailController.text);
@@ -366,11 +387,14 @@ class _PageSigninState extends State<PageSignin> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.mark_email_read_outlined,
-            size: 48, color: Theme.of(context).colorScheme.primary),
+        Icon(
+          Icons.mark_email_read_outlined,
+          size: 48,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         const SizedBox(height: 24),
         Text(
-          'Check your email',
+          AppLocalizations.of(context)!.checkYourEmail,
           textAlign: TextAlign.center,
           style: Theme.of(context)
               .textTheme
@@ -379,7 +403,7 @@ class _PageSigninState extends State<PageSignin> {
         ),
         const SizedBox(height: 8),
         Text(
-          "We've sent a 6-digit code to\n$email",
+          AppLocalizations.of(context)!.sentSixDigitCodeTo(email),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -393,20 +417,29 @@ class _PageSigninState extends State<PageSignin> {
             controller: otpController,
             maxLength: 6,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter the OTP';
-              if (value.length < 6) return 'OTP must be 6 digits';
+              if (value == null || value.isEmpty) {
+                return AppLocalizations.of(context)!.pleaseEnterOtp;
+              }
+              if (value.length < 6) {
+                return AppLocalizations.of(context)!.otpMustBeSixDigits;
+              }
               return null;
             },
             decoration: _buildInputDecoration(
-                    'Enter OTP', '000000', Icons.password_outlined)
-                .copyWith(
-              counterText: "", // Hides the maxLength counter below the field
+              AppLocalizations.of(context)!.enterOtpLabel,
+              AppLocalizations.of(context)!.otpHint,
+              Icons.password_outlined,
+            ).copyWith(
+              counterText: "",
             ),
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.done,
             textAlign: TextAlign.center,
             style: const TextStyle(
-                fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.bold),
+              fontSize: 24,
+              letterSpacing: 8,
+              fontWeight: FontWeight.bold,
+            ),
             onFieldSubmitted: (value) {
               if (_otpFormKey.currentState!.validate()) verifyOtp(value);
             },
@@ -414,7 +447,9 @@ class _PageSigninState extends State<PageSignin> {
         ),
         const SizedBox(height: 24),
         _buildActionButton(
-          label: errorVerifyingOtp ? 'Retry Verification' : 'Verify OTP',
+          label: errorVerifyingOtp
+              ? AppLocalizations.of(context)!.retryVerification
+              : AppLocalizations.of(context)!.verifyOtp,
           onPressed: () {
             if (_otpFormKey.currentState!.validate()) {
               verifyOtp(otpController.text);
@@ -425,7 +460,9 @@ class _PageSigninState extends State<PageSignin> {
         TextButton.icon(
           onPressed: processing ? null : changeEmail,
           icon: const Icon(Icons.arrow_back),
-          label: const Text('Use a different email'),
+          label: Text(
+            AppLocalizations.of(context)!.useDifferentEmail,
+          ),
           style: TextButton.styleFrom(
             foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -439,11 +476,14 @@ class _PageSigninState extends State<PageSignin> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.check_circle_outline,
-            size: 48, color: Theme.of(context).colorScheme.primary),
+        Icon(
+          Icons.check_circle_outline,
+          size: 48,
+          color: Theme.of(context).colorScheme.primary,
+        ),
         const SizedBox(height: 24),
         Text(
-          'Already Signed In',
+          AppLocalizations.of(context)!.alreadySignedIn,
           textAlign: TextAlign.center,
           style: Theme.of(context)
               .textTheme
@@ -454,20 +494,23 @@ class _PageSigninState extends State<PageSignin> {
         OutlinedButton.icon(
           onPressed: signout,
           icon: const Icon(Icons.logout),
-          label: const Text('Sign Out'),
+          label: Text(AppLocalizations.of(context)!.signOut),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
             foregroundColor: Theme.of(context).colorScheme.error,
             side: BorderSide(
-                color: Theme.of(context).colorScheme.error.withAlpha(100)),
+              color: Theme.of(context).colorScheme.error.withAlpha(100),
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildActionButton(
-      {required String label, required VoidCallback onPressed}) {
+  Widget _buildActionButton({
+    required String label,
+    required VoidCallback onPressed,
+  }) {
     return FilledButton(
       onPressed: processing ? null : onPressed,
       style: FilledButton.styleFrom(
@@ -485,7 +528,10 @@ class _PageSigninState extends State<PageSignin> {
             )
           : Text(
               label,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
     );
   }

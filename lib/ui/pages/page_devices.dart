@@ -2,6 +2,7 @@ import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/common.dart';
 import '../../ui/common_widgets.dart';
 import '../../services/service_logger.dart';
@@ -86,13 +87,22 @@ class _PageDevicesState extends State<PageDevices> {
         }
       } else {
         final response = await api.delete(
-            endpoint: '/devices', queryParameters: {'device_uuid': deviceUuid});
+          endpoint: '/devices',
+          queryParameters: {'device_uuid': deviceUuid},
+        );
         final status = response["success"];
         if (status <= 0) {
-          logger.error("Error signing out",
-              error: response["message"].toString());
+          logger.error(
+            "Error signing out",
+            error: response["message"].toString(),
+          );
           if (mounted) {
-            displaySnackBar(context, message: 'Please try again!', seconds: 2);
+            displaySnackBar(
+              context,
+              message:
+                  AppLocalizations.of(context)!.pleaseTryAgainWithExclamation,
+              seconds: 2,
+            );
           }
         } else if (status == 1) {
           fetchDevices();
@@ -100,7 +110,11 @@ class _PageDevicesState extends State<PageDevices> {
       }
     } catch (e) {
       if (mounted) {
-        displaySnackBar(context, message: 'Please try again!', seconds: 2);
+        displaySnackBar(
+          context,
+          message: AppLocalizations.of(context)!.pleaseTryAgainWithExclamation,
+          seconds: 2,
+        );
       }
     } finally {
       if (mounted) {
@@ -117,26 +131,33 @@ class _PageDevicesState extends State<PageDevices> {
         deviceUuid == thisDeviceUuid &&
         mounted &&
         !simulateTesting()) {
-      displaySnackBar(context, message: "Not this device!", seconds: 2);
+      displaySnackBar(
+        context,
+        message: AppLocalizations.of(context)!.notThisDevice,
+        seconds: 2,
+      );
       return;
     }
     if (!mounted) return;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Confirm signout device"),
-        content: Text("Are you sure?"),
+        title: Text(AppLocalizations.of(context)!.confirmSignoutDeviceTitle),
+        content: Text(AppLocalizations.of(context)!.areYouSure),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), // Cancel
-            child: Text("Cancel"),
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // Close dialog
+              Navigator.pop(context);
               signoutDevice(deviceUuid);
             },
-            child: Text("OK", style: TextStyle(color: Colors.red)),
+            child: Text(
+              AppLocalizations.of(context)!.ok,
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -158,70 +179,81 @@ class _PageDevicesState extends State<PageDevices> {
       canPop: true,
       onManualBack: _navigateBack,
       child: Scaffold(
-          body: Column(
-        children: [
-          Expanded(
-            child: processing
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMessage != null
-                    ? tryFailedRequestAgain(
-                        message: _errorMessage!,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                        onPressed: fetchDevices)
-                    : devices.isEmpty
-                        ? Center(child: Text("No device found"))
-                        : ListView.builder(
-                            reverse: true,
-                            itemCount: devices.length,
-                            itemBuilder: (context, index) {
-                              final device = devices[index];
-                              final bool isEnabled = device["active"] == 1;
-                              String lastAt =
-                                  getFormattedDateTime(device["lastAt"]);
-                              return ListTile(
-                                leading: Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isEnabled ? Colors.green : Colors.red,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: Theme.of(context)
-                                          .scaffoldBackgroundColor,
-                                      width: 2,
+        body: Column(
+          children: [
+            Expanded(
+              child: processing
+                  ? const Center(child: CircularProgressIndicator())
+                  : _errorMessage != null
+                      ? tryFailedRequestAgain(
+                          context: context,
+                          message: _errorMessage!,
+                          onPressed: fetchDevices,
+                        )
+                      : devices.isEmpty
+                          ? Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.noDeviceFound,
+                              ),
+                            )
+                          : ListView.builder(
+                              reverse: true,
+                              itemCount: devices.length,
+                              itemBuilder: (context, index) {
+                                final device = devices[index];
+                                final bool isEnabled = device["active"] == 1;
+                                String lastAt =
+                                    getFormattedDateTime(device["lastAt"]);
+                                return ListTile(
+                                  leading: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isEnabled ? Colors.green : Colors.red,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Theme.of(context)
+                                            .scaffoldBackgroundColor,
+                                        width: 2,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                title:
-                                    Text(device["title"], style: TextStyle()),
-                                subtitle: Text(
-                                  lastAt,
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                                trailing: isEnabled
-                                    ? // Show disable button only if enabled
-                                    IconButton(
-                                        icon: Icon(LucideIcons.logOut,
-                                            color: Colors.red),
-                                        onPressed: () =>
-                                            showLogoutDialog(device["id"]),
-                                      )
-                                    : null,
-                              );
-                            },
-                          ),
-          ),
-          buildBottomAppBar(
+                                  title: Text(
+                                    device["title"],
+                                    style: const TextStyle(),
+                                  ),
+                                  subtitle: Text(
+                                    lastAt,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  trailing: isEnabled
+                                      ? IconButton(
+                                          icon: const Icon(
+                                            LucideIcons.logOut,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () =>
+                                              showLogoutDialog(device["id"]),
+                                        )
+                                      : null,
+                                );
+                              },
+                            ),
+            ),
+            buildBottomAppBar(
               color: surfaceColor,
               leading: IconButton(
-                  tooltip: 'Back',
-                  icon: const Icon(LucideIcons.arrowLeft),
-                  onPressed: _navigateBack),
-              title: Text("Devices"),
-              actions: [])
-        ],
-      )),
+                tooltip: AppLocalizations.of(context)!.backTooltip,
+                icon: const Icon(LucideIcons.arrowLeft),
+                onPressed: _navigateBack,
+              ),
+              title: Text(AppLocalizations.of(context)!.devicesTitle),
+              actions: [],
+            )
+          ],
+        ),
+      ),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/model_storage_providers.dart';
 import '../../services/service_storage_validation.dart';
 import '../../utils/enums.dart';
@@ -47,8 +48,11 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
       if (simulateTesting()) {
         await Future.delayed(const Duration(seconds: 1));
         if (mounted) {
-          displaySnackBar(context,
-              message: "Storage added successfully", seconds: 1);
+          displaySnackBar(
+            context,
+            message: AppLocalizations.of(context)!.storageAddedSuccessfully,
+            seconds: 1,
+          );
           Navigator.pop(context, true);
           return;
         }
@@ -110,7 +114,9 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
     } catch (e) {
       if (mounted) {
         setState(
-            () => _errorMessage = 'Network error occurred during validation.');
+          () => _errorMessage =
+              AppLocalizations.of(context)!.networkErrorDuringValidation,
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -145,41 +151,51 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
                           minimumSize: const Size.fromHeight(54.0),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: _isLoading
                             ? const SizedBox(
                                 height: 24,
                                 width: 24,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white))
-                            : const Text('Verify & Connect',
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600)),
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : Text(
+                                AppLocalizations.of(context)!.verifyAndConnect,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                       ),
                       const SizedBox(height: 32),
-                      ...config.fields.reversed.map((field) => Padding(
-                            padding: const EdgeInsets.only(bottom: 20.0),
-                            child: TextFormField(
-                              decoration: InputDecoration(
-                                labelText: field.label,
-                                helperText: field.helperText,
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                filled: true,
-                                fillColor: theme
-                                    .colorScheme.surfaceContainerHighest
-                                    .withAlpha(30),
+                      ...config.fields.reversed.map(
+                        (field) => Padding(
+                          padding: const EdgeInsets.only(bottom: 20.0),
+                          child: TextFormField(
+                            decoration: InputDecoration(
+                              labelText: field.label,
+                              helperText: field.helperText,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              obscureText: field.isObscured,
-                              validator: (value) =>
-                                  value == null || value.isEmpty
-                                      ? 'Required'
-                                      : null,
-                              onSaved: (value) =>
-                                  _formData[field.key] = value!.trim(),
+                              filled: true,
+                              fillColor: theme
+                                  .colorScheme.surfaceContainerHighest
+                                  .withAlpha(30),
                             ),
-                          )),
+                            obscureText: field.isObscured,
+                            validator: (value) => value == null || value.isEmpty
+                                ? AppLocalizations.of(context)!.requiredField
+                                : null,
+                            onSaved: (value) =>
+                                _formData[field.key] = value!.trim(),
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 8),
@@ -191,15 +207,17 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.error_outline,
-                                  color: theme.colorScheme.onErrorContainer),
+                              Icon(
+                                Icons.error_outline,
+                                color: theme.colorScheme.onErrorContainer,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   _errorMessage!,
                                   style: TextStyle(
-                                      color:
-                                          theme.colorScheme.onErrorContainer),
+                                    color: theme.colorScheme.onErrorContainer,
+                                  ),
                                 ),
                               ),
                             ],
@@ -208,15 +226,18 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
                       ],
                       const SizedBox(height: 32),
                       Text(
-                        'Your keys are verified locally and encrypted before transmission.',
-                        style: theme.textTheme.bodyMedium
-                            ?.copyWith(color: theme.colorScheme.outline),
+                        AppLocalizations.of(context)!
+                            .providerKeysVerifiedLocally,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Enter your credentials',
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w600),
+                        AppLocalizations.of(context)!.enterYourCredentials,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ],
                   ),
@@ -224,12 +245,16 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
               ),
             ),
             buildBottomAppBar(
-                color: surfaceColor,
-                leading: IconButton(
-                    icon: const Icon(LucideIcons.arrowLeft),
-                    onPressed: _navigateBack),
-                title: Text('Connect ${config.title}'),
-                actions: [])
+              color: surfaceColor,
+              leading: IconButton(
+                icon: const Icon(LucideIcons.arrowLeft),
+                onPressed: _navigateBack,
+              ),
+              title: Text(
+                AppLocalizations.of(context)!.connectProvider(config.title),
+              ),
+              actions: [],
+            )
           ],
         ),
       ),

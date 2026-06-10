@@ -1,5 +1,6 @@
 import 'package:file_vault_bb/services/service_backend.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/service_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -48,14 +49,25 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
       bool showKeys = true;
       if (simulateTesting()) {
         await Future.delayed(const Duration(seconds: 1));
+        await secureStorage.write(
+          key: AppString.keyCipher.string,
+          value: serverKeys[AppString.cipher.string],
+        );
+        await secureStorage.write(
+          key: AppString.keyNonce.string,
+          value: serverKeys[AppString.nonce.string],
+        );
       } else {
         final result = await api.post(endpoint: '/keys', jsonBody: serverKeys);
         final status = result["success"];
         if (status <= 0) {
           showKeys = false;
           if (mounted) {
-            displaySnackBar(context,
-                message: result["message"].toString(), seconds: 2);
+            displaySnackBar(
+              context,
+              message: result["message"].toString(),
+              seconds: 2,
+            );
           }
         }
       }
@@ -64,12 +76,17 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
         String accessKeyBase64 = privateKeys[AppString.accessKey.string];
         String fileHashKeyBase64 = privateKeys[AppString.fileHashKey.string];
         await secureStorage.write(
-            key: AppString.masterKey.string, value: masterKeyBase64);
+          key: AppString.masterKey.string,
+          value: masterKeyBase64,
+        );
         await secureStorage.write(
-            key: AppString.accessKey.string, value: accessKeyBase64);
+          key: AppString.accessKey.string,
+          value: accessKeyBase64,
+        );
         await secureStorage.write(
-            key: AppString.fileHashKey.string, value: fileHashKeyBase64);
-        // navigate to display key
+          key: AppString.fileHashKey.string,
+          value: fileHashKeyBase64,
+        );
         if (mounted) {
           await context.read<AppSetupState>().showAccessKeys();
         }
@@ -86,7 +103,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Important'),
+        title: Text(AppLocalizations.of(context)!.importantTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -94,19 +111,20 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
-              'On the next page you\'ll see a series of 24 words. This is your unique and private encryption key and it is the ONLY way to recover your data in case of logout, device loss or malfunction.',
+              AppLocalizations.of(context)!.accessKeyNoticePrimary,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
-              'We do not store the key. It is YOUR responsibility to store it in a safe place outside of $appName app.',
+              AppLocalizations.of(context)!
+                  .accessKeyNoticeResponsibility(appName),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             FilledButton(
               onPressed: processing ? null : generateKeys,
               child: Row(
@@ -114,22 +132,21 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
                 children: [
                   if (processing)
                     Padding(
-                      padding: const EdgeInsets.only(
-                          right: 8.0), // Add spacing between indicator and text
+                      padding: const EdgeInsets.only(right: 8.0),
                       child: SizedBox(
-                        width: 16, // Set width and height for the indicator
+                        width: 16,
                         height: 16,
                         child: CircularProgressIndicator(
-                          strokeWidth: 2, // Set color to white
+                          strokeWidth: 2,
                           color: DefaultTextStyle.of(context).style.color,
                         ),
                       ),
                     ),
-                  const Padding(
-                    padding: EdgeInsets.all(8.0),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
                     child: Text(
+                      AppLocalizations.of(context)!.showKeyConfirmation,
                       textAlign: TextAlign.center,
-                      'I understand.\nShow me the key.',
                     ),
                   ),
                 ],

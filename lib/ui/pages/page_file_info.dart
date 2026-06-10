@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
 import '../../utils/enums.dart';
@@ -40,7 +41,9 @@ class _PageFileInfoState extends State<PageFileInfo> {
     });
     modelFile = await ModelFile.get(widget.item.fileHash!);
     if (modelFile == null) {
-      _errorMessage = "File not found";
+      if (mounted) {
+        _errorMessage = AppLocalizations.of(context)!.fileNotFound;
+      }
     } else {
       parts = List.generate(modelFile!.parts, (i) => i + 1);
     }
@@ -66,20 +69,20 @@ class _PageFileInfoState extends State<PageFileInfo> {
     return '${(fileSizeBytes / (1024 * 1024 * 1024)).toStringAsFixed(2)} GB';
   }
 
-  String formattedDate(int utcMilliSeconds) {
+  String formattedDate() {
     final DateTime uploadedDate = DateTime.fromMillisecondsSinceEpoch(
       modelFile!.uploadedAt,
       isUtc: true,
     ).toLocal();
-    return DateFormat('MMM d, yyyy').format(uploadedDate);
+    return DateFormat.yMMMd().format(uploadedDate);
   }
 
-  String formattedTime(int utcMilliSeconds) {
+  String formattedTime() {
     final DateTime uploadedDate = DateTime.fromMillisecondsSinceEpoch(
       modelFile!.uploadedAt,
       isUtc: true,
     ).toLocal();
-    return DateFormat('h:mm a').format(uploadedDate);
+    return DateFormat.jm().format(uploadedDate);
   }
 
   @override
@@ -98,9 +101,10 @@ class _PageFileInfoState extends State<PageFileInfo> {
                   ? const Center(child: CircularProgressIndicator())
                   : _errorMessage != null
                       ? tryFailedRequestAgain(
+                          context: context,
                           message: _errorMessage!,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                          onPressed: fetchFile)
+                          onPressed: fetchFile,
+                        )
                       : modelFile == null
                           ? const SizedBox.shrink()
                           : CustomScrollView(
@@ -111,7 +115,9 @@ class _PageFileInfoState extends State<PageFileInfo> {
                                 ),
                                 SliverPadding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 24),
+                                    horizontal: 20,
+                                    vertical: 24,
+                                  ),
                                   sliver: SliverToBoxAdapter(
                                     child: _buildMetadataGrid(context),
                                   ),
@@ -121,7 +127,8 @@ class _PageFileInfoState extends State<PageFileInfo> {
                                       horizontal: 20),
                                   sliver: SliverToBoxAdapter(
                                     child: Text(
-                                      'File Parts (${modelFile!.parts})',
+                                      AppLocalizations.of(context)!
+                                          .filePartsTitle(modelFile!.parts),
                                       style:
                                           theme.textTheme.titleMedium?.copyWith(
                                         fontWeight: FontWeight.bold,
@@ -132,19 +139,25 @@ class _PageFileInfoState extends State<PageFileInfo> {
                                 ),
                                 SliverPadding(
                                   padding: const EdgeInsets.only(
-                                      left: 20, right: 20, top: 12, bottom: 40),
+                                    left: 20,
+                                    right: 20,
+                                    top: 12,
+                                    bottom: 40,
+                                  ),
                                   sliver: _buildPartsList(context),
                                 ),
                               ],
                             ),
             ),
             buildBottomAppBar(
-                color: surfaceColor,
-                leading: IconButton(
-                    icon: const Icon(LucideIcons.arrowLeft),
-                    onPressed: _navigateBack),
-                title: Text("File Details"),
-                actions: []),
+              color: surfaceColor,
+              leading: IconButton(
+                icon: const Icon(LucideIcons.arrowLeft),
+                onPressed: _navigateBack,
+              ),
+              title: Text(AppLocalizations.of(context)!.fileDetailsTitle),
+              actions: [],
+            ),
           ],
         ),
       ),
@@ -166,8 +179,7 @@ class _PageFileInfoState extends State<PageFileInfo> {
               shape: BoxShape.circle,
             ),
             child: Icon(
-              Icons
-                  .insert_drive_file_rounded, // Better to replace with dynamic icon based on extension
+              Icons.insert_drive_file_rounded,
               size: 56,
               color: colorScheme.primary,
             ),
@@ -183,7 +195,7 @@ class _PageFileInfoState extends State<PageFileInfo> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Encrypted Backup',
+            AppLocalizations.of(context)!.encryptedBackup,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
               letterSpacing: 0.5,
@@ -207,28 +219,29 @@ class _PageFileInfoState extends State<PageFileInfo> {
           childAspectRatio: 1.5,
           children: [
             _InfoCard(
-              title: 'Size',
+              title: AppLocalizations.of(context)!.sizeLabel,
               value: formattedSize(widget.item.size),
               icon: Icons.data_usage_rounded,
             ),
             if (modelFile?.providerId != null)
               _InfoCard(
-                title: 'Provider',
+                title: AppLocalizations.of(context)!.providerLabel,
                 value: StorageProviderExtension.stringFromInt(
-                    modelFile!.providerId!),
+                  modelFile!.providerId!,
+                ),
                 icon: Icons.cloud_done_rounded,
               ),
             if (modelFile!.uploadedAt > 0)
               _InfoCard(
-                title: 'Uploaded At',
-                value: formattedDate(modelFile!.uploadedAt),
-                subtitle: formattedTime(modelFile!.uploadedAt),
+                title: AppLocalizations.of(context)!.uploadedAtLabel,
+                value: formattedDate(),
+                subtitle: formattedTime(),
                 icon: Icons.access_time_rounded,
               ),
             if (modelFile!.uploadedAt > 0)
               _InfoCard(
-                title: 'Status',
-                value: 'Uploaded',
+                title: AppLocalizations.of(context)!.statusLabel,
+                value: AppLocalizations.of(context)!.uploadedStatus,
                 icon: Icons.sync_rounded,
                 iconColor: Colors.green,
               ),
@@ -267,7 +280,7 @@ class _PageFileInfoState extends State<PageFileInfo> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
-                      Icons.extension_rounded, // Represents a "part" or "chunk"
+                      Icons.extension_rounded,
                       size: 20,
                       color: colorScheme.primary,
                     ),

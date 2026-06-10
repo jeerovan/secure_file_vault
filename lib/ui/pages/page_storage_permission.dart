@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:file_vault_bb/main.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/app_localizations.dart';
 import '../../ui/common_widgets.dart';
 
 class StoragePermissionPage extends StatefulWidget {
@@ -22,7 +24,6 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
   @override
   void initState() {
     super.initState();
-    // Setup a subtle pulsing animation for the folder icon
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -48,7 +49,6 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
         final deviceInfo = DeviceInfoPlugin();
         final androidInfo = await deviceInfo.androidInfo;
 
-        // MANAGE_EXTERNAL_STORAGE is required for file explorers starting Android 11 (API 30)
         if (androidInfo.version.sdkInt >= 30) {
           status = await Permission.manageExternalStorage.request();
         } else {
@@ -68,7 +68,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
         _showDeniedMessage();
       }
     } catch (e) {
-      // Handle logging in production
+      logger.error("Permission Error", error: e);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -81,14 +81,14 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Permission Required'),
-        content: const Text(
-          "To automatically back up, manage, and secure your files in the background, we need access to your device storage. Your data is encrypted locally, ensuring total privacy. Please allow access to continue.",
+        title: Text(AppLocalizations.of(context)!.permissionRequiredTitle),
+        content: Text(
+          AppLocalizations.of(context)!.storagePermissionSettingsDescription,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -100,7 +100,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text('Open Settings'),
+            child: Text(AppLocalizations.of(context)!.openSettings),
           ),
         ],
       ),
@@ -110,11 +110,16 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
   void _showDeniedMessage() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            Icon(Icons.error_outline_rounded, color: Colors.white),
-            SizedBox(width: 12),
-            Expanded(child: Text('Storage permission is required to continue')),
+            const Icon(Icons.error_outline_rounded, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                AppLocalizations.of(context)!
+                    .storagePermissionRequiredToContinue,
+              ),
+            ),
           ],
         ),
         behavior: SnackBarBehavior.floating,
@@ -150,8 +155,6 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Spacer(flex: 2),
-
-                // Animated Icon Profile
                 ScaleTransition(
                   scale: _pulseAnimation,
                   child: Container(
@@ -169,19 +172,15 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                       ],
                     ),
                     child: Icon(
-                      Icons
-                          .shield_rounded, // Replaced folder with shield for BYOK context
+                      Icons.shield_rounded,
                       size: 72,
                       color: theme.colorScheme.primary,
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 40),
-
-                // Title
                 Text(
-                  'Secure Local Access',
+                  AppLocalizations.of(context)!.secureLocalAccessTitle,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
@@ -189,13 +188,12 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                   ),
                   textAlign: TextAlign.center,
                 ),
-
                 const SizedBox(height: 16),
-
-                // Premium Description Card
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surface.withAlpha(200),
                     borderRadius: BorderRadius.circular(24),
@@ -204,7 +202,8 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                     ),
                   ),
                   child: Text(
-                    'To explore, encrypt, and back up your files automatically, we need access to your device storage.',
+                    AppLocalizations.of(context)!
+                        .storagePermissionPageDescription,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       height: 1.6,
@@ -212,10 +211,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                     textAlign: TextAlign.center,
                   ),
                 ),
-
                 const Spacer(flex: 2),
-
-                // Fixed-Size Loading Button
                 SizedBox(
                   width: size.width * 0.85,
                   height: 60,
@@ -245,7 +241,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                                 ),
                                 const SizedBox(width: 16),
                                 Text(
-                                  'Verifying...',
+                                  AppLocalizations.of(context)!.verifying,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     color: theme.colorScheme.onPrimary,
                                     fontWeight: FontWeight.w600,
@@ -260,7 +256,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                                 const Icon(Icons.lock_open_rounded, size: 22),
                                 const SizedBox(width: 12),
                                 Text(
-                                  'Grant Access',
+                                  AppLocalizations.of(context)!.grantAccess,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     color: theme.colorScheme.onPrimary,
                                     fontWeight: FontWeight.w600,
@@ -271,10 +267,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
-                // Footer Note
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -285,7 +278,8 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Zero-knowledge encrypted storage',
+                      AppLocalizations.of(context)!
+                          .zeroKnowledgeEncryptedStorage,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color:
                             theme.colorScheme.onSurfaceVariant.withAlpha(150),

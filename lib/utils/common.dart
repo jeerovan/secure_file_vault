@@ -186,30 +186,6 @@ void showAlertMessage(BuildContext context, String title, String message) {
   );
 }
 
-void showProcessingDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-        child: const Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text("Processing...", style: TextStyle(fontSize: 18)),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
 /* date/time conversions -- starts */
 String nowUtcInISO() {
   DateTime nowUtc = DateTime.now().toUtc();
@@ -275,24 +251,6 @@ String getDateFromUtcMilliSeconds(int utcMilliSeconds) {
   String monthFormatted = month < 10 ? '0$month' : month.toString();
   String dayFormatted = date < 10 ? '0$date' : date.toString();
   return '$year$monthFormatted$dayFormatted';
-}
-
-String getReadableDate(DateTime date) {
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final yesterday = today.subtract(const Duration(days: 1));
-
-  if (date.isAfter(today)) {
-    return "Today";
-  } else if (date.isAfter(yesterday)) {
-    return "Yesterday";
-  } else if (now.difference(date).inDays < 7) {
-    return DateFormat('EEEE')
-        .format(date); // Day of the week for the last 7 days
-  } else {
-    return DateFormat('MMMM d, yyyy')
-        .format(date); // Full date for older messages
-  }
 }
 
 String getFormattedTime(int utcMilliSeconds) {

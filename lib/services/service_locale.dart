@@ -35,14 +35,47 @@ class LocaleProvider extends ChangeNotifier {
     _locale = null;
     notifyListeners();
 
-    await ModelSetting.set(AppString.locale.string, "");
+    await ModelSetting.delete(AppString.locale.string);
   }
 }
 
 // Define your supported locales in a helper class
 class L10n {
   static final all = [
+    const Locale('ar'),
+    const Locale('az'),
+    const Locale('bn'),
+    const Locale('de'),
+    const Locale('el'),
     const Locale('en'),
+    const Locale('es'),
+    const Locale('fa'),
+    const Locale('fr'),
+    const Locale('he'),
     const Locale('hi'),
+    const Locale('id'),
+    const Locale('it'),
+    const Locale('ja'),
+    const Locale('km'),
+    const Locale('ko'),
+    const Locale('lo'),
+    const Locale('mn'),
+    const Locale('mr'),
+    const Locale('my'),
+    const Locale('nl'),
+    const Locale('pt'),
+    const Locale('ro'),
+    const Locale('ru'),
+    const Locale('ta'),
+    const Locale('te'),
+    const Locale('tg'),
+    const Locale('th'),
+    const Locale('tk'),
+    const Locale('tr'),
+    const Locale('uk'),
+    const Locale('ur'),
+    const Locale('uz'),
+    const Locale('vi'),
+    const Locale('zh'),
   ];
 }

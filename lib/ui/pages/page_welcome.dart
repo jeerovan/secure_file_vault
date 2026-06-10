@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/model_setting.dart';
 
 // --- Data Model ---
@@ -77,7 +78,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _errorMessage = "Failed to fetch.";
+          _errorMessage = AppLocalizations.of(context)!.failedToFetch;
         });
       }
     }
@@ -132,8 +133,8 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
             ? const Center(child: CircularProgressIndicator())
             : _errorMessage != null
                 ? tryFailedRequestAgain(
+                    context: context,
                     message: _errorMessage!,
-                    style: Theme.of(context).textTheme.bodyLarge,
                     onPressed: _fetchProviders)
                 : Column(
                     children: [
@@ -180,7 +181,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           ),
           const SizedBox(height: 48),
           Text(
-            "FiFe",
+            AppString.appName.string,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -188,7 +189,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            "Your Private Files Ferry",
+            AppLocalizations.of(context)!.appTagline,
             style: theme.textTheme.titleLarge?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w500,
@@ -196,7 +197,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            "An open-source, cloud storage service built with zero-trust architecture. Your data is encrypted locally before it ever leaves your device.",
+            AppLocalizations.of(context)!.onboardingPurposeDescription,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
@@ -217,7 +218,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
         children: [
           const SizedBox(height: 24),
           Text(
-            "Supported Storage",
+            AppLocalizations.of(context)!.supportedStorageTitle,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
@@ -225,15 +226,13 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            "Connect your favorite providers. Start right away with FiFe's built-in 1 GB free secure storage.",
+            AppLocalizations.of(context)!.supportedStorageDescription,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
             ),
           ),
           const SizedBox(height: 24),
-
-          // FiFe Default Storage Card
           Card(
             elevation: 0,
             color: theme.colorScheme.primaryContainer,
@@ -245,25 +244,31 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                 'assets/logo.png',
                 width: 40,
                 height: 40,
-                color:
-                    theme.colorScheme.primary, // Applies the theme color tint
+                color: theme.colorScheme.primary,
               ),
-              title: Text("FiFe Cloud",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onPrimaryContainer)),
-              subtitle: Text("Start backups instantly",
-                  style: TextStyle(
-                      color:
-                          theme.colorScheme.onPrimaryContainer.withAlpha(80))),
-              trailing: Text("1.0 GB",
-                  style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary)),
+              title: Text(
+                AppLocalizations.of(context)!.fifeCloud,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onPrimaryContainer,
+                ),
+              ),
+              subtitle: Text(
+                AppLocalizations.of(context)!.startBackupsInstantly,
+                style: TextStyle(
+                  color: theme.colorScheme.onPrimaryContainer.withAlpha(80),
+                ),
+              ),
+              trailing: Text(
+                AppLocalizations.of(context)!.freeStorageSizeOneGb,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
-
           Expanded(
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -276,13 +281,17 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                         margin: const EdgeInsets.only(bottom: 12),
                         color: theme.colorScheme.surfaceContainerHighest,
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         child: ListTile(
-                          leading: Icon(_getProviderIcon(provider.id),
-                              color: theme.colorScheme.onSurfaceVariant),
-                          title: Text(provider.title,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w600)),
+                          leading: Icon(
+                            _getProviderIcon(provider.id),
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          title: Text(
+                            provider.title,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -293,11 +302,9 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(
-                                width: 4.0,
-                              ),
+                              const SizedBox(width: 4.0),
                               Text(
-                                'Free',
+                                AppLocalizations.of(context)!.freeLabel,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.normal,
@@ -312,7 +319,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            "* Free storage as mentioned on provider's website. Pay-as-you-go with compatible providers.",
+            AppLocalizations.of(context)!.providerStorageDisclaimer,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
               height: 1.5,
@@ -333,7 +340,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              "Why Use FiFe?",
+              AppLocalizations.of(context)!.whyUseFifeTitle,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.onSurface,
@@ -343,33 +350,33 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
             _buildBenefitItem(
               theme,
               icon: LucideIcons.boxes,
-              title: "Claim Free Cloud Storage",
-              description:
-                  "Maximize your space by connecting multiple cloud providers. Securely take advantage of their free storage tiers in one unified app.",
+              title: AppLocalizations.of(context)!.claimFreeCloudStorageTitle,
+              description: AppLocalizations.of(context)!
+                  .claimFreeCloudStorageDescription,
             ),
             const SizedBox(height: 24),
             _buildBenefitItem(
               theme,
               icon: LucideIcons.fileLock2,
-              title: "Top-Notch Security",
+              title: AppLocalizations.of(context)!.topNotchSecurityTitle,
               description:
-                  "Powered by advanced Sodium cryptography. All encryption and decryption happens entirely locally on your device.",
+                  AppLocalizations.of(context)!.topNotchSecurityDescription,
             ),
             const SizedBox(height: 24),
             _buildBenefitItem(
               theme,
               icon: LucideIcons.key,
-              title: "Bring Your Own Key (BYOK)",
+              title: AppLocalizations.of(context)!.bringYourOwnKeyTitle,
               description:
-                  "Maintain complete sovereignty over your data across all cloud storage providers. Keep encrypted storage using your own accounts.",
+                  AppLocalizations.of(context)!.bringYourOwnKeyDescription,
             ),
             const SizedBox(height: 24),
             _buildBenefitItem(
               theme,
               icon: LucideIcons.dollarSign,
-              title: "Pay-as-you-go for storage.",
+              title: AppLocalizations.of(context)!.payAsYouGoStorageTitle,
               description:
-                  "Pay for used storage only with compatible providers. No middleman, no data lock-in.",
+                  AppLocalizations.of(context)!.payAsYouGoStorageDescription,
             ),
           ],
         ),
@@ -377,10 +384,12 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
     );
   }
 
-  Widget _buildBenefitItem(ThemeData theme,
-      {required IconData icon,
-      required String title,
-      required String description}) {
+  Widget _buildBenefitItem(
+    ThemeData theme, {
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -428,7 +437,6 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 24),
-            // Hero Icon with a subtle glow effect
             Center(
               child: Container(
                 padding: const EdgeInsets.all(20),
@@ -451,11 +459,9 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
               ),
             ),
             const SizedBox(height: 32),
-
-            // Page Title & Subtitle
             Center(
               child: Text(
-                'Zero-Knowledge Privacy',
+                AppLocalizations.of(context)!.zeroKnowledgePrivacyTitle,
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.5,
@@ -466,7 +472,7 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
             const SizedBox(height: 12),
             Center(
               child: Text(
-                'Your data is locked on your device before it ever leaves. We cannot see, read, or scan your files.',
+                AppLocalizations.of(context)!.zeroKnowledgePrivacyDescription,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: theme.colorScheme.onSurface.withAlpha(140),
                   height: 1.5,
@@ -475,50 +481,47 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
               ),
             ),
             const SizedBox(height: 48),
-
-            // Encryption Steps Flow
             _buildSecurityFeatureRow(
               theme: theme,
               icon: Icons.create_new_folder_outlined,
-              title: '1. Local Selection',
+              title: AppLocalizations.of(context)!.localSelectionTitle,
               description:
-                  'You select a directory. All processing begins securely on your local device.',
+                  AppLocalizations.of(context)!.localSelectionDescription,
             ),
             _buildSecurityFeatureRow(
               theme: theme,
               icon: Icons.data_object_rounded,
-              title: '2. Metadata Encryption',
+              title: AppLocalizations.of(context)!.metadataEncryptionTitle,
               description:
-                  'File information (titles, types, and sizes) is encrypted before being sent to the server.',
+                  AppLocalizations.of(context)!.metadataEncryptionDescription,
             ),
             _buildSecurityFeatureRow(
               theme: theme,
               icon: Icons.lock_outline_rounded,
-              title: '3. Content Encryption',
+              title: AppLocalizations.of(context)!.contentEncryptionTitle,
               description:
-                  'The actual file content is fragmented and encrypted before uploading to cloud storage.',
+                  AppLocalizations.of(context)!.contentEncryptionDescription,
             ),
             _buildSecurityFeatureRow(
               theme: theme,
               icon: Icons.cloud_off_rounded,
-              title: '4. Blind Server',
-              description:
-                  'Our servers have zero knowledge. We only see encrypted blobs, ensuring absolute privacy.',
+              title: AppLocalizations.of(context)!.blindServerTitle,
+              description: AppLocalizations.of(context)!.blindServerDescription,
               isLast: true,
             ),
-
             const SizedBox(height: 48),
-
-            // Open Source Trust Badge
             Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => openURL(
-                    'https://github.com/jeerovan/secure_file_vault'), // Replace with actual URL
+                  'https://github.com/jeerovan/secure_file_vault',
+                ),
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.surfaceContainerHighest
                         .withAlpha(130),
@@ -540,14 +543,16 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Don't trust, verify.",
+                              AppLocalizations.of(context)!
+                                  .dontTrustVerifyTitle,
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '100% Open Source. You can inspect the code to see exactly how your files are encrypted.',
+                              AppLocalizations.of(context)!
+                                  .openSourceVerificationDescription,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color:
                                     theme.colorScheme.onSurface.withAlpha(150),
@@ -574,7 +579,6 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
     );
   }
 
-  // Helper widget to build the vertical timeline of features
   Widget _buildSecurityFeatureRow({
     required ThemeData theme,
     required IconData icon,
@@ -586,7 +590,6 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Icon and Timeline Line
           Column(
             children: [
               Container(
@@ -616,7 +619,6 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
             ],
           ),
           const SizedBox(width: 16),
-          // Text Content
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 24.0),
@@ -653,7 +655,6 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Custom Page Indicator
           Row(
             children: List.generate(
               4,
@@ -671,8 +672,6 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
               ),
             ),
           ),
-
-          // Next / Get Started Button
           FilledButton(
             onPressed: _nextPage,
             style: FilledButton.styleFrom(
@@ -682,7 +681,9 @@ class _FiFeOnboardingScreenState extends State<FiFeOnboardingScreen> {
               ),
             ),
             child: Text(
-              _currentPage == 3 ? "Get Started" : "Next",
+              _currentPage == 3
+                  ? AppLocalizations.of(context)!.getStarted
+                  : AppLocalizations.of(context)!.next,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
           ),

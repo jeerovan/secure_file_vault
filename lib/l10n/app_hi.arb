@@ -5,6 +5,30 @@
     "description": "App title",
     "comment": "Do not translate"
   },
+  "continueAgreementText": "जारी रखने पर, आप हमारी {terms} और {privacy} से सहमत होते हैं।",
+  "@continueAgreementText": {
+    "description": "Consent text shown before continuing, with clickable Terms of Service and Privacy Policy links",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "termsOfService": "सेवा की शर्तें",
+  "@termsOfService": {
+    "description": "Clickable label for the terms of service link"
+  },
+  "privacyPolicy": "गोपनीयता नीति",
+  "@privacyPolicy": {
+    "description": "Clickable label for the privacy policy link"
+  },
+  "andLabel": " और ",
+  "@andLabel": {
+    "description": "Connector text between terms and privacy policy"
+  },
   "theme": "थीम",
   "@theme": {
     "description": "The label for the theme selection option in settings"
@@ -56,5 +80,865 @@
   "settingsPageTitle": "सेटिंग्स",
   "@settingsPageTitle": {
     "description": "Main title for the settings screen bottom bar"
+  },
+  "language": "भाषा",
+  "@language": {
+    "description": "Label for selecting the app language"
+  },
+  "tapToSelect": "चुनने के लिए टैप करें",
+  "@tapToSelect": {
+    "description": "Prompt text instructing the user to tap and choose an option"
+  },
+  "appTagline": "आपकी निजी फ़ाइलों की फेरी",
+  "@appTagline": {
+    "description": "Tagline displayed below the app name on the onboarding page"
+  },
+  "onboardingPurposeDescription": "एक ओपन-सोर्स क्लाउड स्टोरेज सेवा, जो ज़ीरो-ट्रस्ट आर्किटेक्चर पर बनी है। आपका डेटा आपके डिवाइस से बाहर जाने से पहले ही स्थानीय रूप से एन्क्रिप्ट हो जाता है।",
+  "@onboardingPurposeDescription": {
+    "description": "Description explaining the app purpose on the onboarding welcome page"
+  },
+  "failedToFetch": "प्राप्त करने में विफल।",
+  "@failedToFetch": {
+    "description": "Error message shown when storage providers fail to load"
+  },
+  "supportedStorageTitle": "समर्थित स्टोरेज",
+  "@supportedStorageTitle": {
+    "description": "Title for the onboarding page listing supported storage providers"
+  },
+  "supportedStorageDescription": "अपने पसंदीदा प्रदाताओं को कनेक्ट करें। FiFe की अंतर्निहित 1 GB मुफ्त सुरक्षित स्टोरेज के साथ तुरंत शुरू करें।",
+  "@supportedStorageDescription": {
+    "description": "Description for the supported storage onboarding page"
+  },
+  "fifeCloud": "FiFe Cloud",
+  "@fifeCloud": {
+    "description": "Name of the default FiFe storage provider card"
+  },
+  "startBackupsInstantly": "तुरंत बैकअप शुरू करें",
+  "@startBackupsInstantly": {
+    "description": "Subtitle for the default FiFe cloud storage card"
+  },
+  "freeStorageSizeOneGb": "1.0 GB",
+  "@freeStorageSizeOneGb": {
+    "description": "Displayed free storage size for the built-in FiFe cloud"
+  },
+  "freeLabel": "मुफ्त",
+  "@freeLabel": {
+    "description": "Label indicating a storage plan is free"
+  },
+  "providerStorageDisclaimer": "* मुफ्त स्टोरेज जैसा प्रदाता की वेबसाइट पर बताया गया है। संगत प्रदाताओं के साथ जितना उपयोग करें उतना भुगतान करें।",
+  "@providerStorageDisclaimer": {
+    "description": "Disclaimer about provider free storage and pay-as-you-go support"
+  },
+  "whyUseFifeTitle": "FiFe का उपयोग क्यों करें?",
+  "@whyUseFifeTitle": {
+    "description": "Title for the onboarding benefits page"
+  },
+  "claimFreeCloudStorageTitle": "मुफ्त क्लाउड स्टोरेज पाएं",
+  "@claimFreeCloudStorageTitle": {
+    "description": "Benefit title about using free cloud storage from multiple providers"
+  },
+  "claimFreeCloudStorageDescription": "एक से अधिक क्लाउड प्रदाताओं को जोड़कर अपनी जगह अधिकतम करें। एक ही ऐप में उनकी मुफ्त स्टोरेज योजनाओं का सुरक्षित लाभ उठाएँ।",
+  "@claimFreeCloudStorageDescription": {
+    "description": "Benefit description about aggregating free storage across providers"
+  },
+  "topNotchSecurityTitle": "उच्च स्तरीय सुरक्षा",
+  "@topNotchSecurityTitle": {
+    "description": "Benefit title highlighting strong security"
+  },
+  "topNotchSecurityDescription": "उन्नत Sodium क्रिप्टोग्राफी द्वारा संचालित। सारा एन्क्रिप्शन और डिक्रिप्शन पूरी तरह आपके डिवाइस पर स्थानीय रूप से होता है।",
+  "@topNotchSecurityDescription": {
+    "description": "Benefit description explaining local encryption and decryption"
+  },
+  "bringYourOwnKeyTitle": "अपनी कुंजी स्वयं लाएँ (BYOK)",
+  "@bringYourOwnKeyTitle": {
+    "description": "Benefit title for bring your own key support"
+  },
+  "bringYourOwnKeyDescription": "सभी क्लाउड स्टोरेज प्रदाताओं पर अपने डेटा पर पूर्ण नियंत्रण बनाए रखें। अपने खातों का उपयोग करके एन्क्रिप्टेड स्टोरेज रखें।",
+  "@bringYourOwnKeyDescription": {
+    "description": "Benefit description for using your own accounts and keys"
+  },
+  "payAsYouGoStorageTitle": "स्टोरेज के लिए जितना उपयोग करें उतना भुगतान।",
+  "@payAsYouGoStorageTitle": {
+    "description": "Benefit title for pay-as-you-go storage support"
+  },
+  "payAsYouGoStorageDescription": "संगत प्रदाताओं के साथ केवल उपयोग किए गए स्टोरेज के लिए भुगतान करें। कोई बिचौलिया नहीं, कोई डेटा लॉक-इन नहीं।",
+  "@payAsYouGoStorageDescription": {
+    "description": "Benefit description for pay-as-you-go compatible providers"
+  },
+  "zeroKnowledgePrivacyTitle": "ज़ीरो-नॉलेज गोपनीयता",
+  "@zeroKnowledgePrivacyTitle": {
+    "description": "Title for the onboarding security page"
+  },
+  "zeroKnowledgePrivacyDescription": "आपका डेटा डिवाइस से बाहर जाने से पहले ही आपके डिवाइस पर सुरक्षित कर दिया जाता है। हम आपकी फ़ाइलें देख, पढ़ या स्कैन नहीं सकते।",
+  "@zeroKnowledgePrivacyDescription": {
+    "description": "Subtitle describing zero-knowledge privacy guarantees"
+  },
+  "localSelectionTitle": "1. स्थानीय चयन",
+  "@localSelectionTitle": {
+    "description": "Step title for local file selection in the security flow"
+  },
+  "localSelectionDescription": "आप एक डायरेक्टरी चुनते हैं। सारी प्रक्रिया आपके स्थानीय डिवाइस पर सुरक्षित रूप से शुरू होती है।",
+  "@localSelectionDescription": {
+    "description": "Step description for local file selection in the security flow"
+  },
+  "metadataEncryptionTitle": "2. मेटाडेटा एन्क्रिप्शन",
+  "@metadataEncryptionTitle": {
+    "description": "Step title for metadata encryption in the security flow"
+  },
+  "metadataEncryptionDescription": "फ़ाइल की जानकारी (शीर्षक, प्रकार और आकार) सर्वर पर भेजे जाने से पहले एन्क्रिप्ट की जाती है।",
+  "@metadataEncryptionDescription": {
+    "description": "Step description for metadata encryption in the security flow"
+  },
+  "contentEncryptionTitle": "3. सामग्री एन्क्रिप्शन",
+  "@contentEncryptionTitle": {
+    "description": "Step title for file content encryption in the security flow"
+  },
+  "contentEncryptionDescription": "वास्तविक फ़ाइल सामग्री को क्लाउड स्टोरेज पर अपलोड करने से पहले टुकड़ों में बाँटकर एन्क्रिप्ट किया जाता है।",
+  "@contentEncryptionDescription": {
+    "description": "Step description for file content encryption in the security flow"
+  },
+  "blindServerTitle": "4. ब्लाइंड सर्वर",
+  "@blindServerTitle": {
+    "description": "Step title for the zero-knowledge server step in the security flow"
+  },
+  "blindServerDescription": "हमारे सर्वरों को कुछ भी ज्ञात नहीं होता। हमें केवल एन्क्रिप्टेड ब्लॉब्स दिखाई देते हैं, जिससे पूर्ण गोपनीयता सुनिश्चित होती है।",
+  "@blindServerDescription": {
+    "description": "Step description explaining that servers only handle encrypted data"
+  },
+  "dontTrustVerifyTitle": "भरोसा न करें, सत्यापित करें।",
+  "@dontTrustVerifyTitle": {
+    "description": "Title for the open-source verification callout"
+  },
+  "openSourceVerificationDescription": "100% ओपन सोर्स। आप कोड की जाँच करके देख सकते हैं कि आपकी फ़ाइलें कैसे एन्क्रिप्ट होती हैं।",
+  "@openSourceVerificationDescription": {
+    "description": "Description for the open-source verification callout"
+  },
+  "getStarted": "शुरू करें",
+  "@getStarted": {
+    "description": "Primary button label shown on the final onboarding page"
+  },
+  "next": "अगला",
+  "@next": {
+    "description": "Primary button label used to move to the next onboarding page"
+  },
+  "unauthorized": "अनधिकृत",
+  "@unauthorized": {
+    "description": "Error message shown when the user is not authorized to access the key"
+  },
+  "tryAgain": "फिर से प्रयास करें",
+  "@tryAgain": {
+    "description": "Button label used to retry the failed access key check"
+  },
+  "errorTitle": "त्रुटि",
+  "@errorTitle": {
+    "description": "Generic error dialog title"
+  },
+  "failureTitle": "विफलता",
+  "@failureTitle": {
+    "description": "Dialog title shown when access key verification fails"
+  },
+  "invalidWordList": "अमान्य शब्द सूची",
+  "@invalidWordList": {
+    "description": "Error message shown when the entered recovery phrase is not a valid mnemonic"
+  },
+  "invalidAccessKey": "अमान्य एक्सेस कुंजी",
+  "@invalidAccessKey": {
+    "description": "Error message shown when the provided recovery phrase cannot decrypt the stored key"
+  },
+  "unexpectedDecryptionError": "डिक्रिप्शन के दौरान एक अप्रत्याशित त्रुटि हुई।",
+  "@unexpectedDecryptionError": {
+    "description": "Error message shown when an unexpected exception occurs during access key decryption"
+  },
+  "fileMustContainExactly24Words": "फ़ाइल में ठीक 24 शब्द होने चाहिए।",
+  "@fileMustContainExactly24Words": {
+    "description": "Error message shown when the selected text file does not contain exactly 24 words"
+  },
+  "errorReadingFile": "फ़ाइल पढ़ने में त्रुटि",
+  "@errorReadingFile": {
+    "description": "Snackbar message shown when reading the selected file fails"
+  },
+  "encryptionTitle": "एन्क्रिप्शन",
+  "@encryptionTitle": {
+    "description": "App bar title for the access key decode screen"
+  },
+  "accessKeyDecodeDescription": "क्लाउड सिंक को सुरक्षित रूप से सक्षम करने के लिए अपना 24-शब्द रिकवरी फ़्रेज़ दर्ज करें या .txt फ़ाइल लोड करें।",
+  "@accessKeyDecodeDescription": {
+    "description": "Instruction text on the access key decode screen"
+  },
+  "recoveryPhraseLabel": "रिकवरी फ़्रेज़",
+  "@recoveryPhraseLabel": {
+    "description": "Label for the recovery phrase input field"
+  },
+  "recoveryPhraseHint": "शब्द1 शब्द2 शब्द3...",
+  "@recoveryPhraseHint": {
+    "description": "Hint text shown inside the recovery phrase input field"
+  },
+  "paste": "पेस्ट करें",
+  "@paste": {
+    "description": "Button label used to paste clipboard text into the recovery phrase field"
+  },
+  "wordCountLabel": "{count} / 24 शब्द",
+  "@wordCountLabel": {
+    "description": "Live counter showing how many recovery words have been entered",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseEnterRecoveryPhrase": "कृपया अपना रिकवरी फ़्रेज़ दर्ज करें",
+  "@pleaseEnterRecoveryPhrase": {
+    "description": "Validation message shown when the recovery phrase field is empty"
+  },
+  "mustContainExactly24Words": "ठीक 24 शब्द होने चाहिए",
+  "@mustContainExactly24Words": {
+    "description": "Validation message shown when the recovery phrase does not contain exactly 24 words"
+  },
+  "verify": "सत्यापित करें",
+  "@verify": {
+    "description": "Primary button label used to verify the recovery phrase"
+  },
+  "orLabel": "या",
+  "@orLabel": {
+    "description": "Separator label between manual input and file upload actions"
+  },
+  "loadFromTxtFile": ".txt फ़ाइल से लोड करें",
+  "@loadFromTxtFile": {
+    "description": "Button label used to load the recovery phrase from a text file"
+  },
+  "saveAccessKey": "एक्सेस कुंजी सहेजें",
+  "@saveAccessKey": {
+    "description": "Title for the desktop save file dialog when saving the access key"
+  },
+  "fileSavedSuccessfully": "फ़ाइल सफलतापूर्वक सहेजी गई।",
+  "@fileSavedSuccessfully": {
+    "description": "Snackbar message shown after the access key file is saved successfully"
+  },
+  "accessKeyShareMessage": "यह आपकी एक्सेस कुंजी है।",
+  "@accessKeyShareMessage": {
+    "description": "Text shared alongside the access key file in the mobile share sheet"
+  },
+  "pleaseTryAgain": "कृपया फिर से प्रयास करें।",
+  "@pleaseTryAgain": {
+    "description": "Generic snackbar message shown after a failed file save or share operation"
+  },
+  "copiedToClipboard": "क्लिपबोर्ड में कॉपी किया गया",
+  "@copiedToClipboard": {
+    "description": "Snackbar message shown after copying the access key to the clipboard"
+  },
+  "accessKeyTitle": "एक्सेस कुंजी",
+  "@accessKeyTitle": {
+    "description": "App bar title for the access key screen"
+  },
+  "accessKeyDescription": "कृपया इस कुंजी को किसी सुरक्षित स्थान पर सहेजें। केवल यही आपको आपके एन्क्रिप्टेड डेटा तक पहुँचने देगा।",
+  "@accessKeyDescription": {
+    "description": "Instruction text explaining the importance of safely storing the access key"
+  },
+  "copy": "कॉपी करें",
+  "@copy": {
+    "description": "Button label used to copy the access key to the clipboard"
+  },
+  "downloadAsTextFile": "टेक्स्ट फ़ाइल के रूप में डाउनलोड करें",
+  "@downloadAsTextFile": {
+    "description": "Button label used to save the access key as a text file"
+  },
+  "continueLabel": "जारी रखें",
+  "@continueLabel": {
+    "description": "Button label used to proceed to the next step after viewing the access key"
+  },
+  "importantTitle": "महत्वपूर्ण",
+  "@importantTitle": {
+    "description": "App bar title for the access key notice screen"
+  },
+  "accessKeyNoticePrimary": "अगले पेज पर आपको 24 शब्दों की एक श्रृंखला दिखाई देगी। यह आपकी विशिष्ट और निजी एन्क्रिप्शन कुंजी है और लॉगआउट, डिवाइस खो जाने या खराब होने की स्थिति में आपके डेटा को पुनर्प्राप्त करने का यही एकमात्र तरीका है।",
+  "@accessKeyNoticePrimary": {
+    "description": "Primary warning text explaining the importance of the 24-word recovery key"
+  },
+  "accessKeyNoticeResponsibility": "हम यह कुंजी संग्रहीत नहीं करते। इसे {appName} ऐप के बाहर किसी सुरक्षित स्थान पर रखना आपकी जिम्मेदारी है।",
+  "@accessKeyNoticeResponsibility": {
+    "description": "Warning text reminding the user to store the recovery key outside the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "showKeyConfirmation": "मैं समझता/समझती हूँ।\nमुझे कुंजी दिखाएँ।",
+  "@showKeyConfirmation": {
+    "description": "Confirmation button label acknowledging the warning before showing the access key"
+  },
+  "storageAddedSuccessfully": "स्टोरेज सफलतापूर्वक जोड़ा गया",
+  "@storageAddedSuccessfully": {
+    "description": "Snackbar message shown when a storage provider is added successfully"
+  },
+  "networkErrorDuringValidation": "सत्यापन के दौरान नेटवर्क त्रुटि हुई।",
+  "@networkErrorDuringValidation": {
+    "description": "Error message shown when provider validation fails because of a network error"
+  },
+  "verifyAndConnect": "सत्यापित करें और कनेक्ट करें",
+  "@verifyAndConnect": {
+    "description": "Primary button label used to validate credentials and connect a storage provider"
+  },
+  "requiredField": "आवश्यक",
+  "@requiredField": {
+    "description": "Validation message shown when a required input field is empty"
+  },
+  "providerKeysVerifiedLocally": "आपकी कुंजियों का सत्यापन स्थानीय रूप से किया जाता है और भेजने से पहले उन्हें एन्क्रिप्ट किया जाता है।",
+  "@providerKeysVerifiedLocally": {
+    "description": "Informational text explaining local verification and encryption of credentials"
+  },
+  "enterYourCredentials": "अपने क्रेडेंशियल दर्ज करें",
+  "@enterYourCredentials": {
+    "description": "Section title prompting the user to enter provider credentials"
+  },
+  "connectProvider": "{provider} कनेक्ट करें",
+  "@connectProvider": {
+    "description": "Bottom app bar title for connecting a specific storage provider",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLimitReached": "डिवाइस सीमा पूरी हो गई",
+  "@deviceLimitReached": {
+    "description": "Snackbar message shown when the user has reached the maximum allowed number of registered devices"
+  },
+  "pleaseTryAgainWithExclamation": "कृपया फिर से प्रयास करें!",
+  "@pleaseTryAgainWithExclamation": {
+    "description": "Snackbar message shown when signing out a device fails"
+  },
+  "notThisDevice": "यह डिवाइस नहीं!",
+  "@notThisDevice": {
+    "description": "Snackbar message shown when the user tries to sign out the current device from the device list"
+  },
+  "confirmSignoutDeviceTitle": "डिवाइस साइनआउट की पुष्टि करें",
+  "@confirmSignoutDeviceTitle": {
+    "description": "Dialog title shown before signing out a device"
+  },
+  "areYouSure": "क्या आप सुनिश्चित हैं?",
+  "@areYouSure": {
+    "description": "Confirmation dialog message asking whether the user wants to proceed"
+  },
+  "cancel": "रद्द करें",
+  "@cancel": {
+    "description": "Button label used to cancel a dialog action"
+  },
+  "ok": "ठीक है",
+  "@ok": {
+    "description": "Button label used to confirm a dialog action"
+  },
+  "noDeviceFound": "कोई डिवाइस नहीं मिला",
+  "@noDeviceFound": {
+    "description": "Empty state message shown when no devices are available"
+  },
+  "backTooltip": "वापस",
+  "@backTooltip": {
+    "description": "Tooltip for the back navigation button"
+  },
+  "devicesTitle": "डिवाइस",
+  "@devicesTitle": {
+    "description": "Title for the devices screen"
+  },
+  "longPressToDownload": "डाउनलोड करने के लिए लंबा दबाएँ",
+  "@longPressToDownload": {
+    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+  },
+  "fewItemsExistLocally": "कुछ आइटम स्थानीय रूप से मौजूद हैं।",
+  "@fewItemsExistLocally": {
+    "description": "Snackbar message shown when some selected items still exist locally during archive action"
+  },
+  "selectedItemsCount": "{count} चयनित",
+  "@selectedItemsCount": {
+    "description": "Title shown in the multi-select app bar with the number of selected items",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "हटाएँ",
+  "@delete": {
+    "description": "Tooltip label for deleting selected items"
+  },
+  "info": "जानकारी",
+  "@info": {
+    "description": "Tooltip label for viewing file information"
+  },
+  "download": "डाउनलोड",
+  "@download": {
+    "description": "Tooltip label for downloading selected items"
+  },
+  "archive": "संग्रहित करें",
+  "@archive": {
+    "description": "Tooltip label for archiving selected items"
+  },
+  "appPro": "{appName} Pro",
+  "@appPro": {
+    "description": "Popup menu item label for the premium subscription page using the non-translated app name",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "logs": "लॉग्स",
+  "@logs": {
+    "description": "Popup menu item label for the logs page"
+  },
+  "settings": "सेटिंग्स",
+  "@settings": {
+    "description": "Popup menu item label for the settings page"
+  },
+  "trash": "ट्रैश",
+  "@trash": {
+    "description": "Popup menu item label for the trash page"
+  },
+  "storage": "स्टोरेज",
+  "@storage": {
+    "description": "Popup menu item label for the storage providers page"
+  },
+  "search": "खोजें",
+  "@search": {
+    "description": "Popup menu item label for the search page"
+  },
+  "database": "डेटाबेस",
+  "@database": {
+    "description": "Popup menu item label for the database debug page"
+  },
+  "addFolderTitle": "फ़ोल्डर जोड़ें",
+  "@addFolderTitle": {
+    "description": "Dialog title shown when confirming addition of a sync folder"
+  },
+  "confirm": "पुष्टि करें",
+  "@confirm": {
+    "description": "Button label used to confirm an action in a dialog"
+  },
+  "tapPlusToAddSyncFolder": "सिंक फ़ोल्डर जोड़ने के लिए + पर टैप करें।",
+  "@tapPlusToAddSyncFolder": {
+    "description": "Empty state message shown at the device root when no sync folders have been added"
+  },
+  "thisFolderIsEmpty": "यह फ़ोल्डर खाली है।",
+  "@thisFolderIsEmpty": {
+    "description": "Empty state message shown when the current folder has no items"
+  },
+  "fileNotFound": "फ़ाइल नहीं मिली",
+  "@fileNotFound": {
+    "description": "Error message shown when the requested file metadata cannot be found"
+  },
+  "filePartsTitle": "फ़ाइल भाग ({count})",
+  "@filePartsTitle": {
+    "description": "Section title showing the number of encrypted file parts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileDetailsTitle": "फ़ाइल विवरण",
+  "@fileDetailsTitle": {
+    "description": "Bottom app bar title for the file details screen"
+  },
+  "encryptedBackup": "एन्क्रिप्टेड बैकअप",
+  "@encryptedBackup": {
+    "description": "Subtitle shown below the file name on the file details screen"
+  },
+  "sizeLabel": "आकार",
+  "@sizeLabel": {
+    "description": "Metadata label showing the file size"
+  },
+  "providerLabel": "प्रदाता",
+  "@providerLabel": {
+    "description": "Metadata label showing the storage provider"
+  },
+  "uploadedAtLabel": "अपलोड किया गया",
+  "@uploadedAtLabel": {
+    "description": "Metadata label showing when the file was uploaded"
+  },
+  "statusLabel": "स्थिति",
+  "@statusLabel": {
+    "description": "Metadata label showing the file upload status"
+  },
+  "uploadedStatus": "अपलोड किया गया",
+  "@uploadedStatus": {
+    "description": "Status value shown when the file upload completed successfully"
+  },
+  "errorWithMessage": "त्रुटि: {message}",
+  "@errorWithMessage": {
+    "description": "Error text shown when loading logs fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "noLogsAvailable": "कोई लॉग उपलब्ध नहीं है",
+  "@noLogsAvailable": {
+    "description": "Empty state text shown when there are no logs to display"
+  },
+  "searchLogsHint": "लॉग खोजें..",
+  "@searchLogsHint": {
+    "description": "Hint text for the log search field"
+  },
+  "clearLogs": "लॉग साफ़ करें",
+  "@clearLogs": {
+    "description": "Tooltip for the button that clears all logs"
+  },
+  "searchWithMinThreeCharacters": "कम से कम 3 अक्षरों से खोजें",
+  "@searchWithMinThreeCharacters": {
+    "description": "Hint text shown in the search field requiring at least three characters"
+  },
+  "typeBelowToSearch": "खोजने के लिए नीचे टाइप करें",
+  "@typeBelowToSearch": {
+    "description": "Empty state message shown before the user starts typing in the search screen"
+  },
+  "noResults": "कोई परिणाम नहीं।",
+  "@noResults": {
+    "description": "Empty state message shown when the search returns no items"
+  },
+  "welcomeTitle": "स्वागत है",
+  "@welcomeTitle": {
+    "description": "Title shown on the sign in screen"
+  },
+  "signInToContinue": "{appName} में जारी रखने के लिए साइन इन करें",
+  "@signInToContinue": {
+    "description": "Subtitle on the sign in screen prompting the user to continue into the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterYourEmail": "कृपया अपना ईमेल दर्ज करें",
+  "@pleaseEnterYourEmail": {
+    "description": "Validation message shown when the email field is empty"
+  },
+  "pleaseEnterValidEmailAddress": "कृपया एक मान्य ईमेल पता दर्ज करें",
+  "@pleaseEnterValidEmailAddress": {
+    "description": "Validation message shown when the email format is invalid"
+  },
+  "emailAddressLabel": "ईमेल पता",
+  "@emailAddressLabel": {
+    "description": "Label for the email input field"
+  },
+  "emailAddressHint": "your.email@example.com",
+  "@emailAddressHint": {
+    "description": "Hint text shown in the email input field"
+  },
+  "retrySendingOtp": "OTP फिर से भेजें",
+  "@retrySendingOtp": {
+    "description": "Button label shown when sending OTP failed and the user can retry"
+  },
+  "sendOtp": "OTP भेजें",
+  "@sendOtp": {
+    "description": "Primary button label used to request an OTP"
+  },
+  "checkYourEmail": "अपना ईमेल जाँचें",
+  "@checkYourEmail": {
+    "description": "Title shown on the OTP verification step"
+  },
+  "sentSixDigitCodeTo": "हमने 6-अंकों का कोड इस पते पर भेजा है\n{email}",
+  "@sentSixDigitCodeTo": {
+    "description": "Message shown after sending the OTP to the user's email",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterOtp": "कृपया OTP दर्ज करें",
+  "@pleaseEnterOtp": {
+    "description": "Validation message shown when the OTP field is empty"
+  },
+  "otpMustBeSixDigits": "OTP 6 अंकों का होना चाहिए",
+  "@otpMustBeSixDigits": {
+    "description": "Validation message shown when the OTP is shorter than six digits"
+  },
+  "enterOtpLabel": "OTP दर्ज करें",
+  "@enterOtpLabel": {
+    "description": "Label for the OTP input field"
+  },
+  "otpHint": "000000",
+  "@otpHint": {
+    "description": "Hint text shown in the OTP input field"
+  },
+  "retryVerification": "सत्यापन फिर से करें",
+  "@retryVerification": {
+    "description": "Button label shown when OTP verification failed and the user can retry"
+  },
+  "verifyOtp": "OTP सत्यापित करें",
+  "@verifyOtp": {
+    "description": "Primary button label used to verify the OTP"
+  },
+  "useDifferentEmail": "अलग ईमेल का उपयोग करें",
+  "@useDifferentEmail": {
+    "description": "Button label used to go back and enter a different email address"
+  },
+  "alreadySignedIn": "पहले से साइन इन है",
+  "@alreadySignedIn": {
+    "description": "Title shown when the user is already signed in"
+  },
+  "sendingOtpFailedPleaseTryAgain": "OTP भेजना विफल रहा। कृपया फिर से प्रयास करें!",
+  "@sendingOtpFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when sending the OTP fails"
+  },
+  "otpVerificationFailedPleaseTryAgain": "OTP सत्यापन विफल रहा। कृपया फिर से प्रयास करें।",
+  "@otpVerificationFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when verifying the OTP fails"
+  },
+  "dbViewerTitle": "DB व्यूअर",
+  "@dbViewerTitle": {
+    "description": "App bar title for the SQLite database viewer screen"
+  },
+  "selectTableToViewData": "उसका डेटा देखने के लिए एक तालिका चुनें",
+  "@selectTableToViewData": {
+    "description": "Empty state message shown before a database table is selected"
+  },
+  "selectTable": "एक तालिका चुनें",
+  "@selectTable": {
+    "description": "Hint text for the table selection dropdown"
+  },
+  "permissionRequiredTitle": "अनुमति आवश्यक है",
+  "@permissionRequiredTitle": {
+    "description": "Dialog title shown when storage permission is permanently denied"
+  },
+  "storagePermissionSettingsDescription": "पृष्ठभूमि में आपकी फ़ाइलों का स्वचालित बैकअप, प्रबंधन और सुरक्षा करने के लिए हमें आपके डिवाइस स्टोरेज तक पहुँच चाहिए। आपका डेटा स्थानीय रूप से एन्क्रिप्ट होता है, जिससे पूर्ण गोपनीयता सुनिश्चित होती है। जारी रखने के लिए कृपया पहुँच प्रदान करें।",
+  "@storagePermissionSettingsDescription": {
+    "description": "Dialog description explaining why storage permission is needed and asking the user to open settings"
+  },
+  "openSettings": "सेटिंग्स खोलें",
+  "@openSettings": {
+    "description": "Button label used to open the system app settings screen"
+  },
+  "storagePermissionRequiredToContinue": "जारी रखने के लिए स्टोरेज अनुमति आवश्यक है",
+  "@storagePermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies storage permission"
+  },
+  "secureLocalAccessTitle": "सुरक्षित स्थानीय पहुँच",
+  "@secureLocalAccessTitle": {
+    "description": "Main title on the storage permission onboarding screen"
+  },
+  "storagePermissionPageDescription": "आपकी फ़ाइलों को एक्सप्लोर, एन्क्रिप्ट और स्वचालित रूप से बैकअप करने के लिए हमें आपके डिवाइस स्टोरेज तक पहुँच चाहिए।",
+  "@storagePermissionPageDescription": {
+    "description": "Description on the storage permission page explaining why access is needed"
+  },
+  "verifying": "सत्यापित किया जा रहा है...",
+  "@verifying": {
+    "description": "Button loading label shown while permission status is being checked"
+  },
+  "grantAccess": "पहुँच दें",
+  "@grantAccess": {
+    "description": "Primary button label used to request storage permission"
+  },
+  "zeroKnowledgeEncryptedStorage": "ज़ीरो-नॉलेज एन्क्रिप्टेड स्टोरेज",
+  "@zeroKnowledgeEncryptedStorage": {
+    "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
+  },
+  "requiresAppPro": "{appName} Pro आवश्यक है।",
+  "@requiresAppPro": {
+    "description": "Snackbar message shown when a Pro subscription is required for modifying storage",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "noStorageFound": "कोई स्टोरेज नहीं मिला",
+  "@noStorageFound": {
+    "description": "Empty state message shown when no storage providers are available"
+  },
+  "howToConnect": "कनेक्ट कैसे करें",
+  "@howToConnect": {
+    "description": "Button label that opens help about connecting a storage provider"
+  },
+  "modify": "संशोधित करें",
+  "@modify": {
+    "description": "Button label used to modify a connected storage provider"
+  },
+  "storageUsed": "{used} / {total} उपयोग किया गया",
+  "@storageUsed": {
+    "description": "Storage usage label showing used and total storage",
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "percentageLabel": "{value}%",
+  "@percentageLabel": {
+    "description": "Percentage label showing storage usage percent",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "upToFree": "{size} तक मुफ्त",
+  "@upToFree": {
+    "description": "Label showing the maximum free storage available for an unconnected provider",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "notConnected": "कनेक्ट नहीं है",
+  "@notConnected": {
+    "description": "Status label shown for a storage provider that has not been connected"
+  },
+  "connect": "कनेक्ट करें",
+  "@connect": {
+    "description": "Button label used to connect a storage provider"
+  },
+  "modifyStorageCapacityTitle": "स्टोरेज क्षमता संशोधित करें",
+  "@modifyStorageCapacityTitle": {
+    "description": "Dialog title for changing the storage capacity of a provider"
+  },
+  "enterNewStorageLimitForProvider": "इस प्रदाता के लिए नई स्टोरेज सीमा दर्ज करें।",
+  "@enterNewStorageLimitForProvider": {
+    "description": "Helper text in the modify storage dialog"
+  },
+  "sizePrefix": "आकार: ",
+  "@sizePrefix": {
+    "description": "Prefix text shown before the numeric storage size input"
+  },
+  "gbSuffix": " GB",
+  "@gbSuffix": {
+    "description": "Suffix text shown after the numeric storage size input"
+  },
+  "pleaseEnterSize": "कृपया एक आकार दर्ज करें",
+  "@pleaseEnterSize": {
+    "description": "Validation message shown when the storage size field is empty"
+  },
+  "enterValidNumberGreaterThanOne": "1 से बड़ा एक मान्य संख्या दर्ज करें",
+  "@enterValidNumberGreaterThanOne": {
+    "description": "Validation message shown when the entered storage size is invalid"
+  },
+  "submit": "सबमिट करें",
+  "@submit": {
+    "description": "Button label used to submit the storage size dialog"
+  },
+  "successfullySubscribedToAppPro": "{appName} Pro की सदस्यता सफलतापूर्वक ली गई!",
+  "@successfullySubscribedToAppPro": {
+    "description": "Snackbar message shown after a successful subscription purchase",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseCancelledOrFailed": "खरीद रद्द हो गई या विफल रही।",
+  "@purchaseCancelledOrFailed": {
+    "description": "Snackbar message shown when the purchase flow is cancelled or fails"
+  },
+  "purchasesRestoredSuccessfully": "खरीदारी सफलतापूर्वक बहाल की गई!",
+  "@purchasesRestoredSuccessfully": {
+    "description": "Snackbar message shown when previous purchases are restored successfully"
+  },
+  "noActiveSubscriptionsFound": "कोई सक्रिय सदस्यता नहीं मिली।",
+  "@noActiveSubscriptionsFound": {
+    "description": "Snackbar message shown when restore purchases finds no active subscription"
+  },
+  "manageSubscriptionsInDeviceSettings": "कृपया अपनी सदस्यताओं का प्रबंधन डिवाइस सेटिंग्स में करें।",
+  "@manageSubscriptionsInDeviceSettings": {
+    "description": "Snackbar message shown when no management URL is available"
+  },
+  "freePlanTitle": "मुफ्त",
+  "@freePlanTitle": {
+    "description": "Title of the free subscription plan card"
+  },
+  "freeForeverPrice": "$0.00 / हमेशा के लिए",
+  "@freeForeverPrice": {
+    "description": "Price label for the free plan"
+  },
+  "freeBenefitProviderStorage": "प्रदाताओं से मुफ्त स्टोरेज का आनंद लें",
+  "@freeBenefitProviderStorage": {
+    "description": "Benefit listed under the free plan"
+  },
+  "freeBenefitSyncThreeDevices": "3 डिवाइस तक सुरक्षित रूप से सिंक करें",
+  "@freeBenefitSyncThreeDevices": {
+    "description": "Benefit listed under the free plan"
+  },
+  "appProYearlyTitle": "{appName} Pro - वार्षिक",
+  "@appProYearlyTitle": {
+    "description": "Title of the yearly pro subscription plan",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "proBenefitModifyStorageLimit": "हर प्रदाता के लिए स्टोरेज सीमा संशोधित करें",
+  "@proBenefitModifyStorageLimit": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "proBenefitSyncTenDevices": "10 डिवाइस तक सिंक करें",
+  "@proBenefitSyncTenDevices": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "restorePurchases": "खरीदारी बहाल करें",
+  "@restorePurchases": {
+    "description": "Button label used to restore previous purchases"
+  },
+  "subscriptionAssociatedWithEmailNotDevice": "* सदस्यता डिवाइस से नहीं, ईमेल खाते से जुड़ी है",
+  "@subscriptionAssociatedWithEmailNotDevice": {
+    "description": "Footnote explaining that the subscription is tied to the email account rather than a device"
+  },
+  "subscriptionExpiredTitle": "सदस्यता समाप्त हो गई",
+  "@subscriptionExpiredTitle": {
+    "description": "Title shown in the expired subscription banner"
+  },
+  "subscriptionExpiredDescription": "आपके {appName} Pro लाभ रोक दिए गए हैं। अपनी स्टोरेज सीमाएँ और डिवाइस सिंक बहाल करने के लिए नीचे नवीनीकरण करें।",
+  "@subscriptionExpiredDescription": {
+    "description": "Description shown in the expired subscription banner",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "appProIsActive": "{appName} Pro सक्रिय है",
+  "@appProIsActive": {
+    "description": "Title shown when the user has an active Pro subscription",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "activePlanBenefitsSummary": "✓ हर प्रदाता के लिए स्टोरेज सीमाएँ संशोधित करें\n✓ 10 डिवाइस तक क्रॉस-सिंक करें",
+  "@activePlanBenefitsSummary": {
+    "description": "Summary of active Pro subscription benefits"
+  },
+  "manageSubscription": "सदस्यता प्रबंधित करें",
+  "@manageSubscription": {
+    "description": "Button label used to open subscription management"
+  },
+  "currentPlanBadge": "वर्तमान",
+  "@currentPlanBadge": {
+    "description": "Badge shown on the current active plan"
+  },
+  "subscribeNow": "अभी सदस्यता लें",
+  "@subscribeNow": {
+    "description": "Primary call to action for purchasing the Pro plan"
+  },
+  "subscribeOnMobileApp": "मोबाइल ऐप पर सदस्यता लें",
+  "@subscribeOnMobileApp": {
+    "description": "Call to action shown when subscription purchase is not supported on the current platform"
+  },
+  "recover": "पुनर्प्राप्त करें",
+  "@recover": {
+    "description": "Tooltip label for recovering selected items from the trash"
+  },
+  "empty": "खाली करें",
+  "@empty": {
+    "description": "Tooltip label for emptying the trash"
+  },
+  "noItems": "कोई आइटम नहीं।",
+  "@noItems": {
+    "description": "Empty state text shown when the trash has no items"
   }
 }

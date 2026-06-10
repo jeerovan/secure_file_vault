@@ -6,6 +6,7 @@ import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../models/model_item_task.dart';
@@ -292,8 +293,8 @@ class WidgetKeyValueTable extends StatelessWidget {
 
 // Try failed request again
 Widget tryFailedRequestAgain(
-    {required String message,
-    required TextStyle? style,
+    {required BuildContext context,
+    required String message,
     required Function() onPressed}) {
   return Center(
     child: Padding(
@@ -306,13 +307,13 @@ Widget tryFailedRequestAgain(
           Text(
             message,
             textAlign: TextAlign.center,
-            style: style,
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
             onPressed: onPressed,
             icon: const Icon(LucideIcons.rotateCw),
-            label: const Text("Try Again"),
+            label: Text(AppLocalizations.of(context)!.tryAgain),
           ),
         ],
       ),
@@ -354,31 +355,83 @@ class _PrivacyTermsWidgetState extends State<PrivacyTermsWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    const termsMarker = '__TERMS__';
+    const privacyMarker = '__PRIVACY__';
+
+    final text = l10n.continueAgreementText(termsMarker, privacyMarker);
+
+    final termsIndex = text.indexOf(termsMarker);
+    final privacyIndex = text.indexOf(privacyMarker);
+
+    if (termsIndex == -1 || privacyIndex == -1) {
+      return Text(
+        text,
+        textAlign: TextAlign.center,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    final firstMarkerIsTerms = termsIndex < privacyIndex;
+    final firstIndex = firstMarkerIsTerms ? termsIndex : privacyIndex;
+    final secondIndex = firstMarkerIsTerms ? privacyIndex : termsIndex;
+    final firstMarker = firstMarkerIsTerms ? termsMarker : privacyMarker;
+    final secondMarker = firstMarkerIsTerms ? privacyMarker : termsMarker;
+
+    final prefix = text.substring(0, firstIndex);
+    final middle = text.substring(firstIndex + firstMarker.length, secondIndex);
+    final suffix = text.substring(secondIndex + secondMarker.length);
+
+    final linkStyle = TextStyle(
+      color: theme.colorScheme.primary,
+      fontWeight: FontWeight.w600,
+    );
+
+    InlineSpan firstLinkSpan() {
+      if (firstMarkerIsTerms) {
+        return TextSpan(
+          text: l10n.termsOfService,
+          style: linkStyle,
+          recognizer: termsRecognizer,
+        );
+      }
+      return TextSpan(
+        text: l10n.privacyPolicy,
+        style: linkStyle,
+        recognizer: privacyRecognizer,
+      );
+    }
+
+    InlineSpan secondLinkSpan() {
+      if (firstMarkerIsTerms) {
+        return TextSpan(
+          text: l10n.privacyPolicy,
+          style: linkStyle,
+          recognizer: privacyRecognizer,
+        );
+      }
+      return TextSpan(
+        text: l10n.termsOfService,
+        style: linkStyle,
+        recognizer: termsRecognizer,
+      );
+    }
+
     return Text.rich(
       TextSpan(
-        text: 'By continuing, you agree to our ',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
         children: [
-          TextSpan(
-            text: 'Terms of Service',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-            recognizer: termsRecognizer,
-          ),
-          const TextSpan(text: ' and '),
-          TextSpan(
-            text: 'Privacy Policy',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-            recognizer: privacyRecognizer,
-          ),
-          const TextSpan(text: '.'),
+          TextSpan(text: prefix),
+          firstLinkSpan(),
+          TextSpan(text: middle),
+          secondLinkSpan(),
+          TextSpan(text: suffix),
         ],
       ),
       textAlign: TextAlign.center,
@@ -872,123 +925,6 @@ class UploadDownloadIndicatorState extends State<UploadDownloadIndicator>
           widget.uploading ? LucideIcons.moveUp : LucideIcons.moveDown,
           size: widget.size,
         ),
-      ),
-    );
-  }
-}
-
-class DownloadButton extends StatefulWidget {
-  final VoidCallback onPressed;
-  final double iconSize;
-
-  const DownloadButton({
-    super.key,
-    this.iconSize = 30.0,
-    required this.onPressed, // Default icon size
-  });
-
-  @override
-  State<DownloadButton> createState() => _DownloadButtonState();
-}
-
-class _DownloadButtonState extends State<DownloadButton> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface.withAlpha(50),
-          width: 2.0,
-        ),
-      ),
-      child: IconButton(
-        tooltip: "Download",
-        icon: Opacity(
-          opacity: 0.5,
-          child: Icon(
-            LucideIcons.moveUp,
-            size: widget.iconSize,
-          ),
-        ),
-        onPressed: widget.onPressed,
-      ),
-    );
-  }
-}
-
-class VideoPlayDownloadButton extends StatelessWidget {
-  final double iconSize;
-  final bool showPlay;
-  final VoidCallback onPressed;
-  const VideoPlayDownloadButton(
-      {super.key,
-      required this.iconSize,
-      required this.showPlay,
-      required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      alignment: Alignment.center,
-      width: iconSize,
-      height: iconSize,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
-        // Semi-transparent grey background
-        shape: BoxShape.circle,
-      ),
-      child: showPlay
-          ? Icon(
-              LucideIcons.play,
-              color: Colors.white,
-              size: iconSize / 2,
-            )
-          : IconButton(
-              tooltip: "Download",
-              icon: Icon(
-                LucideIcons.moveDown,
-                color: Colors.white,
-                size: iconSize / 2,
-              ),
-              onPressed: onPressed,
-            ),
-    );
-  }
-}
-
-class ImageDownloadButton extends StatefulWidget {
-  final VoidCallback onPressed;
-  final double iconSize;
-  const ImageDownloadButton({
-    super.key,
-    required this.iconSize,
-    required this.onPressed,
-  });
-
-  @override
-  State<ImageDownloadButton> createState() => _ImageDownloadButtonState();
-}
-
-class _ImageDownloadButtonState extends State<ImageDownloadButton> {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: widget.iconSize,
-      height: widget.iconSize,
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.6),
-        // Semi-transparent grey background
-        shape: BoxShape.circle,
-      ),
-      child: IconButton(
-        tooltip: "Download",
-        icon: Icon(
-          LucideIcons.moveDown,
-          color: Colors.white,
-          size: widget.iconSize / 2,
-        ),
-        onPressed: widget.onPressed,
       ),
     );
   }

@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for Clipboard
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:sodium/sodium_sumo.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../utils/common.dart';
 import '../../ui/common_widgets.dart';
 import '../../storage/storage_secure.dart';
@@ -39,13 +40,11 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
     super.dispose();
   }
 
-  /// Validates input to ensure it contains exactly 24 words
   bool _validateWordCount(String input) {
     final words = input.trim().split(RegExp(r'\s+'));
     return words.length == 24;
   }
 
-  /// Pastes content from clipboard directly into the text field
   Future<void> _pasteFromClipboard() async {
     final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
     if (clipboardData?.text != null) {
@@ -53,7 +52,6 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
     }
   }
 
-  /// Processes the validated 24 words further
   Future<void> _processWords(String words) async {
     setState(() => processing = true);
 
@@ -65,7 +63,13 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
       CryptoUtils cryptoUtils = CryptoUtils(sodium);
 
       if (!bip39.validateMnemonic(words)) {
-        if (mounted) showAlertMessage(context, "Error", "Invalid word list");
+        if (mounted) {
+          showAlertMessage(
+            context,
+            AppLocalizations.of(context)!.errorTitle,
+            AppLocalizations.of(context)!.invalidWordList,
+          );
+        }
         return;
       }
 
@@ -81,30 +85,58 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
       Uint8List masterKeyNonceBytes = base64Decode(masterKeyNonceBase64);
 
       ExecutionResult masterKeyDecryptionResult = cryptoUtils.decryptBytes(
-          cipherBytes: masterKeyCipheredBytes,
-          nonce: masterKeyNonceBytes,
-          key: accessKeyBytes);
+        cipherBytes: masterKeyCipheredBytes,
+        nonce: masterKeyNonceBytes,
+        key: accessKeyBytes,
+      );
 
       if (masterKeyDecryptionResult.isFailure) {
-        if (mounted) showAlertMessage(context, "Failure", "Invalid access key");
+        if (mounted) {
+          showAlertMessage(
+            context,
+            AppLocalizations.of(context)!.failureTitle,
+            AppLocalizations.of(context)!.invalidAccessKey,
+          );
+        }
       } else {
         Uint8List decryptedMasterKeyBytes =
             masterKeyDecryptionResult.getResult()!["decrypted"];
         String decryptedMasterKeyBase64 = base64Encode(decryptedMasterKeyBytes);
-
+        String decryptedAccessKeyBase64 = base64Encode(accessKeyBytes);
         String fileHashKeyBase64 = cryptoUtils.getHashingKeyFromMasterKey(
-            decryptedMasterKeyBase64, AppString.fileHashKeyContext.string, 1);
-
-        // Save keys to secure storage
-        await secureStorage.write(
-            key: AppString.masterKey.string, value: decryptedMasterKeyBase64);
-        await secureStorage.write(
+          decryptedMasterKeyBase64,
+          AppString.fileHashKeyContext.string,
+          1,
+        );
+        if (simulateTesting()) {
+          String savedMasterKey = await secureStorage.read(
+              key: AppString.masterKey.string) as String;
+          String savedAccessKey = await secureStorage.read(
+              key: AppString.accessKey.string) as String;
+          String savedFileHashKey = await secureStorage.read(
+              key: AppString.fileHashKey.string) as String;
+          if (mounted &&
+              savedMasterKey == decryptedMasterKeyBase64 &&
+              savedAccessKey == decryptedAccessKeyBase64 &&
+              savedFileHashKey == fileHashKeyBase64) {
+            displaySnackBar(context, message: "Keys Matched", seconds: 2);
+          } else if (mounted) {
+            displaySnackBar(context, message: "Keys DID NOT Match", seconds: 2);
+          }
+        } else {
+          await secureStorage.write(
+            key: AppString.masterKey.string,
+            value: decryptedMasterKeyBase64,
+          );
+          await secureStorage.write(
             key: AppString.accessKey.string,
-            value: base64Encode(accessKeyBytes));
-        await secureStorage.write(
-            key: AppString.fileHashKey.string, value: fileHashKeyBase64);
-
-        // Delete keycipher and keynonce
+            value: decryptedAccessKeyBase64,
+          );
+          await secureStorage.write(
+            key: AppString.fileHashKey.string,
+            value: fileHashKeyBase64,
+          );
+        }
         await secureStorage.delete(key: AppString.keyCipher.string);
         await secureStorage.delete(key: AppString.keyNonce.string);
 
@@ -114,8 +146,11 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
       }
     } catch (e) {
       if (mounted) {
-        showAlertMessage(context, "Error",
-            "An unexpected error occurred during decryption.");
+        showAlertMessage(
+          context,
+          AppLocalizations.of(context)!.errorTitle,
+          AppLocalizations.of(context)!.unexpectedDecryptionError,
+        );
       }
     } finally {
       if (mounted) {
@@ -124,7 +159,6 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
     }
   }
 
-  /// Handles file selection and validation
   Future<void> _selectFile() async {
     try {
       final result = await FilePicker.platform.pickFiles(
@@ -137,30 +171,34 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
         final content = await file.readAsString();
 
         if (_validateWordCount(content)) {
-          // Update the text field so the user sees what was loaded
           _textController.text = content.trim();
           await _processWords(content.trim());
         } else {
           if (mounted) {
-            showAlertMessage(context, "Error",
-                'The file does not contain exactly 24 words.');
+            showAlertMessage(
+              context,
+              AppLocalizations.of(context)!.errorTitle,
+              AppLocalizations.of(context)!.fileMustContainExactly24Words,
+            );
           }
         }
       }
     } catch (e) {
       if (mounted) {
-        displaySnackBar(context, message: "Error reading file", seconds: 2);
+        displaySnackBar(
+          context,
+          message: AppLocalizations.of(context)!.errorReadingFile,
+          seconds: 2,
+        );
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Determine dynamic color for the word counter
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Encryption'),
+        title: Text(AppLocalizations.of(context)!.encryptionTitle),
         centerTitle: true,
         elevation: 0,
       ),
@@ -178,14 +216,12 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                   color: Colors.blueAccent,
                 ),
                 const SizedBox(height: 16.0),
-                const Text(
-                  "Enter your 24-word recovery phrase or load a .txt file to securely enable cloud sync.",
-                  style: TextStyle(fontSize: 16.0, height: 1.4),
+                Text(
+                  AppLocalizations.of(context)!.accessKeyDecodeDescription,
+                  style: const TextStyle(fontSize: 16.0, height: 1.4),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32.0),
-
-                // TextField with enhanced UX
                 TextFormField(
                   controller: _textController,
                   enabled: !processing,
@@ -194,9 +230,10 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                   maxLines: 6,
                   textInputAction: TextInputAction.done,
                   decoration: InputDecoration(
-                    labelText: 'Recovery Phrase',
+                    labelText:
+                        AppLocalizations.of(context)!.recoveryPhraseLabel,
                     alignLabelWithHint: true,
-                    hintText: 'word1 word2 word3...',
+                    hintText: AppLocalizations.of(context)!.recoveryPhraseHint,
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(12)),
                     ),
@@ -205,18 +242,14 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                         .colorScheme
                         .surfaceContainerHighest
                         .withAlpha(60),
-
-                    // GUARANTEED TO UPDATE: ValueListenableBuilder listens directly to the controller
                     counter: ValueListenableBuilder<TextEditingValue>(
                       valueListenable: _textController,
                       builder: (context, value, child) {
-                        // Calculate word count in real-time
                         final text = value.text.trim();
                         final wordCount = text.isEmpty
                             ? 0
                             : text.split(RegExp(r'\s+')).length;
 
-                        // Determine dynamic color
                         final counterColor = wordCount == 24
                             ? Colors.green.shade700
                             : (wordCount > 24
@@ -229,9 +262,13 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                             TextButton.icon(
                               onPressed:
                                   processing ? null : _pasteFromClipboard,
-                              icon: const Icon(LucideIcons.clipboardPaste,
-                                  size: 16),
-                              label: const Text("Paste"),
+                              icon: const Icon(
+                                LucideIcons.clipboardPaste,
+                                size: 16,
+                              ),
+                              label: Text(
+                                AppLocalizations.of(context)!.paste,
+                              ),
                               style: TextButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 minimumSize: const Size(50, 30),
@@ -239,7 +276,8 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                               ),
                             ),
                             Text(
-                              '$wordCount / 24 words',
+                              AppLocalizations.of(context)!
+                                  .wordCountLabel(wordCount),
                               style: TextStyle(
                                 color: counterColor,
                                 fontWeight: FontWeight.w600,
@@ -252,17 +290,17 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter your recovery phrase';
+                      return AppLocalizations.of(context)!
+                          .pleaseEnterRecoveryPhrase;
                     }
                     if (!_validateWordCount(value)) {
-                      return 'Must contain exactly 24 words';
+                      return AppLocalizations.of(context)!
+                          .mustContainExactly24Words;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 24.0),
-
-                // Submit Button
                 FilledButton(
                   style: FilledButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -274,7 +312,6 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                       ? null
                       : () {
                           if (_formKey.currentState!.validate()) {
-                            // Hide keyboard on submit
                             FocusScope.of(context).unfocus();
                             _processWords(_textController.text);
                           }
@@ -287,22 +324,22 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                             strokeWidth: 2.5,
                           ),
                         )
-                      : const Text(
-                          'Verify',
-                          style: TextStyle(
-                              fontSize: 16.0, fontWeight: FontWeight.bold),
+                      : Text(
+                          AppLocalizations.of(context)!.verify,
+                          style: const TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
                 const SizedBox(height: 24.0),
-
-                // Separator Line
                 Row(
                   children: [
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
-                        'OR',
+                        AppLocalizations.of(context)!.orLabel,
                         style: TextStyle(
                           fontSize: 12.0,
                           color: Colors.grey.shade600,
@@ -314,8 +351,6 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                   ],
                 ),
                 const SizedBox(height: 24.0),
-
-                // File Upload Button
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -325,9 +360,9 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                   ),
                   onPressed: processing ? null : _selectFile,
                   icon: const Icon(LucideIcons.fileText),
-                  label: const Text(
-                    "Load from .txt File",
-                    style: TextStyle(fontSize: 16.0),
+                  label: Text(
+                    AppLocalizations.of(context)!.loadFromTxtFile,
+                    style: const TextStyle(fontSize: 16.0),
                   ),
                 ),
               ],
