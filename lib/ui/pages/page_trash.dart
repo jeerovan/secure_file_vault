@@ -1,5 +1,6 @@
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/model_item.dart';
 import '../../services/service_logger.dart';
 import '../../utils/common.dart';
@@ -16,7 +17,6 @@ class _PageTrashState extends State<PageTrash> {
   final AppLogger logger = AppLogger(prefixes: ["TrashPage"]);
   List<ModelItem> _items = [];
   bool _isLoading = false;
-  // Multi-select state
   bool _isMultiSelectMode = false;
   final Set<ModelItem> _selectedItems = {};
 
@@ -56,7 +56,7 @@ class _PageTrashState extends State<PageTrash> {
       if (_selectedItems.contains(item)) {
         _selectedItems.remove(item);
         if (_selectedItems.isEmpty) {
-          _isMultiSelectMode = false; // Exit mode if nothing is selected
+          _isMultiSelectMode = false;
         }
       } else {
         _selectedItems.add(item);
@@ -125,40 +125,44 @@ class _PageTrashState extends State<PageTrash> {
       return buildBottomAppBar(
         leading: IconButton(
           icon: const Icon(LucideIcons.x),
-          tooltip: 'Cancel',
+          tooltip: AppLocalizations.of(context)!.cancel,
           onPressed: _cancelMultiSelect,
         ),
-        title: Text('${_selectedItems.length} Selected'),
+        title: Text(
+          AppLocalizations.of(context)!
+              .selectedItemsCount(_selectedItems.length),
+        ),
         color: surfaceColor,
         actions: [
           IconButton(
             icon: const Icon(LucideIcons.undo),
-            tooltip: 'Recover',
+            tooltip: AppLocalizations.of(context)!.recover,
             onPressed: recoverItems,
           ),
           IconButton(
             icon: const Icon(LucideIcons.trash),
-            tooltip: 'Delete',
+            tooltip: AppLocalizations.of(context)!.delete,
             onPressed: deleteItems,
           ),
         ],
       );
     }
 
-    // Default AppBar
     return buildBottomAppBar(
       leading: IconButton(
-          icon: const Icon(LucideIcons.arrowLeft),
-          tooltip: 'Back',
-          onPressed: navigateBack),
-      title: Text("Trash"),
+        icon: const Icon(LucideIcons.arrowLeft),
+        tooltip: AppLocalizations.of(context)!.backTooltip,
+        onPressed: navigateBack,
+      ),
+      title: Text(AppLocalizations.of(context)!.trash),
       color: surfaceColor,
       actions: [
         if (_items.isNotEmpty)
           IconButton(
-              icon: const Icon(LucideIcons.trash2),
-              tooltip: 'Empty',
-              onPressed: clearAll),
+            icon: const Icon(LucideIcons.trash2),
+            tooltip: AppLocalizations.of(context)!.empty,
+            onPressed: clearAll,
+          ),
       ],
     );
   }
@@ -175,7 +179,9 @@ class _PageTrashState extends State<PageTrash> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _items.isEmpty
-                      ? const Center(child: Text('No items.'))
+                      ? Center(
+                          child: Text(AppLocalizations.of(context)!.noItems),
+                        )
                       : _buildFileView(),
             ),
             _buildAppBar()
@@ -247,7 +253,6 @@ class _FileListItemState extends State<_FileListItem> {
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
           child: Row(
             children: [
-              // 1. Multi-Select Circular Checkbox
               AnimatedSize(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
@@ -279,8 +284,6 @@ class _FileListItemState extends State<_FileListItem> {
                       : const SizedBox.shrink(),
                 ),
               ),
-
-              // 2. File / Folder Icon
               SizedBox(
                 width: 30,
                 height: 30,
@@ -290,55 +293,47 @@ class _FileListItemState extends State<_FileListItem> {
                     Align(
                       alignment: Alignment.center,
                       child: Icon(
-                          widget.item.isFolder
-                              ? LucideIcons.folder
-                              : LucideIcons.file,
-                          size: 28,
-                          color: theme.colorScheme.primary.withAlpha(150)),
+                        widget.item.isFolder
+                            ? LucideIcons.folder
+                            : LucideIcons.file,
+                        size: 28,
+                        color: theme.colorScheme.primary.withAlpha(150),
+                      ),
                     ),
                   ],
                 ),
               ),
-
               const SizedBox(width: 16),
-
-              // 3. File Details
               Expanded(
-                  child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    widget.item.name,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: theme.colorScheme.onSurface,
-                      height:
-                          1.2, // Tighter line height for better vertical rhythm in lists
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  // Only display if it is a file
-                  if (!widget.item.isFolder) ...[
-                    const SizedBox(
-                        height:
-                            2), // Subtle spacing separates title from metadata
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                     Text(
-                      readableFileSizeFromBytes(widget.item.size),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        // onSurfaceVariant provides the perfect professional muted contrast
-                        // against the onSurface title color
-                        color: theme.colorScheme.onSurfaceVariant,
-                        letterSpacing:
-                            0.1, // Enhances readability for small alphanumeric text
+                      widget.item.name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: theme.colorScheme.onSurface,
+                        height: 1.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (!widget.item.isFolder) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        readableFileSizeFromBytes(widget.item.size),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          letterSpacing: 0.1,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
-                ],
-              )),
+                ),
+              ),
             ],
           ),
         ),

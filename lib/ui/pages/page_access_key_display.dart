@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import '../../l10n/app_localizations.dart';
 import '../../ui/common_widgets.dart';
 import '../../utils/enums.dart';
 import '../../services/service_logger.dart';
@@ -47,21 +48,24 @@ class _PageAccessKeyState extends State<PageAccessKey> {
   }
 
   Future<void> _downloadTextFile(String text) async {
+    final loc = AppLocalizations.of(context)!;
     try {
-      // MOBILE: Save to temp directory and open the native Share Sheet
       final directory = await getTemporaryDirectory();
       final filePath = path.join(directory.path, 'fife_access_key.txt');
       final file = File(filePath);
       await file.writeAsString(text);
 
-      // Updated share_plus syntax (replacing the deprecated Share.shareFiles)
       await SharePlus.instance.share(ShareParams(
         files: [XFile(filePath)],
-        text: 'Here is your access key.',
+        text: loc.accessKeyShareMessage,
       ));
     } catch (e) {
       if (mounted) {
-        displaySnackBar(context, message: "Please try again.", seconds: 1);
+        displaySnackBar(
+          context,
+          message: AppLocalizations.of(context)!.pleaseTryAgain,
+          seconds: 1,
+        );
       }
     }
   }
@@ -69,7 +73,11 @@ class _PageAccessKeyState extends State<PageAccessKey> {
   void copyToClipboard() {
     Clipboard.setData(ClipboardData(text: sentence));
     if (mounted) {
-      displaySnackBar(context, message: "Copied to clipboard", seconds: 1);
+      displaySnackBar(
+        context,
+        message: AppLocalizations.of(context)!.copiedToClipboard,
+        seconds: 1,
+      );
     }
   }
 
@@ -79,11 +87,17 @@ class _PageAccessKeyState extends State<PageAccessKey> {
     }
   }
 
+  Future<void> checkKeys() async {
+    if (mounted) {
+      await context.read<AppSetupState>().decodeAccessKey();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Access Key'),
+        title: Text(AppLocalizations.of(context)!.accessKeyTitle),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -91,15 +105,15 @@ class _PageAccessKeyState extends State<PageAccessKey> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Description Text
             Text(
-              "Please save this key in a secure place. Only this will allow you to access your encrypted data.",
-              style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.w500),
+              AppLocalizations.of(context)!.accessKeyDescription,
+              style: const TextStyle(
+                fontSize: 16.0,
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 20.0),
-
-            // Sentence Display
+            const SizedBox(height: 20.0),
             Container(
               padding: const EdgeInsets.all(16.0),
               decoration: BoxDecoration(
@@ -108,39 +122,41 @@ class _PageAccessKeyState extends State<PageAccessKey> {
               ),
               child: Text(
                 sentence,
-                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.w400),
+                style: const TextStyle(
+                  fontSize: 18.0,
+                  fontWeight: FontWeight.w400,
+                ),
                 textAlign: TextAlign.justify,
               ),
             ),
-            SizedBox(height: 30.0),
-            // Button to copy
+            const SizedBox(height: 30.0),
             FilledButton.icon(
-              onPressed: () => copyToClipboard(),
-              icon: Icon(
+              onPressed: copyToClipboard,
+              icon: const Icon(
                 LucideIcons.copy,
               ),
               label: Text(
-                "Copy",
+                AppLocalizations.of(context)!.copy,
               ),
             ),
-            SizedBox(height: 20.0),
-            // Button to Download and Save as Text File
+            const SizedBox(height: 20.0),
             FilledButton.icon(
               onPressed: () => _downloadTextFile(sentence),
-              icon: Icon(
+              icon: const Icon(
                 LucideIcons.download,
               ),
               label: Text(
-                "Download as Text File",
+                AppLocalizations.of(context)!.downloadAsTextFile,
               ),
             ),
-            SizedBox(height: 20.0),
-
-            // Button to Continue to Next Page
+            if (simulateTesting()) const SizedBox(height: 20.0),
+            if (simulateTesting())
+              TextButton(onPressed: checkKeys, child: Text("Check Keys")),
+            const SizedBox(height: 20.0),
             OutlinedButton(
               onPressed: continueToNext,
               style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
                 side: BorderSide(color: Theme.of(context).primaryColorLight),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
@@ -149,8 +165,8 @@ class _PageAccessKeyState extends State<PageAccessKey> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
-                  "Continue",
-                  style: TextStyle(fontSize: 16.0),
+                  AppLocalizations.of(context)!.continueLabel,
+                  style: const TextStyle(fontSize: 16.0),
                 ),
               ),
             ),

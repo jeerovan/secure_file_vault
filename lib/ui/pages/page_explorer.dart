@@ -4,6 +4,7 @@ import 'package:file_vault_bb/ui/pages/page_sqlite.dart';
 import 'package:file_vault_bb/ui/pages/page_subscription.dart';
 import 'package:sodium/sodium_sumo.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../storage/storage_channel.dart';
 import '../../ui/pages/page_devices.dart';
 import '../../ui/pages/page_file_info.dart';
@@ -240,7 +241,8 @@ class _FilePaneState extends State<FilePane> {
         logger.error(message);
         if (mounted) {
           displaySnackBar(context,
-              message: "Long press to download", seconds: 2);
+              message: AppLocalizations.of(context)!.longPressToDownload,
+              seconds: 2);
         }
       }
     }
@@ -347,7 +349,8 @@ class _FilePaneState extends State<FilePane> {
     _cancelMultiSelect();
     if (locallyExists && mounted) {
       displaySnackBar(context,
-          message: "Few items exists locally.", seconds: 2);
+          message: AppLocalizations.of(context)!.fewItemsExistLocally,
+          seconds: 2);
     }
   }
 
@@ -379,10 +382,6 @@ class _FilePaneState extends State<FilePane> {
       Navigator.of(context)
           .push(AnimatedPageRoute(child: PageFileInfo(item: item)));
     }
-  }
-
-  Future<void> signout() async {
-    context.read<AppSetupState>().logout();
   }
 
   Future<void> showArchives() async {
@@ -438,31 +437,34 @@ class _FilePaneState extends State<FilePane> {
             color: surfaceColor,
             leading: IconButton(
               icon: const Icon(LucideIcons.x),
-              tooltip: 'Cancel',
+              tooltip: AppLocalizations.of(context)!.cancel,
               onPressed: _cancelMultiSelect,
             ),
-            title: Text('${selectedItems.length} Selected'),
+            title: Text(
+              AppLocalizations.of(context)!
+                  .selectedItemsCount(selectedItems.length),
+            ),
             actions: [
               if (!_isLocalPath)
                 IconButton(
                   icon: const Icon(LucideIcons.trash),
-                  tooltip: 'Delete',
+                  tooltip: AppLocalizations.of(context)!.delete,
                   onPressed: deleteLocal,
                 ),
               if (selectedItems.length == 1 && !selectedItems.first.isFolder)
                 IconButton(
                   icon: const Icon(LucideIcons.info),
-                  tooltip: 'Info',
+                  tooltip: AppLocalizations.of(context)!.info,
                   onPressed: showInfo,
                 ),
               IconButton(
                 icon: const Icon(LucideIcons.downloadCloud),
-                tooltip: 'Download',
+                tooltip: AppLocalizations.of(context)!.download,
                 onPressed: downloadItems,
               ),
               IconButton(
                 icon: const Icon(LucideIcons.archive),
-                tooltip: 'Archive',
+                tooltip: AppLocalizations.of(context)!.archive,
                 onPressed: trashItems,
               ),
             ],
@@ -508,7 +510,6 @@ class _FilePaneState extends State<FilePane> {
                 ],
               ),
               onSelected: (value) {
-                if (value == 0) signout();
                 if (value == 1) showArchives();
                 if (value == 2) showDevices();
                 if (value == 3) showStorageProviders();
@@ -519,64 +520,57 @@ class _FilePaneState extends State<FilePane> {
                 if (value == 8) showDatabase();
               },
               itemBuilder: (context) => [
-                const PopupMenuItem<int>(
-                  value: 0,
-                  child: Row(
-                    children: [
-                      Icon(LucideIcons.logOut, color: Colors.grey),
-                      SizedBox(width: 16),
-                      Text('Signout'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem<int>(
+                PopupMenuItem<int>(
                   value: 7,
                   child: Row(
                     children: [
                       Icon(LucideIcons.dollarSign, color: Colors.grey),
                       SizedBox(width: 16),
-                      Text('FiFe Pro'),
+                      Text(
+                        AppLocalizations.of(context)!
+                            .appPro(AppString.appName.string),
+                      ),
                     ],
                   ),
                 ),
                 if (_loggingEnabled)
-                  const PopupMenuItem<int>(
+                  PopupMenuItem<int>(
                     value: 6,
                     child: Row(
                       children: [
                         Icon(LucideIcons.tableProperties, color: Colors.grey),
                         SizedBox(width: 16),
-                        Text('Logs'),
+                        Text(AppLocalizations.of(context)!.logs)
                       ],
                     ),
                   ),
-                const PopupMenuItem<int>(
+                PopupMenuItem<int>(
                   value: 5,
                   child: Row(
                     children: [
                       Icon(LucideIcons.settings, color: Colors.grey),
                       SizedBox(width: 16),
-                      Text('Settings'),
+                      Text(AppLocalizations.of(context)!.settings)
                     ],
                   ),
                 ),
-                const PopupMenuItem<int>(
+                PopupMenuItem<int>(
                   value: 1,
                   child: Row(
                     children: [
                       Icon(LucideIcons.archive, color: Colors.grey),
                       SizedBox(width: 16),
-                      Text('Trash'),
+                      Text(AppLocalizations.of(context)!.trash)
                     ],
                   ),
                 ),
-                const PopupMenuItem<int>(
+                PopupMenuItem<int>(
                   value: 2,
                   child: Row(
                     children: [
                       Icon(LucideIcons.monitorSmartphone, color: Colors.grey),
                       SizedBox(width: 16),
-                      Text('Devices'),
+                      Text(AppLocalizations.of(context)!.devicesTitle)
                     ],
                   ),
                 ),
@@ -588,28 +582,28 @@ class _FilePaneState extends State<FilePane> {
                           ? Icon(LucideIcons.alertTriangle, color: Colors.red)
                           : Icon(LucideIcons.hardDrive, color: Colors.grey),
                       SizedBox(width: 16),
-                      Text('Storage'),
+                      Text(AppLocalizations.of(context)!.storage)
                     ],
                   ),
                 ),
-                const PopupMenuItem<int>(
+                PopupMenuItem<int>(
                   value: 4,
                   child: Row(
                     children: [
                       Icon(LucideIcons.search, color: Colors.grey),
                       SizedBox(width: 16),
-                      Text('Search'),
+                      Text(AppLocalizations.of(context)!.search)
                     ],
                   ),
                 ),
                 if (isDebugEnabled)
-                  const PopupMenuItem<int>(
+                  PopupMenuItem<int>(
                     value: 8,
                     child: Row(
                       children: [
                         Icon(LucideIcons.database, color: Colors.grey),
                         SizedBox(width: 16),
-                        Text('Database'),
+                        Text(AppLocalizations.of(context)!.database)
                       ],
                     ),
                   ),
@@ -653,18 +647,19 @@ class _FilePaneState extends State<FilePane> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Add folder"),
+        title: Text(AppLocalizations.of(context)!.addFolderTitle),
         content: Text(folderName),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               _addSyncFolder(folderPath, bookmark);
             },
-            child: Text('Confirm'),
+            child: Text(AppLocalizations.of(context)!.confirm),
           ),
         ],
       ),
@@ -715,9 +710,14 @@ class _FilePaneState extends State<FilePane> {
             if (currentItem != null &&
                 deviceHash != null &&
                 currentItem?.id == deviceHash) {
-              return const Center(child: Text('Tap + to add sync folder.'));
+              return Center(
+                child:
+                    Text(AppLocalizations.of(context)!.tapPlusToAddSyncFolder),
+              );
             } else {
-              return const Center(child: Text('This Folder is empty.'));
+              return Center(
+                child: Text(AppLocalizations.of(context)!.thisFolderIsEmpty),
+              );
             }
           }
           return ListView.builder(

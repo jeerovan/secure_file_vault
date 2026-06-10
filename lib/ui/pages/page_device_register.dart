@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/model_item.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_backend.dart';
@@ -35,7 +36,6 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
 
   Future<void> _registerDevice() async {
     logger.info("Registering..");
-    // Reset state for retries
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -56,9 +56,13 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
         _errorMessage = result["message"].toString();
         deviceRegistered = false;
         if (_errorMessage == "7" && mounted) {
-          displaySnackBar(context, message: "Device limit reached", seconds: 2);
+          displaySnackBar(
+            context,
+            message: AppLocalizations.of(context)!.deviceLimitReached,
+            seconds: 2,
+          );
           await context.read<AppSetupState>().manageDevices();
-        } // Device limit reached
+        }
       } else {
         deviceRegistered = true;
       }
@@ -80,7 +84,6 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
         await context.read<AppSetupState>().recheckStatus();
       }
     }
-    // Check mounted before updating state or calling callbacks
     if (!mounted) return;
     setState(() {
       _isLoading = false;
@@ -90,15 +93,17 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : _errorMessage != null
-                ? tryFailedRequestAgain(
-                    message: _errorMessage!,
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    onPressed: _registerDevice)
-                : const SizedBox.shrink());
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : _errorMessage != null
+              ? tryFailedRequestAgain(
+                  context: context,
+                  message: _errorMessage!,
+                  onPressed: _registerDevice,
+                )
+              : const SizedBox.shrink(),
+    );
   }
 }

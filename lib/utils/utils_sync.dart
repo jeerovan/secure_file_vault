@@ -272,9 +272,12 @@ class SyncUtils {
         await storage.clear();
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
+        String locale = ModelSetting.get(AppString.locale.string);
         ModelSetting.clear();
         await clearFiFeDirectory();
-        await ModelSetting.set(AppString.onboarding.string, "yes");
+        // keep locale
+        await ModelSetting.set(AppString.locale.string, locale);
+        //await ModelSetting.set(AppString.onboarding.string, "yes"); // TODO enable
         EventStream().publish(AppEvent(
             type: EventType.system, id: "signout", key: EventKey.signout));
         success = true;

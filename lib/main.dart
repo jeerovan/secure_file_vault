@@ -4,6 +4,7 @@ import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_device_register.dart';
 import 'package:file_vault_bb/ui/pages/page_welcome.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -12,6 +13,8 @@ import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import '../storage/storage_sqlite.dart';
 import '../ui/common_widgets.dart';
+import 'l10n/app_localizations.dart';
+import 'services/service_locale.dart';
 import 'ui/pages/page_access_key_display.dart';
 import '../ui/pages/page_access_key_notice.dart';
 import '../ui/pages/page_devices.dart';
@@ -59,6 +62,9 @@ Future<void> main() async {
       providers: [
         ChangeNotifierProvider(
           create: (_) => AppSetupState(prefs),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => LocaleProvider(),
         ),
       ],
       child: const MyApp(),
@@ -167,10 +173,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = Provider.of<LocaleProvider>(context);
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: themeNotifier,
       builder: (context, ThemeMode currentMode, child) {
         return MaterialApp(
+          locale: localeProvider.locale,
+          supportedLocales: L10n.all,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           theme: AppThemes.lightTheme,
           darkTheme: AppThemes.darkTheme,
           themeMode: currentMode,

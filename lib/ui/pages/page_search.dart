@@ -5,6 +5,7 @@ import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:open_filex/open_filex.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/model_item_task.dart';
 import '../../services/service_logger.dart';
 import '../../utils/enums.dart';
@@ -99,7 +100,11 @@ class _SearchScreenState extends State<SearchScreen> {
       String message = 'Could not open file: ${openResult.message}';
       logger.error(message);
       if (mounted) {
-        displaySnackBar(context, message: "Long press to download", seconds: 2);
+        displaySnackBar(
+          context,
+          message: AppLocalizations.of(context)!.longPressToDownload,
+          seconds: 2,
+        );
       }
     }
   }
@@ -122,7 +127,6 @@ class _SearchScreenState extends State<SearchScreen> {
 
     _selectedItemsNotifier.value = currentSelection;
 
-    // Automatically exit multi-select mode if no items are selected
     if (currentSelection.isEmpty && _isMultiSelectNotifier.value) {
       _cancelMultiSelect();
     }
@@ -202,32 +206,34 @@ class _SearchScreenState extends State<SearchScreen> {
             color: surfaceColor,
             leading: IconButton(
               icon: const Icon(LucideIcons.x),
-              tooltip: 'Cancel',
+              tooltip: AppLocalizations.of(context)!.cancel,
               onPressed: _cancelMultiSelect,
             ),
-            title: Text('${selectedItems.length} Selected'),
+            title: Text(
+              AppLocalizations.of(context)!
+                  .selectedItemsCount(selectedItems.length),
+            ),
             actions: [
               if (selectedItems.length == 1)
                 IconButton(
                   icon: const Icon(LucideIcons.info),
-                  tooltip: 'Info',
+                  tooltip: AppLocalizations.of(context)!.info,
                   onPressed: showInfo,
                 ),
               IconButton(
                 icon: const Icon(LucideIcons.downloadCloud),
-                tooltip: 'Download',
+                tooltip: AppLocalizations.of(context)!.download,
                 onPressed: downloadItems,
               ),
               IconButton(
                 icon: const Icon(LucideIcons.archive),
-                tooltip: 'Archive',
+                tooltip: AppLocalizations.of(context)!.archive,
                 onPressed: trashItems,
               ),
             ],
           );
         }
 
-        // Default Mode
         return buildBottomAppBar(
           color: surfaceColor,
           leading: IconButton(
@@ -235,12 +241,11 @@ class _SearchScreenState extends State<SearchScreen> {
             onPressed: _navigateBack,
           ),
           title: SizedBox(
-            height: 40, // Keeps the search bar vertically constrained
+            height: 40,
             child: TextField(
               controller: _searchController,
-              onChanged: onSearchChanged, // Triggers the debounce timer
-              textAlignVertical: TextAlignVertical
-                  .center, // FIX: Perfectly centers text vertically
+              onChanged: onSearchChanged,
+              textAlignVertical: TextAlignVertical.center,
               textInputAction: TextInputAction.search,
               style: Theme.of(context).textTheme.bodyMedium,
               decoration: InputDecoration(
@@ -251,10 +256,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12.0),
-                  borderSide:
-                      BorderSide.none, // Removes default underline/borders
+                  borderSide: BorderSide.none,
                 ),
-                hintText: 'Search with min 3 characters',
+                hintText:
+                    AppLocalizations.of(context)!.searchWithMinThreeCharacters,
                 hintStyle: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface.withAlpha(125),
                 ),
@@ -269,11 +274,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     if (value.text.isEmpty) return const SizedBox.shrink();
                     return IconButton(
                       icon: const Icon(LucideIcons.x, size: 18),
-                      splashRadius: 20,
                       onPressed: () {
                         _searchController.clear();
-                        onSearchChanged(
-                            ''); // Immediately reset search with debounce
+                        onSearchChanged('');
                       },
                     );
                   },
@@ -309,33 +312,40 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildFileView() {
     return ValueListenableBuilder<List<ModelItem>>(
-        valueListenable: _itemsNotifier,
-        builder: (context, items, _) {
-          if (items.isEmpty) {
-            if (_searchController.text.isEmpty) {
-              return const Center(
-                child: Text("Type below to search"),
-              );
-            } else {
-              return const Center(child: Text('No results.'));
-            }
+      valueListenable: _itemsNotifier,
+      builder: (context, items, _) {
+        if (items.isEmpty) {
+          if (_searchController.text.isEmpty) {
+            return Center(
+              child: Text(
+                AppLocalizations.of(context)!.typeBelowToSearch,
+              ),
+            );
+          } else {
+            return Center(
+              child: Text(
+                AppLocalizations.of(context)!.noResults,
+              ),
+            );
           }
-          return ListView.builder(
-            reverse: true,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
+        }
+        return ListView.builder(
+          reverse: true,
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            final item = items[index];
 
-              return FileListItem(
-                key: ValueKey(item.id),
-                item: item,
-                selectedItemsNotifier: _selectedItemsNotifier,
-                isMultiSelectNotifier: _isMultiSelectNotifier,
-                onTap: () => _onTap(item),
-                onLongPress: () => _onLongPress(item),
-              );
-            },
-          );
-        });
+            return FileListItem(
+              key: ValueKey(item.id),
+              item: item,
+              selectedItemsNotifier: _selectedItemsNotifier,
+              isMultiSelectNotifier: _isMultiSelectNotifier,
+              onTap: () => _onTap(item),
+              onLongPress: () => _onLongPress(item),
+            );
+          },
+        );
+      },
+    );
   }
 }

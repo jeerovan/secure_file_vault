@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../storage/storage_sqlite.dart';
 
 class PageSqlite extends StatefulWidget {
@@ -49,7 +50,7 @@ class _PageSqliteState extends State<PageSqlite> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('DB Viewer'),
+        title: Text(AppLocalizations.of(context)!.dbViewerTitle),
       ),
       body: _database == null
           ? const Center(child: CircularProgressIndicator())
@@ -58,8 +59,11 @@ class _PageSqliteState extends State<PageSqlite> {
               children: [
                 Expanded(
                   child: _selectedTable == null
-                      ? const Center(
-                          child: Text('Select a table to view its data'))
+                      ? Center(
+                          child: Text(
+                            AppLocalizations.of(context)!.selectTableToViewData,
+                          ),
+                        )
                       : SingleChildScrollView(
                           scrollDirection: Axis.vertical,
                           child: SingleChildScrollView(
@@ -87,7 +91,9 @@ class _PageSqliteState extends State<PageSqlite> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: DropdownButton<String>(
-                    hint: const Text('Select a table'),
+                    hint: Text(
+                      AppLocalizations.of(context)!.selectTable,
+                    ),
                     value: _selectedTable,
                     onChanged: (String? tableName) {
                       if (tableName != null) {

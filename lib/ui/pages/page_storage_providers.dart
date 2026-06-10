@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../models/model_profile.dart';
 import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
@@ -102,11 +103,9 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
 
   Future<void> openHowToConnect() async {
     final url = '${AppEnv.apiBaseUrl}/connect';
-    // Launch this URL in the browser or WebView
     openURL(url);
   }
 
-  // Helper to format bytes into readable strings (KB, MB, GB, etc.)
   String _formatBytes(int bytes, int decimals) {
     if (bytes <= 0) return "0 B";
     const suffixes = ["B", "KB", "MB", "GB", "TB", "PB"];
@@ -120,10 +119,13 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
 
   Future<void> connectStorageProvider(StorageProvider storageProvider) async {
     Navigator.of(context)
-        .push(AnimatedPageRoute(
-            child: AddProviderScreen(
-      storageProvider: storageProvider,
-    )))
+        .push(
+      AnimatedPageRoute(
+        child: AddProviderScreen(
+          storageProvider: storageProvider,
+        ),
+      ),
+    )
         .then((value) {
       fetchStorage();
     });
@@ -136,8 +138,9 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
     int sizeBytes = sizeGb * 1024 * 1024 * 1024;
     try {
       final response = await api.post(
-          endpoint: '/storages/modify',
-          jsonBody: {'provider_id': providerId, 'bytes': sizeBytes});
+        endpoint: '/storages/modify',
+        jsonBody: {'provider_id': providerId, 'bytes': sizeBytes},
+      );
       final status = response["success"];
       if (status == 1) {
         fetchStorage();
@@ -160,17 +163,20 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
 
   void _checkAndModify(BuildContext context, int providerId) async {
     if (!_isActive) {
-      displaySnackBar(context, message: "Requires FiFe Pro.", seconds: 2);
+      displaySnackBar(
+        context,
+        message: AppLocalizations.of(context)!
+            .requiresAppPro(AppString.appName.string),
+        seconds: 2,
+      );
       return;
     }
-    // 1. Await the result from the dialog
     final int? newSize = await showDialog<int>(
       context: context,
       barrierDismissible: true,
       builder: (context) => const _SizeInputDialog(),
     );
 
-    // 2. Process the value if the user submitted it
     if (newSize != null && newSize > 1 && mounted) {
       modifyStorage(providerId, newSize);
     }
@@ -190,15 +196,22 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : _errorMessage != null
                       ? tryFailedRequestAgain(
+                          context: context,
                           message: _errorMessage!,
-                          style: Theme.of(context).textTheme.bodyLarge,
-                          onPressed: fetchStorage)
+                          onPressed: fetchStorage,
+                        )
                       : storages.isEmpty
-                          ? Center(child: Text("No device found"))
+                          ? Center(
+                              child: Text(
+                                AppLocalizations.of(context)!.noStorageFound,
+                              ),
+                            )
                           : ListView.builder(
                               reverse: true,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16.0, vertical: 24.0),
+                                horizontal: 16.0,
+                                vertical: 24.0,
+                              ),
                               itemCount: storages.length,
                               itemBuilder: (context, index) {
                                 final provider = storages[index];
@@ -209,31 +222,29 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
             FilledButton.tonalIcon(
               onPressed: openHowToConnect,
               icon: const Icon(LucideIcons.arrowRight, size: 18),
-              label: const Text(
-                "How to connect",
-                style: TextStyle(fontWeight: FontWeight.w600),
+              label: Text(
+                AppLocalizations.of(context)!.howToConnect,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-              iconAlignment:
-                  IconAlignment.end, // Natively places icon on the right
+              iconAlignment: IconAlignment.end,
               style: FilledButton.styleFrom(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(12), // Sleek, modern corners
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
-            const SizedBox(
-              height: 12,
-            ),
+            const SizedBox(height: 12),
             buildBottomAppBar(
-                color: surfaceColor,
-                leading: IconButton(
-                    icon: const Icon(LucideIcons.arrowLeft),
-                    onPressed: _navigateBack),
-                title: Text("Storage"),
-                actions: []),
+              color: surfaceColor,
+              leading: IconButton(
+                icon: const Icon(LucideIcons.arrowLeft),
+                onPressed: _navigateBack,
+              ),
+              title: Text(AppLocalizations.of(context)!.storage),
+              actions: [],
+            ),
           ],
         ),
       ),
@@ -241,7 +252,9 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
   }
 
   Widget _buildProviderCard(
-      BuildContext context, Map<String, dynamic> provider) {
+    BuildContext context,
+    Map<String, dynamic> provider,
+  ) {
     final int providerId = provider['id'];
     final bool isAdded = provider['added'] == 1;
     final int totalBytes = provider['bytes'] ?? 0;
@@ -257,7 +270,6 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
           color: theme.colorScheme.outlineVariant.withAlpha(50),
         ),
       ),
-      // Using InkWell for a subtle tap effect if the user interacts with added providers
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -281,13 +293,15 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
                       _checkAndModify(context, providerId);
                     },
                     icon: const Icon(Icons.edit, size: 18),
-                    label: const Text('Modify'),
+                    label: Text(AppLocalizations.of(context)!.modify),
                     style: OutlinedButton.styleFrom(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 0),
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
                     ),
                   ),
               ],
@@ -308,7 +322,6 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
     final double usagePercent =
         total > 0 ? (used / total).clamp(0.0, 1.0) : 0.0;
 
-    // Change progress color to red/orange if storage is almost full (>90%)
     final Color progressColor = usagePercent > 0.9
         ? theme.colorScheme.error
         : theme.colorScheme.primary;
@@ -320,14 +333,18 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              '${_formatBytes(used, 1)} / ${_formatBytes(total, 0)} Used',
+              AppLocalizations.of(context)!.storageUsed(
+                _formatBytes(used, 1),
+                _formatBytes(total, 0),
+              ),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
               ),
             ),
             Text(
-              '${(usagePercent * 100).toStringAsFixed(1)}%',
+              AppLocalizations.of(context)!
+                  .percentageLabel((usagePercent * 100).toStringAsFixed(1)),
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w600,
@@ -341,14 +358,17 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
           minHeight: 6,
           backgroundColor: theme.colorScheme.surfaceContainerHighest,
           color: progressColor,
-          borderRadius: BorderRadius.circular(8), // Modern rounded progress bar
+          borderRadius: BorderRadius.circular(8),
         ),
       ],
     );
   }
 
   Widget _buildUnaddedState(
-      BuildContext context, int providerId, int totalBytes) {
+    BuildContext context,
+    int providerId,
+    int totalBytes,
+  ) {
     final theme = Theme.of(context);
     StorageProvider storageProvider =
         StorageProviderExtension.fromValue(providerId);
@@ -359,14 +379,16 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Up to ${_formatBytes(totalBytes, 0)} free',
+              AppLocalizations.of(context)!.upToFree(
+                _formatBytes(totalBytes, 0),
+              ),
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 2),
             Text(
-              'Not connected',
+              AppLocalizations.of(context)!.notConnected,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.outline,
               ),
@@ -378,7 +400,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
             connectStorageProvider(storageProvider);
           },
           icon: const Icon(Icons.add_link, size: 18),
-          label: const Text('Connect'),
+          label: Text(AppLocalizations.of(context)!.connect),
           style: OutlinedButton.styleFrom(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -390,16 +412,15 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
     );
   }
 
-  // Helper to return a stylized icon based on provider ID
   Widget _buildProviderIcon(int id, ThemeData theme) {
     Widget iconData;
     switch (id) {
       case 1:
         iconData = Image.asset(
-          'assets/logo.png', // Replace with your actual asset path
+          'assets/logo.png',
           width: 30,
           height: 30,
-          color: theme.colorScheme.primary, // Applies the theme color tint
+          color: theme.colorScheme.primary,
         );
         break;
       case 2:
@@ -468,7 +489,6 @@ class _SizeInputDialogState extends State<_SizeInputDialog> {
 
   @override
   void dispose() {
-    // The framework calls this safely AFTER the closing animation completes
     _sizeController.dispose();
     super.dispose();
   }
@@ -476,16 +496,16 @@ class _SizeInputDialogState extends State<_SizeInputDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Modify Storage Capacity'),
+      title: Text(AppLocalizations.of(context)!.modifyStorageCapacityTitle),
       content: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Enter the new storage limit for this provider.',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            Text(
+              AppLocalizations.of(context)!.enterNewStorageLimitForProvider,
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -493,22 +513,22 @@ class _SizeInputDialogState extends State<_SizeInputDialog> {
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               autofocus: true,
-              decoration: const InputDecoration(
-                prefixText: 'Size: ',
-                suffixText: ' GB',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                prefixText: AppLocalizations.of(context)!.sizePrefix,
+                suffixText: AppLocalizations.of(context)!.gbSuffix,
+                border: const OutlineInputBorder(),
                 filled: true,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a size';
+                  return AppLocalizations.of(context)!.pleaseEnterSize;
                 }
                 if (int.tryParse(value) == null || int.parse(value) <= 1) {
-                  return 'Enter a valid number greater than 1';
+                  return AppLocalizations.of(context)!
+                      .enterValidNumberGreaterThanOne;
                 }
                 return null;
               },
-              // Allow submitting via keyboard "Done" / "Enter" key
               onFieldSubmitted: (_) => _submit(),
             ),
           ],
@@ -516,12 +536,12 @@ class _SizeInputDialogState extends State<_SizeInputDialog> {
       ),
       actions: <Widget>[
         TextButton(
-          onPressed: () => Navigator.of(context).pop(), // Returns null
-          child: const Text('Cancel'),
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(AppLocalizations.of(context)!.cancel),
         ),
         FilledButton(
           onPressed: _submit,
-          child: const Text('Submit'),
+          child: Text(AppLocalizations.of(context)!.submit),
         ),
       ],
     );
@@ -530,7 +550,6 @@ class _SizeInputDialogState extends State<_SizeInputDialog> {
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       final size = int.parse(_sizeController.text);
-      // Return the validated integer back to the caller
       Navigator.of(context).pop(size);
     }
   }
