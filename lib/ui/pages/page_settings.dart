@@ -124,16 +124,6 @@ class SettingsPageState extends State<SettingsPage> {
       locale: Locale('ar'),
     ),
     _AppLanguageOption(
-      code: 'az',
-      nativeName: 'Azərbaycan dili',
-      locale: Locale('az'),
-    ),
-    _AppLanguageOption(
-      code: 'bn',
-      nativeName: 'বাংলা',
-      locale: Locale('bn'),
-    ),
-    _AppLanguageOption(
       code: 'de',
       nativeName: 'Deutsch',
       locale: Locale('de'),
@@ -189,34 +179,9 @@ class SettingsPageState extends State<SettingsPage> {
       locale: Locale('ja'),
     ),
     _AppLanguageOption(
-      code: 'km',
-      nativeName: 'ខ្មែរ',
-      locale: Locale('km'),
-    ),
-    _AppLanguageOption(
       code: 'ko',
       nativeName: '한국어',
       locale: Locale('ko'),
-    ),
-    _AppLanguageOption(
-      code: 'lo',
-      nativeName: 'ລາວ',
-      locale: Locale('lo'),
-    ),
-    _AppLanguageOption(
-      code: 'mn',
-      nativeName: 'Монгол',
-      locale: Locale('mn'),
-    ),
-    _AppLanguageOption(
-      code: 'mr',
-      nativeName: 'मराठी',
-      locale: Locale('mr'),
-    ),
-    _AppLanguageOption(
-      code: 'my',
-      nativeName: 'မြန်မာ',
-      locale: Locale('my'),
     ),
     _AppLanguageOption(
       code: 'nl',
@@ -229,39 +194,14 @@ class SettingsPageState extends State<SettingsPage> {
       locale: Locale('pt'),
     ),
     _AppLanguageOption(
-      code: 'ro',
-      nativeName: 'Română',
-      locale: Locale('ro'),
-    ),
-    _AppLanguageOption(
       code: 'ru',
       nativeName: 'Русский',
       locale: Locale('ru'),
     ),
     _AppLanguageOption(
-      code: 'ta',
-      nativeName: 'தமிழ்',
-      locale: Locale('ta'),
-    ),
-    _AppLanguageOption(
-      code: 'te',
-      nativeName: 'తెలుగు',
-      locale: Locale('te'),
-    ),
-    _AppLanguageOption(
-      code: 'tg',
-      nativeName: 'Тоҷикӣ',
-      locale: Locale('tg'),
-    ),
-    _AppLanguageOption(
       code: 'th',
       nativeName: 'ไทย',
       locale: Locale('th'),
-    ),
-    _AppLanguageOption(
-      code: 'tk',
-      nativeName: 'Türkmen',
-      locale: Locale('tk'),
     ),
     _AppLanguageOption(
       code: 'tr',
@@ -274,22 +214,12 @@ class SettingsPageState extends State<SettingsPage> {
       locale: Locale('uk'),
     ),
     _AppLanguageOption(
-      code: 'ur',
-      nativeName: 'اردو',
-      locale: Locale('ur'),
-    ),
-    _AppLanguageOption(
-      code: 'uz',
-      nativeName: 'Oʻzbek',
-      locale: Locale('uz'),
-    ),
-    _AppLanguageOption(
       code: 'vi',
       nativeName: 'Tiếng Việt',
       locale: Locale('vi'),
     ),
     _AppLanguageOption(
-      code: 'zh-rCN',
+      code: 'zh',
       nativeName: '简体中文',
       locale: Locale.fromSubtags(languageCode: 'zh', countryCode: 'CN'),
     ),
