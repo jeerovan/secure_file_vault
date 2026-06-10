@@ -1,0 +1,944 @@
+{
+  "@@locale": "es",
+  "appTitle": "FiFe",
+  "@appTitle": {
+    "description": "App title",
+    "comment": "Do not translate"
+  },
+  "continueAgreementText": "Al continuar, aceptas nuestros {terms} y nuestra {privacy}.",
+  "@continueAgreementText": {
+    "description": "Consent text shown before continuing, with clickable Terms of Service and Privacy Policy links",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "termsOfService": "Términos del servicio",
+  "@termsOfService": {
+    "description": "Clickable label for the terms of service link"
+  },
+  "privacyPolicy": "Política de privacidad",
+  "@privacyPolicy": {
+    "description": "Clickable label for the privacy policy link"
+  },
+  "andLabel": " y ",
+  "@andLabel": {
+    "description": "Connector text between terms and privacy policy"
+  },
+  "theme": "Tema",
+  "@theme": {
+    "description": "The label for the theme selection option in settings"
+  },
+  "themeTooltip": "Tema claro/oscuro",
+  "@themeTooltip": {
+    "description": "Tooltip for the theme toggle button"
+  },
+  "logging": "Registro",
+  "@logging": {
+    "description": "The label for the system logging configuration"
+  },
+  "reportIssue": "Reportar problema",
+  "@reportIssue": {
+    "description": "Action to navigate to the issue tracker"
+  },
+  "sourceCode": "Código fuente",
+  "@sourceCode": {
+    "description": "Link to the project source code repository"
+  },
+  "desktopApp": "Aplicación de escritorio",
+  "@desktopApp": {
+    "description": "Information for users on desktop platforms"
+  },
+  "mobileApp": "Aplicación móvil",
+  "@mobileApp": {
+    "description": "Information for users on mobile platforms"
+  },
+  "leaveReview": "Dejar una reseña",
+  "@leaveReview": {
+    "description": "Call to action to leave a store rating"
+  },
+  "share": "Compartir",
+  "@share": {
+    "description": "Option to share the application link with others"
+  },
+  "versionLabel": "Versión: ",
+  "@versionLabel": {
+    "description": "Static prefix for the current version number display"
+  },
+  "loading": "Cargando...",
+  "@loading": {
+    "description": "Status shown while fetching package information"
+  },
+  "signOut": "Cerrar sesión",
+  "@signOut": {
+    "description": "Button text to log out the user"
+  },
+  "settingsPageTitle": "Ajustes",
+  "@settingsPageTitle": {
+    "description": "Main title for the settings screen bottom bar"
+  },
+  "language": "Idioma",
+  "@language": {
+    "description": "Label for selecting the app language"
+  },
+  "tapToSelect": "Toca para seleccionar",
+  "@tapToSelect": {
+    "description": "Prompt text instructing the user to tap and choose an option"
+  },
+  "appTagline": "Tu transporte privado para archivos",
+  "@appTagline": {
+    "description": "Tagline displayed below the app name on the onboarding page"
+  },
+  "onboardingPurposeDescription": "Un servicio de almacenamiento en la nube de código abierto, creado con arquitectura zero-trust. Tus datos se cifran en tu dispositivo antes de salir de él.",
+  "@onboardingPurposeDescription": {
+    "description": "Description explaining the app purpose on the onboarding welcome page"
+  },
+  "failedToFetch": "No se pudo cargar.",
+  "@failedToFetch": {
+    "description": "Error message shown when storage providers fail to load"
+  },
+  "supportedStorageTitle": "Almacenamientos compatibles",
+  "@supportedStorageTitle": {
+    "description": "Title for the onboarding page listing supported storage providers"
+  },
+  "supportedStorageDescription": "Conecta tus proveedores favoritos. Empieza de inmediato con 1 GB de almacenamiento seguro gratuito incluido en FiFe.",
+  "@supportedStorageDescription": {
+    "description": "Description for the supported storage onboarding page"
+  },
+  "fifeCloud": "FiFe Cloud",
+  "@fifeCloud": {
+    "description": "Name of the default FiFe storage provider card"
+  },
+  "startBackupsInstantly": "Empieza tus copias de seguridad al instante",
+  "@startBackupsInstantly": {
+    "description": "Subtitle for the default FiFe cloud storage card"
+  },
+  "freeStorageSizeOneGb": "1.0 GB",
+  "@freeStorageSizeOneGb": {
+    "description": "Displayed free storage size for the built-in FiFe cloud"
+  },
+  "freeLabel": "Gratis",
+  "@freeLabel": {
+    "description": "Label indicating a storage plan is free"
+  },
+  "providerStorageDisclaimer": "* Almacenamiento gratuito según lo indicado en el sitio web del proveedor. Pago por uso con proveedores compatibles.",
+  "@providerStorageDisclaimer": {
+    "description": "Disclaimer about provider free storage and pay-as-you-go support"
+  },
+  "whyUseFifeTitle": "¿Por qué usar FiFe?",
+  "@whyUseFifeTitle": {
+    "description": "Title for the onboarding benefits page"
+  },
+  "claimFreeCloudStorageTitle": "Aprovecha almacenamiento gratuito en la nube",
+  "@claimFreeCloudStorageTitle": {
+    "description": "Benefit title about using free cloud storage from multiple providers"
+  },
+  "claimFreeCloudStorageDescription": "Aumenta tu espacio conectando varios proveedores en la nube. Aprovecha de forma segura sus planes gratuitos desde una sola app.",
+  "@claimFreeCloudStorageDescription": {
+    "description": "Benefit description about aggregating free storage across providers"
+  },
+  "topNotchSecurityTitle": "Seguridad de primer nivel",
+  "@topNotchSecurityTitle": {
+    "description": "Benefit title highlighting strong security"
+  },
+  "topNotchSecurityDescription": "Impulsado por criptografía avanzada de Sodium. Todo el cifrado y descifrado se realiza localmente en tu dispositivo.",
+  "@topNotchSecurityDescription": {
+    "description": "Benefit description explaining local encryption and decryption"
+  },
+  "bringYourOwnKeyTitle": "Bring Your Own Key (BYOK)",
+  "@bringYourOwnKeyTitle": {
+    "description": "Benefit title for bring your own key support"
+  },
+  "bringYourOwnKeyDescription": "Mantén el control total de tus datos en todos los proveedores de almacenamiento en la nube. Usa almacenamiento cifrado con tus propias cuentas.",
+  "@bringYourOwnKeyDescription": {
+    "description": "Benefit description for using your own accounts and keys"
+  },
+  "payAsYouGoStorageTitle": "Paga solo por el almacenamiento que uses.",
+  "@payAsYouGoStorageTitle": {
+    "description": "Benefit title for pay-as-you-go storage support"
+  },
+  "payAsYouGoStorageDescription": "Paga solo por el almacenamiento que realmente uses con proveedores compatibles. Sin intermediarios ni bloqueo de datos.",
+  "@payAsYouGoStorageDescription": {
+    "description": "Benefit description for pay-as-you-go compatible providers"
+  },
+  "zeroKnowledgePrivacyTitle": "Privacidad de conocimiento cero",
+  "@zeroKnowledgePrivacyTitle": {
+    "description": "Title for the onboarding security page"
+  },
+  "zeroKnowledgePrivacyDescription": "Tus datos quedan protegidos en tu dispositivo antes de salir de él. No podemos ver, leer ni analizar tus archivos.",
+  "@zeroKnowledgePrivacyDescription": {
+    "description": "Subtitle describing zero-knowledge privacy guarantees"
+  },
+  "localSelectionTitle": "1. Selección local",
+  "@localSelectionTitle": {
+    "description": "Step title for local file selection in the security flow"
+  },
+  "localSelectionDescription": "Tú eliges una carpeta. Todo el procesamiento comienza de forma segura en tu dispositivo.",
+  "@localSelectionDescription": {
+    "description": "Step description for local file selection in the security flow"
+  },
+  "metadataEncryptionTitle": "2. Cifrado de metadatos",
+  "@metadataEncryptionTitle": {
+    "description": "Step title for metadata encryption in the security flow"
+  },
+  "metadataEncryptionDescription": "La información del archivo, como nombres, tipos y tamaños, se cifra antes de enviarse al servidor.",
+  "@metadataEncryptionDescription": {
+    "description": "Step description for metadata encryption in the security flow"
+  },
+  "contentEncryptionTitle": "3. Cifrado del contenido",
+  "@contentEncryptionTitle": {
+    "description": "Step title for file content encryption in the security flow"
+  },
+  "contentEncryptionDescription": "El contenido real del archivo se fragmenta y se cifra antes de subirse al almacenamiento en la nube.",
+  "@contentEncryptionDescription": {
+    "description": "Step description for file content encryption in the security flow"
+  },
+  "blindServerTitle": "4. Servidor ciego",
+  "@blindServerTitle": {
+    "description": "Step title for the zero-knowledge server step in the security flow"
+  },
+  "blindServerDescription": "Nuestros servidores no tienen conocimiento de tus datos. Solo vemos bloques cifrados, lo que garantiza una privacidad total.",
+  "@blindServerDescription": {
+    "description": "Step description explaining that servers only handle encrypted data"
+  },
+  "dontTrustVerifyTitle": "No confíes, verifica.",
+  "@dontTrustVerifyTitle": {
+    "description": "Title for the open-source verification callout"
+  },
+  "openSourceVerificationDescription": "100 % de código abierto. Puedes revisar el código para ver exactamente cómo se cifran tus archivos.",
+  "@openSourceVerificationDescription": {
+    "description": "Description for the open-source verification callout"
+  },
+  "getStarted": "Empezar",
+  "@getStarted": {
+    "description": "Primary button label shown on the final onboarding page"
+  },
+  "next": "Siguiente",
+  "@next": {
+    "description": "Primary button label used to move to the next onboarding page"
+  },
+  "unauthorized": "No autorizado",
+  "@unauthorized": {
+    "description": "Error message shown when the user is not authorized to access the key"
+  },
+  "tryAgain": "Intentar de nuevo",
+  "@tryAgain": {
+    "description": "Button label used to retry the failed access key check"
+  },
+  "errorTitle": "Error",
+  "@errorTitle": {
+    "description": "Generic error dialog title"
+  },
+  "failureTitle": "Fallo",
+  "@failureTitle": {
+    "description": "Dialog title shown when access key verification fails"
+  },
+  "invalidWordList": "Lista de palabras no válida",
+  "@invalidWordList": {
+    "description": "Error message shown when the entered recovery phrase is not a valid mnemonic"
+  },
+  "invalidAccessKey": "Clave de acceso no válida",
+  "@invalidAccessKey": {
+    "description": "Error message shown when the provided recovery phrase cannot decrypt the stored key"
+  },
+  "unexpectedDecryptionError": "Ocurrió un error inesperado durante el descifrado.",
+  "@unexpectedDecryptionError": {
+    "description": "Error message shown when an unexpected exception occurs during access key decryption"
+  },
+  "fileMustContainExactly24Words": "El archivo debe contener exactamente 24 palabras.",
+  "@fileMustContainExactly24Words": {
+    "description": "Error message shown when the selected text file does not contain exactly 24 words"
+  },
+  "errorReadingFile": "Error al leer el archivo",
+  "@errorReadingFile": {
+    "description": "Snackbar message shown when reading the selected file fails"
+  },
+  "encryptionTitle": "Cifrado",
+  "@encryptionTitle": {
+    "description": "App bar title for the access key decode screen"
+  },
+  "accessKeyDecodeDescription": "Introduce tu frase de recuperación de 24 palabras o carga un archivo .txt para activar la sincronización en la nube de forma segura.",
+  "@accessKeyDecodeDescription": {
+    "description": "Instruction text on the access key decode screen"
+  },
+  "recoveryPhraseLabel": "Frase de recuperación",
+  "@recoveryPhraseLabel": {
+    "description": "Label for the recovery phrase input field"
+  },
+  "recoveryPhraseHint": "word1 word2 word3...",
+  "@recoveryPhraseHint": {
+    "description": "Hint text shown inside the recovery phrase input field"
+  },
+  "paste": "Pegar",
+  "@paste": {
+    "description": "Button label used to paste clipboard text into the recovery phrase field"
+  },
+  "wordCountLabel": "{count} / 24 palabras",
+  "@wordCountLabel": {
+    "description": "Live counter showing how many recovery words have been entered",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseEnterRecoveryPhrase": "Introduce tu frase de recuperación",
+  "@pleaseEnterRecoveryPhrase": {
+    "description": "Validation message shown when the recovery phrase field is empty"
+  },
+  "mustContainExactly24Words": "Debe contener exactamente 24 palabras",
+  "@mustContainExactly24Words": {
+    "description": "Validation message shown when the recovery phrase does not contain exactly 24 words"
+  },
+  "verify": "Verificar",
+  "@verify": {
+    "description": "Primary button label used to verify the recovery phrase"
+  },
+  "orLabel": "O",
+  "@orLabel": {
+    "description": "Separator label between manual input and file upload actions"
+  },
+  "loadFromTxtFile": "Cargar desde archivo .txt",
+  "@loadFromTxtFile": {
+    "description": "Button label used to load the recovery phrase from a text file"
+  },
+  "saveAccessKey": "Guardar clave de acceso",
+  "@saveAccessKey": {
+    "description": "Title for the desktop save file dialog when saving the access key"
+  },
+  "fileSavedSuccessfully": "Archivo guardado correctamente.",
+  "@fileSavedSuccessfully": {
+    "description": "Snackbar message shown after the access key file is saved successfully"
+  },
+  "accessKeyShareMessage": "Aquí tienes tu clave de acceso.",
+  "@accessKeyShareMessage": {
+    "description": "Text shared alongside the access key file in the mobile share sheet"
+  },
+  "pleaseTryAgain": "Inténtalo de nuevo.",
+  "@pleaseTryAgain": {
+    "description": "Generic snackbar message shown after a failed file save or share operation"
+  },
+  "copiedToClipboard": "Copiado al portapapeles",
+  "@copiedToClipboard": {
+    "description": "Snackbar message shown after copying the access key to the clipboard"
+  },
+  "accessKeyTitle": "Clave de acceso",
+  "@accessKeyTitle": {
+    "description": "App bar title for the access key screen"
+  },
+  "accessKeyDescription": "Guarda esta clave en un lugar seguro. Solo con ella podrás acceder a tus datos cifrados.",
+  "@accessKeyDescription": {
+    "description": "Instruction text explaining the importance of safely storing the access key"
+  },
+  "copy": "Copiar",
+  "@copy": {
+    "description": "Button label used to copy the access key to the clipboard"
+  },
+  "downloadAsTextFile": "Descargar como archivo de texto",
+  "@downloadAsTextFile": {
+    "description": "Button label used to save the access key as a text file"
+  },
+  "continueLabel": "Continuar",
+  "@continueLabel": {
+    "description": "Button label used to proceed to the next step after viewing the access key"
+  },
+  "importantTitle": "Importante",
+  "@importantTitle": {
+    "description": "App bar title for the access key notice screen"
+  },
+  "accessKeyNoticePrimary": "En la siguiente pantalla verás una serie de 24 palabras. Esta es tu clave de cifrado privada y única, y es la ÚNICA forma de recuperar tus datos en caso de cerrar sesión, perder el dispositivo o sufrir un fallo.",
+  "@accessKeyNoticePrimary": {
+    "description": "Primary warning text explaining the importance of the 24-word recovery key"
+  },
+  "accessKeyNoticeResponsibility": "Nosotros no almacenamos esta clave. Es TU responsabilidad guardarla en un lugar seguro fuera de la app {appName}.",
+  "@accessKeyNoticeResponsibility": {
+    "description": "Warning text reminding the user to store the recovery key outside the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "showKeyConfirmation": "Lo entiendo.\nMuéstrame la clave.",
+  "@showKeyConfirmation": {
+    "description": "Confirmation button label acknowledging the warning before showing the access key"
+  },
+  "storageAddedSuccessfully": "Almacenamiento añadido correctamente",
+  "@storageAddedSuccessfully": {
+    "description": "Snackbar message shown when a storage provider is added successfully"
+  },
+  "networkErrorDuringValidation": "Ocurrió un error de red durante la validación.",
+  "@networkErrorDuringValidation": {
+    "description": "Error message shown when provider validation fails because of a network error"
+  },
+  "verifyAndConnect": "Verificar y conectar",
+  "@verifyAndConnect": {
+    "description": "Primary button label used to validate credentials and connect a storage provider"
+  },
+  "requiredField": "Obligatorio",
+  "@requiredField": {
+    "description": "Validation message shown when a required input field is empty"
+  },
+  "providerKeysVerifiedLocally": "Tus claves se verifican localmente y se cifran antes de enviarse.",
+  "@providerKeysVerifiedLocally": {
+    "description": "Informational text explaining local verification and encryption of credentials"
+  },
+  "enterYourCredentials": "Introduce tus credenciales",
+  "@enterYourCredentials": {
+    "description": "Section title prompting the user to enter provider credentials"
+  },
+  "connectProvider": "Conectar {provider}",
+  "@connectProvider": {
+    "description": "Bottom app bar title for connecting a specific storage provider",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLimitReached": "Se alcanzó el límite de dispositivos",
+  "@deviceLimitReached": {
+    "description": "Snackbar message shown when the user has reached the maximum allowed number of registered devices"
+  },
+  "pleaseTryAgainWithExclamation": "¡Inténtalo de nuevo!",
+  "@pleaseTryAgainWithExclamation": {
+    "description": "Snackbar message shown when signing out a device fails"
+  },
+  "notThisDevice": "¡No este dispositivo!",
+  "@notThisDevice": {
+    "description": "Snackbar message shown when the user tries to sign out the current device from the device list"
+  },
+  "confirmSignoutDeviceTitle": "Confirmar cierre de sesión del dispositivo",
+  "@confirmSignoutDeviceTitle": {
+    "description": "Dialog title shown before signing out a device"
+  },
+  "areYouSure": "¿Estás seguro?",
+  "@areYouSure": {
+    "description": "Confirmation dialog message asking whether the user wants to proceed"
+  },
+  "cancel": "Cancelar",
+  "@cancel": {
+    "description": "Button label used to cancel a dialog action"
+  },
+  "ok": "Aceptar",
+  "@ok": {
+    "description": "Button label used to confirm a dialog action"
+  },
+  "noDeviceFound": "No se encontró ningún dispositivo",
+  "@noDeviceFound": {
+    "description": "Empty state message shown when no devices are available"
+  },
+  "backTooltip": "Atrás",
+  "@backTooltip": {
+    "description": "Tooltip for the back navigation button"
+  },
+  "devicesTitle": "Dispositivos",
+  "@devicesTitle": {
+    "description": "Title for the devices screen"
+  },
+  "longPressToDownload": "Mantén pulsado para descargar",
+  "@longPressToDownload": {
+    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+  },
+  "fewItemsExistLocally": "Algunos elementos siguen existiendo localmente.",
+  "@fewItemsExistLocally": {
+    "description": "Snackbar message shown when some selected items still exist locally during archive action"
+  },
+  "selectedItemsCount": "{count} seleccionados",
+  "@selectedItemsCount": {
+    "description": "Title shown in the multi-select app bar with the number of selected items",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "Eliminar",
+  "@delete": {
+    "description": "Tooltip label for deleting selected items"
+  },
+  "info": "Información",
+  "@info": {
+    "description": "Tooltip label for viewing file information"
+  },
+  "download": "Descargar",
+  "@download": {
+    "description": "Tooltip label for downloading selected items"
+  },
+  "archive": "Archivar",
+  "@archive": {
+    "description": "Tooltip label for archiving selected items"
+  },
+  "appPro": "{appName} Pro",
+  "@appPro": {
+    "description": "Popup menu item label for the premium subscription page using the non-translated app name",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "logs": "Registros",
+  "@logs": {
+    "description": "Popup menu item label for the logs page"
+  },
+  "settings": "Ajustes",
+  "@settings": {
+    "description": "Popup menu item label for the settings page"
+  },
+  "trash": "Papelera",
+  "@trash": {
+    "description": "Popup menu item label for the trash page"
+  },
+  "storage": "Almacenamiento",
+  "@storage": {
+    "description": "Popup menu item label for the storage providers page"
+  },
+  "search": "Buscar",
+  "@search": {
+    "description": "Popup menu item label for the search page"
+  },
+  "database": "Base de datos",
+  "@database": {
+    "description": "Popup menu item label for the database debug page"
+  },
+  "addFolderTitle": "Añadir carpeta",
+  "@addFolderTitle": {
+    "description": "Dialog title shown when confirming addition of a sync folder"
+  },
+  "confirm": "Confirmar",
+  "@confirm": {
+    "description": "Button label used to confirm an action in a dialog"
+  },
+  "tapPlusToAddSyncFolder": "Toca + para añadir una carpeta de sincronización.",
+  "@tapPlusToAddSyncFolder": {
+    "description": "Empty state message shown at the device root when no sync folders have been added"
+  },
+  "thisFolderIsEmpty": "Esta carpeta está vacía.",
+  "@thisFolderIsEmpty": {
+    "description": "Empty state message shown when the current folder has no items"
+  },
+  "fileNotFound": "Archivo no encontrado",
+  "@fileNotFound": {
+    "description": "Error message shown when the requested file metadata cannot be found"
+  },
+  "filePartsTitle": "Partes del archivo ({count})",
+  "@filePartsTitle": {
+    "description": "Section title showing the number of encrypted file parts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileDetailsTitle": "Detalles del archivo",
+  "@fileDetailsTitle": {
+    "description": "Bottom app bar title for the file details screen"
+  },
+  "encryptedBackup": "Copia de seguridad cifrada",
+  "@encryptedBackup": {
+    "description": "Subtitle shown below the file name on the file details screen"
+  },
+  "sizeLabel": "Tamaño",
+  "@sizeLabel": {
+    "description": "Metadata label showing the file size"
+  },
+  "providerLabel": "Proveedor",
+  "@providerLabel": {
+    "description": "Metadata label showing the storage provider"
+  },
+  "uploadedAtLabel": "Subido el",
+  "@uploadedAtLabel": {
+    "description": "Metadata label showing when the file was uploaded"
+  },
+  "statusLabel": "Estado",
+  "@statusLabel": {
+    "description": "Metadata label showing the file upload status"
+  },
+  "uploadedStatus": "Subido",
+  "@uploadedStatus": {
+    "description": "Status value shown when the file upload completed successfully"
+  },
+  "errorWithMessage": "Error: {message}",
+  "@errorWithMessage": {
+    "description": "Error text shown when loading logs fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "noLogsAvailable": "No hay registros disponibles",
+  "@noLogsAvailable": {
+    "description": "Empty state text shown when there are no logs to display"
+  },
+  "searchLogsHint": "Buscar en los registros...",
+  "@searchLogsHint": {
+    "description": "Hint text for the log search field"
+  },
+  "clearLogs": "Borrar registros",
+  "@clearLogs": {
+    "description": "Tooltip for the button that clears all logs"
+  },
+  "searchWithMinThreeCharacters": "Busca con al menos 3 caracteres",
+  "@searchWithMinThreeCharacters": {
+    "description": "Hint text shown in the search field requiring at least three characters"
+  },
+  "typeBelowToSearch": "Escribe abajo para buscar",
+  "@typeBelowToSearch": {
+    "description": "Empty state message shown before the user starts typing in the search screen"
+  },
+  "noResults": "Sin resultados.",
+  "@noResults": {
+    "description": "Empty state message shown when the search returns no items"
+  },
+  "welcomeTitle": "Bienvenido",
+  "@welcomeTitle": {
+    "description": "Title shown on the sign in screen"
+  },
+  "signInToContinue": "Inicia sesión para continuar en {appName}",
+  "@signInToContinue": {
+    "description": "Subtitle on the sign in screen prompting the user to continue into the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterYourEmail": "Introduce tu correo electrónico",
+  "@pleaseEnterYourEmail": {
+    "description": "Validation message shown when the email field is empty"
+  },
+  "pleaseEnterValidEmailAddress": "Introduce una dirección de correo válida",
+  "@pleaseEnterValidEmailAddress": {
+    "description": "Validation message shown when the email format is invalid"
+  },
+  "emailAddressLabel": "Correo electrónico",
+  "@emailAddressLabel": {
+    "description": "Label for the email input field"
+  },
+  "emailAddressHint": "tu.correo@ejemplo.com",
+  "@emailAddressHint": {
+    "description": "Hint text shown in the email input field"
+  },
+  "retrySendingOtp": "Reenviar OTP",
+  "@retrySendingOtp": {
+    "description": "Button label shown when sending OTP failed and the user can retry"
+  },
+  "sendOtp": "Enviar OTP",
+  "@sendOtp": {
+    "description": "Primary button label used to request an OTP"
+  },
+  "checkYourEmail": "Revisa tu correo",
+  "@checkYourEmail": {
+    "description": "Title shown on the OTP verification step"
+  },
+  "sentSixDigitCodeTo": "Hemos enviado un código de 6 dígitos a\n{email}",
+  "@sentSixDigitCodeTo": {
+    "description": "Message shown after sending the OTP to the user's email",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterOtp": "Introduce el OTP",
+  "@pleaseEnterOtp": {
+    "description": "Validation message shown when the OTP field is empty"
+  },
+  "otpMustBeSixDigits": "El OTP debe tener 6 dígitos",
+  "@otpMustBeSixDigits": {
+    "description": "Validation message shown when the OTP is shorter than six digits"
+  },
+  "enterOtpLabel": "Introduce el OTP",
+  "@enterOtpLabel": {
+    "description": "Label for the OTP input field"
+  },
+  "otpHint": "000000",
+  "@otpHint": {
+    "description": "Hint text shown in the OTP input field"
+  },
+  "retryVerification": "Reintentar verificación",
+  "@retryVerification": {
+    "description": "Button label shown when OTP verification failed and the user can retry"
+  },
+  "verifyOtp": "Verificar OTP",
+  "@verifyOtp": {
+    "description": "Primary button label used to verify the OTP"
+  },
+  "useDifferentEmail": "Usar otro correo electrónico",
+  "@useDifferentEmail": {
+    "description": "Button label used to go back and enter a different email address"
+  },
+  "alreadySignedIn": "Sesión ya iniciada",
+  "@alreadySignedIn": {
+    "description": "Title shown when the user is already signed in"
+  },
+  "sendingOtpFailedPleaseTryAgain": "Error al enviar el OTP. ¡Inténtalo de nuevo!",
+  "@sendingOtpFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when sending the OTP fails"
+  },
+  "otpVerificationFailedPleaseTryAgain": "La verificación del OTP falló. Inténtalo de nuevo.",
+  "@otpVerificationFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when verifying the OTP fails"
+  },
+  "dbViewerTitle": "Visor de BD",
+  "@dbViewerTitle": {
+    "description": "App bar title for the SQLite database viewer screen"
+  },
+  "selectTableToViewData": "Selecciona una tabla para ver sus datos",
+  "@selectTableToViewData": {
+    "description": "Empty state message shown before a database table is selected"
+  },
+  "selectTable": "Seleccionar tabla",
+  "@selectTable": {
+    "description": "Hint text for the table selection dropdown"
+  },
+  "permissionRequiredTitle": "Permiso necesario",
+  "@permissionRequiredTitle": {
+    "description": "Dialog title shown when storage permission is permanently denied"
+  },
+  "storagePermissionSettingsDescription": "Para hacer copias de seguridad automáticas, gestionar y proteger tus archivos en segundo plano, necesitamos acceso al almacenamiento de tu dispositivo. Tus datos se cifran localmente para garantizar una privacidad total. Permite el acceso para continuar.",
+  "@storagePermissionSettingsDescription": {
+    "description": "Dialog description explaining why storage permission is needed and asking the user to open settings"
+  },
+  "openSettings": "Abrir ajustes",
+  "@openSettings": {
+    "description": "Button label used to open the system app settings screen"
+  },
+  "storagePermissionRequiredToContinue": "Se necesita permiso de almacenamiento para continuar",
+  "@storagePermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies storage permission"
+  },
+  "secureLocalAccessTitle": "Acceso local seguro",
+  "@secureLocalAccessTitle": {
+    "description": "Main title on the storage permission onboarding screen"
+  },
+  "storagePermissionPageDescription": "Para explorar, cifrar y hacer copias de seguridad automáticas de tus archivos, necesitamos acceso al almacenamiento de tu dispositivo.",
+  "@storagePermissionPageDescription": {
+    "description": "Description on the storage permission page explaining why access is needed"
+  },
+  "verifying": "Verificando...",
+  "@verifying": {
+    "description": "Button loading label shown while permission status is being checked"
+  },
+  "grantAccess": "Conceder acceso",
+  "@grantAccess": {
+    "description": "Primary button label used to request storage permission"
+  },
+  "zeroKnowledgeEncryptedStorage": "Almacenamiento cifrado de conocimiento cero",
+  "@zeroKnowledgeEncryptedStorage": {
+    "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
+  },
+  "requiresAppPro": "Requiere {appName} Pro.",
+  "@requiresAppPro": {
+    "description": "Snackbar message shown when a Pro subscription is required for modifying storage",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "noStorageFound": "No se encontró almacenamiento",
+  "@noStorageFound": {
+    "description": "Empty state message shown when no storage providers are available"
+  },
+  "howToConnect": "Cómo conectar",
+  "@howToConnect": {
+    "description": "Button label that opens help about connecting a storage provider"
+  },
+  "modify": "Modificar",
+  "@modify": {
+    "description": "Button label used to modify a connected storage provider"
+  },
+  "storageUsed": "{used} / {total} usados",
+  "@storageUsed": {
+    "description": "Storage usage label showing used and total storage",
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "percentageLabel": "{value}%",
+  "@percentageLabel": {
+    "description": "Percentage label showing storage usage percent",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "upToFree": "Hasta {size} gratis",
+  "@upToFree": {
+    "description": "Label showing the maximum free storage available for an unconnected provider",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "notConnected": "No conectado",
+  "@notConnected": {
+    "description": "Status label shown for a storage provider that has not been connected"
+  },
+  "connect": "Conectar",
+  "@connect": {
+    "description": "Button label used to connect a storage provider"
+  },
+  "modifyStorageCapacityTitle": "Modificar capacidad de almacenamiento",
+  "@modifyStorageCapacityTitle": {
+    "description": "Dialog title for changing the storage capacity of a provider"
+  },
+  "enterNewStorageLimitForProvider": "Introduce el nuevo límite de almacenamiento para este proveedor.",
+  "@enterNewStorageLimitForProvider": {
+    "description": "Helper text in the modify storage dialog"
+  },
+  "sizePrefix": "Tamaño: ",
+  "@sizePrefix": {
+    "description": "Prefix text shown before the numeric storage size input"
+  },
+  "gbSuffix": " GB",
+  "@gbSuffix": {
+    "description": "Suffix text shown after the numeric storage size input"
+  },
+  "pleaseEnterSize": "Introduce un tamaño",
+  "@pleaseEnterSize": {
+    "description": "Validation message shown when the storage size field is empty"
+  },
+  "enterValidNumberGreaterThanOne": "Introduce un número válido mayor que 1",
+  "@enterValidNumberGreaterThanOne": {
+    "description": "Validation message shown when the entered storage size is invalid"
+  },
+  "submit": "Enviar",
+  "@submit": {
+    "description": "Button label used to submit the storage size dialog"
+  },
+  "successfullySubscribedToAppPro": "¡Suscripción a {appName} Pro completada con éxito!",
+  "@successfullySubscribedToAppPro": {
+    "description": "Snackbar message shown after a successful subscription purchase",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseCancelledOrFailed": "La compra se canceló o falló.",
+  "@purchaseCancelledOrFailed": {
+    "description": "Snackbar message shown when the purchase flow is cancelled or fails"
+  },
+  "purchasesRestoredSuccessfully": "¡Compras restauradas correctamente!",
+  "@purchasesRestoredSuccessfully": {
+    "description": "Snackbar message shown when previous purchases are restored successfully"
+  },
+  "noActiveSubscriptionsFound": "No se encontraron suscripciones activas.",
+  "@noActiveSubscriptionsFound": {
+    "description": "Snackbar message shown when restore purchases finds no active subscription"
+  },
+  "manageSubscriptionsInDeviceSettings": "Gestiona las suscripciones desde los ajustes de tu dispositivo.",
+  "@manageSubscriptionsInDeviceSettings": {
+    "description": "Snackbar message shown when no management URL is available"
+  },
+  "freePlanTitle": "Gratis",
+  "@freePlanTitle": {
+    "description": "Title of the free subscription plan card"
+  },
+  "freeForeverPrice": "$0.00 / para siempre",
+  "@freeForeverPrice": {
+    "description": "Price label for the free plan"
+  },
+  "freeBenefitProviderStorage": "Disfruta del almacenamiento gratuito de los proveedores",
+  "@freeBenefitProviderStorage": {
+    "description": "Benefit listed under the free plan"
+  },
+  "freeBenefitSyncThreeDevices": "Sincroniza hasta 3 dispositivos de forma segura",
+  "@freeBenefitSyncThreeDevices": {
+    "description": "Benefit listed under the free plan"
+  },
+  "appProYearlyTitle": "{appName} Pro - Anual",
+  "@appProYearlyTitle": {
+    "description": "Title of the yearly pro subscription plan",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "proBenefitModifyStorageLimit": "Modifica el límite de almacenamiento de cada proveedor",
+  "@proBenefitModifyStorageLimit": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "proBenefitSyncTenDevices": "Sincroniza hasta 10 dispositivos",
+  "@proBenefitSyncTenDevices": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "restorePurchases": "Restaurar compras",
+  "@restorePurchases": {
+    "description": "Button label used to restore previous purchases"
+  },
+  "subscriptionAssociatedWithEmailNotDevice": "* La suscripción está asociada a la cuenta de correo electrónico, no al dispositivo",
+  "@subscriptionAssociatedWithEmailNotDevice": {
+    "description": "Footnote explaining that the subscription is tied to the email account rather than a device"
+  },
+  "subscriptionExpiredTitle": "Suscripción vencida",
+  "@subscriptionExpiredTitle": {
+    "description": "Title shown in the expired subscription banner"
+  },
+  "subscriptionExpiredDescription": "Tus beneficios de {appName} Pro están en pausa. Renueva abajo para recuperar tus límites de almacenamiento y la sincronización entre dispositivos.",
+  "@subscriptionExpiredDescription": {
+    "description": "Description shown in the expired subscription banner",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "appProIsActive": "{appName} Pro está activo",
+  "@appProIsActive": {
+    "description": "Title shown when the user has an active Pro subscription",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "activePlanBenefitsSummary": "✓ Modifica los límites de almacenamiento de cada proveedor\n✓ Sincronización entre dispositivos hasta en 10 dispositivos",
+  "@activePlanBenefitsSummary": {
+    "description": "Summary of active Pro subscription benefits"
+  },
+  "manageSubscription": "Gestionar suscripción",
+  "@manageSubscription": {
+    "description": "Button label used to open subscription management"
+  },
+  "currentPlanBadge": "ACTUAL",
+  "@currentPlanBadge": {
+    "description": "Badge shown on the current active plan"
+  },
+  "subscribeNow": "Suscribirse ahora",
+  "@subscribeNow": {
+    "description": "Primary call to action for purchasing the Pro plan"
+  },
+  "subscribeOnMobileApp": "Suscríbete desde la app móvil",
+  "@subscribeOnMobileApp": {
+    "description": "Call to action shown when subscription purchase is not supported on the current platform"
+  },
+  "recover": "Recuperar",
+  "@recover": {
+    "description": "Tooltip label for recovering selected items from the trash"
+  },
+  "empty": "Vaciar",
+  "@empty": {
+    "description": "Tooltip label for emptying the trash"
+  },
+  "noItems": "No hay elementos.",
+  "@noItems": {
+    "description": "Empty state text shown when the trash has no items"
+  }
+}

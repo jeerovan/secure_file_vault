@@ -1,0 +1,944 @@
+{
+  "@@locale": "el",
+  "appTitle": "FiFe",
+  "@appTitle": {
+    "description": "App title",
+    "comment": "Do not translate"
+  },
+  "continueAgreementText": "Συνεχίζοντας, συμφωνείτε με τους {terms} και την {privacy}.",
+  "@continueAgreementText": {
+    "description": "Consent text shown before continuing, with clickable Terms of Service and Privacy Policy links",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "termsOfService": "Όροι Χρήσης",
+  "@termsOfService": {
+    "description": "Clickable label for the terms of service link"
+  },
+  "privacyPolicy": "Πολιτική Απορρήτου",
+  "@privacyPolicy": {
+    "description": "Clickable label for the privacy policy link"
+  },
+  "andLabel": " και ",
+  "@andLabel": {
+    "description": "Connector text between terms and privacy policy"
+  },
+  "theme": "Θέμα",
+  "@theme": {
+    "description": "The label for the theme selection option in settings"
+  },
+  "themeTooltip": "Θέμα ημέρας/νύχτας",
+  "@themeTooltip": {
+    "description": "Tooltip for the theme toggle button"
+  },
+  "logging": "Καταγραφή",
+  "@logging": {
+    "description": "The label for the system logging configuration"
+  },
+  "reportIssue": "Αναφορά προβλήματος",
+  "@reportIssue": {
+    "description": "Action to navigate to the issue tracker"
+  },
+  "sourceCode": "Πηγαίος κώδικας",
+  "@sourceCode": {
+    "description": "Link to the project source code repository"
+  },
+  "desktopApp": "Εφαρμογή υπολογιστή",
+  "@desktopApp": {
+    "description": "Information for users on desktop platforms"
+  },
+  "mobileApp": "Εφαρμογή κινητού",
+  "@mobileApp": {
+    "description": "Information for users on mobile platforms"
+  },
+  "leaveReview": "Αφήστε αξιολόγηση",
+  "@leaveReview": {
+    "description": "Call to action to leave a store rating"
+  },
+  "share": "Κοινοποίηση",
+  "@share": {
+    "description": "Option to share the application link with others"
+  },
+  "versionLabel": "Έκδοση: ",
+  "@versionLabel": {
+    "description": "Static prefix for the current version number display"
+  },
+  "loading": "Φόρτωση...",
+  "@loading": {
+    "description": "Status shown while fetching package information"
+  },
+  "signOut": "Αποσύνδεση",
+  "@signOut": {
+    "description": "Button text to log out the user"
+  },
+  "settingsPageTitle": "Ρυθμίσεις",
+  "@settingsPageTitle": {
+    "description": "Main title for the settings screen bottom bar"
+  },
+  "language": "Γλώσσα",
+  "@language": {
+    "description": "Label for selecting the app language"
+  },
+  "tapToSelect": "Πατήστε για επιλογή",
+  "@tapToSelect": {
+    "description": "Prompt text instructing the user to tap and choose an option"
+  },
+  "appTagline": "Η ιδιωτική μεταφορά των αρχείων σας",
+  "@appTagline": {
+    "description": "Tagline displayed below the app name on the onboarding page"
+  },
+  "onboardingPurposeDescription": "Μια υπηρεσία αποθήκευσης cloud ανοιχτού κώδικα, σχεδιασμένη με αρχιτεκτονική zero-trust. Τα δεδομένα σας κρυπτογραφούνται τοπικά στη συσκευή σας πριν φύγουν από αυτή.",
+  "@onboardingPurposeDescription": {
+    "description": "Description explaining the app purpose on the onboarding welcome page"
+  },
+  "failedToFetch": "Η φόρτωση απέτυχε.",
+  "@failedToFetch": {
+    "description": "Error message shown when storage providers fail to load"
+  },
+  "supportedStorageTitle": "Υποστηριζόμενοι χώροι αποθήκευσης",
+  "@supportedStorageTitle": {
+    "description": "Title for the onboarding page listing supported storage providers"
+  },
+  "supportedStorageDescription": "Συνδέστε τους αγαπημένους σας παρόχους. Ξεκινήστε αμέσως με 1 GB δωρεάν ασφαλούς αποθήκευσης από το FiFe.",
+  "@supportedStorageDescription": {
+    "description": "Description for the supported storage onboarding page"
+  },
+  "fifeCloud": "FiFe Cloud",
+  "@fifeCloud": {
+    "description": "Name of the default FiFe storage provider card"
+  },
+  "startBackupsInstantly": "Ξεκινήστε άμεσα αντίγραφα ασφαλείας",
+  "@startBackupsInstantly": {
+    "description": "Subtitle for the default FiFe cloud storage card"
+  },
+  "freeStorageSizeOneGb": "1.0 GB",
+  "@freeStorageSizeOneGb": {
+    "description": "Displayed free storage size for the built-in FiFe cloud"
+  },
+  "freeLabel": "Δωρεάν",
+  "@freeLabel": {
+    "description": "Label indicating a storage plan is free"
+  },
+  "providerStorageDisclaimer": "* Δωρεάν αποθηκευτικός χώρος όπως αναφέρεται στον ιστότοπο του παρόχου. Χρέωση ανάλογα με τη χρήση με συμβατούς παρόχους.",
+  "@providerStorageDisclaimer": {
+    "description": "Disclaimer about provider free storage and pay-as-you-go support"
+  },
+  "whyUseFifeTitle": "Γιατί να χρησιμοποιήσετε το FiFe;",
+  "@whyUseFifeTitle": {
+    "description": "Title for the onboarding benefits page"
+  },
+  "claimFreeCloudStorageTitle": "Αξιοποιήστε δωρεάν χώρο στο cloud",
+  "@claimFreeCloudStorageTitle": {
+    "description": "Benefit title about using free cloud storage from multiple providers"
+  },
+  "claimFreeCloudStorageDescription": "Αυξήστε τον διαθέσιμο χώρο σας συνδέοντας πολλούς παρόχους cloud. Αξιοποιήστε με ασφάλεια τα δωρεάν πακέτα τους μέσα από μία ενιαία εφαρμογή.",
+  "@claimFreeCloudStorageDescription": {
+    "description": "Benefit description about aggregating free storage across providers"
+  },
+  "topNotchSecurityTitle": "Κορυφαία ασφάλεια",
+  "@topNotchSecurityTitle": {
+    "description": "Benefit title highlighting strong security"
+  },
+  "topNotchSecurityDescription": "Με προηγμένη κρυπτογραφία Sodium. Όλη η κρυπτογράφηση και αποκρυπτογράφηση γίνεται τοπικά στη συσκευή σας.",
+  "@topNotchSecurityDescription": {
+    "description": "Benefit description explaining local encryption and decryption"
+  },
+  "bringYourOwnKeyTitle": "Bring Your Own Key (BYOK)",
+  "@bringYourOwnKeyTitle": {
+    "description": "Benefit title for bring your own key support"
+  },
+  "bringYourOwnKeyDescription": "Διατηρήστε τον πλήρη έλεγχο των δεδομένων σας σε όλους τους παρόχους cloud storage. Χρησιμοποιήστε κρυπτογραφημένη αποθήκευση με τους δικούς σας λογαριασμούς.",
+  "@bringYourOwnKeyDescription": {
+    "description": "Benefit description for using your own accounts and keys"
+  },
+  "payAsYouGoStorageTitle": "Πληρωμή μόνο για ό,τι χρησιμοποιείτε.",
+  "@payAsYouGoStorageTitle": {
+    "description": "Benefit title for pay-as-you-go storage support"
+  },
+  "payAsYouGoStorageDescription": "Πληρώνετε μόνο για τον χώρο που χρησιμοποιείτε με συμβατούς παρόχους. Χωρίς μεσάζοντες, χωρίς κλείδωμα δεδομένων.",
+  "@payAsYouGoStorageDescription": {
+    "description": "Benefit description for pay-as-you-go compatible providers"
+  },
+  "zeroKnowledgePrivacyTitle": "Απόρρητο Zero-Knowledge",
+  "@zeroKnowledgePrivacyTitle": {
+    "description": "Title for the onboarding security page"
+  },
+  "zeroKnowledgePrivacyDescription": "Τα δεδομένα σας κλειδώνονται στη συσκευή σας πριν φύγουν από αυτή. Δεν μπορούμε να δούμε, να διαβάσουμε ή να σαρώσουμε τα αρχεία σας.",
+  "@zeroKnowledgePrivacyDescription": {
+    "description": "Subtitle describing zero-knowledge privacy guarantees"
+  },
+  "localSelectionTitle": "1. Τοπική επιλογή",
+  "@localSelectionTitle": {
+    "description": "Step title for local file selection in the security flow"
+  },
+  "localSelectionDescription": "Εσείς επιλέγετε έναν φάκελο. Όλη η επεξεργασία ξεκινά με ασφάλεια στη συσκευή σας.",
+  "@localSelectionDescription": {
+    "description": "Step description for local file selection in the security flow"
+  },
+  "metadataEncryptionTitle": "2. Κρυπτογράφηση μεταδεδομένων",
+  "@metadataEncryptionTitle": {
+    "description": "Step title for metadata encryption in the security flow"
+  },
+  "metadataEncryptionDescription": "Οι πληροφορίες του αρχείου, όπως όνομα, τύπος και μέγεθος, κρυπτογραφούνται πριν σταλούν στον διακομιστή.",
+  "@metadataEncryptionDescription": {
+    "description": "Step description for metadata encryption in the security flow"
+  },
+  "contentEncryptionTitle": "3. Κρυπτογράφηση περιεχομένου",
+  "@contentEncryptionTitle": {
+    "description": "Step title for file content encryption in the security flow"
+  },
+  "contentEncryptionDescription": "Το ίδιο το περιεχόμενο του αρχείου τεμαχίζεται και κρυπτογραφείται πριν ανέβει στο cloud storage.",
+  "@contentEncryptionDescription": {
+    "description": "Step description for file content encryption in the security flow"
+  },
+  "blindServerTitle": "4. Τυφλός διακομιστής",
+  "@blindServerTitle": {
+    "description": "Step title for the zero-knowledge server step in the security flow"
+  },
+  "blindServerDescription": "Οι διακομιστές μας δεν γνωρίζουν τίποτα για τα δεδομένα σας. Βλέπουμε μόνο κρυπτογραφημένα δεδομένα, εξασφαλίζοντας απόλυτο απόρρητο.",
+  "@blindServerDescription": {
+    "description": "Step description explaining that servers only handle encrypted data"
+  },
+  "dontTrustVerifyTitle": "Μην εμπιστεύεστε, επαληθεύστε.",
+  "@dontTrustVerifyTitle": {
+    "description": "Title for the open-source verification callout"
+  },
+  "openSourceVerificationDescription": "100% ανοιχτός κώδικας. Μπορείτε να ελέγξετε τον κώδικα και να δείτε ακριβώς πώς κρυπτογραφούνται τα αρχεία σας.",
+  "@openSourceVerificationDescription": {
+    "description": "Description for the open-source verification callout"
+  },
+  "getStarted": "Ξεκινήστε",
+  "@getStarted": {
+    "description": "Primary button label shown on the final onboarding page"
+  },
+  "next": "Επόμενο",
+  "@next": {
+    "description": "Primary button label used to move to the next onboarding page"
+  },
+  "unauthorized": "Μη εξουσιοδοτημένη πρόσβαση",
+  "@unauthorized": {
+    "description": "Error message shown when the user is not authorized to access the key"
+  },
+  "tryAgain": "Δοκιμάστε ξανά",
+  "@tryAgain": {
+    "description": "Button label used to retry the failed access key check"
+  },
+  "errorTitle": "Σφάλμα",
+  "@errorTitle": {
+    "description": "Generic error dialog title"
+  },
+  "failureTitle": "Αποτυχία",
+  "@failureTitle": {
+    "description": "Dialog title shown when access key verification fails"
+  },
+  "invalidWordList": "Μη έγκυρη λίστα λέξεων",
+  "@invalidWordList": {
+    "description": "Error message shown when the entered recovery phrase is not a valid mnemonic"
+  },
+  "invalidAccessKey": "Μη έγκυρο κλειδί πρόσβασης",
+  "@invalidAccessKey": {
+    "description": "Error message shown when the provided recovery phrase cannot decrypt the stored key"
+  },
+  "unexpectedDecryptionError": "Προέκυψε ένα απρόσμενο σφάλμα κατά την αποκρυπτογράφηση.",
+  "@unexpectedDecryptionError": {
+    "description": "Error message shown when an unexpected exception occurs during access key decryption"
+  },
+  "fileMustContainExactly24Words": "Το αρχείο πρέπει να περιέχει ακριβώς 24 λέξεις.",
+  "@fileMustContainExactly24Words": {
+    "description": "Error message shown when the selected text file does not contain exactly 24 words"
+  },
+  "errorReadingFile": "Σφάλμα κατά την ανάγνωση του αρχείου",
+  "@errorReadingFile": {
+    "description": "Snackbar message shown when reading the selected file fails"
+  },
+  "encryptionTitle": "Κρυπτογράφηση",
+  "@encryptionTitle": {
+    "description": "App bar title for the access key decode screen"
+  },
+  "accessKeyDecodeDescription": "Εισαγάγετε τη φράση ανάκτησης με 24 λέξεις ή φορτώστε ένα αρχείο .txt για να ενεργοποιήσετε με ασφάλεια τον συγχρονισμό στο cloud.",
+  "@accessKeyDecodeDescription": {
+    "description": "Instruction text on the access key decode screen"
+  },
+  "recoveryPhraseLabel": "Φράση ανάκτησης",
+  "@recoveryPhraseLabel": {
+    "description": "Label for the recovery phrase input field"
+  },
+  "recoveryPhraseHint": "word1 word2 word3...",
+  "@recoveryPhraseHint": {
+    "description": "Hint text shown inside the recovery phrase input field"
+  },
+  "paste": "Επικόλληση",
+  "@paste": {
+    "description": "Button label used to paste clipboard text into the recovery phrase field"
+  },
+  "wordCountLabel": "{count} / 24 λέξεις",
+  "@wordCountLabel": {
+    "description": "Live counter showing how many recovery words have been entered",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseEnterRecoveryPhrase": "Παρακαλώ εισαγάγετε τη φράση ανάκτησης",
+  "@pleaseEnterRecoveryPhrase": {
+    "description": "Validation message shown when the recovery phrase field is empty"
+  },
+  "mustContainExactly24Words": "Πρέπει να περιέχει ακριβώς 24 λέξεις",
+  "@mustContainExactly24Words": {
+    "description": "Validation message shown when the recovery phrase does not contain exactly 24 words"
+  },
+  "verify": "Επαλήθευση",
+  "@verify": {
+    "description": "Primary button label used to verify the recovery phrase"
+  },
+  "orLabel": "Ή",
+  "@orLabel": {
+    "description": "Separator label between manual input and file upload actions"
+  },
+  "loadFromTxtFile": "Φόρτωση από αρχείο .txt",
+  "@loadFromTxtFile": {
+    "description": "Button label used to load the recovery phrase from a text file"
+  },
+  "saveAccessKey": "Αποθήκευση κλειδιού πρόσβασης",
+  "@saveAccessKey": {
+    "description": "Title for the desktop save file dialog when saving the access key"
+  },
+  "fileSavedSuccessfully": "Το αρχείο αποθηκεύτηκε με επιτυχία.",
+  "@fileSavedSuccessfully": {
+    "description": "Snackbar message shown after the access key file is saved successfully"
+  },
+  "accessKeyShareMessage": "Ορίστε το κλειδί πρόσβασής σας.",
+  "@accessKeyShareMessage": {
+    "description": "Text shared alongside the access key file in the mobile share sheet"
+  },
+  "pleaseTryAgain": "Παρακαλώ δοκιμάστε ξανά.",
+  "@pleaseTryAgain": {
+    "description": "Generic snackbar message shown after a failed file save or share operation"
+  },
+  "copiedToClipboard": "Αντιγράφηκε στο πρόχειρο",
+  "@copiedToClipboard": {
+    "description": "Snackbar message shown after copying the access key to the clipboard"
+  },
+  "accessKeyTitle": "Κλειδί πρόσβασης",
+  "@accessKeyTitle": {
+    "description": "App bar title for the access key screen"
+  },
+  "accessKeyDescription": "Αποθηκεύστε αυτό το κλειδί σε ασφαλές σημείο. Μόνο με αυτό θα μπορείτε να αποκτήσετε πρόσβαση στα κρυπτογραφημένα δεδομένα σας.",
+  "@accessKeyDescription": {
+    "description": "Instruction text explaining the importance of safely storing the access key"
+  },
+  "copy": "Αντιγραφή",
+  "@copy": {
+    "description": "Button label used to copy the access key to the clipboard"
+  },
+  "downloadAsTextFile": "Λήψη ως αρχείο κειμένου",
+  "@downloadAsTextFile": {
+    "description": "Button label used to save the access key as a text file"
+  },
+  "continueLabel": "Συνέχεια",
+  "@continueLabel": {
+    "description": "Button label used to proceed to the next step after viewing the access key"
+  },
+  "importantTitle": "Σημαντικό",
+  "@importantTitle": {
+    "description": "App bar title for the access key notice screen"
+  },
+  "accessKeyNoticePrimary": "Στην επόμενη σελίδα θα δείτε μια σειρά από 24 λέξεις. Αυτό είναι το μοναδικό και ιδιωτικό σας κλειδί κρυπτογράφησης και είναι ο ΜΟΝΑΔΙΚΟΣ τρόπος να ανακτήσετε τα δεδομένα σας σε περίπτωση αποσύνδεσης, απώλειας συσκευής ή βλάβης.",
+  "@accessKeyNoticePrimary": {
+    "description": "Primary warning text explaining the importance of the 24-word recovery key"
+  },
+  "accessKeyNoticeResponsibility": "Δεν αποθηκεύουμε αυτό το κλειδί. Είναι ΔΙΚΗ σας ευθύνη να το φυλάξετε σε ασφαλές σημείο εκτός της εφαρμογής {appName}.",
+  "@accessKeyNoticeResponsibility": {
+    "description": "Warning text reminding the user to store the recovery key outside the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "showKeyConfirmation": "Το κατάλαβα.\nΔείξε μου το κλειδί.",
+  "@showKeyConfirmation": {
+    "description": "Confirmation button label acknowledging the warning before showing the access key"
+  },
+  "storageAddedSuccessfully": "Ο χώρος αποθήκευσης προστέθηκε με επιτυχία",
+  "@storageAddedSuccessfully": {
+    "description": "Snackbar message shown when a storage provider is added successfully"
+  },
+  "networkErrorDuringValidation": "Προέκυψε σφάλμα δικτύου κατά την επαλήθευση.",
+  "@networkErrorDuringValidation": {
+    "description": "Error message shown when provider validation fails because of a network error"
+  },
+  "verifyAndConnect": "Επαλήθευση & σύνδεση",
+  "@verifyAndConnect": {
+    "description": "Primary button label used to validate credentials and connect a storage provider"
+  },
+  "requiredField": "Υποχρεωτικό",
+  "@requiredField": {
+    "description": "Validation message shown when a required input field is empty"
+  },
+  "providerKeysVerifiedLocally": "Τα κλειδιά σας επαληθεύονται τοπικά και κρυπτογραφούνται πριν από τη μεταφορά.",
+  "@providerKeysVerifiedLocally": {
+    "description": "Informational text explaining local verification and encryption of credentials"
+  },
+  "enterYourCredentials": "Εισαγάγετε τα στοιχεία σας",
+  "@enterYourCredentials": {
+    "description": "Section title prompting the user to enter provider credentials"
+  },
+  "connectProvider": "Σύνδεση {provider}",
+  "@connectProvider": {
+    "description": "Bottom app bar title for connecting a specific storage provider",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLimitReached": "Έχει συμπληρωθεί το όριο συσκευών",
+  "@deviceLimitReached": {
+    "description": "Snackbar message shown when the user has reached the maximum allowed number of registered devices"
+  },
+  "pleaseTryAgainWithExclamation": "Παρακαλώ δοκιμάστε ξανά!",
+  "@pleaseTryAgainWithExclamation": {
+    "description": "Snackbar message shown when signing out a device fails"
+  },
+  "notThisDevice": "Όχι αυτή η συσκευή!",
+  "@notThisDevice": {
+    "description": "Snackbar message shown when the user tries to sign out the current device from the device list"
+  },
+  "confirmSignoutDeviceTitle": "Επιβεβαίωση αποσύνδεσης συσκευής",
+  "@confirmSignoutDeviceTitle": {
+    "description": "Dialog title shown before signing out a device"
+  },
+  "areYouSure": "Είστε βέβαιοι;",
+  "@areYouSure": {
+    "description": "Confirmation dialog message asking whether the user wants to proceed"
+  },
+  "cancel": "Ακύρωση",
+  "@cancel": {
+    "description": "Button label used to cancel a dialog action"
+  },
+  "ok": "OK",
+  "@ok": {
+    "description": "Button label used to confirm a dialog action"
+  },
+  "noDeviceFound": "Δεν βρέθηκε συσκευή",
+  "@noDeviceFound": {
+    "description": "Empty state message shown when no devices are available"
+  },
+  "backTooltip": "Πίσω",
+  "@backTooltip": {
+    "description": "Tooltip for the back navigation button"
+  },
+  "devicesTitle": "Συσκευές",
+  "@devicesTitle": {
+    "description": "Title for the devices screen"
+  },
+  "longPressToDownload": "Παρατεταμένο πάτημα για λήψη",
+  "@longPressToDownload": {
+    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+  },
+  "fewItemsExistLocally": "Μερικά στοιχεία υπάρχουν ακόμη τοπικά.",
+  "@fewItemsExistLocally": {
+    "description": "Snackbar message shown when some selected items still exist locally during archive action"
+  },
+  "selectedItemsCount": "Επιλέχθηκαν {count}",
+  "@selectedItemsCount": {
+    "description": "Title shown in the multi-select app bar with the number of selected items",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "Διαγραφή",
+  "@delete": {
+    "description": "Tooltip label for deleting selected items"
+  },
+  "info": "Πληροφορίες",
+  "@info": {
+    "description": "Tooltip label for viewing file information"
+  },
+  "download": "Λήψη",
+  "@download": {
+    "description": "Tooltip label for downloading selected items"
+  },
+  "archive": "Αρχειοθέτηση",
+  "@archive": {
+    "description": "Tooltip label for archiving selected items"
+  },
+  "appPro": "{appName} Pro",
+  "@appPro": {
+    "description": "Popup menu item label for the premium subscription page using the non-translated app name",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "logs": "Καταγραφές",
+  "@logs": {
+    "description": "Popup menu item label for the logs page"
+  },
+  "settings": "Ρυθμίσεις",
+  "@settings": {
+    "description": "Popup menu item label for the settings page"
+  },
+  "trash": "Κάδος",
+  "@trash": {
+    "description": "Popup menu item label for the trash page"
+  },
+  "storage": "Αποθήκευση",
+  "@storage": {
+    "description": "Popup menu item label for the storage providers page"
+  },
+  "search": "Αναζήτηση",
+  "@search": {
+    "description": "Popup menu item label for the search page"
+  },
+  "database": "Βάση δεδομένων",
+  "@database": {
+    "description": "Popup menu item label for the database debug page"
+  },
+  "addFolderTitle": "Προσθήκη φακέλου",
+  "@addFolderTitle": {
+    "description": "Dialog title shown when confirming addition of a sync folder"
+  },
+  "confirm": "Επιβεβαίωση",
+  "@confirm": {
+    "description": "Button label used to confirm an action in a dialog"
+  },
+  "tapPlusToAddSyncFolder": "Πατήστε + για να προσθέσετε φάκελο συγχρονισμού.",
+  "@tapPlusToAddSyncFolder": {
+    "description": "Empty state message shown at the device root when no sync folders have been added"
+  },
+  "thisFolderIsEmpty": "Αυτός ο φάκελος είναι άδειος.",
+  "@thisFolderIsEmpty": {
+    "description": "Empty state message shown when the current folder has no items"
+  },
+  "fileNotFound": "Το αρχείο δεν βρέθηκε",
+  "@fileNotFound": {
+    "description": "Error message shown when the requested file metadata cannot be found"
+  },
+  "filePartsTitle": "Τμήματα αρχείου ({count})",
+  "@filePartsTitle": {
+    "description": "Section title showing the number of encrypted file parts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileDetailsTitle": "Λεπτομέρειες αρχείου",
+  "@fileDetailsTitle": {
+    "description": "Bottom app bar title for the file details screen"
+  },
+  "encryptedBackup": "Κρυπτογραφημένο αντίγραφο ασφαλείας",
+  "@encryptedBackup": {
+    "description": "Subtitle shown below the file name on the file details screen"
+  },
+  "sizeLabel": "Μέγεθος",
+  "@sizeLabel": {
+    "description": "Metadata label showing the file size"
+  },
+  "providerLabel": "Πάροχος",
+  "@providerLabel": {
+    "description": "Metadata label showing the storage provider"
+  },
+  "uploadedAtLabel": "Μεταφορτώθηκε στις",
+  "@uploadedAtLabel": {
+    "description": "Metadata label showing when the file was uploaded"
+  },
+  "statusLabel": "Κατάσταση",
+  "@statusLabel": {
+    "description": "Metadata label showing the file upload status"
+  },
+  "uploadedStatus": "Μεταφορτώθηκε",
+  "@uploadedStatus": {
+    "description": "Status value shown when the file upload completed successfully"
+  },
+  "errorWithMessage": "Σφάλμα: {message}",
+  "@errorWithMessage": {
+    "description": "Error text shown when loading logs fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "noLogsAvailable": "Δεν υπάρχουν καταγραφές",
+  "@noLogsAvailable": {
+    "description": "Empty state text shown when there are no logs to display"
+  },
+  "searchLogsHint": "Αναζήτηση στις καταγραφές...",
+  "@searchLogsHint": {
+    "description": "Hint text for the log search field"
+  },
+  "clearLogs": "Εκκαθάριση καταγραφών",
+  "@clearLogs": {
+    "description": "Tooltip for the button that clears all logs"
+  },
+  "searchWithMinThreeCharacters": "Αναζήτηση με τουλάχιστον 3 χαρακτήρες",
+  "@searchWithMinThreeCharacters": {
+    "description": "Hint text shown in the search field requiring at least three characters"
+  },
+  "typeBelowToSearch": "Πληκτρολογήστε παρακάτω για αναζήτηση",
+  "@typeBelowToSearch": {
+    "description": "Empty state message shown before the user starts typing in the search screen"
+  },
+  "noResults": "Δεν υπάρχουν αποτελέσματα.",
+  "@noResults": {
+    "description": "Empty state message shown when the search returns no items"
+  },
+  "welcomeTitle": "Καλώς ήρθατε",
+  "@welcomeTitle": {
+    "description": "Title shown on the sign in screen"
+  },
+  "signInToContinue": "Συνδεθείτε για να συνεχίσετε στο {appName}",
+  "@signInToContinue": {
+    "description": "Subtitle on the sign in screen prompting the user to continue into the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterYourEmail": "Παρακαλώ εισαγάγετε το email σας",
+  "@pleaseEnterYourEmail": {
+    "description": "Validation message shown when the email field is empty"
+  },
+  "pleaseEnterValidEmailAddress": "Παρακαλώ εισαγάγετε έγκυρη διεύθυνση email",
+  "@pleaseEnterValidEmailAddress": {
+    "description": "Validation message shown when the email format is invalid"
+  },
+  "emailAddressLabel": "Διεύθυνση email",
+  "@emailAddressLabel": {
+    "description": "Label for the email input field"
+  },
+  "emailAddressHint": "your.email@example.com",
+  "@emailAddressHint": {
+    "description": "Hint text shown in the email input field"
+  },
+  "retrySendingOtp": "Επανάληψη αποστολής OTP",
+  "@retrySendingOtp": {
+    "description": "Button label shown when sending OTP failed and the user can retry"
+  },
+  "sendOtp": "Αποστολή OTP",
+  "@sendOtp": {
+    "description": "Primary button label used to request an OTP"
+  },
+  "checkYourEmail": "Ελέγξτε το email σας",
+  "@checkYourEmail": {
+    "description": "Title shown on the OTP verification step"
+  },
+  "sentSixDigitCodeTo": "Στείλαμε έναν 6ψήφιο κωδικό στο\n{email}",
+  "@sentSixDigitCodeTo": {
+    "description": "Message shown after sending the OTP to the user's email",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterOtp": "Παρακαλώ εισαγάγετε το OTP",
+  "@pleaseEnterOtp": {
+    "description": "Validation message shown when the OTP field is empty"
+  },
+  "otpMustBeSixDigits": "Το OTP πρέπει να έχει 6 ψηφία",
+  "@otpMustBeSixDigits": {
+    "description": "Validation message shown when the OTP is shorter than six digits"
+  },
+  "enterOtpLabel": "Εισαγωγή OTP",
+  "@enterOtpLabel": {
+    "description": "Label for the OTP input field"
+  },
+  "otpHint": "000000",
+  "@otpHint": {
+    "description": "Hint text shown in the OTP input field"
+  },
+  "retryVerification": "Επανάληψη επαλήθευσης",
+  "@retryVerification": {
+    "description": "Button label shown when OTP verification failed and the user can retry"
+  },
+  "verifyOtp": "Επαλήθευση OTP",
+  "@verifyOtp": {
+    "description": "Primary button label used to verify the OTP"
+  },
+  "useDifferentEmail": "Χρήση άλλου email",
+  "@useDifferentEmail": {
+    "description": "Button label used to go back and enter a different email address"
+  },
+  "alreadySignedIn": "Έχετε ήδη συνδεθεί",
+  "@alreadySignedIn": {
+    "description": "Title shown when the user is already signed in"
+  },
+  "sendingOtpFailedPleaseTryAgain": "Η αποστολή OTP απέτυχε. Παρακαλώ δοκιμάστε ξανά!",
+  "@sendingOtpFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when sending the OTP fails"
+  },
+  "otpVerificationFailedPleaseTryAgain": "Η επαλήθευση OTP απέτυχε. Παρακαλώ δοκιμάστε ξανά.",
+  "@otpVerificationFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when verifying the OTP fails"
+  },
+  "dbViewerTitle": "Προβολή βάσης δεδομένων",
+  "@dbViewerTitle": {
+    "description": "App bar title for the SQLite database viewer screen"
+  },
+  "selectTableToViewData": "Επιλέξτε έναν πίνακα για να δείτε τα δεδομένα του",
+  "@selectTableToViewData": {
+    "description": "Empty state message shown before a database table is selected"
+  },
+  "selectTable": "Επιλέξτε πίνακα",
+  "@selectTable": {
+    "description": "Hint text for the table selection dropdown"
+  },
+  "permissionRequiredTitle": "Απαιτείται άδεια",
+  "@permissionRequiredTitle": {
+    "description": "Dialog title shown when storage permission is permanently denied"
+  },
+  "storagePermissionSettingsDescription": "Για να δημιουργούμε αυτόματα αντίγραφα ασφαλείας, να διαχειριζόμαστε και να προστατεύουμε τα αρχεία σας στο παρασκήνιο, χρειαζόμαστε πρόσβαση στον χώρο αποθήκευσης της συσκευής σας. Τα δεδομένα σας κρυπτογραφούνται τοπικά, εξασφαλίζοντας πλήρες απόρρητο. Παρακαλώ επιτρέψτε την πρόσβαση για να συνεχίσετε.",
+  "@storagePermissionSettingsDescription": {
+    "description": "Dialog description explaining why storage permission is needed and asking the user to open settings"
+  },
+  "openSettings": "Άνοιγμα ρυθμίσεων",
+  "@openSettings": {
+    "description": "Button label used to open the system app settings screen"
+  },
+  "storagePermissionRequiredToContinue": "Απαιτείται άδεια αποθήκευσης για να συνεχίσετε",
+  "@storagePermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies storage permission"
+  },
+  "secureLocalAccessTitle": "Ασφαλής τοπική πρόσβαση",
+  "@secureLocalAccessTitle": {
+    "description": "Main title on the storage permission onboarding screen"
+  },
+  "storagePermissionPageDescription": "Για να περιηγείστε, να κρυπτογραφείτε και να δημιουργείτε αυτόματα αντίγραφα ασφαλείας των αρχείων σας, χρειαζόμαστε πρόσβαση στον αποθηκευτικό χώρο της συσκευής σας.",
+  "@storagePermissionPageDescription": {
+    "description": "Description on the storage permission page explaining why access is needed"
+  },
+  "verifying": "Γίνεται επαλήθευση...",
+  "@verifying": {
+    "description": "Button loading label shown while permission status is being checked"
+  },
+  "grantAccess": "Παραχώρηση πρόσβασης",
+  "@grantAccess": {
+    "description": "Primary button label used to request storage permission"
+  },
+  "zeroKnowledgeEncryptedStorage": "Κρυπτογραφημένη αποθήκευση zero-knowledge",
+  "@zeroKnowledgeEncryptedStorage": {
+    "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
+  },
+  "requiresAppPro": "Απαιτείται {appName} Pro.",
+  "@requiresAppPro": {
+    "description": "Snackbar message shown when a Pro subscription is required for modifying storage",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "noStorageFound": "Δεν βρέθηκε χώρος αποθήκευσης",
+  "@noStorageFound": {
+    "description": "Empty state message shown when no storage providers are available"
+  },
+  "howToConnect": "Πώς να συνδεθείτε",
+  "@howToConnect": {
+    "description": "Button label that opens help about connecting a storage provider"
+  },
+  "modify": "Τροποποίηση",
+  "@modify": {
+    "description": "Button label used to modify a connected storage provider"
+  },
+  "storageUsed": "{used} / {total} σε χρήση",
+  "@storageUsed": {
+    "description": "Storage usage label showing used and total storage",
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "percentageLabel": "{value}%",
+  "@percentageLabel": {
+    "description": "Percentage label showing storage usage percent",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "upToFree": "Έως {size} δωρεάν",
+  "@upToFree": {
+    "description": "Label showing the maximum free storage available for an unconnected provider",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "notConnected": "Δεν έχει συνδεθεί",
+  "@notConnected": {
+    "description": "Status label shown for a storage provider that has not been connected"
+  },
+  "connect": "Σύνδεση",
+  "@connect": {
+    "description": "Button label used to connect a storage provider"
+  },
+  "modifyStorageCapacityTitle": "Τροποποίηση χωρητικότητας αποθήκευσης",
+  "@modifyStorageCapacityTitle": {
+    "description": "Dialog title for changing the storage capacity of a provider"
+  },
+  "enterNewStorageLimitForProvider": "Εισαγάγετε το νέο όριο αποθήκευσης για αυτόν τον πάροχο.",
+  "@enterNewStorageLimitForProvider": {
+    "description": "Helper text in the modify storage dialog"
+  },
+  "sizePrefix": "Μέγεθος: ",
+  "@sizePrefix": {
+    "description": "Prefix text shown before the numeric storage size input"
+  },
+  "gbSuffix": " GB",
+  "@gbSuffix": {
+    "description": "Suffix text shown after the numeric storage size input"
+  },
+  "pleaseEnterSize": "Παρακαλώ εισαγάγετε μέγεθος",
+  "@pleaseEnterSize": {
+    "description": "Validation message shown when the storage size field is empty"
+  },
+  "enterValidNumberGreaterThanOne": "Εισαγάγετε έναν έγκυρο αριθμό μεγαλύτερο από 1",
+  "@enterValidNumberGreaterThanOne": {
+    "description": "Validation message shown when the entered storage size is invalid"
+  },
+  "submit": "Υποβολή",
+  "@submit": {
+    "description": "Button label used to submit the storage size dialog"
+  },
+  "successfullySubscribedToAppPro": "Η συνδρομή στο {appName} Pro ολοκληρώθηκε με επιτυχία!",
+  "@successfullySubscribedToAppPro": {
+    "description": "Snackbar message shown after a successful subscription purchase",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseCancelledOrFailed": "Η αγορά ακυρώθηκε ή απέτυχε.",
+  "@purchaseCancelledOrFailed": {
+    "description": "Snackbar message shown when the purchase flow is cancelled or fails"
+  },
+  "purchasesRestoredSuccessfully": "Οι αγορές αποκαταστάθηκαν με επιτυχία!",
+  "@purchasesRestoredSuccessfully": {
+    "description": "Snackbar message shown when previous purchases are restored successfully"
+  },
+  "noActiveSubscriptionsFound": "Δεν βρέθηκαν ενεργές συνδρομές.",
+  "@noActiveSubscriptionsFound": {
+    "description": "Snackbar message shown when restore purchases finds no active subscription"
+  },
+  "manageSubscriptionsInDeviceSettings": "Παρακαλώ διαχειριστείτε τις συνδρομές από τις ρυθμίσεις της συσκευής σας.",
+  "@manageSubscriptionsInDeviceSettings": {
+    "description": "Snackbar message shown when no management URL is available"
+  },
+  "freePlanTitle": "Δωρεάν",
+  "@freePlanTitle": {
+    "description": "Title of the free subscription plan card"
+  },
+  "freeForeverPrice": "$0.00 / για πάντα",
+  "@freeForeverPrice": {
+    "description": "Price label for the free plan"
+  },
+  "freeBenefitProviderStorage": "Αξιοποιήστε δωρεάν χώρο από παρόχους",
+  "@freeBenefitProviderStorage": {
+    "description": "Benefit listed under the free plan"
+  },
+  "freeBenefitSyncThreeDevices": "Ασφαλής συγχρονισμός έως 3 συσκευών",
+  "@freeBenefitSyncThreeDevices": {
+    "description": "Benefit listed under the free plan"
+  },
+  "appProYearlyTitle": "{appName} Pro - Ετήσιο",
+  "@appProYearlyTitle": {
+    "description": "Title of the yearly pro subscription plan",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "proBenefitModifyStorageLimit": "Τροποποίηση ορίου αποθήκευσης για κάθε πάροχο",
+  "@proBenefitModifyStorageLimit": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "proBenefitSyncTenDevices": "Συγχρονισμός έως 10 συσκευών",
+  "@proBenefitSyncTenDevices": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "restorePurchases": "Επαναφορά αγορών",
+  "@restorePurchases": {
+    "description": "Button label used to restore previous purchases"
+  },
+  "subscriptionAssociatedWithEmailNotDevice": "* Η συνδρομή συνδέεται με το email και όχι με τη συσκευή",
+  "@subscriptionAssociatedWithEmailNotDevice": {
+    "description": "Footnote explaining that the subscription is tied to the email account rather than a device"
+  },
+  "subscriptionExpiredTitle": "Η συνδρομή έληξε",
+  "@subscriptionExpiredTitle": {
+    "description": "Title shown in the expired subscription banner"
+  },
+  "subscriptionExpiredDescription": "Τα προνόμια του {appName} Pro έχουν τεθεί σε παύση. Ανανεώστε παρακάτω για να επαναφέρετε τα όρια αποθήκευσης και τον συγχρονισμό συσκευών.",
+  "@subscriptionExpiredDescription": {
+    "description": "Description shown in the expired subscription banner",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "appProIsActive": "Το {appName} Pro είναι ενεργό",
+  "@appProIsActive": {
+    "description": "Title shown when the user has an active Pro subscription",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "activePlanBenefitsSummary": "✓ Τροποποίηση ορίων αποθήκευσης για κάθε πάροχο\n✓ Συγχρονισμός μεταξύ συσκευών έως 10 συσκευές",
+  "@activePlanBenefitsSummary": {
+    "description": "Summary of active Pro subscription benefits"
+  },
+  "manageSubscription": "Διαχείριση συνδρομής",
+  "@manageSubscription": {
+    "description": "Button label used to open subscription management"
+  },
+  "currentPlanBadge": "ΤΡΕΧΟΝ",
+  "@currentPlanBadge": {
+    "description": "Badge shown on the current active plan"
+  },
+  "subscribeNow": "Εγγραφή τώρα",
+  "@subscribeNow": {
+    "description": "Primary call to action for purchasing the Pro plan"
+  },
+  "subscribeOnMobileApp": "Εγγραφή από την εφαρμογή κινητού",
+  "@subscribeOnMobileApp": {
+    "description": "Call to action shown when subscription purchase is not supported on the current platform"
+  },
+  "recover": "Επαναφορά",
+  "@recover": {
+    "description": "Tooltip label for recovering selected items from the trash"
+  },
+  "empty": "Άδειασμα",
+  "@empty": {
+    "description": "Tooltip label for emptying the trash"
+  },
+  "noItems": "Δεν υπάρχουν στοιχεία.",
+  "@noItems": {
+    "description": "Empty state text shown when the trash has no items"
+  }
+}

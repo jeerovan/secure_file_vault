@@ -1,0 +1,944 @@
+{
+  "@@locale": "th",
+  "appTitle": "FiFe",
+  "@appTitle": {
+    "description": "App title",
+    "comment": "Do not translate"
+  },
+  "continueAgreementText": "เมื่อดำเนินการต่อ แสดงว่าคุณยอมรับ{terms}และ{privacy}ของเรา",
+  "@continueAgreementText": {
+    "description": "Consent text shown before continuing, with clickable Terms of Service and Privacy Policy links",
+    "placeholders": {
+      "terms": {
+        "type": "String"
+      },
+      "privacy": {
+        "type": "String"
+      }
+    }
+  },
+  "termsOfService": "ข้อกำหนดการให้บริการ",
+  "@termsOfService": {
+    "description": "Clickable label for the terms of service link"
+  },
+  "privacyPolicy": "นโยบายความเป็นส่วนตัว",
+  "@privacyPolicy": {
+    "description": "Clickable label for the privacy policy link"
+  },
+  "andLabel": " และ ",
+  "@andLabel": {
+    "description": "Connector text between terms and privacy policy"
+  },
+  "theme": "ธีม",
+  "@theme": {
+    "description": "The label for the theme selection option in settings"
+  },
+  "themeTooltip": "ธีมสว่าง/มืด",
+  "@themeTooltip": {
+    "description": "Tooltip for the theme toggle button"
+  },
+  "logging": "บันทึกระบบ",
+  "@logging": {
+    "description": "The label for the system logging configuration"
+  },
+  "reportIssue": "รายงานปัญหา",
+  "@reportIssue": {
+    "description": "Action to navigate to the issue tracker"
+  },
+  "sourceCode": "ซอร์สโค้ด",
+  "@sourceCode": {
+    "description": "Link to the project source code repository"
+  },
+  "desktopApp": "แอปเดสก์ท็อป",
+  "@desktopApp": {
+    "description": "Information for users on desktop platforms"
+  },
+  "mobileApp": "แอปมือถือ",
+  "@mobileApp": {
+    "description": "Information for users on mobile platforms"
+  },
+  "leaveReview": "เขียนรีวิว",
+  "@leaveReview": {
+    "description": "Call to action to leave a store rating"
+  },
+  "share": "แชร์",
+  "@share": {
+    "description": "Option to share the application link with others"
+  },
+  "versionLabel": "เวอร์ชัน: ",
+  "@versionLabel": {
+    "description": "Static prefix for the current version number display"
+  },
+  "loading": "กำลังโหลด...",
+  "@loading": {
+    "description": "Status shown while fetching package information"
+  },
+  "signOut": "ออกจากระบบ",
+  "@signOut": {
+    "description": "Button text to log out the user"
+  },
+  "settingsPageTitle": "การตั้งค่า",
+  "@settingsPageTitle": {
+    "description": "Main title for the settings screen bottom bar"
+  },
+  "language": "ภาษา",
+  "@language": {
+    "description": "Label for selecting the app language"
+  },
+  "tapToSelect": "แตะเพื่อเลือก",
+  "@tapToSelect": {
+    "description": "Prompt text instructing the user to tap and choose an option"
+  },
+  "appTagline": "เรือขนไฟล์ส่วนตัวของคุณ",
+  "@appTagline": {
+    "description": "Tagline displayed below the app name on the onboarding page"
+  },
+  "onboardingPurposeDescription": "บริการจัดเก็บข้อมูลบนคลาวด์แบบโอเพนซอร์สที่สร้างบนสถาปัตยกรรม zero-trust ข้อมูลของคุณจะถูกเข้ารหัสในอุปกรณ์ก่อนออกจากเครื่องเสมอ",
+  "@onboardingPurposeDescription": {
+    "description": "Description explaining the app purpose on the onboarding welcome page"
+  },
+  "failedToFetch": "ไม่สามารถดึงข้อมูลได้",
+  "@failedToFetch": {
+    "description": "Error message shown when storage providers fail to load"
+  },
+  "supportedStorageTitle": "พื้นที่จัดเก็บที่รองรับ",
+  "@supportedStorageTitle": {
+    "description": "Title for the onboarding page listing supported storage providers"
+  },
+  "supportedStorageDescription": "เชื่อมต่อผู้ให้บริการที่คุณชื่นชอบได้ทันที และเริ่มต้นด้วยพื้นที่จัดเก็บปลอดภัยฟรี 1 GB จาก FiFe",
+  "@supportedStorageDescription": {
+    "description": "Description for the supported storage onboarding page"
+  },
+  "fifeCloud": "FiFe Cloud",
+  "@fifeCloud": {
+    "description": "Name of the default FiFe storage provider card"
+  },
+  "startBackupsInstantly": "เริ่มสำรองข้อมูลได้ทันที",
+  "@startBackupsInstantly": {
+    "description": "Subtitle for the default FiFe cloud storage card"
+  },
+  "freeStorageSizeOneGb": "1.0 GB",
+  "@freeStorageSizeOneGb": {
+    "description": "Displayed free storage size for the built-in FiFe cloud"
+  },
+  "freeLabel": "ฟรี",
+  "@freeLabel": {
+    "description": "Label indicating a storage plan is free"
+  },
+  "providerStorageDisclaimer": "* พื้นที่ฟรีเป็นไปตามที่ระบุไว้บนเว็บไซต์ของผู้ให้บริการ และผู้ให้บริการที่รองรับจะคิดค่าบริการตามการใช้งานจริง",
+  "@providerStorageDisclaimer": {
+    "description": "Disclaimer about provider free storage and pay-as-you-go support"
+  },
+  "whyUseFifeTitle": "ทำไมต้องใช้ FiFe?",
+  "@whyUseFifeTitle": {
+    "description": "Title for the onboarding benefits page"
+  },
+  "claimFreeCloudStorageTitle": "รวมพื้นที่คลาวด์ฟรีไว้ในที่เดียว",
+  "@claimFreeCloudStorageTitle": {
+    "description": "Benefit title about using free cloud storage from multiple providers"
+  },
+  "claimFreeCloudStorageDescription": "เพิ่มพื้นที่ใช้งานของคุณด้วยการเชื่อมต่อผู้ให้บริการคลาวด์หลายราย และใช้สิทธิ์พื้นที่ฟรีของแต่ละเจ้าผ่านแอปเดียวอย่างปลอดภัย",
+  "@claimFreeCloudStorageDescription": {
+    "description": "Benefit description about aggregating free storage across providers"
+  },
+  "topNotchSecurityTitle": "ความปลอดภัยระดับสูง",
+  "@topNotchSecurityTitle": {
+    "description": "Benefit title highlighting strong security"
+  },
+  "topNotchSecurityDescription": "ขับเคลื่อนด้วยการเข้ารหัส Sodium ขั้นสูง การเข้ารหัสและถอดรหัสทั้งหมดเกิดขึ้นภายในอุปกรณ์ของคุณเท่านั้น",
+  "@topNotchSecurityDescription": {
+    "description": "Benefit description explaining local encryption and decryption"
+  },
+  "bringYourOwnKeyTitle": "Bring Your Own Key (BYOK)",
+  "@bringYourOwnKeyTitle": {
+    "description": "Benefit title for bring your own key support"
+  },
+  "bringYourOwnKeyDescription": "ควบคุมข้อมูลของคุณได้อย่างเต็มที่กับผู้ให้บริการคลาวด์ทุกเจ้า โดยใช้บัญชีของคุณเองกับพื้นที่จัดเก็บที่เข้ารหัสไว้",
+  "@bringYourOwnKeyDescription": {
+    "description": "Benefit description for using your own accounts and keys"
+  },
+  "payAsYouGoStorageTitle": "จ่ายเฉพาะพื้นที่ที่ใช้งาน",
+  "@payAsYouGoStorageTitle": {
+    "description": "Benefit title for pay-as-you-go storage support"
+  },
+  "payAsYouGoStorageDescription": "จ่ายเฉพาะพื้นที่ที่ใช้จริงกับผู้ให้บริการที่รองรับ ไม่มีคนกลาง และไม่ถูกผูกกับแพลตฟอร์มใดแพลตฟอร์มหนึ่ง",
+  "@payAsYouGoStorageDescription": {
+    "description": "Benefit description for pay-as-you-go compatible providers"
+  },
+  "zeroKnowledgePrivacyTitle": "ความเป็นส่วนตัวแบบ Zero-Knowledge",
+  "@zeroKnowledgePrivacyTitle": {
+    "description": "Title for the onboarding security page"
+  },
+  "zeroKnowledgePrivacyDescription": "ข้อมูลของคุณถูกล็อกไว้ในอุปกรณ์ก่อนส่งออก เราไม่สามารถเห็น อ่าน หรือสแกนไฟล์ของคุณได้",
+  "@zeroKnowledgePrivacyDescription": {
+    "description": "Subtitle describing zero-knowledge privacy guarantees"
+  },
+  "localSelectionTitle": "1. เลือกจากอุปกรณ์",
+  "@localSelectionTitle": {
+    "description": "Step title for local file selection in the security flow"
+  },
+  "localSelectionDescription": "คุณเลือกโฟลเดอร์ได้เอง และทุกขั้นตอนจะเริ่มต้นอย่างปลอดภัยบนอุปกรณ์ของคุณ",
+  "@localSelectionDescription": {
+    "description": "Step description for local file selection in the security flow"
+  },
+  "metadataEncryptionTitle": "2. เข้ารหัสเมทาดาทา",
+  "@metadataEncryptionTitle": {
+    "description": "Step title for metadata encryption in the security flow"
+  },
+  "metadataEncryptionDescription": "ข้อมูลของไฟล์ เช่น ชื่อ ประเภท และขนาด จะถูกเข้ารหัสก่อนส่งไปยังเซิร์ฟเวอร์",
+  "@metadataEncryptionDescription": {
+    "description": "Step description for metadata encryption in the security flow"
+  },
+  "contentEncryptionTitle": "3. เข้ารหัสเนื้อหาไฟล์",
+  "@contentEncryptionTitle": {
+    "description": "Step title for file content encryption in the security flow"
+  },
+  "contentEncryptionDescription": "เนื้อหาไฟล์จริงจะถูกแบ่งและเข้ารหัสก่อนอัปโหลดไปยังคลาวด์สตอเรจ",
+  "@contentEncryptionDescription": {
+    "description": "Step description for file content encryption in the security flow"
+  },
+  "blindServerTitle": "4. เซิร์ฟเวอร์ที่ไม่เห็นข้อมูล",
+  "@blindServerTitle": {
+    "description": "Step title for the zero-knowledge server step in the security flow"
+  },
+  "blindServerDescription": "เซิร์ฟเวอร์ของเราไม่มีความรู้เกี่ยวกับข้อมูลของคุณ โดยจะเห็นเพียงข้อมูลที่ถูกเข้ารหัสเท่านั้น เพื่อความเป็นส่วนตัวสูงสุด",
+  "@blindServerDescription": {
+    "description": "Step description explaining that servers only handle encrypted data"
+  },
+  "dontTrustVerifyTitle": "อย่าแค่เชื่อ ตรวจสอบได้ด้วยตัวเอง",
+  "@dontTrustVerifyTitle": {
+    "description": "Title for the open-source verification callout"
+  },
+  "openSourceVerificationDescription": "โอเพนซอร์ส 100% คุณสามารถตรวจสอบโค้ดได้ด้วยตัวเองว่าไฟล์ของคุณถูกเข้ารหัสอย่างไร",
+  "@openSourceVerificationDescription": {
+    "description": "Description for the open-source verification callout"
+  },
+  "getStarted": "เริ่มต้น",
+  "@getStarted": {
+    "description": "Primary button label shown on the final onboarding page"
+  },
+  "next": "ถัดไป",
+  "@next": {
+    "description": "Primary button label used to move to the next onboarding page"
+  },
+  "unauthorized": "ไม่ได้รับอนุญาต",
+  "@unauthorized": {
+    "description": "Error message shown when the user is not authorized to access the key"
+  },
+  "tryAgain": "ลองอีกครั้ง",
+  "@tryAgain": {
+    "description": "Button label used to retry the failed access key check"
+  },
+  "errorTitle": "ข้อผิดพลาด",
+  "@errorTitle": {
+    "description": "Generic error dialog title"
+  },
+  "failureTitle": "ไม่สำเร็จ",
+  "@failureTitle": {
+    "description": "Dialog title shown when access key verification fails"
+  },
+  "invalidWordList": "รายการคำไม่ถูกต้อง",
+  "@invalidWordList": {
+    "description": "Error message shown when the entered recovery phrase is not a valid mnemonic"
+  },
+  "invalidAccessKey": "คีย์เข้าถึงไม่ถูกต้อง",
+  "@invalidAccessKey": {
+    "description": "Error message shown when the provided recovery phrase cannot decrypt the stored key"
+  },
+  "unexpectedDecryptionError": "เกิดข้อผิดพลาดที่ไม่คาดคิดระหว่างการถอดรหัส",
+  "@unexpectedDecryptionError": {
+    "description": "Error message shown when an unexpected exception occurs during access key decryption"
+  },
+  "fileMustContainExactly24Words": "ไฟล์ต้องมีคำทั้งหมด 24 คำพอดี",
+  "@fileMustContainExactly24Words": {
+    "description": "Error message shown when the selected text file does not contain exactly 24 words"
+  },
+  "errorReadingFile": "เกิดข้อผิดพลาดในการอ่านไฟล์",
+  "@errorReadingFile": {
+    "description": "Snackbar message shown when reading the selected file fails"
+  },
+  "encryptionTitle": "การเข้ารหัส",
+  "@encryptionTitle": {
+    "description": "App bar title for the access key decode screen"
+  },
+  "accessKeyDecodeDescription": "ป้อนวลีกู้คืน 24 คำของคุณ หรือโหลดไฟล์ .txt เพื่อเปิดใช้งานการซิงก์กับคลาวด์อย่างปลอดภัย",
+  "@accessKeyDecodeDescription": {
+    "description": "Instruction text on the access key decode screen"
+  },
+  "recoveryPhraseLabel": "วลีกู้คืน",
+  "@recoveryPhraseLabel": {
+    "description": "Label for the recovery phrase input field"
+  },
+  "recoveryPhraseHint": "คำ1 คำ2 คำ3...",
+  "@recoveryPhraseHint": {
+    "description": "Hint text shown inside the recovery phrase input field"
+  },
+  "paste": "วาง",
+  "@paste": {
+    "description": "Button label used to paste clipboard text into the recovery phrase field"
+  },
+  "wordCountLabel": "{count} / 24 คำ",
+  "@wordCountLabel": {
+    "description": "Live counter showing how many recovery words have been entered",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pleaseEnterRecoveryPhrase": "โปรดป้อนวลีกู้คืนของคุณ",
+  "@pleaseEnterRecoveryPhrase": {
+    "description": "Validation message shown when the recovery phrase field is empty"
+  },
+  "mustContainExactly24Words": "ต้องมีครบ 24 คำพอดี",
+  "@mustContainExactly24Words": {
+    "description": "Validation message shown when the recovery phrase does not contain exactly 24 words"
+  },
+  "verify": "ยืนยัน",
+  "@verify": {
+    "description": "Primary button label used to verify the recovery phrase"
+  },
+  "orLabel": "หรือ",
+  "@orLabel": {
+    "description": "Separator label between manual input and file upload actions"
+  },
+  "loadFromTxtFile": "โหลดจากไฟล์ .txt",
+  "@loadFromTxtFile": {
+    "description": "Button label used to load the recovery phrase from a text file"
+  },
+  "saveAccessKey": "บันทึกคีย์เข้าถึง",
+  "@saveAccessKey": {
+    "description": "Title for the desktop save file dialog when saving the access key"
+  },
+  "fileSavedSuccessfully": "บันทึกไฟล์สำเร็จ",
+  "@fileSavedSuccessfully": {
+    "description": "Snackbar message shown after the access key file is saved successfully"
+  },
+  "accessKeyShareMessage": "นี่คือคีย์เข้าถึงของคุณ",
+  "@accessKeyShareMessage": {
+    "description": "Text shared alongside the access key file in the mobile share sheet"
+  },
+  "pleaseTryAgain": "โปรดลองอีกครั้ง",
+  "@pleaseTryAgain": {
+    "description": "Generic snackbar message shown after a failed file save or share operation"
+  },
+  "copiedToClipboard": "คัดลอกไปยังคลิปบอร์ดแล้ว",
+  "@copiedToClipboard": {
+    "description": "Snackbar message shown after copying the access key to the clipboard"
+  },
+  "accessKeyTitle": "คีย์เข้าถึง",
+  "@accessKeyTitle": {
+    "description": "App bar title for the access key screen"
+  },
+  "accessKeyDescription": "โปรดเก็บคีย์นี้ไว้ในที่ปลอดภัย เพราะนี่คือสิ่งเดียวที่จะช่วยให้คุณเข้าถึงข้อมูลที่เข้ารหัสไว้ได้",
+  "@accessKeyDescription": {
+    "description": "Instruction text explaining the importance of safely storing the access key"
+  },
+  "copy": "คัดลอก",
+  "@copy": {
+    "description": "Button label used to copy the access key to the clipboard"
+  },
+  "downloadAsTextFile": "ดาวน์โหลดเป็นไฟล์ข้อความ",
+  "@downloadAsTextFile": {
+    "description": "Button label used to save the access key as a text file"
+  },
+  "continueLabel": "ดำเนินการต่อ",
+  "@continueLabel": {
+    "description": "Button label used to proceed to the next step after viewing the access key"
+  },
+  "importantTitle": "สำคัญ",
+  "@importantTitle": {
+    "description": "App bar title for the access key notice screen"
+  },
+  "accessKeyNoticePrimary": "ในหน้าถัดไป คุณจะเห็นชุดคำทั้งหมด 24 คำ ซึ่งเป็นคีย์เข้ารหัสส่วนตัวเฉพาะของคุณ และเป็นวิธีเดียวเท่านั้นในการกู้คืนข้อมูล หากคุณออกจากระบบ ทำอุปกรณ์หาย หรืออุปกรณ์เกิดปัญหา",
+  "@accessKeyNoticePrimary": {
+    "description": "Primary warning text explaining the importance of the 24-word recovery key"
+  },
+  "accessKeyNoticeResponsibility": "เราไม่ได้เก็บคีย์นี้ไว้ คุณต้องรับผิดชอบในการเก็บรักษาไว้ในที่ปลอดภัยนอกแอป {appName}",
+  "@accessKeyNoticeResponsibility": {
+    "description": "Warning text reminding the user to store the recovery key outside the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "showKeyConfirmation": "ฉันเข้าใจแล้ว\nแสดงคีย์ให้ฉัน",
+  "@showKeyConfirmation": {
+    "description": "Confirmation button label acknowledging the warning before showing the access key"
+  },
+  "storageAddedSuccessfully": "เพิ่มพื้นที่จัดเก็บสำเร็จ",
+  "@storageAddedSuccessfully": {
+    "description": "Snackbar message shown when a storage provider is added successfully"
+  },
+  "networkErrorDuringValidation": "เกิดข้อผิดพลาดเครือข่ายระหว่างการตรวจสอบ",
+  "@networkErrorDuringValidation": {
+    "description": "Error message shown when provider validation fails because of a network error"
+  },
+  "verifyAndConnect": "ยืนยันและเชื่อมต่อ",
+  "@verifyAndConnect": {
+    "description": "Primary button label used to validate credentials and connect a storage provider"
+  },
+  "requiredField": "จำเป็นต้องกรอก",
+  "@requiredField": {
+    "description": "Validation message shown when a required input field is empty"
+  },
+  "providerKeysVerifiedLocally": "คีย์ของคุณจะถูกตรวจสอบในเครื่องและเข้ารหัสก่อนส่งออก",
+  "@providerKeysVerifiedLocally": {
+    "description": "Informational text explaining local verification and encryption of credentials"
+  },
+  "enterYourCredentials": "ป้อนข้อมูลรับรองของคุณ",
+  "@enterYourCredentials": {
+    "description": "Section title prompting the user to enter provider credentials"
+  },
+  "connectProvider": "เชื่อมต่อ {provider}",
+  "@connectProvider": {
+    "description": "Bottom app bar title for connecting a specific storage provider",
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceLimitReached": "ถึงขีดจำกัดจำนวนอุปกรณ์แล้ว",
+  "@deviceLimitReached": {
+    "description": "Snackbar message shown when the user has reached the maximum allowed number of registered devices"
+  },
+  "pleaseTryAgainWithExclamation": "โปรดลองอีกครั้ง!",
+  "@pleaseTryAgainWithExclamation": {
+    "description": "Snackbar message shown when signing out a device fails"
+  },
+  "notThisDevice": "ไม่ใช่อุปกรณ์นี้!",
+  "@notThisDevice": {
+    "description": "Snackbar message shown when the user tries to sign out the current device from the device list"
+  },
+  "confirmSignoutDeviceTitle": "ยืนยันการออกจากระบบของอุปกรณ์",
+  "@confirmSignoutDeviceTitle": {
+    "description": "Dialog title shown before signing out a device"
+  },
+  "areYouSure": "คุณแน่ใจหรือไม่",
+  "@areYouSure": {
+    "description": "Confirmation dialog message asking whether the user wants to proceed"
+  },
+  "cancel": "ยกเลิก",
+  "@cancel": {
+    "description": "Button label used to cancel a dialog action"
+  },
+  "ok": "ตกลง",
+  "@ok": {
+    "description": "Button label used to confirm a dialog action"
+  },
+  "noDeviceFound": "ไม่พบอุปกรณ์",
+  "@noDeviceFound": {
+    "description": "Empty state message shown when no devices are available"
+  },
+  "backTooltip": "ย้อนกลับ",
+  "@backTooltip": {
+    "description": "Tooltip for the back navigation button"
+  },
+  "devicesTitle": "อุปกรณ์",
+  "@devicesTitle": {
+    "description": "Title for the devices screen"
+  },
+  "longPressToDownload": "กดค้างเพื่อดาวน์โหลด",
+  "@longPressToDownload": {
+    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+  },
+  "fewItemsExistLocally": "ยังมีบางรายการอยู่ในอุปกรณ์",
+  "@fewItemsExistLocally": {
+    "description": "Snackbar message shown when some selected items still exist locally during archive action"
+  },
+  "selectedItemsCount": "เลือกแล้ว {count} รายการ",
+  "@selectedItemsCount": {
+    "description": "Title shown in the multi-select app bar with the number of selected items",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "delete": "ลบ",
+  "@delete": {
+    "description": "Tooltip label for deleting selected items"
+  },
+  "info": "ข้อมูล",
+  "@info": {
+    "description": "Tooltip label for viewing file information"
+  },
+  "download": "ดาวน์โหลด",
+  "@download": {
+    "description": "Tooltip label for downloading selected items"
+  },
+  "archive": "เก็บถาวร",
+  "@archive": {
+    "description": "Tooltip label for archiving selected items"
+  },
+  "appPro": "{appName} Pro",
+  "@appPro": {
+    "description": "Popup menu item label for the premium subscription page using the non-translated app name",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "logs": "บันทึก",
+  "@logs": {
+    "description": "Popup menu item label for the logs page"
+  },
+  "settings": "การตั้งค่า",
+  "@settings": {
+    "description": "Popup menu item label for the settings page"
+  },
+  "trash": "ถังขยะ",
+  "@trash": {
+    "description": "Popup menu item label for the trash page"
+  },
+  "storage": "พื้นที่จัดเก็บ",
+  "@storage": {
+    "description": "Popup menu item label for the storage providers page"
+  },
+  "search": "ค้นหา",
+  "@search": {
+    "description": "Popup menu item label for the search page"
+  },
+  "database": "ฐานข้อมูล",
+  "@database": {
+    "description": "Popup menu item label for the database debug page"
+  },
+  "addFolderTitle": "เพิ่มโฟลเดอร์",
+  "@addFolderTitle": {
+    "description": "Dialog title shown when confirming addition of a sync folder"
+  },
+  "confirm": "ยืนยัน",
+  "@confirm": {
+    "description": "Button label used to confirm an action in a dialog"
+  },
+  "tapPlusToAddSyncFolder": "แตะ + เพื่อเพิ่มโฟลเดอร์ซิงก์",
+  "@tapPlusToAddSyncFolder": {
+    "description": "Empty state message shown at the device root when no sync folders have been added"
+  },
+  "thisFolderIsEmpty": "โฟลเดอร์นี้ว่างเปล่า",
+  "@thisFolderIsEmpty": {
+    "description": "Empty state message shown when the current folder has no items"
+  },
+  "fileNotFound": "ไม่พบไฟล์",
+  "@fileNotFound": {
+    "description": "Error message shown when the requested file metadata cannot be found"
+  },
+  "filePartsTitle": "ชิ้นส่วนไฟล์ ({count})",
+  "@filePartsTitle": {
+    "description": "Section title showing the number of encrypted file parts",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fileDetailsTitle": "รายละเอียดไฟล์",
+  "@fileDetailsTitle": {
+    "description": "Bottom app bar title for the file details screen"
+  },
+  "encryptedBackup": "ข้อมูลสำรองที่เข้ารหัส",
+  "@encryptedBackup": {
+    "description": "Subtitle shown below the file name on the file details screen"
+  },
+  "sizeLabel": "ขนาด",
+  "@sizeLabel": {
+    "description": "Metadata label showing the file size"
+  },
+  "providerLabel": "ผู้ให้บริการ",
+  "@providerLabel": {
+    "description": "Metadata label showing the storage provider"
+  },
+  "uploadedAtLabel": "อัปโหลดเมื่อ",
+  "@uploadedAtLabel": {
+    "description": "Metadata label showing when the file was uploaded"
+  },
+  "statusLabel": "สถานะ",
+  "@statusLabel": {
+    "description": "Metadata label showing the file upload status"
+  },
+  "uploadedStatus": "อัปโหลดแล้ว",
+  "@uploadedStatus": {
+    "description": "Status value shown when the file upload completed successfully"
+  },
+  "errorWithMessage": "ข้อผิดพลาด: {message}",
+  "@errorWithMessage": {
+    "description": "Error text shown when loading logs fails",
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "noLogsAvailable": "ไม่มีบันทึก",
+  "@noLogsAvailable": {
+    "description": "Empty state text shown when there are no logs to display"
+  },
+  "searchLogsHint": "ค้นหาในบันทึก...",
+  "@searchLogsHint": {
+    "description": "Hint text for the log search field"
+  },
+  "clearLogs": "ล้างบันทึก",
+  "@clearLogs": {
+    "description": "Tooltip for the button that clears all logs"
+  },
+  "searchWithMinThreeCharacters": "ค้นหาด้วยอย่างน้อย 3 ตัวอักษร",
+  "@searchWithMinThreeCharacters": {
+    "description": "Hint text shown in the search field requiring at least three characters"
+  },
+  "typeBelowToSearch": "พิมพ์ด้านล่างเพื่อค้นหา",
+  "@typeBelowToSearch": {
+    "description": "Empty state message shown before the user starts typing in the search screen"
+  },
+  "noResults": "ไม่พบผลลัพธ์",
+  "@noResults": {
+    "description": "Empty state message shown when the search returns no items"
+  },
+  "welcomeTitle": "ยินดีต้อนรับ",
+  "@welcomeTitle": {
+    "description": "Title shown on the sign in screen"
+  },
+  "signInToContinue": "ลงชื่อเข้าใช้เพื่อใช้งาน {appName} ต่อ",
+  "@signInToContinue": {
+    "description": "Subtitle on the sign in screen prompting the user to continue into the app",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterYourEmail": "โปรดป้อนอีเมลของคุณ",
+  "@pleaseEnterYourEmail": {
+    "description": "Validation message shown when the email field is empty"
+  },
+  "pleaseEnterValidEmailAddress": "โปรดป้อนอีเมลที่ถูกต้อง",
+  "@pleaseEnterValidEmailAddress": {
+    "description": "Validation message shown when the email format is invalid"
+  },
+  "emailAddressLabel": "อีเมล",
+  "@emailAddressLabel": {
+    "description": "Label for the email input field"
+  },
+  "emailAddressHint": "your.email@example.com",
+  "@emailAddressHint": {
+    "description": "Hint text shown in the email input field"
+  },
+  "retrySendingOtp": "ส่ง OTP อีกครั้ง",
+  "@retrySendingOtp": {
+    "description": "Button label shown when sending OTP failed and the user can retry"
+  },
+  "sendOtp": "ส่ง OTP",
+  "@sendOtp": {
+    "description": "Primary button label used to request an OTP"
+  },
+  "checkYourEmail": "ตรวจสอบอีเมลของคุณ",
+  "@checkYourEmail": {
+    "description": "Title shown on the OTP verification step"
+  },
+  "sentSixDigitCodeTo": "เราได้ส่งรหัส 6 หลักไปที่\n{email}",
+  "@sentSixDigitCodeTo": {
+    "description": "Message shown after sending the OTP to the user's email",
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "pleaseEnterOtp": "โปรดป้อน OTP",
+  "@pleaseEnterOtp": {
+    "description": "Validation message shown when the OTP field is empty"
+  },
+  "otpMustBeSixDigits": "OTP ต้องมี 6 หลัก",
+  "@otpMustBeSixDigits": {
+    "description": "Validation message shown when the OTP is shorter than six digits"
+  },
+  "enterOtpLabel": "ป้อน OTP",
+  "@enterOtpLabel": {
+    "description": "Label for the OTP input field"
+  },
+  "otpHint": "000000",
+  "@otpHint": {
+    "description": "Hint text shown in the OTP input field"
+  },
+  "retryVerification": "ยืนยันอีกครั้ง",
+  "@retryVerification": {
+    "description": "Button label shown when OTP verification failed and the user can retry"
+  },
+  "verifyOtp": "ยืนยัน OTP",
+  "@verifyOtp": {
+    "description": "Primary button label used to verify the OTP"
+  },
+  "useDifferentEmail": "ใช้อีเมลอื่น",
+  "@useDifferentEmail": {
+    "description": "Button label used to go back and enter a different email address"
+  },
+  "alreadySignedIn": "ลงชื่อเข้าใช้แล้ว",
+  "@alreadySignedIn": {
+    "description": "Title shown when the user is already signed in"
+  },
+  "sendingOtpFailedPleaseTryAgain": "ส่ง OTP ไม่สำเร็จ โปรดลองอีกครั้ง!",
+  "@sendingOtpFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when sending the OTP fails"
+  },
+  "otpVerificationFailedPleaseTryAgain": "ยืนยัน OTP ไม่สำเร็จ โปรดลองอีกครั้ง",
+  "@otpVerificationFailedPleaseTryAgain": {
+    "description": "Snackbar message shown when verifying the OTP fails"
+  },
+  "dbViewerTitle": "ตัวดูฐานข้อมูล",
+  "@dbViewerTitle": {
+    "description": "App bar title for the SQLite database viewer screen"
+  },
+  "selectTableToViewData": "เลือกตารางเพื่อดูข้อมูล",
+  "@selectTableToViewData": {
+    "description": "Empty state message shown before a database table is selected"
+  },
+  "selectTable": "เลือกตาราง",
+  "@selectTable": {
+    "description": "Hint text for the table selection dropdown"
+  },
+  "permissionRequiredTitle": "ต้องการสิทธิ์การเข้าถึง",
+  "@permissionRequiredTitle": {
+    "description": "Dialog title shown when storage permission is permanently denied"
+  },
+  "storagePermissionSettingsDescription": "เพื่อสำรองข้อมูล จัดการ และปกป้องไฟล์ของคุณในเบื้องหลังโดยอัตโนมัติ เราจำเป็นต้องเข้าถึงพื้นที่จัดเก็บในอุปกรณ์ของคุณ ข้อมูลของคุณจะถูกเข้ารหัสภายในเครื่องเพื่อให้เป็นส่วนตัวอย่างสมบูรณ์ โปรดอนุญาตการเข้าถึงเพื่อดำเนินการต่อ",
+  "@storagePermissionSettingsDescription": {
+    "description": "Dialog description explaining why storage permission is needed and asking the user to open settings"
+  },
+  "openSettings": "เปิดการตั้งค่า",
+  "@openSettings": {
+    "description": "Button label used to open the system app settings screen"
+  },
+  "storagePermissionRequiredToContinue": "จำเป็นต้องได้รับสิทธิ์เข้าถึงพื้นที่จัดเก็บเพื่อดำเนินการต่อ",
+  "@storagePermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies storage permission"
+  },
+  "secureLocalAccessTitle": "การเข้าถึงในเครื่องอย่างปลอดภัย",
+  "@secureLocalAccessTitle": {
+    "description": "Main title on the storage permission onboarding screen"
+  },
+  "storagePermissionPageDescription": "เพื่อสำรวจ เข้ารหัส และสำรองข้อมูลไฟล์ของคุณโดยอัตโนมัติ เราจำเป็นต้องเข้าถึงพื้นที่จัดเก็บในอุปกรณ์ของคุณ",
+  "@storagePermissionPageDescription": {
+    "description": "Description on the storage permission page explaining why access is needed"
+  },
+  "verifying": "กำลังตรวจสอบ...",
+  "@verifying": {
+    "description": "Button loading label shown while permission status is being checked"
+  },
+  "grantAccess": "อนุญาตการเข้าถึง",
+  "@grantAccess": {
+    "description": "Primary button label used to request storage permission"
+  },
+  "zeroKnowledgeEncryptedStorage": "พื้นที่จัดเก็บเข้ารหัสแบบ Zero-Knowledge",
+  "@zeroKnowledgeEncryptedStorage": {
+    "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
+  },
+  "requiresAppPro": "ต้องใช้ {appName} Pro",
+  "@requiresAppPro": {
+    "description": "Snackbar message shown when a Pro subscription is required for modifying storage",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "noStorageFound": "ไม่พบพื้นที่จัดเก็บ",
+  "@noStorageFound": {
+    "description": "Empty state message shown when no storage providers are available"
+  },
+  "howToConnect": "วิธีเชื่อมต่อ",
+  "@howToConnect": {
+    "description": "Button label that opens help about connecting a storage provider"
+  },
+  "modify": "แก้ไข",
+  "@modify": {
+    "description": "Button label used to modify a connected storage provider"
+  },
+  "storageUsed": "ใช้ไป {used} / {total}",
+  "@storageUsed": {
+    "description": "Storage usage label showing used and total storage",
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "percentageLabel": "{value}%",
+  "@percentageLabel": {
+    "description": "Percentage label showing storage usage percent",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "upToFree": "ฟรีสูงสุด {size}",
+  "@upToFree": {
+    "description": "Label showing the maximum free storage available for an unconnected provider",
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
+  "notConnected": "ยังไม่ได้เชื่อมต่อ",
+  "@notConnected": {
+    "description": "Status label shown for a storage provider that has not been connected"
+  },
+  "connect": "เชื่อมต่อ",
+  "@connect": {
+    "description": "Button label used to connect a storage provider"
+  },
+  "modifyStorageCapacityTitle": "แก้ไขขนาดพื้นที่จัดเก็บ",
+  "@modifyStorageCapacityTitle": {
+    "description": "Dialog title for changing the storage capacity of a provider"
+  },
+  "enterNewStorageLimitForProvider": "ป้อนขีดจำกัดพื้นที่จัดเก็บใหม่สำหรับผู้ให้บริการนี้",
+  "@enterNewStorageLimitForProvider": {
+    "description": "Helper text in the modify storage dialog"
+  },
+  "sizePrefix": "ขนาด: ",
+  "@sizePrefix": {
+    "description": "Prefix text shown before the numeric storage size input"
+  },
+  "gbSuffix": " GB",
+  "@gbSuffix": {
+    "description": "Suffix text shown after the numeric storage size input"
+  },
+  "pleaseEnterSize": "โปรดป้อนขนาด",
+  "@pleaseEnterSize": {
+    "description": "Validation message shown when the storage size field is empty"
+  },
+  "enterValidNumberGreaterThanOne": "ป้อนตัวเลขที่ถูกต้องและมากกว่า 1",
+  "@enterValidNumberGreaterThanOne": {
+    "description": "Validation message shown when the entered storage size is invalid"
+  },
+  "submit": "ส่ง",
+  "@submit": {
+    "description": "Button label used to submit the storage size dialog"
+  },
+  "successfullySubscribedToAppPro": "สมัคร {appName} Pro สำเร็จแล้ว!",
+  "@successfullySubscribedToAppPro": {
+    "description": "Snackbar message shown after a successful subscription purchase",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "purchaseCancelledOrFailed": "ยกเลิกการซื้อหรือการซื้อไม่สำเร็จ",
+  "@purchaseCancelledOrFailed": {
+    "description": "Snackbar message shown when the purchase flow is cancelled or fails"
+  },
+  "purchasesRestoredSuccessfully": "กู้คืนการซื้อสำเร็จ!",
+  "@purchasesRestoredSuccessfully": {
+    "description": "Snackbar message shown when previous purchases are restored successfully"
+  },
+  "noActiveSubscriptionsFound": "ไม่พบการสมัครใช้งานที่ยังใช้งานอยู่",
+  "@noActiveSubscriptionsFound": {
+    "description": "Snackbar message shown when restore purchases finds no active subscription"
+  },
+  "manageSubscriptionsInDeviceSettings": "โปรดจัดการการสมัครใช้งานในการตั้งค่าของอุปกรณ์",
+  "@manageSubscriptionsInDeviceSettings": {
+    "description": "Snackbar message shown when no management URL is available"
+  },
+  "freePlanTitle": "ฟรี",
+  "@freePlanTitle": {
+    "description": "Title of the free subscription plan card"
+  },
+  "freeForeverPrice": "$0.00 / ตลอดไป",
+  "@freeForeverPrice": {
+    "description": "Price label for the free plan"
+  },
+  "freeBenefitProviderStorage": "ใช้งานพื้นที่ฟรีจากผู้ให้บริการต่าง ๆ",
+  "@freeBenefitProviderStorage": {
+    "description": "Benefit listed under the free plan"
+  },
+  "freeBenefitSyncThreeDevices": "ซิงก์ได้อย่างปลอดภัยสูงสุด 3 อุปกรณ์",
+  "@freeBenefitSyncThreeDevices": {
+    "description": "Benefit listed under the free plan"
+  },
+  "appProYearlyTitle": "{appName} Pro - รายปี",
+  "@appProYearlyTitle": {
+    "description": "Title of the yearly pro subscription plan",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "proBenefitModifyStorageLimit": "ปรับขีดจำกัดพื้นที่จัดเก็บของแต่ละผู้ให้บริการได้",
+  "@proBenefitModifyStorageLimit": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "proBenefitSyncTenDevices": "ซิงก์ได้สูงสุด 10 อุปกรณ์",
+  "@proBenefitSyncTenDevices": {
+    "description": "Benefit listed under the Pro plan"
+  },
+  "restorePurchases": "กู้คืนการซื้อ",
+  "@restorePurchases": {
+    "description": "Button label used to restore previous purchases"
+  },
+  "subscriptionAssociatedWithEmailNotDevice": "* การสมัครใช้งานผูกกับบัญชีอีเมล ไม่ได้ผูกกับอุปกรณ์",
+  "@subscriptionAssociatedWithEmailNotDevice": {
+    "description": "Footnote explaining that the subscription is tied to the email account rather than a device"
+  },
+  "subscriptionExpiredTitle": "การสมัครใช้งานหมดอายุ",
+  "@subscriptionExpiredTitle": {
+    "description": "Title shown in the expired subscription banner"
+  },
+  "subscriptionExpiredDescription": "สิทธิประโยชน์ของ {appName} Pro ของคุณถูกระงับชั่วคราว ต่ออายุด้านล่างเพื่อกู้คืนขีดจำกัดพื้นที่จัดเก็บและการซิงก์ระหว่างอุปกรณ์",
+  "@subscriptionExpiredDescription": {
+    "description": "Description shown in the expired subscription banner",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "appProIsActive": "{appName} Pro เปิดใช้งานอยู่",
+  "@appProIsActive": {
+    "description": "Title shown when the user has an active Pro subscription",
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "activePlanBenefitsSummary": "✓ ปรับขีดจำกัดพื้นที่จัดเก็บของแต่ละผู้ให้บริการได้\n✓ ซิงก์ข้ามอุปกรณ์ได้สูงสุด 10 เครื่อง",
+  "@activePlanBenefitsSummary": {
+    "description": "Summary of active Pro subscription benefits"
+  },
+  "manageSubscription": "จัดการการสมัครใช้งาน",
+  "@manageSubscription": {
+    "description": "Button label used to open subscription management"
+  },
+  "currentPlanBadge": "แผนปัจจุบัน",
+  "@currentPlanBadge": {
+    "description": "Badge shown on the current active plan"
+  },
+  "subscribeNow": "สมัครตอนนี้",
+  "@subscribeNow": {
+    "description": "Primary call to action for purchasing the Pro plan"
+  },
+  "subscribeOnMobileApp": "สมัครผ่านแอปมือถือ",
+  "@subscribeOnMobileApp": {
+    "description": "Call to action shown when subscription purchase is not supported on the current platform"
+  },
+  "recover": "กู้คืน",
+  "@recover": {
+    "description": "Tooltip label for recovering selected items from the trash"
+  },
+  "empty": "ล้าง",
+  "@empty": {
+    "description": "Tooltip label for emptying the trash"
+  },
+  "noItems": "ไม่มีรายการ",
+  "@noItems": {
+    "description": "Empty state text shown when the trash has no items"
+  }
+}
