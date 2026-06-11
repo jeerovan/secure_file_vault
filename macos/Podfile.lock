@@ -11,12 +11,12 @@ PODS:
   - FlutterMacOS (1.0.0)
   - package_info_plus (0.0.1):
     - FlutterMacOS
-  - purchases_flutter (10.0.1):
+  - purchases_flutter (10.2.2):
     - FlutterMacOS
-    - PurchasesHybridCommon (= 18.1.0)
-  - PurchasesHybridCommon (18.1.0):
-    - RevenueCat (= 5.68.0)
-  - RevenueCat (5.68.0)
+    - PurchasesHybridCommon (= 18.10.0)
+  - PurchasesHybridCommon (18.10.0):
+    - RevenueCat (= 5.76.0)
+  - RevenueCat (5.76.0)
   - share_plus (0.0.1):
     - FlutterMacOS
   - sqflite_darwin (0.0.4):
@@ -71,9 +71,9 @@ SPEC CHECKSUMS:
   flutter_secure_storage_darwin: 557817588b80e60213cbecb573c45c76b788018d
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b
-  purchases_flutter: 26918e5da2b103babc49f7df5d5866dfe8fab1c8
-  PurchasesHybridCommon: 32902b8fad349cf549f096183926ee33af00e36a
-  RevenueCat: c535d3739d51163f6d9d5dbd01c7b5d93b718ff5
+  purchases_flutter: 0b20e3043e01426013ce2fe63de3b244911af7d7
+  PurchasesHybridCommon: 3e650c7f56ebcd63b37a708685fbf98515305d14
+  RevenueCat: 792388288b4207a5056550fbf8f673090f1fbe22
   share_plus: 1fa619de8392a4398bfaf176d441853922614e89
   sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
   url_launcher_macos: 175a54c831f4375a6cf895875f716ee5af3888ce
