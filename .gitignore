@@ -1,132 +1,52 @@
-# Miscellaneous
-
-_.class
-_.log
-_.pyc
-_.swp
+# OS / editor
 .DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-android/app/google-services.json
-firebase.json
-lib/firebase_options.dart
-
-# IntelliJ related
-
-_.iml
-_.ipr
-\*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-
-# VS Code which you may wish to be included in version control, so this line
-
-# is commented out by default.
-
-#.vscode/
-
-# Flutter/Dart/Pub related
-
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.sentry-native
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-
-# Symbolication related
-
-app.\*.symbols
-
-# Obfuscation related
-
-app.\*.map.json
-
-# Android Studio will place build artifacts here
-
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-mermaid.\*.md
-assets/config.txt
-/android/app/google-services.json
-
-# Release/Build Related
-
-distribute_options.yaml
-
-# Builds in dist
-
-/dist/
-
-#-- npm
-node_modules
-
-# env
-
-.env
-
-# Miscellaneous
+*~
+*.swp
 *.class
 *.log
 *.pyc
-*.swp
-.DS_Store
 .atom/
-.buildlog/
 .history
-.svn/
-*~
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
 .idea/
-
-# Visual Studio Code related
 .vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+*.iml
+*.ipr
+*.iws
 
-# Flutter/Dart/Pub related
+# Logs / temp
+.buildlog/
+migrate_working_dir/
+
+# Dart / Flutter / Pub
 .dart_tool/
 .packages
-.pub-cache/
 .pub/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+.sentry-native
 /build/
+**/doc/api/
+
+# Different pubspec.yaml in iOS branch
 pubspec.lock
 
-# Android related
-**/android/**/gradle-wrapper.jar
+# Android
 **/android/.gradle
 **/android/captures/
-**/android/gradlew
-**/android/gradlew.bat
 **/android/local.properties
-**/android/**/GeneratedPluginRegistrant.java
+**/android/app/google-services.json
+/android/app/debug
+/android/app/profile
+/android/app/release
 
-# iOS/XCode related
-**/ios/**/*.mode1v3
-**/ios/**/*.mode2v3
-**/ios/**/*.moved-aside
-**/ios/**/*.pbxuser
-**/ios/**/*.perspectivev3
-**/ios/**/*sync/
-**/ios/**/.macports/
+# iOS
+**/ios/Flutter/.last_build_id
 **/ios/.generated/
 **/ios/Flutter/App.framework
 **/ios/Flutter/Flutter.framework
@@ -136,45 +56,56 @@ pubspec.lock
 **/ios/Flutter/app.zip
 **/ios/Flutter/flutter_assets/
 **/ios/Flutter/flutter_export_environment.sh
-**/ios/ServiceDefinitions.json
+**/ios/Pods/
+**/ios/.symlinks/
 **/ios/Runner/GeneratedPluginRegistrant.*
-
-# macOS related
-**/macos/Flutter/GeneratedPluginRegistrant.swift
-**/macos/Flutter/ephemeral/
-**/macos/build
-
-# Windows related
-**/windows/flutter/ephemeral/
-**/windows/flutter/generated_plugin*
-/Output/
-
-# Linux related
-**/linux/flutter/ephemeral/
-**/linux/flutter/generated_plugin*
-
-# Web related
-**/web/main.dart.js
-**/web/main.dart.js.map
-
-# Exceptions to above rules
-!**/android/**/build.gradle
+**/ios/**/*.mode1v3
+**/ios/**/*.mode2v3
+**/ios/**/*.moved-aside
+**/ios/**/*.pbxuser
+**/ios/**/*.perspectivev3
+**/ios/**/*sync/
 !**/ios/**/default.mode1v3
 !**/ios/**/default.mode2v3
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 
-# Application secrets and environment files
+# macOS
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+**/macos/build/
+
+# Linux
+**/linux/flutter/ephemeral/
+**/linux/flutter/generated_plugin*
+
+# Windows
+**/windows/flutter/ephemeral/
+**/windows/flutter/generated_plugin*
+/Output/
+
+# Web
+**/web/main.dart.js
+**/web/main.dart.js.map
+
+# Firebase / secrets
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_app_id_file.json
+firebase.json
 .env
 .env.*
 !.env.example
 *.jks
 *.keystore
-google-services.json
-GoogleService-Info.plist
-
-# Crashlytics/Firebase
 crashlytics-build.properties
+distribute_options.yaml
+assets/config.txt
 
-# Symbols
+# Generated artifacts
+app.*.symbols
+app.*.map.json
 *.sym
+/dist/
+node_modules
+mermaid.*.md
