@@ -142,6 +142,7 @@ pubspec.lock
 # macOS related
 **/macos/Flutter/GeneratedPluginRegistrant.swift
 **/macos/Flutter/ephemeral/
+**/macos/build
 
 # Windows related
 **/windows/flutter/ephemeral/
