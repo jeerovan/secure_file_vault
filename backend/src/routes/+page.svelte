@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import gsap from 'gsap';
+	import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 	import {
 		Check,
 		Cloud,
@@ -19,6 +22,142 @@
 	} from 'lucide-svelte';
 
 	const providers = ['Oracle', 'Cloudflare R2', 'Backblaze B2', 'IDrive E2', 'S3 Compatible'];
+
+	onMount(() => {
+		gsap.registerPlugin(ScrollTrigger);
+
+		const runHeroAnimations = () => {
+			// Initialize starting states explicitly
+			gsap.set('.hero-title', { opacity: 0, y: 60 });
+			gsap.set('.hero-subtitle', { opacity: 0, y: 30 });
+			gsap.set('.hero-image', { opacity: 0, scale: 0.8 });
+
+			// Animate to final states
+			gsap.to('.hero-title', {
+				opacity: 1,
+				y: 0,
+				duration: 1.2,
+				ease: 'power4.out'
+			});
+
+			gsap.to('.hero-subtitle', {
+				opacity: 1,
+				y: 0,
+				duration: 1,
+				ease: 'power3.out',
+				delay: 0.3
+			});
+
+			gsap.to('.hero-image', {
+				opacity: 1,
+				scale: 1,
+				duration: 1.5,
+				ease: 'expo.out',
+				delay: 0.5
+			});
+		};
+
+		const heroImg = document.querySelector('.hero-image img') as HTMLImageElement | null;
+		if (heroImg) {
+			if (heroImg.complete) {
+				runHeroAnimations();
+			} else {
+				heroImg.addEventListener('load', runHeroAnimations);
+			}
+		} else {
+			runHeroAnimations();
+		}
+
+		// Feature Cards Stagger - Scoped to #features
+		gsap.from('#features .grid-card', {
+			scrollTrigger: {
+				trigger: '#features .grid-card',
+				start: 'top 85%',
+			},
+			y: 40,
+			opacity: 0,
+			stagger: 0.15,
+			duration: 0.8,
+			ease: 'power2.out'
+		});
+
+		// Security Image Scale & Fade - Scoped to #security
+		gsap.from('#security .security-img', {
+			scrollTrigger: {
+				trigger: '#security .security-img',
+				start: 'top 90%',
+				end: 'top 30%',
+				scrub: 1,
+			},
+			scale: 0.8,
+			opacity: 0.4,
+			ease: 'none'
+		});
+
+		// Security Cards - Scoped to #security
+		gsap.from('#security .security-card', {
+			scrollTrigger: {
+				trigger: '#security .security-card',
+				start: 'top 85%',
+			},
+			x: -30,
+			opacity: 0,
+			stagger: 0.2,
+			duration: 0.8,
+			ease: 'power2.out'
+		});
+
+		// Workflow Cards - Scoped to #workflow
+		gsap.from('#workflow .workflow-card', {
+			scrollTrigger: {
+				trigger: '#workflow .workflow-card',
+				start: 'top 85%',
+			},
+			y: 30,
+			opacity: 0,
+			stagger: 0.2,
+			duration: 0.8,
+			ease: 'power2.out'
+		});
+
+		// Download Cards - Scoped to #download
+		gsap.from('#download .download-card', {
+			scrollTrigger: {
+				trigger: '#download .download-card',
+				start: 'top 90%',
+			},
+			y: 20,
+			opacity: 0,
+			stagger: 0.1,
+			duration: 0.6,
+			ease: 'power2.out'
+		});
+
+		// Magnetic Button Effect
+		const buttons = document.querySelectorAll('.btn-magnetic') as NodeListOf<HTMLElement>;
+		buttons.forEach(btn => {
+			btn.addEventListener('mousemove', (e: Event) => {
+				const mouseEvent = e as MouseEvent;
+				const rect = btn.getBoundingClientRect();
+				const x = mouseEvent.clientX - rect.left - rect.width / 2;
+				const y = mouseEvent.clientY - rect.top - rect.height / 2;
+				gsap.to(btn, {
+					x: x * 0.3,
+					y: y * 0.3,
+					duration: 0.3,
+					ease: 'power2.out'
+				});
+			});
+			btn.addEventListener('mouseleave', () => {
+				gsap.to(btn, {
+					x: 0,
+					y: 0,
+					duration: 0.5,
+					ease: 'elastic.out(1, 0.3)'
+				});
+			});
+		});
+	});
 </script>
 
 <svelte:head>
@@ -38,24 +177,28 @@
 			</div>
 
 			<h1
-				class="mt-6 max-w-4xl text-4xl leading-tight font-semibold tracking-tight text-white md:text-6xl"
+				style="opacity: 0"
+				class="hero-title mt-6 max-w-4xl text-4xl leading-tight font-semibold tracking-tight text-white md:text-6xl"
 			>
 				Uncompromising security with a file explorer people actually love using.
 			</h1>
 
-			<p class="mt-6 max-w-2xl text-lg leading-8 text-white/70">
+			<p
+				style="opacity: 0"
+				class="hero-subtitle mt-6 max-w-2xl text-lg leading-8 text-white/70"
+			>
 				Protect your files with BYOK encryption, enjoy seamless cross-platform support with
 				auto-sync, and manage everything through a sleek interface built for speed, clarity, and
 				absolute data privacy.
 			</p>
 
 			<div class="mt-8 flex flex-col gap-3 sm:flex-row">
-				<a href="#download" class="btn-primary">
+				<a href="#download" class="btn-primary btn-magnetic">
 					<Download class="mr-2 h-4 w-4" />
 					Download now
 				</a>
 
-				<a href="#security" class="btn-secondary">
+				<a href="#security" class="btn-secondary btn-magnetic">
 					<Lock class="mr-2 h-4 w-4" />
 					See how security works
 				</a>
@@ -68,7 +211,10 @@
 			</div>
 		</div>
 
-		<div class="glass-card relative overflow-hidden p-4 lg:p-5">
+		<div
+			style="opacity: 0"
+			class="hero-image glass-card relative overflow-hidden p-4 lg:p-5"
+		>
 			<div
 				class="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#FF4040]/20 to-transparent"
 			></div>
@@ -192,7 +338,7 @@
 			<img
 				src="https://images.fife.jeero.one/encryption-flow-explain.webp"
 				alt="Encryption diagram placeholder"
-				class="rounded-[1.5rem] border border-white/10"
+				class="security-img rounded-[1.5rem] border border-white/10"
 			/>
 		</div>
 
@@ -206,51 +352,46 @@
 				</p>
 
 				<div class="mt-8 grid gap-4">
-					<div class="glass-card p-5">
-						<div class="flex items-start gap-4">
-							<div class="feature-icon">
-								<Lock class="h-5 w-5" />
-							</div>
-							<div>
-								<h3 class="text-lg font-semibold text-white">Superior than standard AES-256</h3>
-								<p class="mt-2 text-white/70">
-									Data is encrypted before leaving the user device using modern cryptographic
-									standards that are objectively superior than the AES-256 encryption which other
-									service providers normally use.
-								</p>
-							</div>
+					<div class="security-card glass-card p-5">
+						<div class="feature-icon">
+							<Lock class="h-6 w-6" />
+						</div>
+						<div class="mt-6">
+							<h3 class="text-lg font-semibold text-white">Superior than standard AES-256</h3>
+							<p class="mt-2 text-white/70">
+								Data is encrypted before leaving the user device using modern cryptographic
+								standards that are objectively superior than the AES-256 encryption which other
+								service providers normally use.
+							</p>
 						</div>
 					</div>
 
-					<div class="glass-card p-5">
-						<div class="flex items-start gap-4">
-							<div class="feature-icon">
-								<KeyRound class="h-5 w-5" />
-							</div>
-							<div>
-								<h3 class="text-lg font-semibold text-white">No metadata stored</h3>
-								<p class="mt-2 text-white/70">
-									Unlike standard cloud storage solutions that track your activity, FiFe does not
-									store file metadata like others do, ensuring your folder structures and file sizes
-									remain completely private.
-								</p>
-							</div>
+					<div class="security-card glass-card p-5">
+						<div class="feature-icon">
+							<KeyRound class="h-6 w-6" />
 						</div>
+						<div class="mt-6">
+							<h3 class="text-lg font-semibold text-white">No metadata stored</h3>
+							<p class="mt-2 text-white/70">
+								Unlike standard cloud storage solutions that track your activity, FiFe does not
+								store file metadata like others do, ensuring your folder structures and file sizes
+								remain completely private.
+							</p>
+						</div>
+						
 					</div>
 
-					<div class="glass-card p-5">
-						<div class="flex items-start gap-4">
-							<div class="feature-icon">
-								<CloudCog class="h-5 w-5" />
-							</div>
-							<div>
-								<h3 class="text-lg font-semibold text-white">Advanced Tech Stack</h3>
-								<p class="mt-2 text-white/70">
-									Our architecture routes the domain directly through Cloudflare Workers and
-									Hyperdrive connected to a Neon.tech PostgreSQL database. This eliminates the need
-									for certificate pinning and Cloudflare channels, maximizing backend security.
-								</p>
-							</div>
+					<div class="security-card glass-card p-5">
+						<div class="feature-icon">
+							<CloudCog class="h-6 w-6" />
+						</div>
+						<div class="mt-6">
+							<h3 class="text-lg font-semibold text-white">Advanced Tech Stack</h3>
+							<p class="mt-2 text-white/70">
+								Our architecture routes the domain directly through Cloudflare Workers and
+								Hyperdrive connected to a Neon.tech PostgreSQL database. This eliminates the need
+								for certificate pinning and Cloudflare channels, maximizing backend security.
+							</p>
 						</div>
 					</div>
 				</div>
@@ -270,7 +411,7 @@
 		</p>
 
 		<div class="mt-12 grid gap-6 lg:grid-cols-3">
-			<div class="grid-card">
+			<div class="workflow-card grid-card">
 				<div class="feature-icon">
 					<Cloud class="h-6 w-6" />
 				</div>
@@ -282,7 +423,7 @@
 				</p>
 			</div>
 
-			<div class="grid-card">
+			<div class="workflow-card grid-card">
 				<div class="feature-icon">
 					<KeyRound class="h-6 w-6" />
 				</div>
@@ -293,7 +434,7 @@
 				</p>
 			</div>
 
-			<div class="grid-card">
+			<div class="workflow-card grid-card">
 				<div class="feature-icon">
 					<MonitorSmartphone class="h-6 w-6" />
 				</div>
@@ -330,7 +471,7 @@
 				<a
 					href="https://github.com/jeerovan/secure_file_vault/releases"
 					target="_blank"
-					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+					class="download-card group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
 				>
 					<div class="flex items-center gap-3">
 						<AppWindowIcon class="h-5 w-5 text-[#FF6B6B]" />
@@ -347,7 +488,7 @@
 				<!-- macOS -->
 				<a
 					href="https://apps.apple.com/app/id6765812250"
-					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+					class="download-card group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
 				>
 					<div class="flex items-center gap-3">
 						<AppWindowMacIcon class="h-5 w-5 text-[#FF6B6B]" />
@@ -365,7 +506,7 @@
 				<a
 					href="https://play.google.com/store/apps/details?id=com.jeerovan.fife"
 					target="_blank"
-					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+					class="download-card group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
 				>
 					<div class="flex items-center gap-3">
 						<SmartphoneIcon class="h-5 w-5 text-[#FF6B6B]" />
@@ -382,7 +523,7 @@
 				<!-- iOS -->
 				<a
 					href="https://apps.apple.com/app/id6765812250"
-					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+					class="download-card group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
 				>
 					<div class="flex items-center gap-3">
 						<SmartphoneIcon class="h-5 w-5 text-[#FF6B6B]" />
@@ -400,7 +541,7 @@
 				<a
 					href="https://github.com/jeerovan/secure_file_vault/releases"
 					target="_blank"
-					class="group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
+					class="download-card group block cursor-pointer rounded-3xl border border-white/10 bg-white/5 p-5 transition-colors hover:bg-white/10"
 				>
 					<div class="flex items-center gap-3">
 						<TerminalIcon class="h-5 w-5 text-[#FF6B6B]" />
