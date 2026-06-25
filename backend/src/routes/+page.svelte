@@ -57,7 +57,7 @@
 			});
 		};
 
-		const heroImg = document.querySelector('.hero-image img');
+		const heroImg = document.querySelector('.hero-image img') as HTMLImageElement | null;
 		if (heroImg) {
 			if (heroImg.complete) {
 				runHeroAnimations();
@@ -134,12 +134,13 @@
 		});
 
 		// Magnetic Button Effect
-		const buttons = document.querySelectorAll('.btn-magnetic');
+		const buttons = document.querySelectorAll('.btn-magnetic') as NodeListOf<HTMLElement>;
 		buttons.forEach(btn => {
-			btn.addEventListener('mousemove', (e) => {
+			btn.addEventListener('mousemove', (e: Event) => {
+				const mouseEvent = e as MouseEvent;
 				const rect = btn.getBoundingClientRect();
-				const x = e.clientX - rect.left - rect.width / 2;
-				const y = e.clientY - rect.top - rect.height / 2;
+				const x = mouseEvent.clientX - rect.left - rect.width / 2;
+				const y = mouseEvent.clientY - rect.top - rect.height / 2;
 				gsap.to(btn, {
 					x: x * 0.3,
 					y: y * 0.3,
@@ -352,52 +353,47 @@
 
 				<div class="mt-8 grid gap-4">
 					<div class="security-card glass-card p-5">
-							<div class="flex items-start gap-5">
-								<div class="feature-icon">
-									<Lock class="h-6 w-6" />
-								</div>
-								<div>
-									<h3 class="text-lg font-semibold text-white">Superior than standard AES-256</h3>
-									<p class="mt-2 text-white/70">
-										Data is encrypted before leaving the user device using modern cryptographic
-										standards that are objectively superior than the AES-256 encryption which other
-										service providers normally use.
-									</p>
-								</div>
-							</div>
+						<div class="feature-icon">
+							<Lock class="h-6 w-6" />
 						</div>
+						<div class="mt-6">
+							<h3 class="text-lg font-semibold text-white">Superior than standard AES-256</h3>
+							<p class="mt-2 text-white/70">
+								Data is encrypted before leaving the user device using modern cryptographic
+								standards that are objectively superior than the AES-256 encryption which other
+								service providers normally use.
+							</p>
+						</div>
+					</div>
 
-						<div class="security-card glass-card p-5">
-							<div class="flex items-start gap-4">
-								<div class="feature-icon">
-									<KeyRound class="h-6 w-6" />
-								</div>
-								<div>
-									<h3 class="text-lg font-semibold text-white">No metadata stored</h3>
-									<p class="mt-2 text-white/70">
-										Unlike standard cloud storage solutions that track your activity, FiFe does not
-										store file metadata like others do, ensuring your folder structures and file sizes
-										remain completely private.
-									</p>
-								</div>
-							</div>
+					<div class="security-card glass-card p-5">
+						<div class="feature-icon">
+							<KeyRound class="h-6 w-6" />
 						</div>
+						<div class="mt-6">
+							<h3 class="text-lg font-semibold text-white">No metadata stored</h3>
+							<p class="mt-2 text-white/70">
+								Unlike standard cloud storage solutions that track your activity, FiFe does not
+								store file metadata like others do, ensuring your folder structures and file sizes
+								remain completely private.
+							</p>
+						</div>
+						
+					</div>
 
-						<div class="security-card glass-card p-5">
-							<div class="flex items-start gap-4">
-								<div class="feature-icon">
-									<CloudCog class="h-6 w-6" />
-								</div>
-								<div>
-									<h3 class="text-lg font-semibold text-white">Advanced Tech Stack</h3>
-									<p class="mt-2 text-white/70">
-										Our architecture routes the domain directly through Cloudflare Workers and
-										Hyperdrive connected to a Neon.tech PostgreSQL database. This eliminates the need
-										for certificate pinning and Cloudflare channels, maximizing backend security.
-									</p>
-								</div>
-							</div>
+					<div class="security-card glass-card p-5">
+						<div class="feature-icon">
+							<CloudCog class="h-6 w-6" />
 						</div>
+						<div class="mt-6">
+							<h3 class="text-lg font-semibold text-white">Advanced Tech Stack</h3>
+							<p class="mt-2 text-white/70">
+								Our architecture routes the domain directly through Cloudflare Workers and
+								Hyperdrive connected to a Neon.tech PostgreSQL database. This eliminates the need
+								for certificate pinning and Cloudflare channels, maximizing backend security.
+							</p>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
