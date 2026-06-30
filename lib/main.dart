@@ -60,6 +60,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   AppLogger(prefixes: ["FCM-BG"])
       .info("Handling background message: ${message.messageId}");
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   try {
     await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
     await initializeDependencies(mode: ExecutionMode.appBackground);
