@@ -110,3 +110,4 @@ app.*.map.json
 node_modules
 mermaid.*.md
 SPEC.md
+*PLAN.md

@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:file_vault_bb/services/service_notification.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_device_register.dart';
@@ -52,6 +55,21 @@ void backgroundTaskDispatcher() {
   });
 }
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  AppLogger(prefixes: ["FCM-BG"])
+      .info("Handling background message: ${message.messageId}");
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
+    await initializeDependencies(mode: ExecutionMode.appBackground);
+    await SyncUtils().reconFolders(inBackground: true);
+  } catch (e, s) {
+    AppLogger(prefixes: ["FCM-BG"])
+        .error("FCM Background Sync failed", error: e, stackTrace: s);
+  }
+}
+
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,9 +94,29 @@ Future<void> main() async {
 Future<void> initializeInParallel() async {
   await Future.wait([
     initializeDependencies(mode: ExecutionMode.appForeground),
+    initializeFirebase(),
     initializeBackgroundSync(),
-    initializePurchases()
+    initializePurchases(),
   ]);
+}
+
+Future<void> initializeFirebase() async {
+  if (runningOnMobile) {
+    // Initialize Firebase
+    try {
+      await Firebase.initializeApp();
+      logger.info("initialized firebase");
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
+      logger.info("initialized firebase background handler");
+      if (await SyncUtils.canSync()) {
+        await ServiceNotification.initialize();
+        logger.info("initialized notification service");
+      }
+    } catch (e) {
+      logger.error("Firebase Init failed", error: e);
+    }
+  }
 }
 
 Future<void> initializePurchases() async {
