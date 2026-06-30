@@ -63,7 +63,6 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   purchases_flutter: ^10.0.1
   firebase_messaging: ^16.4.1
-  flutter_local_notifications: ^22.0.1
   firebase_core: ^4.11.0
 
 dev_dependencies:

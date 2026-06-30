@@ -4,7 +4,6 @@ import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 
 class ServiceNotification {
@@ -12,39 +11,18 @@ class ServiceNotification {
   static final ServiceNotification instance = ServiceNotification._();
   static final AppLogger logger =
       AppLogger(prefixes: ["Firebase Notification Service"]);
-  static final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
 
   /// Initialize Firebase Messaging and Local Notifications
   static Future<void> initialize() async {
     logger.info("Initializing Notification Service...");
 
-    // 1. Initialize Local Notifications
-    const AndroidInitializationSettings androidSettings =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const DarwinInitializationSettings iosSettings =
-        DarwinInitializationSettings();
-
-    const InitializationSettings initSettings = InitializationSettings(
-      android: androidSettings,
-      iOS: iosSettings,
-    );
-
-    await _localNotifications.initialize(
-      settings: initSettings,
-      onDidReceiveNotificationResponse: (details) {
-        logger.info("Notification clicked: ${details.payload}");
-      },
-    );
-
-    // 2. Request Permissions
     FirebaseMessaging messaging = FirebaseMessaging.instance;
     NotificationSettings settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
+      alert: false, // No notifications
+      badge: false, // No badges
+      sound: false, // No sounds
       provisional: true, // Silent permission on iOS
-    );
+    ); // Minimal permission request for background messages
     logger.info("FCM Permission status: ${settings.authorizationStatus}");
 
     // Handle foreground messages
@@ -102,34 +80,5 @@ class ServiceNotification {
         }
       }
     }
-  }
-
-  /// Show a simple local notification
-  static Future<void> showNotification({
-    required String title,
-    required String body,
-    String? payload,
-  }) async {
-    const AndroidNotificationDetails androidDetails =
-        AndroidNotificationDetails(
-      'fife_sync_channel',
-      'Sync Notifications',
-      channelDescription: 'Notifications regarding file synchronization',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const NotificationDetails platformDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: DarwinNotificationDetails(),
-    );
-
-    await _localNotifications.show(
-      id: 0, // Default ID
-      title: title,
-      body: body,
-      notificationDetails: platformDetails,
-      payload: payload,
-    );
   }
 }
