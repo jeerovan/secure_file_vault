@@ -109,3 +109,4 @@ app.*.map.json
 /dist/
 node_modules
 mermaid.*.md
+SPEC.md
