@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "Доступ к уведомлениям",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "Чтобы ваши файлы оставались синхронизированными и вы получали обновления статуса в реальном времени в фоновом режиме, нам нужно разрешение на показ уведомлений.",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "Разрешить уведомления",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "Уведомления необходимы для мониторинга фоновой синхронизации. Пожалуйста, включите их в системных настройках, чтобы ваши данные всегда были актуальными.",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "Для фоновой синхронизации требуется разрешение на уведомления",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "Требуется {appName} Pro.",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

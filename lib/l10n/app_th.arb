@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "การเข้าถึงการแจ้งเตือน",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "เพื่อให้ไฟล์ของคุณซิงก์อยู่เสมอและให้ข้อมูลสถานะแบบเรียลไทม์ในเบื้องหลัง เราจำเป็นต้องได้รับอนุญาตในการแสดงการแจ้งเตือน",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "อนุญาตการแจ้งเตือน",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "การแจ้งเตือนจำเป็นสำหรับการตรวจสอบการซิงก์ในเบื้องหลัง โปรดเปิดใช้งานในการตั้งค่าระบบเพื่อให้แน่ใจว่าข้อมูลของคุณเป็นปัจจุบันเสมอ",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "จำเป็นต้องได้รับอนุญาตการแจ้งเตือนสำหรับการซิงก์ในเบื้องหลัง",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "ต้องใช้ {appName} Pro",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

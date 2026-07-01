@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "وصول الإشعارات",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "للحفاظ على مزامنة ملفاتك وتقديم تحديثات الحالة في الوقت الفعلي في الخلفية، نحتاج إلى إذن لإظهار الإشعارات.",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "السماح بالإشعارات",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "الإشعارات مطلوبة لمراقبة المزامنة في الخلفية. يرجى تفعيلها في إعدادات النظام لضمان تحديث بياناتك دائمًا.",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "إذن الإشعارات مطلوب للمزامنة في الخلفية",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "يتطلب {appName} Pro.",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

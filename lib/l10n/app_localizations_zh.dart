@@ -550,6 +550,23 @@ class AppLocalizationsZh extends AppLocalizations {
   String get zeroKnowledgeEncryptedStorage => '零知识加密存储';
 
   @override
+  String get notificationPermissionTitle => '通知权限';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      '为了保持您的文件同步并在后台提供实时状态更新，我们需要您授予显示通知的权限。';
+
+  @override
+  String get notificationPermissionGrantButton => '允许通知';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      '通知对于监控后台同步至关重要。请在系统设置中启用通知，以确保您的数据始终是最新的。';
+
+  @override
+  String get notificationPermissionRequiredToContinue => '后台同步需要通知权限';
+
+  @override
   String requiresAppPro(String appName) {
     return '需要 $appName Pro。';
   }

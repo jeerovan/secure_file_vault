@@ -568,6 +568,24 @@ class AppLocalizationsFa extends AppLocalizations {
       'فضای ذخیره‌سازی رمزگذاری‌شده Zero-Knowledge';
 
   @override
+  String get notificationPermissionTitle => 'دسترسی به اعلان‌ها';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'برای همگام‌سازی فایل‌های شما و ارائه به‌روزرسانی‌های لحظه‌ای وضعیت در پس‌زمینه، به اجازه برای نمایش اعلان‌ها نیاز داریم.';
+
+  @override
+  String get notificationPermissionGrantButton => 'اجازه به اعلان‌ها';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'اعلان‌ها برای نظارت بر همگام‌سازی پس‌زمینه ضروری هستند. لطفاً آن‌ها را در تنظیمات سیستم فعال کنید تا مطمئن شوید داده‌های شما همیشه به‌روز هستند.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'مجوز اعلان‌ها برای همگام‌سازی پس‌زمینه الزامی است';
+
+  @override
   String requiresAppPro(String appName) {
     return 'نیاز به $appName Pro دارد.';
   }

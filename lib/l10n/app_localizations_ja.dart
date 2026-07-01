@@ -557,6 +557,24 @@ class AppLocalizationsJa extends AppLocalizations {
   String get zeroKnowledgeEncryptedStorage => 'ゼロ知識型の暗号化ストレージ';
 
   @override
+  String get notificationPermissionTitle => '通知へのアクセス';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'ファイルの同期を維持し、バックグラウンドでリアルタイムのステータス更新を提供するために、通知の許可が必要です。';
+
+  @override
+  String get notificationPermissionGrantButton => '通知を許可する';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'バックグラウンド同期を監視するには通知が必要です。データが常に最新の状態に保たれるよう、システム設定で通知を有効にしてください。';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'バックグラウンド同期には通知の許可が必要です';
+
+  @override
   String requiresAppPro(String appName) {
     return '$appName Proが必要です。';
   }

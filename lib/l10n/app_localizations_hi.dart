@@ -568,6 +568,24 @@ class AppLocalizationsHi extends AppLocalizations {
       'ज़ीरो-नॉलेज एन्क्रिप्टेड स्टोरेज';
 
   @override
+  String get notificationPermissionTitle => 'नोटिफिकेशन एक्सेस';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'आपकी फ़ाइलों को सिंक रखने और बैकग्राउंड में रीयल-टाइम स्टेटस अपडेट देने के लिए, हमें नोटिफिकेशन दिखाने की अनुमति चाहिए।';
+
+  @override
+  String get notificationPermissionGrantButton => 'नोटिफिकेशन की अनुमति दें';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'बैकग्राउंड सिंक्रोनाइज़ेशन की निगरानी के लिए नोटिफिकेशन आवश्यक हैं। कृपया सिस्टम सेटिंग्स में इन्हें सक्षम करें ताकि आपका डेटा हमेशा अपडेट रहे।';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'बैकग्राउंड सिंक के लिए नोटिफिकेशन अनुमति आवश्यक है';
+
+  @override
   String requiresAppPro(String appName) {
     return '$appName Pro आवश्यक है।';
   }

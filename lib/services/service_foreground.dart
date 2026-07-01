@@ -1,58 +1,60 @@
-import 'package:flutter_foreground_task/task_handler.dart';
+import 'package:file_vault_bb/main.dart';
+import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
-import '../storage/storage_sqlite.dart';
-import '../utils/common.dart';
-import '../utils/enums.dart';
-import '../utils/utils_sync.dart';
-import 'service_logger.dart';
+class ServiceForeground {
+  ServiceForeground._();
+  static final ServiceForeground instance = ServiceForeground._();
+  AppLogger logger = AppLogger(prefixes: ["Foreground Service"]);
+  void init() {
+    FlutterForegroundTask.initCommunicationPort();
+    FlutterForegroundTask.init(
+      androidNotificationOptions: AndroidNotificationOptions(
+        channelId: 'data_sync',
+        channelName: 'Data Sync',
+        channelImportance: NotificationChannelImportance.MAX,
+        priority: NotificationPriority.MAX,
+      ),
+      iosNotificationOptions: const IOSNotificationOptions(
+        showNotification: true,
+        playSound: false,
+      ),
+      foregroundTaskOptions: ForegroundTaskOptions(
+        eventAction: ForegroundTaskEventAction.nothing(),
+        autoRunOnBoot: false,
+        autoRunOnMyPackageReplaced: false,
+        allowWakeLock: true,
+        allowWifiLock: true,
+      ),
+    );
+  }
 
-class ForegroundTaskHandler extends TaskHandler {
-  AppLogger logger = AppLogger(prefixes: ["Forground Service"]);
-  // Called when the task is started.
-  @override
-  Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
-    try {
-      await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
-      await initializeDependencies(mode: ExecutionMode.appBackground);
-      await SyncUtils().reconFolders();
-    } catch (e, s) {
-      logger.error("Sync failed", error: e, stackTrace: s);
+  Future<void> start() async {
+    if (!await FlutterForegroundTask.isRunningService) {
+      logger.info("Starting");
+      final ServiceRequestResult result =
+          await FlutterForegroundTask.startService(
+        serviceTypes: [ForegroundServiceTypes.dataSync],
+        serviceId: 300,
+        notificationTitle: 'Data Sync Service',
+        notificationText: 'In progress',
+        callback: startForegroundTask,
+      );
+
+      if (result is ServiceRequestFailure) {
+        logger.error("Failed to start", error: result.error);
+      }
     }
   }
 
-  // Called based on the eventAction set in ForegroundTaskOptions.
-  @override
-  void onRepeatEvent(DateTime timestamp) {
-    logger.info('onRepeatEvent(timestamp: $timestamp)');
-  }
-
-  // Called when the task is destroyed.
-  @override
-  Future<void> onDestroy(DateTime timestamp, bool isTimeout) async {
-    logger.info('onDestroy(isTimeout: $isTimeout)');
-  }
-
-  // Called when data is sent using `FlutterForegroundTask.sendDataToTask`.
-  @override
-  void onReceiveData(Object data) {
-    logger.info('onReceiveData: $data');
-  }
-
-  // Called when the notification button is pressed.
-  @override
-  void onNotificationButtonPressed(String id) {
-    logger.info('onNotificationButtonPressed: $id');
-  }
-
-  // Called when the notification itself is pressed.
-  @override
-  void onNotificationPressed() {
-    logger.info('onNotificationPressed');
-  }
-
-  // Called when the notification itself is dismissed.
-  @override
-  void onNotificationDismissed() {
-    logger.info('onNotificationDismissed');
+  Future<void> stop() async {
+    if (await FlutterForegroundTask.isRunningService) {
+      logger.info("Stopping");
+      final ServiceRequestResult result =
+          await FlutterForegroundTask.stopService();
+      if (result is ServiceRequestFailure) {
+        logger.error("Failed to stop", error: result.error);
+      }
+    }
   }
 }

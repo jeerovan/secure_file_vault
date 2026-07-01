@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "알림 권한",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "파일을 계속 동기화하고 백그라운드에서 실시간 상태 업데이트를 제공하려면 알림 권한이 필요합니다.",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "알림 허용",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "백그라운드 동기화를 모니터링하려면 알림이 필요합니다. 데이터가 항상 최신 상태로 유지되도록 시스템 설정에서 알림을 활성화해 주세요.",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "백그라운드 동기화를 위해 알림 권한이 필요합니다",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "{appName} Pro가 필요합니다.",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

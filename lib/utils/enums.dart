@@ -9,6 +9,7 @@ enum SetupStep {
   registerDevice,
   manageDevices,
   storagePermission,
+  notificationPermission,
   explorer,
 }
 

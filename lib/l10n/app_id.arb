@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "Akses Notifikasi",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "Untuk menjaga file Anda tetap sinkron dan memberikan pembaruan status waktu nyata di latar belakang, kami memerlukan izin untuk menampilkan notifikasi.",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "Izinkan Notifikasi",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "Notifikasi diperlukan untuk memantau sinkronisasi latar belakang. Silakan aktifkan di pengaturan sistem untuk memastikan data Anda selalu mutakhir.",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "Izin notifikasi diperlukan untuk sinkronisasi latar belakang",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "Memerlukan {appName} Pro.",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

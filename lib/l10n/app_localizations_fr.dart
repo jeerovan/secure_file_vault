@@ -571,6 +571,24 @@ class AppLocalizationsFr extends AppLocalizations {
   String get zeroKnowledgeEncryptedStorage => 'Stockage chiffré zero-knowledge';
 
   @override
+  String get notificationPermissionTitle => 'Accès aux Notifications';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Pour maintenir vos fichiers synchronisés et fournir des mises à jour de statut en temps réel en arrière-plan, nous avons besoin de l\'autorisation d\'afficher des notifications.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Autoriser les Notifications';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Les notifications sont nécessaires pour surveiller la synchronisation en arrière-plan. Veuillez les activer dans les paramètres du système pour garantir que vos données sont toujours à jour.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'L\'autorisation de notification est requise pour la synchronisation en arrière-plan';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Nécessite $appName Pro.';
   }

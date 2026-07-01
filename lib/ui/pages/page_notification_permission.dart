@@ -1,21 +1,21 @@
-import 'dart:io';
-
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:file_vault_bb/main.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
 import '../../ui/common_widgets.dart';
+import 'package:file_vault_bb/main.dart';
 
-class StoragePermissionPage extends StatefulWidget {
-  const StoragePermissionPage({super.key});
+class NotificationPermissionPage extends StatefulWidget {
+  const NotificationPermissionPage({super.key});
 
   @override
-  State<StoragePermissionPage> createState() => _StoragePermissionPageState();
+  State<NotificationPermissionPage> createState() =>
+      _NotificationPermissionPageState();
 }
 
-class _StoragePermissionPageState extends State<StoragePermissionPage>
+class _NotificationPermissionPageState extends State<NotificationPermissionPage>
     with SingleTickerProviderStateMixin {
   bool _isLoading = false;
   late final AnimationController _pulseController;
@@ -32,6 +32,10 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Request permissions and initialize the service.
+      _checkPermission();
+    });
   }
 
   @override
@@ -40,35 +44,36 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
     super.dispose();
   }
 
+  Future<void> _checkPermission() async {
+    NotificationPermission notificationPermission =
+        await getNotificationPermissionStatus();
+    if (!mounted) return;
+    if (notificationPermission == NotificationPermission.granted) {
+      // Transition to the next step in setup
+      await context.read<AppSetupState>().showExplorer();
+    }
+  }
+
   Future<void> _requestPermission() async {
     setState(() => _isLoading = true);
 
     try {
-      PermissionStatus status;
-      if (Platform.isAndroid) {
-        final deviceInfo = DeviceInfoPlugin();
-        final androidInfo = await deviceInfo.androidInfo;
-
-        if (androidInfo.version.sdkInt >= 30) {
-          status = await Permission.manageExternalStorage.request();
-        } else {
-          status = await Permission.storage.request();
-        }
-      } else {
-        status = PermissionStatus.granted;
-      }
+      NotificationPermission notificationPermission =
+          await FlutterForegroundTask.requestNotificationPermission();
 
       if (!mounted) return;
 
-      if (status.isGranted) {
-        await context.read<AppSetupState>().recheckStatus();
-      } else if (status.isPermanentlyDenied) {
+      if (notificationPermission == NotificationPermission.granted) {
+        // Transition to the next step in setup
+        await context.read<AppSetupState>().showExplorer();
+      } else if (notificationPermission ==
+          NotificationPermission.permanently_denied) {
         _showSettingsDialog();
       } else {
         _showDeniedMessage();
       }
     } catch (e) {
-      logger.error("Permission Error", error: e);
+      logger.error("Notification Permission Error", error: e);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -83,7 +88,8 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Text(AppLocalizations.of(context)!.permissionRequiredTitle),
         content: Text(
-          AppLocalizations.of(context)!.storagePermissionSettingsDescription,
+          AppLocalizations.of(context)!
+              .notificationPermissionSettingsDescription,
         ),
         actions: [
           TextButton(
@@ -117,7 +123,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
             Expanded(
               child: Text(
                 AppLocalizations.of(context)!
-                    .storagePermissionRequiredToContinue,
+                    .notificationPermissionRequiredToContinue,
               ),
             ),
           ],
@@ -172,7 +178,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                       ],
                     ),
                     child: Icon(
-                      Icons.shield_rounded,
+                      Icons.notifications_active_rounded,
                       size: 72,
                       color: theme.colorScheme.primary,
                     ),
@@ -180,7 +186,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                 ),
                 const SizedBox(height: 40),
                 Text(
-                  AppLocalizations.of(context)!.secureLocalAccessTitle,
+                  AppLocalizations.of(context)!.notificationPermissionTitle,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
@@ -203,7 +209,7 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                   ),
                   child: Text(
                     AppLocalizations.of(context)!
-                        .storagePermissionPageDescription,
+                        .notificationPermissionPageDescription,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                       height: 1.6,
@@ -253,10 +259,12 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
                               key: const ValueKey('idle'),
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.lock_open_rounded, size: 22),
+                                const Icon(Icons.notifications_rounded,
+                                    size: 22),
                                 const SizedBox(width: 12),
                                 Text(
-                                  AppLocalizations.of(context)!.grantAccess,
+                                  AppLocalizations.of(context)!
+                                      .notificationPermissionGrantButton,
                                   style: theme.textTheme.titleMedium?.copyWith(
                                     color: theme.colorScheme.onPrimary,
                                     fontWeight: FontWeight.w600,

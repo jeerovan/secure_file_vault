@@ -5,6 +5,7 @@ import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/model_file.dart';
@@ -82,6 +83,15 @@ class AppSetupState extends ChangeNotifier {
     if (!storagePermission.isGranted) {
       logger.info("Storage Permission");
       _currentStep = SetupStep.storagePermission;
+      notifyListeners();
+      return;
+    }
+
+    NotificationPermission notificationPermission =
+        await getNotificationPermissionStatus();
+    if (notificationPermission != NotificationPermission.granted) {
+      logger.info("Notification Permission");
+      _currentStep = SetupStep.notificationPermission;
       notifyListeners();
       return;
     }

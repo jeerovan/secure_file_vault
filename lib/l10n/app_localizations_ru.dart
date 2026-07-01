@@ -572,6 +572,24 @@ class AppLocalizationsRu extends AppLocalizations {
       'Шифрованное хранилище Zero-Knowledge';
 
   @override
+  String get notificationPermissionTitle => 'Доступ к уведомлениям';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Чтобы ваши файлы оставались синхронизированными и вы получали обновления статуса в реальном времени в фоновом режиме, нам нужно разрешение на показ уведомлений.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Разрешить уведомления';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Уведомления необходимы для мониторинга фоновой синхронизации. Пожалуйста, включите их в системных настройках, чтобы ваши данные всегда были актуальными.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'Для фоновой синхронизации требуется разрешение на уведомления';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Требуется $appName Pro.';
   }

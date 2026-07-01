@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_vault_bb/services/service_foreground.dart';
+import 'package:file_vault_bb/ui/pages/page_notification_permission.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:file_vault_bb/services/service_notification.dart';
@@ -32,6 +33,7 @@ import '../utils/common.dart';
 import '../utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'utils/service_foreground_handler.dart';
 import 'utils/utils_sync.dart';
 
 // Mobile-specific callback - must be top-level function
@@ -49,7 +51,7 @@ void backgroundTaskDispatcher() {
       return Future.value(false);
     }
     try {
-      await SyncUtils().reconFolders(inBackground: true);
+      await SyncUtils().reconFolders(inBackground: true, caller: "Workmanager");
       return Future.value(true);
     } catch (e) {
       return Future.value(false);
@@ -65,9 +67,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   if (message.data['type'] == 'Sync') {
     try {
-      await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
-      await initializeDependencies(mode: ExecutionMode.appBackground);
-      await SyncUtils().reconFolders(inBackground: true);
+      ServiceForeground.instance.init();
+      ServiceForeground.instance.start();
     } catch (e, s) {
       AppLogger(prefixes: ["FCM-BG"])
           .error("FCM Background Sync failed", error: e, stackTrace: s);
@@ -85,7 +86,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageSqlite.initialize(mode: ExecutionMode.appForeground);
   await initializeInParallel();
-  FlutterForegroundTask.initCommunicationPort();
+  ServiceForeground.instance.init();
   SecureStorage prefs = SecureStorage();
   runApp(
     MultiProvider(
@@ -283,6 +284,8 @@ class AppNavigator extends StatelessWidget {
             );
           case SetupStep.storagePermission:
             return const StoragePermissionPage();
+          case SetupStep.notificationPermission:
+            return const NotificationPermissionPage();
           case SetupStep.explorer:
             return PageExplorer(
               onThemeChange: onThemeChange,

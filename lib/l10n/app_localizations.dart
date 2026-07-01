@@ -1156,6 +1156,36 @@ abstract class AppLocalizations {
   /// **'Zero-knowledge encrypted storage'**
   String get zeroKnowledgeEncryptedStorage;
 
+  /// Main title on the notification permission onboarding screen
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications Access'**
+  String get notificationPermissionTitle;
+
+  /// Description on the notification permission page explaining why access is needed
+  ///
+  /// In en, this message translates to:
+  /// **'To keep your files in sync and provide real-time status updates in the background, we need permission to show notifications.'**
+  String get notificationPermissionPageDescription;
+
+  /// Primary button label used to request notification permission
+  ///
+  /// In en, this message translates to:
+  /// **'Allow Notifications'**
+  String get notificationPermissionGrantButton;
+
+  /// Dialog description explaining why notification permission is needed and asking the user to open settings
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are required to monitor background synchronization. Please enable them in the system settings to ensure your data is always up to date.'**
+  String get notificationPermissionSettingsDescription;
+
+  /// Snackbar message shown when the user denies notification permission
+  ///
+  /// In en, this message translates to:
+  /// **'Notification permission is required for background sync'**
+  String get notificationPermissionRequiredToContinue;
+
   /// Snackbar message shown when a Pro subscription is required for modifying storage
   ///
   /// In en, this message translates to:

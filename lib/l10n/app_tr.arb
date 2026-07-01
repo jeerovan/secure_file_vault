@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "Bildirim Erişimi",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "Dosyalarınızın senkronize kalmasını sağlamak ve arka planda gerçek zamanlı durum güncellemeleri sunmak için bildirimleri gösterme iznine ihtiyacımız var.",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "Bildirimlere İzin Ver",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "Arka plan senkronizasyonunu izlemek için bildirimler gereklidir. Verilerinizin her zaman güncel olduğundan emin olmak için lütfen sistem ayarlarından bildirimleri etkinleştirin.",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "Arka plan senkronizasyonu için bildirim izni gereklidir",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "{appName} Pro gerektirir.",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

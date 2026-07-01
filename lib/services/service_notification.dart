@@ -29,7 +29,7 @@ class ServiceNotification {
     FirebaseMessaging.onMessage.listen((message) {
       logger.info("Received on foreground: ${message.data.toString()}");
       if (message.data['type'] == 'Sync') {
-        SyncUtils().reconFolders();
+        SyncUtils().reconFolders(caller: "FCM");
       }
     });
 

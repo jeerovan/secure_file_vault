@@ -564,6 +564,24 @@ class AppLocalizationsTh extends AppLocalizations {
       'พื้นที่จัดเก็บเข้ารหัสแบบ Zero-Knowledge';
 
   @override
+  String get notificationPermissionTitle => 'การเข้าถึงการแจ้งเตือน';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'เพื่อให้ไฟล์ของคุณซิงก์อยู่เสมอและให้ข้อมูลสถานะแบบเรียลไทม์ในเบื้องหลัง เราจำเป็นต้องได้รับอนุญาตในการแสดงการแจ้งเตือน';
+
+  @override
+  String get notificationPermissionGrantButton => 'อนุญาตการแจ้งเตือน';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'การแจ้งเตือนจำเป็นสำหรับการตรวจสอบการซิงก์ในเบื้องหลัง โปรดเปิดใช้งานในการตั้งค่าระบบเพื่อให้แน่ใจว่าข้อมูลของคุณเป็นปัจจุบันเสมอ';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'จำเป็นต้องได้รับอนุญาตการแจ้งเตือนสำหรับการซิงก์ในเบื้องหลัง';
+
+  @override
   String requiresAppPro(String appName) {
     return 'ต้องใช้ $appName Pro';
   }
