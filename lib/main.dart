@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_vault_bb/services/service_foreground.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:file_vault_bb/services/service_notification.dart';
@@ -7,6 +8,7 @@ import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_device_register.dart';
 import 'package:file_vault_bb/ui/pages/page_welcome.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:workmanager/workmanager.dart';
@@ -73,11 +75,17 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   }
 }
 
+@pragma('vm:entry-point')
+void startForegroundTask() {
+  FlutterForegroundTask.setTaskHandler(ForegroundTaskHandler());
+}
+
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageSqlite.initialize(mode: ExecutionMode.appForeground);
   await initializeInParallel();
+  FlutterForegroundTask.initCommunicationPort();
   SecureStorage prefs = SecureStorage();
   runApp(
     MultiProvider(
