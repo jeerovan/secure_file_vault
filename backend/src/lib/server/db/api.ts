@@ -362,7 +362,7 @@ export async function updateDeviceStatus(
 	return json({ success: 1 });
 }
 
-export async function fetchFcmIds(db: Db | Tx, rowId: number) {
+export async function fetchFcmIds(db: Db | Tx, rowId: number, limit: number) {
 	const results = await db
 		.selectDistinct({
 			fcmId: userDevice[UserDeviceKeys.NOTIFICATION_ID],
@@ -380,7 +380,7 @@ export async function fetchFcmIds(db: Db | Tx, rowId: number) {
 			)
 		)
 		.orderBy(userDevice[UserDeviceKeys.ID])
-		.limit(100);
+		.limit(limit);
 
 	// Return just an array of strings (the fcmIds)
 	// We use .filter(Boolean) to satisfy TypeScript that fcmId is string
