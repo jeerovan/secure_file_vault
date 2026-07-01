@@ -1,5 +1,5 @@
+import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
-import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
@@ -27,6 +27,7 @@ class ServiceNotification {
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((message) {
+      logger.info("Received foreground message");
       if (message.data['type'] == 'Sync') {
         SyncUtils().reconFolders();
       }
@@ -48,16 +49,15 @@ class ServiceNotification {
 
   static Future<void> _saveFcmToken(String token) async {
     logger.info("Received FCM Token:$token");
-    SecureStorage storage = SecureStorage();
-    String? oldToken = await storage.read(key: AppString.fcmId.string);
+    String oldToken = ModelSetting.get(AppString.fcmId.string);
     bool updateToken = false;
-    if (oldToken == null) {
+    if (oldToken.isEmpty) {
       updateToken = true;
     } else if (oldToken != token) {
       updateToken = true;
     }
     if (updateToken) {
-      await storage.write(key: AppString.fcmId.string, value: token);
+      await ModelSetting.set(AppString.fcmId.string, token);
       String deviceUuid = await getDeviceUuid();
       if (!simulateTesting() && deviceUuid.isNotEmpty) {
         final api = BackendApi();

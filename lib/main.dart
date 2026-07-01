@@ -58,16 +58,18 @@ void backgroundTaskDispatcher() {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   AppLogger(prefixes: ["FCM-BG"])
-      .info("Handling background message: ${message.messageId}");
+      .info("Received background message: ${message.messageId}");
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  try {
-    await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
-    await initializeDependencies(mode: ExecutionMode.appBackground);
-    await SyncUtils().reconFolders(inBackground: true);
-  } catch (e, s) {
-    AppLogger(prefixes: ["FCM-BG"])
-        .error("FCM Background Sync failed", error: e, stackTrace: s);
+  if (message.data['type'] == 'Sync') {
+    try {
+      await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
+      await initializeDependencies(mode: ExecutionMode.appBackground);
+      await SyncUtils().reconFolders(inBackground: true);
+    } catch (e, s) {
+      AppLogger(prefixes: ["FCM-BG"])
+          .error("FCM Background Sync failed", error: e, stackTrace: s);
+    }
   }
 }
 
@@ -110,10 +112,8 @@ Future<void> initializeFirebase() async {
       FirebaseMessaging.onBackgroundMessage(
           _firebaseMessagingBackgroundHandler);
       logger.info("initialized firebase background handler");
-      if (await SyncUtils.canSync()) {
-        await ServiceNotification.initialize();
-        logger.info("initialized notification service");
-      }
+      await ServiceNotification.initialize();
+      logger.info("initialized notification service");
     } catch (e) {
       logger.error("Firebase Init failed", error: e);
     }
