@@ -385,7 +385,7 @@ export async function fetchFcmIds(db: Db | Tx, rowId: number, limit: number) {
 	// Return just an array of strings (the fcmIds)
 	// We use .filter(Boolean) to satisfy TypeScript that fcmId is string
 	// even though the schema allows it to be nullable
-	return results.map((row) => row.fcmId).filter((id): id is string => id !== null && id !== '');
+	return results;
 }
 export async function removeFcmIds(db: Db | Tx, tokens: string[]) {
 	await db

@@ -58,7 +58,7 @@ void backgroundTaskDispatcher() {
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   AppLogger(prefixes: ["FCM-BG"])
-      .info("Received background message: ${message.messageId}");
+      .info("Received background message: ${message.data.toString()}");
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   if (message.data['type'] == 'Sync') {

@@ -27,7 +27,7 @@ class ServiceNotification {
 
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((message) {
-      logger.info("Received foreground message");
+      logger.info("Received on foreground: ${message.data.toString()}");
       if (message.data['type'] == 'Sync') {
         SyncUtils().reconFolders();
       }
@@ -53,7 +53,7 @@ class ServiceNotification {
     bool updateToken = false;
     if (oldToken.isEmpty) {
       updateToken = true;
-    } else if (oldToken != token) {
+    } else if (oldToken != token && token.isNotEmpty) {
       updateToken = true;
     }
     if (updateToken) {
