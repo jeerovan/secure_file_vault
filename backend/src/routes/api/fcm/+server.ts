@@ -12,9 +12,10 @@ export const GET: RequestHandler = async ({ request, url, platform }) => {
 	}
 	const rowId = parseInt(url.searchParams.get('row_id') || '0');
 	const limit = parseInt(url.searchParams.get('limit') || '100');
+	const minutes = parseInt(url.searchParams.get('minutes') || '60');
 	const db = getDb(platform);
 
-	const fcmIds = await fetchFcmIds(db, rowId, limit);
+	const fcmIds = await fetchFcmIds(db, rowId, limit, minutes);
 
 	return json({ success: 1, fcmIds });
 };

@@ -22,7 +22,8 @@ import {
 	sql,
 	getTableColumns,
 	inArray,
-	isNotNull
+	isNotNull,
+	lt
 } from 'drizzle-orm';
 import {
 	UserKeys,
@@ -362,7 +363,8 @@ export async function updateDeviceStatus(
 	return json({ success: 1 });
 }
 
-export async function fetchFcmIds(db: Db | Tx, rowId: number, limit: number) {
+export async function fetchFcmIds(db: Db | Tx, rowId: number, limit: number, minutes: number) {
+	const threshold = Date.now() - minutes * 60 * 1000;
 	const results = await db
 		.selectDistinct({
 			fcmId: userDevice[UserDeviceKeys.NOTIFICATION_ID],
@@ -371,20 +373,15 @@ export async function fetchFcmIds(db: Db | Tx, rowId: number, limit: number) {
 		.from(userDevice)
 		.where(
 			and(
-				// active devices only
 				eq(userDevice[UserDeviceKeys.ACTIVE], 1),
-				// Where ID > rowId
 				gt(userDevice[UserDeviceKeys.ID], rowId),
-				// Where NOTIFICATION_ID is not null
-				isNotNull(userDevice[UserDeviceKeys.NOTIFICATION_ID])
+				isNotNull(userDevice[UserDeviceKeys.NOTIFICATION_ID]),
+				lt(userDevice[UserDeviceKeys.SERVER_UPDATED_AT], threshold)
 			)
 		)
 		.orderBy(userDevice[UserDeviceKeys.ID])
 		.limit(limit);
 
-	// Return just an array of strings (the fcmIds)
-	// We use .filter(Boolean) to satisfy TypeScript that fcmId is string
-	// even though the schema allows it to be nullable
 	return results;
 }
 export async function removeFcmIds(db: Db | Tx, tokens: string[]) {

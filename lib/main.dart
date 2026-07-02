@@ -40,13 +40,13 @@ import 'utils/utils_sync.dart';
 @pragma('vm:entry-point')
 void backgroundTaskDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
-    AppLogger(prefixes: ["Background"]).info("Task Triggered: $taskName");
+    AppLogger(prefixes: ["Workmanager"]).info("Task Triggered: $taskName");
     WidgetsFlutterBinding.ensureInitialized();
     try {
       await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
       await initializeDependencies(mode: ExecutionMode.appBackground);
     } catch (e, s) {
-      AppLogger(prefixes: ["Background"])
+      AppLogger(prefixes: ["Workmanager"])
           .error("Initialize failed", error: e, stackTrace: s);
       return Future.value(false);
     }

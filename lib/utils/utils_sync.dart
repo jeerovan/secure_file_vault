@@ -54,7 +54,9 @@ class SyncUtils {
 
   // Pass inBackground flag to determine if we should await everything
   Future<void> reconFolders(
-      {bool inBackground = false, String caller = ""}) async {
+      {bool inBackground = false,
+      bool awaited = false,
+      String caller = ""}) async {
     String? userId = await getSignedInUserId();
     if (userId == null) {
       return;
@@ -101,8 +103,8 @@ class SyncUtils {
     _reconProcessTimer = null;
 
     // If in background, await directly to prevent isolate termination
-    if (inBackground) {
-      await triggerSync(inBackground: true, caller: caller);
+    if (inBackground || awaited) {
+      await triggerSync(inBackground: inBackground, caller: caller);
     } else {
       waitAndSyncChanges(caller);
     }

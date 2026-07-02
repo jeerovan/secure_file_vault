@@ -19,9 +19,7 @@ class ForegroundTaskHandler extends TaskHandler {
       await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
       await initializeDependencies(mode: ExecutionMode.appBackground);
       await SyncUtils().reconFolders(
-          inBackground: true,
-          caller:
-              "ForegroundService"); // to make the process wait till it finishes
+          inBackground: false, awaited: true, caller: "ForegroundService");
       ServiceForeground.instance.stop();
     } catch (e, s) {
       logger.error("Sync failed", error: e, stackTrace: s);

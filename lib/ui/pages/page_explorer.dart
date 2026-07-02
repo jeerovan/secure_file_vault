@@ -203,7 +203,7 @@ class _FilePaneState extends State<FilePane> {
     setState(() {
       _syncInProgress = true;
     });
-    await SyncUtils().reconFolders(caller: "Explorer");
+    await SyncUtils().reconFolders(awaited: true, caller: "Explorer");
     _loadFiles();
   }
 

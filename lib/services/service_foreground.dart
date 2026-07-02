@@ -10,10 +10,10 @@ class ServiceForeground {
     FlutterForegroundTask.initCommunicationPort();
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
-        channelId: 'data_sync',
+        channelId: 'data_sync_channel',
         channelName: 'Data Sync',
-        channelImportance: NotificationChannelImportance.MAX,
-        priority: NotificationPriority.MAX,
+        channelImportance: NotificationChannelImportance.LOW,
+        priority: NotificationPriority.LOW,
       ),
       iosNotificationOptions: const IOSNotificationOptions(
         showNotification: true,
@@ -36,8 +36,8 @@ class ServiceForeground {
           await FlutterForegroundTask.startService(
         serviceTypes: [ForegroundServiceTypes.dataSync],
         serviceId: 300,
-        notificationTitle: 'Data Sync Service',
-        notificationText: 'In progress',
+        notificationTitle: 'File Sync Service',
+        notificationText: 'Checks and uploads remaining files to cloud',
         callback: startForegroundTask,
       );
 
