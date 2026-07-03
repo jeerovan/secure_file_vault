@@ -5,6 +5,13 @@ import '../utils/enums.dart';
 
 import '../storage/storage_sqlite.dart';
 
+class TaskStatus {
+  final int task;
+  final int progress;
+
+  TaskStatus({required this.task, required this.progress});
+}
+
 class ModelItemTask {
   String id;
   int task;

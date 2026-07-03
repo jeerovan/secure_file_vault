@@ -5,6 +5,7 @@ import 'package:file_vault_bb/ui/pages/page_subscription.dart';
 import 'package:sodium/sodium_sumo.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../repositories/repository_item_task.dart';
 import '../../storage/storage_channel.dart';
 import '../../ui/pages/page_devices.dart';
 import '../../ui/pages/page_file_info.dart';
@@ -97,7 +98,6 @@ class _FilePaneState extends State<FilePane> {
     super.initState();
     EventStream().notifier.addListener(_handleAppEvents);
     _loadFiles();
-    _syncRootFolders();
   }
 
   @override
@@ -727,22 +727,31 @@ class _FilePaneState extends State<FilePane> {
               );
             }
           }
-          return ListView.builder(
-            reverse: true,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-
-              return FileListItem(
-                key: ValueKey(item.id),
-                item: item,
-                selectedItemsNotifier: _selectedItemsNotifier,
-                isMultiSelectNotifier: _isMultiSelectNotifier,
-                onTap: () => _onTap(item),
-                onLongPress: () => _onLongPress(item),
-              );
-            },
-          );
+          return StreamBuilder<Map<String, TaskStatus>>(
+              stream: RepositoryItemTask.instance.getTaskSnapshotStream(),
+              builder: (context, snapshot) {
+                final taskMap = snapshot.data ?? {};
+                logger.debug("TaskMap: $taskMap");
+                return ListView.builder(
+                  reverse: true,
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    TaskStatus? taskStatus = taskMap[item.id];
+                    logger.debug(
+                        "id: ${item.id}, task: ${taskStatus?.task}, progress: ${taskStatus?.progress}");
+                    return FileListItem(
+                      key: ValueKey(item.id),
+                      item: item,
+                      taskStatus: taskStatus,
+                      selectedItemsNotifier: _selectedItemsNotifier,
+                      isMultiSelectNotifier: _isMultiSelectNotifier,
+                      onTap: () => _onTap(item),
+                      onLongPress: () => _onLongPress(item),
+                    );
+                  },
+                );
+              });
         });
   }
 }
