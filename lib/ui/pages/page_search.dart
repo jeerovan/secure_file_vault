@@ -174,7 +174,7 @@ class _SearchScreenState extends State<SearchScreen> {
       }
     }
     if (hasTasks) {
-      TaskManager.init(inBackground: false);
+      TaskManager.init();
     }
     _cancelMultiSelect();
   }

@@ -32,12 +32,9 @@ class SyncUtils {
   factory SyncUtils() => _instance;
   SyncUtils._internal();
 
-  Timer? _debounceTimer;
   Timer? _foregroundSyncTimer;
   Timer? _syncProcessTimer;
   Timer? _reconProcessTimer;
-
-  bool _hasPendingChanges = false;
 
   static final logger = AppLogger(prefixes: ["Sync"]);
 
@@ -45,7 +42,7 @@ class SyncUtils {
     final minutes = isDebugEnabled ? 5 : 15;
     _foregroundSyncTimer?.cancel();
     _foregroundSyncTimer = Timer.periodic(Duration(minutes: minutes), (timer) {
-      reconFolders(inBackground: false, caller: "AutoSync");
+      reconFolders(caller: "AutoSync");
     });
   }
 
@@ -55,10 +52,7 @@ class SyncUtils {
   }
 
   // Pass inBackground flag to determine if we should await everything
-  Future<void> reconFolders(
-      {bool inBackground = false,
-      bool awaited = false,
-      String caller = ""}) async {
+  Future<void> reconFolders({String caller = ""}) async {
     String? userId = await getSignedInUserId();
     if (userId == null) {
       return;
@@ -67,15 +61,14 @@ class SyncUtils {
     if (!canAccessSecureStorage) {
       return;
     }
-    String mode = inBackground ? "Background" : "Foreground";
 
     int startedAt = DateTime.now().millisecondsSinceEpoch;
     String lastRunningAtString =
-        ModelSetting.get(AppString.lastReconRunningAt.string);
+        await ModelState.get(AppString.lastReconRunningAt.string);
     int? lastRunningAt =
         lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
     if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
-      logger.warning("Recon already in progress, skipping in $mode.");
+      logger.warning("Recon already in progress, from $caller.");
       return;
     }
     EventStream().publish(AppEvent(
@@ -83,15 +76,15 @@ class SyncUtils {
         id: "",
         key: EventKey.running,
         value: null));
-    await ModelSetting.set(
+    await ModelState.set(
         AppString.lastReconRunningAt.string, startedAt.toString());
     // set timer to update running state every seconds
     _reconProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      await ModelSetting.set(AppString.lastReconRunningAt.string,
+      await ModelState.set(AppString.lastReconRunningAt.string,
           DateTime.now().millisecondsSinceEpoch.toString());
     });
 
-    logger.info("Start recon in $mode from $caller");
+    logger.info("Start recon from $caller");
     try {
       SodiumSumo sodium = await SodiumSumoInit.init();
       List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
@@ -100,39 +93,19 @@ class SyncUtils {
       }
     } catch (e) {
       logger.error("Recon failed", error: e);
+    } finally {
+      _reconProcessTimer?.cancel();
+      _reconProcessTimer = null;
     }
-    _reconProcessTimer?.cancel();
-    _reconProcessTimer = null;
-
-    // If in background, await directly to prevent isolate termination
-    if (inBackground || awaited) {
-      await triggerSync(inBackground: inBackground, caller: caller);
-    } else {
-      waitAndSyncChanges(caller);
-    }
+    await triggerSync(caller: caller);
   }
 
   static void waitAndSyncChanges(String caller) {
     logger.info("wait and sync (Foreground)");
-    _instance._handleChange(caller);
+    _instance.triggerSync(caller: caller);
   }
 
-  void _handleChange(String caller) {
-    _hasPendingChanges = true;
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(seconds: 1), () {
-      if (_hasPendingChanges) {
-        _hasPendingChanges = false;
-        triggerSync(
-            inBackground: false,
-            caller: caller); // Fire and forget for foreground
-      }
-    });
-  }
-
-  Future<void> triggerSync(
-      {required bool inBackground, String caller = ""}) async {
-    String mode = inBackground ? "Background" : "Foreground";
+  Future<void> triggerSync({String caller = ""}) async {
     // Drop the request if a sync is already actively running
     int startedAt = DateTime.now().millisecondsSinceEpoch;
     String lastRunningAtString =
@@ -140,8 +113,7 @@ class SyncUtils {
     int? lastRunningAt =
         lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
     if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
-      logger
-          .warning("Sync already in progress, skipping in $mode from $caller.");
+      logger.warning("Sync already in progress. from $caller.");
       return;
     }
     // update state immediately
@@ -159,28 +131,26 @@ class SyncUtils {
     });
 
     try {
-      logger.info("sync request in: $mode from $caller");
+      logger.info("sync request from $caller");
 
       bool canSync = await SyncUtils.canSync();
       if (!canSync) {
-        logger.warning("can not sync, in :$mode from $caller");
+        logger.warning("can not sync. from $caller");
         return;
       }
 
       // Note: Workmanager already ensures network connectivity via constraints on Android
       bool hasInternet = await InternetConnection().hasInternetAccess;
       if (!hasInternet) {
-        logger.info("No internet, in: $mode from $caller");
+        logger.info("No internet, from $caller");
         return;
       }
       // refresh jwt first
       await refreshNeonAuth();
 
-      await _performSyncOperations(inBackground, caller);
+      await _performSyncOperations(caller);
     } catch (e, stack) {
       logger.error("Sync failed", error: e, stackTrace: stack);
-      // If this is a background task, you might want to rethrow so Workmanager can retry
-      if (inBackground) rethrow;
     } finally {
       _syncProcessTimer?.cancel();
       _syncProcessTimer = null;
@@ -192,9 +162,8 @@ class SyncUtils {
     }
   }
 
-  Future<void> _performSyncOperations(bool inBackground, String caller) async {
-    String mode = inBackground ? "Background" : "Foreground";
-    logger.info("$mode|$caller|------------------START----------------");
+  Future<void> _performSyncOperations(String caller) async {
+    logger.info("$caller|------------------START----------------");
     try {
       bool removed = await checkDeviceStatus();
       if (!removed) {
@@ -205,8 +174,7 @@ class SyncUtils {
               await pushMapChanges(); // send items/files changes before client uploads them
         }
         if (allpushed) {
-          await TaskManager.init(
-              inBackground: inBackground); // upload actual files
+          await TaskManager.init(); // upload actual files
           bool _ = await pushMapChanges(); // send upload changes to server
         }
       }
@@ -216,7 +184,7 @@ class SyncUtils {
     if (simulateTesting()) {
       await Future.delayed(const Duration(seconds: 10));
     }
-    logger.info("$mode|$caller|------------------ENDED----------------");
+    logger.info("$caller|------------------ENDED----------------");
   }
 
   // to sync, one must have masterKey with

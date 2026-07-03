@@ -60,8 +60,7 @@ class ForegroundTaskHandler extends TaskHandler {
           notificationButtons: [], notificationText: "In Progress...");
       await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
       await initializeDependencies(mode: ExecutionMode.appBackground);
-      await SyncUtils().reconFolders(
-          inBackground: false, awaited: true, caller: "ForegroundService");
+      await SyncUtils().reconFolders(caller: "ForegroundService");
       FlutterForegroundTask.updateService(
           notificationText: 'Tap the button below to sync',
           notificationButtons: [

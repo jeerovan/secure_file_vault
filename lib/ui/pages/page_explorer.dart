@@ -239,7 +239,7 @@ class _FilePaneState extends State<FilePane> {
     setState(() {
       _syncInProgress = true;
     });
-    await SyncUtils().reconFolders(awaited: true, caller: "Explorer");
+    await SyncUtils().reconFolders(caller: "Explorer");
     _loadFiles();
   }
 
@@ -404,7 +404,7 @@ class _FilePaneState extends State<FilePane> {
       }
     }
     if (hasTasks) {
-      TaskManager.init(inBackground: false);
+      TaskManager.init();
     }
     _cancelMultiSelect();
   }

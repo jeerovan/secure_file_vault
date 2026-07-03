@@ -37,8 +37,6 @@ class TaskManager {
 
   // State trackers
   bool _isDispatching = false;
-  bool _inBackground = false;
-  DateTime _startTime = DateTime.now();
 
   // Completer to keep background isolate alive
   Completer<void>? _syncCompleter;
@@ -49,13 +47,9 @@ class TaskManager {
   // Store the last 5 task durations to calculate a responsive rolling average
   final Queue<int> _recentTaskDurationsMs = Queue<int>();
   static const int _maxHistoryLength = 5;
-  // Default estimate for the very first task (e.g., 5 seconds)
-  static const int _defaultTaskEstimateMs = 5000;
-  // Safety buffer multiplier (e.g., 1.5 = 50% buffer) to account for network fluctuations
-  static const double _safetyBuffer = 1.5;
 
   /// Static function "init" to start the process.
-  static Future<void> init({bool inBackground = false}) async {
+  static Future<void> init() async {
     if (_instance._activeTaskIds.isNotEmpty || _instance._isDispatching) {
       logger.info("Already running.");
       // Return the existing future if it's already processing to prevent premature exit
@@ -67,46 +61,14 @@ class TaskManager {
     }
 
     _instance._syncCompleter = Completer<void>();
-    _instance.setStartTime();
 
     // Clear history on a fresh start for accurate session estimates
     _instance._recentTaskDurationsMs.clear();
 
     // Fire and forget start, but block init() using the completer
-    _instance.start(inBackground);
+    _instance.start();
 
     return _instance._syncCompleter!.future;
-  }
-
-  void setStartTime() {
-    _startTime = DateTime.now();
-  }
-
-  /// Calculates if the next task can safely complete within remaining OS background limits
-  bool _hasSufficientTimeForNextTask() {
-    if (!_inBackground) return true;
-
-    final int elapsedMs = DateTime.now().difference(_startTime).inMilliseconds;
-    // 30 seconds for iOS, 3 minutes for Android
-    final int maxAllowedMs = Platform.isIOS ? 30000 : 180000;
-    final int remainingMs = maxAllowedMs - elapsedMs;
-
-    // Calculate rolling average
-    int averageTaskMs = _defaultTaskEstimateMs;
-    if (_recentTaskDurationsMs.isNotEmpty) {
-      final sum = _recentTaskDurationsMs.reduce((a, b) => a + b);
-      averageTaskMs = (sum / _recentTaskDurationsMs.length).round();
-    }
-
-    // Apply safety buffer to our estimate
-    final int estimatedNextTaskMs = (averageTaskMs * _safetyBuffer).round();
-
-    logger.info(
-      'Background check: Remaining time = ${remainingMs / 1000}s, '
-      'Estimated next task = ${estimatedNextTaskMs / 1000}s',
-    );
-
-    return remainingMs >= estimatedNextTaskMs;
   }
 
   /// Updates the rolling average history with a newly completed task's duration
@@ -118,12 +80,11 @@ class TaskManager {
   }
 
   /// Dispatcher function
-  Future<void> start(bool isBackground) async {
+  Future<void> start() async {
     // Maintains running state in a flag to ignore start request if already running
     if (_isDispatching) return;
 
     _isDispatching = true;
-    _inBackground = isBackground;
 
     try {
       bool hasInternet = await InternetConnection().hasInternetAccess;
@@ -133,16 +94,10 @@ class TaskManager {
       }
 
       // Concurrency limits
-      final int maxConcurrentProcesses = _inBackground ? 1 : 3;
+      final int maxConcurrentProcesses = 3;
       bool tasksDispatched = false;
 
       while (_activeTaskIds.length < maxConcurrentProcesses) {
-        if (!_hasSufficientTimeForNextTask()) {
-          logger.info(
-              "Insufficient background time remaining to safely start a new task. Stopping queue.");
-          break; // Break the while loop; don't dispatch more tasks
-        }
-
         // Fetches pending upload identifier from another function
         final String? pendingTaskId =
             await ModelItemTask.fetchPendingTask(_activeTaskIds);
@@ -198,27 +153,11 @@ class TaskManager {
           DateTime.now().difference(taskStartTime).inMilliseconds;
       _recordTaskDuration(individualTaskMs);
 
-      final Duration totalSessionDuration =
-          DateTime.now().difference(_startTime);
-      logger.info('Task $taskId finished in ${individualTaskMs / 1000}s. '
-          'Total session time: ${totalSessionDuration.inSeconds}s');
-      if (_inBackground) {
-        if (Platform.isIOS && totalSessionDuration.inSeconds >= 30) {
-          logger.info(
-              'Background process exceeded 30 second limit. Ending queue.');
-          queueNext = false;
-        } else if (Platform.isAndroid && totalSessionDuration.inMinutes >= 3) {
-          logger.info(
-              'Background process exceeded 3 minute limit. Ending queue.');
-          queueNext = false;
-        }
-      }
-
       // Call dispatcher function to enqueue new task process
       if (queueNext) {
         // check jwtToken before requests
         await refreshNeonAuth();
-        start(_inBackground);
+        start();
       } else {
         // If we shouldn't queue next, verify if all remaining concurrent tasks are also done
         _checkCompletion();
