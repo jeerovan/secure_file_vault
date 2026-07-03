@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:file_vault_bb/main.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/service_logger.dart';
 import '../../ui/common_widgets.dart';
 
 class StoragePermissionPage extends StatefulWidget {
@@ -16,14 +17,16 @@ class StoragePermissionPage extends StatefulWidget {
 }
 
 class _StoragePermissionPageState extends State<StoragePermissionPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   bool _isLoading = false;
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
+  final AppLogger logger = AppLogger(prefixes: ["PageStoragePermission"]);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -35,9 +38,28 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    logger.info("App State:$state");
+    if (Platform.isIOS || Platform.isAndroid) {
+      if (state == AppLifecycleState.resumed) {
+        _checkPermission();
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pulseController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkPermission() async {
+    PermissionStatus storagePermission = await getStoragePermissionStatus();
+    if (mounted && storagePermission.isGranted) {
+      // Transition to the next step in setup
+      await context.read<AppSetupState>().recheckStatus();
+    }
   }
 
   Future<void> _requestPermission() async {
@@ -62,10 +84,8 @@ class _StoragePermissionPageState extends State<StoragePermissionPage>
 
       if (status.isGranted) {
         await context.read<AppSetupState>().recheckStatus();
-      } else if (status.isPermanentlyDenied) {
-        _showSettingsDialog();
       } else {
-        _showDeniedMessage();
+        _showSettingsDialog();
       }
     } catch (e) {
       logger.error("Permission Error", error: e);

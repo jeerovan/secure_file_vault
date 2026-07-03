@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/services/service_foreground.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/model_file.dart';
@@ -87,13 +87,21 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    NotificationPermission notificationPermission =
-        await getNotificationPermissionStatus();
-    if (notificationPermission != NotificationPermission.granted) {
-      logger.info("Notification Permission");
-      _currentStep = SetupStep.notificationPermission;
-      notifyListeners();
-      return;
+    PermissionStatus notificationPermission =
+        await Permission.notification.status;
+    bool quickSyncRequired = ModelSetting.get(
+            AppString.syncWithNotification.string,
+            defaultValue: "yes") ==
+        "yes";
+    if (quickSyncRequired) {
+      if (!notificationPermission.isGranted) {
+        logger.info("Notification Permission");
+        _currentStep = SetupStep.notificationPermission;
+        notifyListeners();
+        return;
+      } else {
+        ServiceForeground.instance.start();
+      }
     }
 
     // All setup complete

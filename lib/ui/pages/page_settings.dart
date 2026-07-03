@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:file_vault_bb/services/service_events.dart';
+import 'package:file_vault_bb/services/service_foreground.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -35,6 +36,10 @@ class SettingsPageState extends State<SettingsPage> {
   bool loggingEnabled =
       ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
           "yes";
+  bool quickSyncEnabled = ModelSetting.get(
+          AppString.syncWithNotification.string,
+          defaultValue: "yes") ==
+      "yes";
   late bool isDarkMode;
   String? emailId = "";
 
@@ -85,6 +90,21 @@ class SettingsPageState extends State<SettingsPage> {
     if (mounted) {
       setState(() {
         loggingEnabled = enable;
+      });
+    }
+  }
+
+  Future<void> setQuickSyncWithNotification(bool enable) async {
+    if (enable) {
+      await ModelSetting.set(AppString.syncWithNotification.string, "yes");
+      ServiceForeground.instance.start();
+    } else {
+      await ModelSetting.set(AppString.syncWithNotification.string, "no");
+      ServiceForeground.instance.stop();
+    }
+    if (mounted) {
+      setState(() {
+        quickSyncEnabled = enable;
       });
     }
   }
@@ -370,6 +390,19 @@ class SettingsPageState extends State<SettingsPage> {
                       ),
                     ),
                     onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
+                  ),
+                ),
+                ListTile(
+                  leading:
+                      const Icon(LucideIcons.refreshCcw, color: Colors.grey),
+                  title: Text("Quick Sync Notification"),
+                  horizontalTitleGap: 24.0,
+                  trailing: Transform.scale(
+                    scale: 0.7,
+                    child: Switch(
+                      value: quickSyncEnabled,
+                      onChanged: setQuickSyncWithNotification,
+                    ),
                   ),
                 ),
                 ListTile(

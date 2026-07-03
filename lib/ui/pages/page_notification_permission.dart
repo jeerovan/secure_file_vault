@@ -1,11 +1,12 @@
-import 'package:file_vault_bb/utils/common.dart';
+import 'dart:io';
+
+import 'package:file_vault_bb/services/service_foreground.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../../services/service_logger.dart';
 import '../../ui/common_widgets.dart';
-import 'package:file_vault_bb/main.dart';
 
 class NotificationPermissionPage extends StatefulWidget {
   const NotificationPermissionPage({super.key});
@@ -16,14 +17,16 @@ class NotificationPermissionPage extends StatefulWidget {
 }
 
 class _NotificationPermissionPageState extends State<NotificationPermissionPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   bool _isLoading = false;
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
+  final AppLogger logger = AppLogger(prefixes: ["PageNotification"]);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -32,25 +35,31 @@ class _NotificationPermissionPageState extends State<NotificationPermissionPage>
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Request permissions and initialize the service.
-      _checkPermission();
-    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    logger.info("App State:$state");
+    if (Platform.isIOS || Platform.isAndroid) {
+      if (state == AppLifecycleState.resumed) {
+        _checkPermission();
+      }
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pulseController.dispose();
     super.dispose();
   }
 
   Future<void> _checkPermission() async {
-    NotificationPermission notificationPermission =
-        await getNotificationPermissionStatus();
-    if (!mounted) return;
-    if (notificationPermission == NotificationPermission.granted) {
-      // Transition to the next step in setup
-      await context.read<AppSetupState>().showExplorer();
+    PermissionStatus notificationPermission =
+        await Permission.notification.status;
+    if (mounted && notificationPermission.isGranted) {
+      await context.read<AppSetupState>().recheckStatus();
+      // We start the notification service while rechecking
     }
   }
 
@@ -58,19 +67,16 @@ class _NotificationPermissionPageState extends State<NotificationPermissionPage>
     setState(() => _isLoading = true);
 
     try {
-      NotificationPermission notificationPermission =
-          await FlutterForegroundTask.requestNotificationPermission();
-
+      PermissionStatus notificationPermission =
+          await Permission.notification.request();
       if (!mounted) return;
 
-      if (notificationPermission == NotificationPermission.granted) {
+      if (notificationPermission.isGranted) {
+        ServiceForeground.instance.start();
         // Transition to the next step in setup
-        await context.read<AppSetupState>().showExplorer();
-      } else if (notificationPermission ==
-          NotificationPermission.permanently_denied) {
-        _showSettingsDialog();
+        await context.read<AppSetupState>().recheckStatus();
       } else {
-        _showDeniedMessage();
+        _showSettingsDialog();
       }
     } catch (e) {
       logger.error("Notification Permission Error", error: e);

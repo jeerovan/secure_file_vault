@@ -1,4 +1,3 @@
-import 'package:file_vault_bb/services/service_foreground.dart';
 import 'package:flutter_foreground_task/task_handler.dart';
 
 import '../services/service_logger.dart';
@@ -15,15 +14,6 @@ class ForegroundTaskHandler extends TaskHandler {
     logger.info(
       "OnStart: $starter",
     );
-    try {
-      await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
-      await initializeDependencies(mode: ExecutionMode.appBackground);
-      await SyncUtils().reconFolders(
-          inBackground: false, awaited: true, caller: "ForegroundService");
-      ServiceForeground.instance.stop();
-    } catch (e, s) {
-      logger.error("Sync failed", error: e, stackTrace: s);
-    }
   }
 
   // Called based on the eventAction set in ForegroundTaskOptions.
@@ -48,6 +38,7 @@ class ForegroundTaskHandler extends TaskHandler {
   @override
   void onNotificationButtonPressed(String id) {
     logger.info('onNotificationButtonPressed: $id');
+    startSyncTask();
   }
 
   // Called when the notification itself is pressed.
@@ -60,5 +51,16 @@ class ForegroundTaskHandler extends TaskHandler {
   @override
   void onNotificationDismissed() {
     logger.info('onNotificationDismissed');
+  }
+
+  Future<void> startSyncTask() async {
+    try {
+      await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
+      await initializeDependencies(mode: ExecutionMode.appBackground);
+      await SyncUtils().reconFolders(
+          inBackground: false, awaited: true, caller: "ForegroundService");
+    } catch (e, s) {
+      logger.error("Sync failed", error: e, stackTrace: s);
+    }
   }
 }

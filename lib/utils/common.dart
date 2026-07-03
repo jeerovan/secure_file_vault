@@ -11,7 +11,6 @@ import 'package:file_vault_bb/utils/utils_crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:intl/intl.dart';
 import '../utils/enums.dart';
 import '../models/model_setting.dart';
@@ -690,12 +689,6 @@ Future<PermissionStatus> getStoragePermissionStatus() async {
     // Default fallback
     return PermissionStatus.granted;
   }
-}
-
-Future<NotificationPermission> getNotificationPermissionStatus() async {
-  final NotificationPermission notificationPermission =
-      await FlutterForegroundTask.checkNotificationPermission();
-  return notificationPermission;
 }
 
 Future<void> initializeDependencies(

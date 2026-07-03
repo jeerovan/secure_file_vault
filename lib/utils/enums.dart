@@ -96,10 +96,9 @@ enum AppString {
   jwtToken,
   sessionCookie,
 
-  // Recon
-  lastReconRunningAt,
-
   // Sync
+  lastReconRunningAt,
+  syncWithNotification,
   encryptionKeyType,
   hasEncryptionKeys,
   lastSyncRunningAt,
@@ -151,6 +150,8 @@ extension AppStringExtension on AppString {
         return "file_hash_key";
       case AppString.lastReconRunningAt:
         return "last_recon_running_at";
+      case AppString.syncWithNotification:
+        return "sync_with_notification";
       case AppString.theme:
         return "theme";
       case AppString.onboarding:

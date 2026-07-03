@@ -30,16 +30,20 @@ class ServiceForeground {
   }
 
   Future<void> start() async {
-    if (!await FlutterForegroundTask.isRunningService) {
+    if (await FlutterForegroundTask.isRunningService) {
+      await FlutterForegroundTask.restartService();
+    } else {
       logger.info("Starting");
       final ServiceRequestResult result =
           await FlutterForegroundTask.startService(
-        serviceTypes: [ForegroundServiceTypes.dataSync],
-        serviceId: 300,
-        notificationTitle: 'File Sync Service',
-        notificationText: 'Checks and uploads remaining files to cloud',
-        callback: startForegroundTask,
-      );
+              serviceTypes: [ForegroundServiceTypes.dataSync],
+              serviceId: 300,
+              notificationTitle: 'File Sync Service',
+              notificationText: 'Tap the button below to sync',
+              callback: startForegroundTask,
+              notificationButtons: [
+                const NotificationButton(id: 'sync', text: 'Sync Now')
+              ]);
 
       if (result is ServiceRequestFailure) {
         logger.error("Failed to start", error: result.error);
