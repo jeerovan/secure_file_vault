@@ -134,7 +134,7 @@ class SyncUtils {
     // Drop the request if a sync is already actively running
     int startedAt = DateTime.now().millisecondsSinceEpoch;
     String lastRunningAtString =
-        ModelSetting.get(AppString.lastSyncRunningAt.string);
+        await ModelState.get(AppString.lastSyncRunningAt.string);
     int? lastRunningAt =
         lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
     if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
@@ -142,6 +142,9 @@ class SyncUtils {
           .warning("Sync already in progress, skipping in $mode from $caller.");
       return;
     }
+    // update state immediately
+    await ModelState.set(AppString.lastSyncRunningAt.string,
+        DateTime.now().millisecondsSinceEpoch.toString());
     // set timer to update running state every seconds
     _syncProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
       EventStream().publish(AppEvent(
@@ -149,7 +152,7 @@ class SyncUtils {
           id: "",
           key: EventKey.running,
           value: null));
-      await ModelSetting.set(AppString.lastSyncRunningAt.string,
+      await ModelState.set(AppString.lastSyncRunningAt.string,
           DateTime.now().millisecondsSinceEpoch.toString());
     });
 
