@@ -1,3 +1,4 @@
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_foreground_task/task_handler.dart';
 
 import '../services/service_logger.dart';
@@ -55,10 +56,17 @@ class ForegroundTaskHandler extends TaskHandler {
 
   Future<void> startSyncTask() async {
     try {
+      FlutterForegroundTask.updateService(
+          notificationButtons: [], notificationText: "In Progress...");
       await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
       await initializeDependencies(mode: ExecutionMode.appBackground);
       await SyncUtils().reconFolders(
           inBackground: false, awaited: true, caller: "ForegroundService");
+      FlutterForegroundTask.updateService(
+          notificationText: 'Tap the button below to sync',
+          notificationButtons: [
+            const NotificationButton(id: 'sync', text: 'Sync Now')
+          ]);
     } catch (e, s) {
       logger.error("Sync failed", error: e, stackTrace: s);
     }

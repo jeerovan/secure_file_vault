@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_auth.dart';
+import 'package:file_vault_bb/services/service_foreground.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../models/model_change.dart';
@@ -282,6 +283,8 @@ class SyncUtils {
             }
           }
         }
+        // Stop foreground service
+        ServiceForeground.instance.stop();
         await storage.clear();
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();
