@@ -42,7 +42,7 @@ class SyncUtils {
   static final logger = AppLogger(prefixes: ["Sync"]);
 
   void startAutoSync() {
-    final minutes = isDebugEnabled ? 2 : 10;
+    final minutes = isDebugEnabled ? 5 : 15;
     _foregroundSyncTimer?.cancel();
     _foregroundSyncTimer = Timer.periodic(Duration(minutes: minutes), (timer) {
       reconFolders(inBackground: false, caller: "AutoSync");

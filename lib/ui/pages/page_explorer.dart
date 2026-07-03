@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/ui/pages/page_logs.dart';
 import 'package:file_vault_bb/ui/pages/page_sqlite.dart';
@@ -80,7 +82,10 @@ class _FilePaneState extends State<FilePane> {
       ValueNotifier({});
   final ValueNotifier<bool> _isMultiSelectNotifier = ValueNotifier(false);
 
+  Timer? _reloadTimer;
+
   ModelItem? currentItem;
+  ModelItem? previousItem;
   bool _isLoading = false;
   bool _isLocalPath = false;
   bool _isDeviceRoot = false;
@@ -98,10 +103,24 @@ class _FilePaneState extends State<FilePane> {
     super.initState();
     EventStream().notifier.addListener(_handleAppEvents);
     _loadFiles();
+    _startReloadTimer();
+  }
+
+  void _startReloadTimer() {
+    _reloadTimer?.cancel();
+    _reloadTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _loadFiles(isSilent: true);
+    });
+  }
+
+  void _stopReloadTimer() {
+    _reloadTimer?.cancel();
+    _reloadTimer = null;
   }
 
   @override
   void dispose() {
+    _stopReloadTimer();
     EventStream().notifier.removeListener(_handleAppEvents);
     _breadcrumbController.dispose();
     _itemsNotifier.dispose();
@@ -167,7 +186,7 @@ class _FilePaneState extends State<FilePane> {
     }
   }
 
-  Future<void> _loadFiles() async {
+  Future<void> _loadFiles({bool isSilent = false}) async {
     if (currentItem == null) {
       deviceHash = await getDeviceHash();
       ModelItem? rootFife = await ModelItem.get("fife");
@@ -181,16 +200,33 @@ class _FilePaneState extends State<FilePane> {
       return;
     }
 
-    if (mounted) {
+    if (!isSilent && mounted) {
       setState(() => _isLoading = true);
     }
+
     final items = await ModelItem.getDisplayItems(currentItem);
     _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
     String deviceRootHash = await getDeviceHash();
     _isDeviceRoot = currentItem?.id == deviceRootHash;
+
     if (mounted) {
-      setState(() {
+      if (currentItem != previousItem) {
+        // Folder changed: full update
         _itemsNotifier.value = items;
+        previousItem = currentItem;
+      } else {
+        // Same folder: apply atomic changes
+        final currentList = _itemsNotifier.value;
+        final currentIds = currentList.map((e) => e.id).toSet();
+        final newIds = items.map((e) => e.id).toSet();
+
+        if (currentIds.length != newIds.length ||
+            currentIds.any((id) => !newIds.contains(id))) {
+          _itemsNotifier.value = items;
+        }
+      }
+
+      setState(() {
         _isLoading = false;
       });
     }
@@ -458,11 +494,12 @@ class _FilePaneState extends State<FilePane> {
                   tooltip: AppLocalizations.of(context)!.info,
                   onPressed: showInfo,
                 ),
-              IconButton(
-                icon: const Icon(LucideIcons.downloadCloud),
-                tooltip: AppLocalizations.of(context)!.download,
-                onPressed: downloadItems,
-              ),
+              if (!simulateTesting())
+                IconButton(
+                  icon: const Icon(LucideIcons.downloadCloud),
+                  tooltip: AppLocalizations.of(context)!.download,
+                  onPressed: downloadItems,
+                ),
               IconButton(
                 icon: const Icon(LucideIcons.archive),
                 tooltip: AppLocalizations.of(context)!.archive,

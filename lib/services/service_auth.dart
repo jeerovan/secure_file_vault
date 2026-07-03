@@ -11,8 +11,6 @@ import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:cookie_jar/cookie_jar.dart';
 import 'package:path_provider/path_provider.dart';
 
-Completer<void>? _refreshJwtCompleter;
-
 class NeonAuth {
   late Dio _dio;
   late PersistCookieJar _cookieJar;
@@ -21,6 +19,7 @@ class NeonAuth {
   final logger = AppLogger(prefixes: ["NeonAuth"]);
 
   final Completer<void> _initCompleter = Completer<void>();
+  Completer<void>? _refreshJwtCompleter;
   bool _isInitialized = false;
 
   NeonAuth({SecureStorage? storage})
@@ -189,7 +188,8 @@ class NeonAuth {
 
       try {
         final cookie =
-            Cookie('__Secure-neon-auth.session_token', oldCookieValue);
+            Cookie('__Secure-neon-auth.session_token', oldCookieValue)
+              ..secure = true;
 
         final uri = Uri.parse(_neonAuthUrl);
         await _cookieJar.saveFromResponse(uri, [cookie]);
