@@ -261,7 +261,6 @@ class SyncUtils {
     String? userId = await getSignedInUserId();
     if (userId != null) {
       String deviceUuid = await getDeviceUuid();
-      SecureStorage storage = SecureStorage();
       try {
         if (!simulateTesting()) {
           if (deviceUuid.isNotEmpty) {
@@ -277,36 +276,45 @@ class SyncUtils {
           if (!success) {
             return false;
           }
-          if (revenueCatSupported) {
-            final isAnonymous = await Purchases.isAnonymous;
-            if (!isAnonymous) {
-              await Purchases.logOut();
-            }
-          }
         }
-        if (Platform.isAndroid || Platform.isIOS) {
-          // Stop foreground service
-          ServiceForeground.instance.stop();
-        }
-        await storage.clear();
-        final dbHelper = StorageSqlite.instance;
-        await dbHelper.clearDb();
-        String locale = ModelSetting.get(AppString.locale.string);
-        String fcmToken = ModelSetting.get(AppString.fcmId.string);
-        ModelSetting.clear();
-        await clearFiFeDirectory();
-        // keep locale
-        await ModelSetting.set(AppString.locale.string, locale);
-        await ModelSetting.set(AppString.fcmId.string, fcmToken);
-        await ModelSetting.set(AppString.onboarding.string, "yes");
-        EventStream().publish(AppEvent(
-            type: EventType.system, id: "signout", key: EventKey.signout));
+        await resetDevice();
         success = true;
       } catch (e, s) {
         logger.error("signout", error: e, stackTrace: s);
       }
     }
     return success;
+  }
+
+  static Future<void> resetDevice() async {
+    SecureStorage storage = SecureStorage();
+    try {
+      if (!simulateTesting() && revenueCatSupported) {
+        final isAnonymous = await Purchases.isAnonymous;
+        if (!isAnonymous) {
+          await Purchases.logOut();
+        }
+      }
+      if (Platform.isAndroid || Platform.isIOS) {
+        // Stop foreground service
+        ServiceForeground.instance.stop();
+      }
+      await storage.clear();
+      final dbHelper = StorageSqlite.instance;
+      await dbHelper.clearDb();
+      String locale = ModelSetting.get(AppString.locale.string);
+      String fcmToken = ModelSetting.get(AppString.fcmId.string);
+      ModelSetting.clear();
+      await clearFiFeDirectory();
+      // keep locale
+      await ModelSetting.set(AppString.locale.string, locale);
+      await ModelSetting.set(AppString.fcmId.string, fcmToken);
+      await ModelSetting.set(AppString.onboarding.string, "yes");
+      EventStream().publish(AppEvent(
+          type: EventType.system, id: "signout", key: EventKey.signout));
+    } catch (e, s) {
+      logger.error("Resetting device", error: e, stackTrace: s);
+    }
   }
 
   static Future<void> logChangeToPush(Map<String, dynamic> map,

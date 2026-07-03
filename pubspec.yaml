@@ -64,6 +64,7 @@ dependencies:
   flutter_foreground_task: ^9.2.2
   dio: ^5.10.0
   dio_cookie_manager: ^3.4.0
+  cookie_jar: ^4.0.9
 
 dev_dependencies:
   flutter_test:

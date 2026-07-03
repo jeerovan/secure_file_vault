@@ -88,7 +88,7 @@ class _PageSigninState extends State<PageSignin> {
       } else {
         final response = await NeonAuth().sendOTP(email);
         if (response.statusCode != 200) {
-          throw Exception('Failed to send OTP: ${response.body}');
+          throw Exception('Failed to send OTP: ${response.data.toString()}');
         }
       }
 
