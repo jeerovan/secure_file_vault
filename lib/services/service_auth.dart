@@ -32,6 +32,16 @@ class NeonAuth {
     }
   }
 
+  String? _getHeader(Map<String, String> headers, String key) {
+    final lowerKey = key.toLowerCase();
+    for (var entry in headers.entries) {
+      if (entry.key.toLowerCase() == lowerKey) {
+        return entry.value;
+      }
+    }
+    return null;
+  }
+
   Future<http.Response> sendOTP(String email) async {
     Uri otpUrl = Uri.parse('$_neonAuthUrl/email-otp/send-verification-otp');
     final response = await _http.post(
@@ -59,7 +69,7 @@ class NeonAuth {
     String? userId;
     if (response.statusCode == 200) {
       // Extract the full cookie string from the header
-      final rawCookie = response.headers['set-cookie'];
+      final rawCookie = _getHeader(response.headers, 'set-cookie');
       if (rawCookie != null) {
         // Parse out the __Secure-neon-auth.session_token
         final cookieMatch = RegExp(r'__Secure-neon-auth\.session_token=([^;]+)')
@@ -135,7 +145,7 @@ class NeonAuth {
 
       final sessionCookie =
           await _storage.read(key: AppString.sessionCookie.string);
-
+      logger.debug("Neon Session Cookie: $sessionCookie");
       if (sessionCookie == null) {
         logger.error("Session cookie not found while refreshing JWT.");
         await SyncUtils.signout();
@@ -145,13 +155,16 @@ class NeonAuth {
       final response = await _http.get(
         Uri.parse('$_neonAuthUrl/get-session'),
         headers: {
-          'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
-          'Content-Type': 'application/json'
+          'Cookie': '__Secure-neon-auth.session_token=$sessionCookie;',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
       ).timeout(const Duration(seconds: 30)); // Prevents hanging network calls
 
       if (response.statusCode == 200) {
-        final jwt = response.headers['set-auth-jwt'];
+        logger.debug(
+            "Neon response headers: ${response.headers.toString()}, body:${response.body}");
+        final jwt = _getHeader(response.headers, 'set-auth-jwt');
         if (jwt != null && jwt.isNotEmpty) {
           await _storage.write(key: AppString.jwtToken.string, value: jwt);
           logger.info("Successfully refreshed jwtToken.");

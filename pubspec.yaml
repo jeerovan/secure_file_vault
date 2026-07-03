@@ -62,6 +62,8 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   purchases_flutter: ^10.0.1
   flutter_foreground_task: ^9.2.2
+  dio: ^5.10.0
+  dio_cookie_manager: ^3.4.0
 
 dev_dependencies:
   flutter_test:

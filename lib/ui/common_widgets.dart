@@ -86,20 +86,22 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    PermissionStatus notificationPermission =
-        await Permission.notification.status;
-    bool quickSyncRequired = ModelSetting.get(
-            AppString.syncWithNotification.string,
-            defaultValue: "yes") ==
-        "yes";
-    if (quickSyncRequired) {
-      if (!notificationPermission.isGranted) {
-        logger.info("Notification Permission");
-        _currentStep = SetupStep.notificationPermission;
-        notifyListeners();
-        return;
-      } else {
-        ServiceForeground.instance.start();
+    if (Platform.isAndroid || Platform.isIOS) {
+      PermissionStatus notificationPermission =
+          await Permission.notification.status;
+      bool quickSyncRequired = ModelSetting.get(
+              AppString.syncWithNotification.string,
+              defaultValue: "yes") ==
+          "yes";
+      if (quickSyncRequired) {
+        if (!notificationPermission.isGranted) {
+          logger.info("Notification Permission");
+          _currentStep = SetupStep.notificationPermission;
+          notifyListeners();
+          return;
+        } else {
+          ServiceForeground.instance.start();
+        }
       }
     }
 

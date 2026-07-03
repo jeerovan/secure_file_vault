@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
@@ -283,8 +284,10 @@ class SyncUtils {
             }
           }
         }
-        // Stop foreground service
-        ServiceForeground.instance.stop();
+        if (Platform.isAndroid || Platform.isIOS) {
+          // Stop foreground service
+          ServiceForeground.instance.stop();
+        }
         await storage.clear();
         final dbHelper = StorageSqlite.instance;
         await dbHelper.clearDb();

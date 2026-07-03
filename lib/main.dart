@@ -42,7 +42,9 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await StorageSqlite.initialize(mode: ExecutionMode.appForeground);
   await initializeInParallel();
-  ServiceForeground.instance.init();
+  if (Platform.isIOS || Platform.isAndroid) {
+    ServiceForeground.instance.init();
+  }
   SecureStorage prefs = SecureStorage();
   runApp(
     MultiProvider(

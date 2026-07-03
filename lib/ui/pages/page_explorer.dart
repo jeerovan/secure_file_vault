@@ -731,15 +731,12 @@ class _FilePaneState extends State<FilePane> {
               stream: RepositoryItemTask.instance.getTaskSnapshotStream(),
               builder: (context, snapshot) {
                 final taskMap = snapshot.data ?? {};
-                logger.debug("TaskMap: $taskMap");
                 return ListView.builder(
                   reverse: true,
                   itemCount: items.length,
                   itemBuilder: (context, index) {
                     final item = items[index];
                     TaskStatus? taskStatus = taskMap[item.id];
-                    logger.debug(
-                        "id: ${item.id}, task: ${taskStatus?.task}, progress: ${taskStatus?.progress}");
                     return FileListItem(
                       key: ValueKey(item.id),
                       item: item,

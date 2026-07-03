@@ -392,19 +392,20 @@ class SettingsPageState extends State<SettingsPage> {
                     onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
                   ),
                 ),
-                ListTile(
-                  leading:
-                      const Icon(LucideIcons.refreshCcw, color: Colors.grey),
-                  title: Text("Quick Sync Notification"),
-                  horizontalTitleGap: 24.0,
-                  trailing: Transform.scale(
-                    scale: 0.7,
-                    child: Switch(
-                      value: quickSyncEnabled,
-                      onChanged: setQuickSyncWithNotification,
+                if (Platform.isAndroid || Platform.isIOS)
+                  ListTile(
+                    leading:
+                        const Icon(LucideIcons.refreshCcw, color: Colors.grey),
+                    title: Text("Quick Sync Notification"),
+                    horizontalTitleGap: 24.0,
+                    trailing: Transform.scale(
+                      scale: 0.7,
+                      child: Switch(
+                        value: quickSyncEnabled,
+                        onChanged: setQuickSyncWithNotification,
+                      ),
                     ),
                   ),
-                ),
                 ListTile(
                   leading: const Icon(LucideIcons.list, color: Colors.grey),
                   title: Text(loc.logging), // Changed from "Logging"
