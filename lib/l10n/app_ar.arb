@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "للحفاظ على مزامنة ملفاتك وتقديم تحديثات الحالة في الوقت الفعلي في الخلفية، نحتاج إلى إذن لإظهار الإشعارات.",
+  "notificationPermissionPageDescription": "لإجراء مزامنة سريعة ورفع ملفاتك في الخلفية من لوحة الإشعارات، نحتاج إلى إذن لعرض الإشعارات. يمكنك تعطيله في أي وقت من الإعدادات.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "الإشعارات مطلوبة لمراقبة المزامنة في الخلفية. يرجى تفعيلها في إعدادات النظام لضمان تحديث بياناتك دائمًا.",
+  "notificationPermissionSettingsDescription": "الإشعارات مطلوبة لتوفير ميزة المزامنة السريعة عبر لوحة الإشعارات. يُرجى تفعيلها من إعدادات النظام لضمان رفع جميع بياناتك.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

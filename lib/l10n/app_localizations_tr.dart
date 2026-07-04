@@ -585,14 +585,14 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'Dosyalarınızın senkronize kalmasını sağlamak ve arka planda gerçek zamanlı durum güncellemeleri sunmak için bildirimleri gösterme iznine ihtiyacımız var.';
+      'Dosyalarınızı bildirim paneli üzerinden arka planda hızlıca senkronize edip yükleyebilmek için bildirim gösterme iznine ihtiyacımız var. Bu izni istediğiniz zaman ayarlardan kapatabilirsiniz.';
 
   @override
   String get notificationPermissionGrantButton => 'Bildirimlere İzin Ver';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'Arka plan senkronizasyonunu izlemek için bildirimler gereklidir. Verilerinizin her zaman güncel olduğundan emin olmak için lütfen sistem ayarlarından bildirimleri etkinleştirin.';
+      'Bildirim panelindeki hızlı senkronizasyon özelliğinin çalışması için bildirimler gereklidir. Tüm verilerinizin yüklendiğinden emin olmak için lütfen sistem ayarlarından bildirimleri etkinleştirin.';
 
   @override
   String requiresAppPro(String appName) {

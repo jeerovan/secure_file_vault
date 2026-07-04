@@ -573,14 +573,14 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'ファイルの同期を維持し、バックグラウンドでリアルタイムのステータス更新を提供するために、通知の許可が必要です。';
+      '通知パネルからバックグラウンドでファイルをすばやく同期・アップロードするために, 通知を表示する権限が必要です。この権限は設定からいつでも無効にできます。';
 
   @override
   String get notificationPermissionGrantButton => '通知を許可する';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'バックグラウンド同期を監視するには通知が必要です。データが常に最新の状態に保たれるよう、システム設定で通知を有効にしてください。';
+      '通知パネルからのクイック同期機能を利用するには通知が必要です。すべてのデータを確実にアップロードするため、システム設定で通知を有効にしてください。';
 
   @override
   String requiresAppPro(String appName) {

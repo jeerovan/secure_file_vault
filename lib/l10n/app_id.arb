@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "Untuk menjaga file Anda tetap sinkron dan memberikan pembaruan status waktu nyata di latar belakang, kami memerlukan izin untuk menampilkan notifikasi.",
+  "notificationPermissionPageDescription": "Agar file Anda dapat disinkronkan dan diunggah dengan cepat di latar belakang melalui panel notifikasi, kami memerlukan izin untuk menampilkan notifikasi. Anda dapat menonaktifkannya kapan saja melalui pengaturan.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "Notifikasi diperlukan untuk memantau sinkronisasi latar belakang. Silakan aktifkan di pengaturan sistem untuk memastikan data Anda selalu mutakhir.",
+  "notificationPermissionSettingsDescription": "Notifikasi diperlukan agar fitur sinkronisasi cepat melalui panel notifikasi dapat digunakan. Aktifkan di pengaturan sistem untuk memastikan semua data Anda berhasil diunggah.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "Um deine Dateien synchron zu halten und Status-Updates in Echtzeit im Hintergrund bereitzustellen, benötigen wir die Erlaubnis, Benachrichtigungen anzuzeigen.",
+  "notificationPermissionPageDescription": "Damit deine Dateien schnell über das Benachrichtigungsfeld im Hintergrund synchronisiert und hochgeladen werden können, benötigen wir die Berechtigung, Benachrichtigungen anzuzeigen. Du kannst sie jederzeit in den Einstellungen deaktivieren.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "Benachrichtigungen sind erforderlich, um die Hintergrundsynchronisierung zu überwachen. Bitte aktiviere sie in den Systemeinstellungen, um sicherzustellen, dass deine Daten immer aktuell sind.",
+  "notificationPermissionSettingsDescription": "Benachrichtigungen sind erforderlich, damit die Schnellsynchronisierung über das Benachrichtigungsfeld funktioniert. Bitte aktiviere sie in den Systemeinstellungen, damit alle deine Daten hochgeladen werden.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

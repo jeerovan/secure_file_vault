@@ -591,14 +591,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'Para mantener tus archivos sincronizados y proporcionar actualizaciones de estado en tiempo real en segundo plano, necesitamos permiso para mostrar notificaciones.';
+      'Para sincronizar y subir tus archivos rápidamente en segundo plano desde el panel de notificaciones, necesitamos permiso para mostrar notificaciones. Puedes desactivarlo en cualquier momento desde la configuración.';
 
   @override
   String get notificationPermissionGrantButton => 'Permitir Notificaciones';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'Las notificaciones son necesarias para supervisar la sincronización en segundo plano. Por favor, actívalas en los ajustes del sistema para asegurar que tus datos estén siempre actualizados.';
+      'Las notificaciones son necesarias para ofrecer la sincronización rápida desde el panel de notificaciones. Actívalas en la configuración del sistema para asegurarte de que todos tus datos se suban correctamente.';
 
   @override
   String requiresAppPro(String appName) {

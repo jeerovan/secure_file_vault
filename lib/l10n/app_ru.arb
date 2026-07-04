@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "Чтобы ваши файлы оставались синхронизированными и вы получали обновления статуса в реальном времени в фоновом режиме, нам нужно разрешение на показ уведомлений.",
+  "notificationPermissionPageDescription": "Чтобы быстро синхронизировать и загружать файлы в фоновом режиме через панель уведомлений, приложению требуется разрешение на показ уведомлений. Вы можете отключить его в любое время в настройках.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "Уведомления необходимы для мониторинга фоновой синхронизации. Пожалуйста, включите их в системных настройках, чтобы ваши данные всегда были актуальными.",
+  "notificationPermissionSettingsDescription": "Уведомления необходимы для работы функции быстрой синхронизации через панель уведомлений. Включите их в настройках системы, чтобы все ваши данные были успешно загружены.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

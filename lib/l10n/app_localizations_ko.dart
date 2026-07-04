@@ -574,14 +574,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      '파일을 계속 동기화하고 백그라운드에서 실시간 상태 업데이트를 제공하려면 알림 권한이 필요합니다.';
+      '알림 패널에서 백그라운드로 파일을 빠르게 동기화하고 업로드하려면 알림 표시 권한이 필요합니다. 이 권한은 설정에서 언제든지 끌 수 있습니다.';
 
   @override
   String get notificationPermissionGrantButton => '알림 허용';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      '백그라운드 동기화를 모니터링하려면 알림이 필요합니다. 데이터가 항상 최신 상태로 유지되도록 시스템 설정에서 알림을 활성화해 주세요.';
+      '알림 패널의 빠른 동기화 기능을 사용하려면 알림이 필요합니다. 모든 데이터가 정상적으로 업로드되도록 시스템 설정에서 알림을 허용해 주세요.';
 
   @override
   String requiresAppPro(String appName) {

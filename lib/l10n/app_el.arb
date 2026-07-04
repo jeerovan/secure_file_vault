@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "Για να διατηρούνται τα αρχεία σας συγχρονισμένα και να παρέχονται ενημερώσεις κατάστασης σε πραγματικό χρόνο στο παρασκήνιο, χρειαζόμαστε άδεια για να εμφανίσουμε ειδοποιήσεις.",
+  "notificationPermissionPageDescription": "Για γρήγορο συγχρονισμό και μεταφόρτωση των αρχείων σας στο παρασκήνιο μέσω του πίνακα ειδοποιήσεων, χρειαζόμαστε άδεια για την εμφάνιση ειδοποιήσεων. Μπορείτε να την απενεργοποιήσετε οποιαδήποτε στιγμή από τις ρυθμίσεις.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "Οι ειδοποιήσεις είναι απαραίτητες για την παρακολούθηση του συγχρονισμού στο παρασκήνιο. Παρακαλώ ενεργοποιήστε τις στις ρυθμίσεις του συστήματος για να διασφαλίσετε ότι τα δεδομένα σας είναι πάντα up to date.",
+  "notificationPermissionSettingsDescription": "Οι ειδοποιήσεις είναι απαραίτητες για τη γρήγορη λειτουργία συγχρονισμού μέσω του πίνακα ειδοποιήσεων. Ενεργοποιήστε τις από τις ρυθμίσεις του συστήματος, ώστε να διασφαλιστεί ότι όλα τα δεδομένα σας θα μεταφορτωθούν.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

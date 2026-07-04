@@ -586,14 +586,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'Untuk menjaga file Anda tetap sinkron dan memberikan pembaruan status waktu nyata di latar belakang, kami memerlukan izin untuk menampilkan notifikasi.';
+      'Agar file Anda dapat disinkronkan dan diunggah dengan cepat di latar belakang melalui panel notifikasi, kami memerlukan izin untuk menampilkan notifikasi. Anda dapat menonaktifkannya kapan saja melalui pengaturan.';
 
   @override
   String get notificationPermissionGrantButton => 'Izinkan Notifikasi';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'Notifikasi diperlukan untuk memantau sinkronisasi latar belakang. Silakan aktifkan di pengaturan sistem untuk memastikan data Anda selalu mutakhir.';
+      'Notifikasi diperlukan agar fitur sinkronisasi cepat melalui panel notifikasi dapat digunakan. Aktifkan di pengaturan sistem untuk memastikan semua data Anda berhasil diunggah.';
 
   @override
   String requiresAppPro(String appName) {

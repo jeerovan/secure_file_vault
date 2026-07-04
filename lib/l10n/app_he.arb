@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "כדי לשמור על הקבצים שלך מסונכרנים ולספק עדכוני סטטוס בזמן אמת ברקע, אנו זקוקים להרשאה להצגת התראות.",
+  "notificationPermissionPageDescription": "כדי לסנכרן ולהעלות את הקבצים שלך במהירות ברקע דרך לוח ההתראות, אנו זקוקים להרשאה להצגת התראות. ניתן לבטל אותה בכל עת דרך ההגדרות.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "התראות נדרשות כדי לנטר את הסנכרון ברקע. אנא הפעל אותן בהגדרות המערכת כדי להבטיח שהנתונים שלך תמיד מעודכנים.",
+  "notificationPermissionSettingsDescription": "התראות נדרשות כדי לספק סנכרון מהיר דרך לוח ההתראות. יש להפעיל אותן בהגדרות המערכת כדי לוודא שכל הנתונים שלך יועלו.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

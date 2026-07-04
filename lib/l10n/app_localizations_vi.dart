@@ -582,14 +582,14 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'Để giữ cho các tập tin của bạn luôn được đồng bộ và cung cấp cập nhật trạng thái theo thời gian thực trong nền, chúng tôi cần quyền hiển thị thông báo.';
+      'Để đồng bộ và tải tệp của bạn lên nhanh chóng trong nền từ bảng thông báo, chúng tôi cần quyền hiển thị thông báo. Bạn có thể tắt quyền này bất cứ lúc nào trong phần cài đặt.';
 
   @override
   String get notificationPermissionGrantButton => 'Cho phép Thông báo';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'Thông báo là cần thiết để theo dõi quá trình đồng bộ hóa trong nền. Vui lòng bật chúng trong cài đặt hệ thống để đảm bảo dữ liệu của bạn luôn được cập nhật.';
+      'Thông báo là cần thiết để sử dụng tính năng đồng bộ nhanh từ bảng thông báo. Vui lòng bật thông báo trong cài đặt hệ thống để đảm bảo toàn bộ dữ liệu của bạn được tải lên.';
 
   @override
   String requiresAppPro(String appName) {

@@ -584,14 +584,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'برای همگام‌سازی فایل‌های شما و ارائه به‌روزرسانی‌های لحظه‌ای وضعیت در پس‌زمینه، به اجازه برای نمایش اعلان‌ها نیاز داریم.';
+      'برای همگام‌سازی سریع و بارگذاری فایل‌های شما در پس‌زمینه از طریق پنل اعلان‌ها، به اجازه نمایش اعلان نیاز داریم. هر زمان بخواهید می‌توانید آن را از تنظیمات غیرفعال کنید.';
 
   @override
   String get notificationPermissionGrantButton => 'اجازه به اعلان‌ها';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'اعلان‌ها برای نظارت بر همگام‌سازی پس‌زمینه ضروری هستند. لطفاً آن‌ها را در تنظیمات سیستم فعال کنید تا مطمئن شوید داده‌های شما همیشه به‌روز هستند.';
+      'اعلان‌ها برای ارائه قابلیت همگام‌سازی سریع از طریق پنل اعلان‌ها ضروری هستند. لطفاً آن‌ها را در تنظیمات سیستم فعال کنید تا مطمئن شوید همه داده‌های شما بارگذاری می‌شوند.';
 
   @override
   String requiresAppPro(String appName) {

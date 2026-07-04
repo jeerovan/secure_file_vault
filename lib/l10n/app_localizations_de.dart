@@ -587,14 +587,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'Um deine Dateien synchron zu halten und Status-Updates in Echtzeit im Hintergrund bereitzustellen, benötigen wir die Erlaubnis, Benachrichtigungen anzuzeigen.';
+      'Damit deine Dateien schnell über das Benachrichtigungsfeld im Hintergrund synchronisiert und hochgeladen werden können, benötigen wir die Berechtigung, Benachrichtigungen anzuzeigen. Du kannst sie jederzeit in den Einstellungen deaktivieren.';
 
   @override
   String get notificationPermissionGrantButton => 'Benachrichtigungen zulassen';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'Benachrichtigungen sind erforderlich, um die Hintergrundsynchronisierung zu überwachen. Bitte aktiviere sie in den Systemeinstellungen, um sicherzustellen, dass deine Daten immer aktuell sind.';
+      'Benachrichtigungen sind erforderlich, damit die Schnellsynchronisierung über das Benachrichtigungsfeld funktioniert. Bitte aktiviere sie in den Systemeinstellungen, damit alle deine Daten hochgeladen werden.';
 
   @override
   String requiresAppPro(String appName) {

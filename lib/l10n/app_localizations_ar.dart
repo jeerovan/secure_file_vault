@@ -577,14 +577,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'للحفاظ على مزامنة ملفاتك وتقديم تحديثات الحالة في الوقت الفعلي في الخلفية، نحتاج إلى إذن لإظهار الإشعارات.';
+      'لإجراء مزامنة سريعة ورفع ملفاتك في الخلفية من لوحة الإشعارات، نحتاج إلى إذن لعرض الإشعارات. يمكنك تعطيله في أي وقت من الإعدادات.';
 
   @override
   String get notificationPermissionGrantButton => 'السماح بالإشعارات';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'الإشعارات مطلوبة لمراقبة المزامنة في الخلفية. يرجى تفعيلها في إعدادات النظام لضمان تحديث بياناتك دائمًا.';
+      'الإشعارات مطلوبة لتوفير ميزة المزامنة السريعة عبر لوحة الإشعارات. يُرجى تفعيلها من إعدادات النظام لضمان رفع جميع بياناتك.';
 
   @override
   String requiresAppPro(String appName) {

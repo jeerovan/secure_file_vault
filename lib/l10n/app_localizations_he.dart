@@ -579,14 +579,14 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'כדי לשמור על הקבצים שלך מסונכרנים ולספק עדכוני סטטוס בזמן אמת ברקע, אנו זקוקים להרשאה להצגת התראות.';
+      'כדי לסנכרן ולהעלות את הקבצים שלך במהירות ברקע דרך לוח ההתראות, אנו זקוקים להרשאה להצגת התראות. ניתן לבטל אותה בכל עת דרך ההגדרות.';
 
   @override
   String get notificationPermissionGrantButton => 'אפשר התראות';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'התראות נדרשות כדי לנטר את הסנכרון ברקע. אנא הפעל אותן בהגדרות המערכת כדי להבטיח שהנתונים שלך תמיד מעודכנים.';
+      'התראות נדרשות כדי לספק סנכרון מהיר דרך לוח ההתראות. יש להפעיל אותן בהגדרות המערכת כדי לוודא שכל הנתונים שלך יועלו.';
 
   @override
   String requiresAppPro(String appName) {

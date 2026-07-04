@@ -566,14 +566,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      '为了保持您的文件同步并在后台提供实时状态更新，我们需要您授予显示通知的权限。';
+      '为了通过通知栏在后台快速同步并上传您的文件，我们需要通知权限。您可以随时在设置中将其关闭。';
 
   @override
   String get notificationPermissionGrantButton => '允许通知';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      '通知对于监控后台同步至关重要。请在系统设置中启用通知，以确保您的数据始终是最新的。';
+      '快速同步功能需要通知权限才能正常工作。请在系统设置中启用通知，以确保您的所有数据都能成功上传。';
 
   @override
   String requiresAppPro(String appName) {

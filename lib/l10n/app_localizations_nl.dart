@@ -585,14 +585,14 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'Om je bestanden gesynchroniseerd te houden en real-time statusupdates op de achtergrond te geven, hebben we toestemming nodig om meldingen te tonen.';
+      'Om je bestanden snel op de achtergrond te synchroniseren en te uploaden via het meldingenpaneel, hebben we toestemming nodig om meldingen te tonen. Je kunt dit altijd uitschakelen via de instellingen.';
 
   @override
   String get notificationPermissionGrantButton => 'Meldingen toestaan';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'Meldingen zijn vereist om synchronisatie op de achtergrond te bewaken. Schakel deze in de systeeminstellingen in om er zeker van te zijn dat je gegevens altijd up-to-date zijn.';
+      'Meldingen zijn nodig voor de snelle synchronisatiefunctie via het meldingenpaneel. Schakel ze in via de systeeminstellingen zodat al je gegevens volledig worden geüpload.';
 
   @override
   String requiresAppPro(String appName) {

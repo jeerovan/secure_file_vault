@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "เพื่อให้ไฟล์ของคุณซิงก์อยู่เสมอและให้ข้อมูลสถานะแบบเรียลไทม์ในเบื้องหลัง เราจำเป็นต้องได้รับอนุญาตในการแสดงการแจ้งเตือน",
+  "notificationPermissionPageDescription": "เพื่อซิงค์และอัปโหลดไฟล์ของคุณอย่างรวดเร็วในเบื้องหลังผ่านแผงการแจ้งเตือน เราจำเป็นต้องได้รับสิทธิ์ในการแสดงการแจ้งเตือน คุณสามารถปิดได้ทุกเมื่อจากการตั้งค่า",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "การแจ้งเตือนจำเป็นสำหรับการตรวจสอบการซิงก์ในเบื้องหลัง โปรดเปิดใช้งานในการตั้งค่าระบบเพื่อให้แน่ใจว่าข้อมูลของคุณเป็นปัจจุบันเสมอ",
+  "notificationPermissionSettingsDescription": "จำเป็นต้องเปิดการแจ้งเตือนเพื่อใช้งานการซิงค์ด่วนผ่านแผงการแจ้งเตือน โปรดเปิดใช้งานในการตั้งค่าระบบเพื่อให้แน่ใจว่าข้อมูลทั้งหมดของคุณได้รับการอัปโหลด",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

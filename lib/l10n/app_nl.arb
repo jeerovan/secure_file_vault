@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "Om je bestanden gesynchroniseerd te houden en real-time statusupdates op de achtergrond te geven, hebben we toestemming nodig om meldingen te tonen.",
+  "notificationPermissionPageDescription": "Om je bestanden snel op de achtergrond te synchroniseren en te uploaden via het meldingenpaneel, hebben we toestemming nodig om meldingen te tonen. Je kunt dit altijd uitschakelen via de instellingen.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "Meldingen zijn vereist om synchronisatie op de achtergrond te bewaken. Schakel deze in de systeeminstellingen in om er zeker van te zijn dat je gegevens altijd up-to-date zijn.",
+  "notificationPermissionSettingsDescription": "Meldingen zijn nodig voor de snelle synchronisatiefunctie via het meldingenpaneel. Schakel ze in via de systeeminstellingen zodat al je gegevens volledig worden geüpload.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

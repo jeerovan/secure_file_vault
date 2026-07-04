@@ -584,14 +584,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'आपकी फ़ाइलों को सिंक रखने और बैकग्राउंड में रीयल-टाइम स्टेटस अपडेट देने के लिए, हमें नोटिफिकेशन दिखाने की अनुमति चाहिए।';
+      'नोटिफिकेशन पैनल से बैकग्राउंड में आपकी फ़ाइलों को तेज़ी से सिंक और अपलोड करने के लिए हमें नोटिफिकेशन दिखाने की अनुमति चाहिए। आप इसे कभी भी सेटिंग्स से बंद कर सकते हैं।';
 
   @override
   String get notificationPermissionGrantButton => 'नोटिफिकेशन की अनुमति दें';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'बैकग्राउंड सिंक्रोनाइज़ेशन की निगरानी के लिए नोटिफिकेशन आवश्यक हैं। कृपया सिस्टम सेटिंग्स में इन्हें सक्षम करें ताकि आपका डेटा हमेशा अपडेट रहे।';
+      'त्वरित सिंक सुविधा के लिए नोटिफिकेशन आवश्यक हैं। कृपया सिस्टम सेटिंग्स में जाकर इन्हें सक्षम करें, ताकि आपकी सभी फ़ाइलें सफलतापूर्वक अपलोड हो सकें।';
 
   @override
   String requiresAppPro(String appName) {

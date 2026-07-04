@@ -1,0 +1,82 @@
+{
+  "ar": {
+    "notificationPermissionPageDescription": "لإجراء مزامنة سريعة ورفع ملفاتك في الخلفية من لوحة الإشعارات، نحتاج إلى إذن لعرض الإشعارات. يمكنك تعطيله في أي وقت من الإعدادات.",
+    "notificationPermissionSettingsDescription": "الإشعارات مطلوبة لتوفير ميزة المزامنة السريعة عبر لوحة الإشعارات. يُرجى تفعيلها من إعدادات النظام لضمان رفع جميع بياناتك."
+  },
+  "de": {
+    "notificationPermissionPageDescription": "Damit deine Dateien schnell über das Benachrichtigungsfeld im Hintergrund synchronisiert und hochgeladen werden können, benötigen wir die Berechtigung, Benachrichtigungen anzuzeigen. Du kannst sie jederzeit in den Einstellungen deaktivieren.",
+    "notificationPermissionSettingsDescription": "Benachrichtigungen sind erforderlich, damit die Schnellsynchronisierung über das Benachrichtigungsfeld funktioniert. Bitte aktiviere sie in den Systemeinstellungen, damit alle deine Daten hochgeladen werden."
+  },
+  "el": {
+    "notificationPermissionPageDescription": "Για γρήγορο συγχρονισμό και μεταφόρτωση των αρχείων σας στο παρασκήνιο μέσω του πίνακα ειδοποιήσεων, χρειαζόμαστε άδεια για την εμφάνιση ειδοποιήσεων. Μπορείτε να την απενεργοποιήσετε οποιαδήποτε στιγμή από τις ρυθμίσεις.",
+    "notificationPermissionSettingsDescription": "Οι ειδοποιήσεις είναι απαραίτητες για τη γρήγορη λειτουργία συγχρονισμού μέσω του πίνακα ειδοποιήσεων. Ενεργοποιήστε τις από τις ρυθμίσεις του συστήματος, ώστε να διασφαλιστεί ότι όλα τα δεδομένα σας θα μεταφορτωθούν."
+  },
+  "es": {
+    "notificationPermissionPageDescription": "Para sincronizar y subir tus archivos rápidamente en segundo plano desde el panel de notificaciones, necesitamos permiso para mostrar notificaciones. Puedes desactivarlo en cualquier momento desde la configuración.",
+    "notificationPermissionSettingsDescription": "Las notificaciones son necesarias para ofrecer la sincronización rápida desde el panel de notificaciones. Actívalas en la configuración del sistema para asegurarte de que todos tus datos se suban correctamente."
+  },
+  "fa": {
+    "notificationPermissionPageDescription": "برای همگام‌سازی سریع و بارگذاری فایل‌های شما در پس‌زمینه از طریق پنل اعلان‌ها، به اجازه نمایش اعلان نیاز داریم. هر زمان بخواهید می‌توانید آن را از تنظیمات غیرفعال کنید.",
+    "notificationPermissionSettingsDescription": "اعلان‌ها برای ارائه قابلیت همگام‌سازی سریع از طریق پنل اعلان‌ها ضروری هستند. لطفاً آن‌ها را در تنظیمات سیستم فعال کنید تا مطمئن شوید همه داده‌های شما بارگذاری می‌شوند."
+  },
+  "fr": {
+    "notificationPermissionPageDescription": "Pour synchroniser et envoyer rapidement vos fichiers en arrière-plan depuis le panneau de notifications, nous avons besoin de l'autorisation d'afficher des notifications. Vous pourrez la désactiver à tout moment dans les paramètres.",
+    "notificationPermissionSettingsDescription": "Les notifications sont nécessaires pour utiliser la synchronisation rapide depuis le panneau de notifications. Veuillez les activer dans les paramètres du système afin de garantir le téléversement complet de vos données."
+  },
+  "he": {
+    "notificationPermissionPageDescription": "כדי לסנכרן ולהעלות את הקבצים שלך במהירות ברקע דרך לוח ההתראות, אנו זקוקים להרשאה להצגת התראות. ניתן לבטל אותה בכל עת דרך ההגדרות.",
+    "notificationPermissionSettingsDescription": "התראות נדרשות כדי לספק סנכרון מהיר דרך לוח ההתראות. יש להפעיל אותן בהגדרות המערכת כדי לוודא שכל הנתונים שלך יועלו."
+  },
+  "hi": {
+    "notificationPermissionPageDescription": "नोटिफिकेशन पैनल से बैकग्राउंड में आपकी फ़ाइलों को तेज़ी से सिंक और अपलोड करने के लिए हमें नोटिफिकेशन दिखाने की अनुमति चाहिए। आप इसे कभी भी सेटिंग्स से बंद कर सकते हैं।",
+    "notificationPermissionSettingsDescription": "त्वरित सिंक सुविधा के लिए नोटिफिकेशन आवश्यक हैं। कृपया सिस्टम सेटिंग्स में जाकर इन्हें सक्षम करें, ताकि आपकी सभी फ़ाइलें सफलतापूर्वक अपलोड हो सकें।"
+  },
+  "id": {
+    "notificationPermissionPageDescription": "Agar file Anda dapat disinkronkan dan diunggah dengan cepat di latar belakang melalui panel notifikasi, kami memerlukan izin untuk menampilkan notifikasi. Anda dapat menonaktifkannya kapan saja melalui pengaturan.",
+    "notificationPermissionSettingsDescription": "Notifikasi diperlukan agar fitur sinkronisasi cepat melalui panel notifikasi dapat digunakan. Aktifkan di pengaturan sistem untuk memastikan semua data Anda berhasil diunggah."
+  },
+  "it": {
+    "notificationPermissionPageDescription": "Per sincronizzare e caricare rapidamente i tuoi file in background dal pannello delle notifiche, abbiamo bisogno dell'autorizzazione a mostrare notifiche. Puoi disattivarla in qualsiasi momento dalle impostazioni.",
+    "notificationPermissionSettingsDescription": "Le notifiche sono necessarie per utilizzare la sincronizzazione rapida dal pannello delle notifiche. Abilitale nelle impostazioni di sistema per assicurarti che tutti i tuoi dati vengano caricati."
+  },
+  "ja": {
+    "notificationPermissionPageDescription": "通知パネルからバックグラウンドでファイルをすばやく同期・アップロードするために、通知を表示する権限が必要です。この権限は設定からいつでも無効にできます。",
+    "notificationPermissionSettingsDescription": "通知パネルからのクイック同期機能を利用するには通知が必要です。すべてのデータを確実にアップロードするため、システム設定で通知を有効にしてください。"
+  },
+  "ko": {
+    "notificationPermissionPageDescription": "알림 패널에서 백그라운드로 파일을 빠르게 동기화하고 업로드하려면 알림 표시 권한이 필요합니다. 이 권한은 설정에서 언제든지 끌 수 있습니다.",
+    "notificationPermissionSettingsDescription": "알림 패널의 빠른 동기화 기능을 사용하려면 알림이 필요합니다. 모든 데이터가 정상적으로 업로드되도록 시스템 설정에서 알림을 허용해 주세요."
+  },
+  "nl": {
+    "notificationPermissionPageDescription": "Om je bestanden snel op de achtergrond te synchroniseren en te uploaden via het meldingenpaneel, hebben we toestemming nodig om meldingen te tonen. Je kunt dit altijd uitschakelen via de instellingen.",
+    "notificationPermissionSettingsDescription": "Meldingen zijn nodig voor de snelle synchronisatiefunctie via het meldingenpaneel. Schakel ze in via de systeeminstellingen zodat al je gegevens volledig worden geüpload."
+  },
+  "pt": {
+    "notificationPermissionPageDescription": "Para sincronizar e enviar seus arquivos rapidamente em segundo plano pelo painel de notificações, precisamos da permissão para exibir notificações. Você pode desativá-la a qualquer momento nas configurações.",
+    "notificationPermissionSettingsDescription": "As notificações são necessárias para oferecer a sincronização rápida pelo painel de notificações. Ative-as nas configurações do sistema para garantir que todos os seus dados sejam enviados."
+  },
+  "ru": {
+    "notificationPermissionPageDescription": "Чтобы быстро синхронизировать и загружать файлы в фоновом режиме через панель уведомлений, приложению требуется разрешение на показ уведомлений. Вы можете отключить его в любое время в настройках.",
+    "notificationPermissionSettingsDescription": "Уведомления необходимы для работы функции быстрой синхронизации через панель уведомлений. Включите их в настройках системы, чтобы все ваши данные были успешно загружены."
+  },
+  "th": {
+    "notificationPermissionPageDescription": "เพื่อซิงค์และอัปโหลดไฟล์ของคุณอย่างรวดเร็วในเบื้องหลังผ่านแผงการแจ้งเตือน เราจำเป็นต้องได้รับสิทธิ์ในการแสดงการแจ้งเตือน คุณสามารถปิดได้ทุกเมื่อจากการตั้งค่า",
+    "notificationPermissionSettingsDescription": "จำเป็นต้องเปิดการแจ้งเตือนเพื่อใช้งานการซิงค์ด่วนผ่านแผงการแจ้งเตือน โปรดเปิดใช้งานในการตั้งค่าระบบเพื่อให้แน่ใจว่าข้อมูลทั้งหมดของคุณได้รับการอัปโหลด"
+  },
+  "tr": {
+    "notificationPermissionPageDescription": "Dosyalarınızı bildirim paneli üzerinden arka planda hızlıca senkronize edip yükleyebilmek için bildirim gösterme iznine ihtiyacımız var. Bu izni istediğiniz zaman ayarlardan kapatabilirsiniz.",
+    "notificationPermissionSettingsDescription": "Bildirim panelindeki hızlı senkronizasyon özelliğinin çalışması için bildirimler gereklidir. Tüm verilerinizin yüklendiğinden emin olmak için lütfen sistem ayarlarından bildirimleri etkinleştirin."
+  },
+  "uk": {
+    "notificationPermissionPageDescription": "Щоб швидко синхронізувати й завантажувати файли у фоновому режимі через панель сповіщень, нам потрібен дозвіл на показ сповіщень. Ви можете будь-коли вимкнути його в налаштуваннях.",
+    "notificationPermissionSettingsDescription": "Сповіщення потрібні для роботи функції швидкої синхронізації через панель сповіщень. Увімкніть їх у системних налаштуваннях, щоб усі ваші дані були успішно завантажені."
+  },
+  "vi": {
+    "notificationPermissionPageDescription": "Để đồng bộ và tải tệp của bạn lên nhanh chóng trong nền từ bảng thông báo, chúng tôi cần quyền hiển thị thông báo. Bạn có thể tắt quyền này bất cứ lúc nào trong phần cài đặt.",
+    "notificationPermissionSettingsDescription": "Thông báo là cần thiết để sử dụng tính năng đồng bộ nhanh từ bảng thông báo. Vui lòng bật thông báo trong cài đặt hệ thống để đảm bảo toàn bộ dữ liệu của bạn được tải lên."
+  },
+  "zh": {
+    "notificationPermissionPageDescription": "为了通过通知栏在后台快速同步并上传您的文件，我们需要通知权限。您可以随时在设置中将其关闭。",
+    "notificationPermissionSettingsDescription": "快速同步功能需要通知权限才能正常工作。请在系统设置中启用通知，以确保您的所有数据都能成功上传。"
+  }
+}

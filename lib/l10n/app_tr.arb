@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "Dosyalarınızın senkronize kalmasını sağlamak ve arka planda gerçek zamanlı durum güncellemeleri sunmak için bildirimleri gösterme iznine ihtiyacımız var.",
+  "notificationPermissionPageDescription": "Dosyalarınızı bildirim paneli üzerinden arka planda hızlıca senkronize edip yükleyebilmek için bildirim gösterme iznine ihtiyacımız var. Bu izni istediğiniz zaman ayarlardan kapatabilirsiniz.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "Arka plan senkronizasyonunu izlemek için bildirimler gereklidir. Verilerinizin her zaman güncel olduğundan emin olmak için lütfen sistem ayarlarından bildirimleri etkinleştirin.",
+  "notificationPermissionSettingsDescription": "Bildirim panelindeki hızlı senkronizasyon özelliğinin çalışması için bildirimler gereklidir. Tüm verilerinizin yüklendiğinden emin olmak için lütfen sistem ayarlarından bildirimleri etkinleştirin.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },

@@ -758,7 +758,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "Per mantenere i tuoi file sincronizzati e fornire aggiornamenti sullo stato in tempo reale in background, abbiamo bisogno del permesso di mostrare le notifiche.",
+  "notificationPermissionPageDescription": "Per sincronizzare e caricare rapidamente i tuoi file in background dal pannello delle notifiche, abbiamo bisogno dell'autorizzazione a mostrare notifiche. Puoi disattivarla in qualsiasi momento dalle impostazioni.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -766,7 +766,7 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "Le notifiche sono necessarie per monitorare la sincronizzazione in background. Ti preghiamo di abilitarle nelle impostazioni di sistema per assicurarti che i tuoi dati siano sempre aggiornati.",
+  "notificationPermissionSettingsDescription": "Le notifiche sono necessarie per utilizzare la sincronizzazione rapida dal pannello delle notifiche. Abilitale nelle impostazioni di sistema per assicurarti che tutti i tuoi dati vengano caricati.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
   },
