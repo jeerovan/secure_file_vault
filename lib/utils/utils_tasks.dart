@@ -7,9 +7,8 @@ import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
-import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/models/model_state.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
-import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
@@ -251,11 +250,7 @@ class TaskManager {
         final status = providerResult["success"];
         if (status <= 0) {
           logger.error('Get storage provider: ${jsonEncode(providerResult)}');
-          await ModelSetting.set(AppString.storageFull.string, "yes");
-          EventStream().publish(AppEvent(
-              type: EventType.syncStatus,
-              id: "yes",
-              key: EventKey.storageFull));
+          await ModelState.set(AppString.storageFull.string, "yes");
           return false;
         } else {
           final providerData = providerResult["data"];
@@ -263,9 +258,7 @@ class TaskManager {
           modelFile.providerId = providerData["provider_id"];
           List<String> attrs = ["storage_id", "provider_id"];
           await modelFile.update(attrs);
-          await ModelSetting.set(AppString.storageFull.string, "no");
-          EventStream().publish(AppEvent(
-              type: EventType.syncStatus, id: "no", key: EventKey.storageFull));
+          await ModelState.set(AppString.storageFull.string, "no");
         }
       }
     }

@@ -71,11 +71,7 @@ class SyncUtils {
       logger.warning("Recon already in progress, from $caller.");
       return;
     }
-    EventStream().publish(AppEvent(
-        type: EventType.syncStatus,
-        id: "",
-        key: EventKey.running,
-        value: null));
+
     await ModelState.set(
         AppString.lastReconRunningAt.string, startedAt.toString());
     // set timer to update running state every seconds
@@ -121,11 +117,6 @@ class SyncUtils {
         DateTime.now().millisecondsSinceEpoch.toString());
     // set timer to update running state every seconds
     _syncProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      EventStream().publish(AppEvent(
-          type: EventType.syncStatus,
-          id: "",
-          key: EventKey.running,
-          value: null));
       await ModelState.set(AppString.lastSyncRunningAt.string,
           DateTime.now().millisecondsSinceEpoch.toString());
     });
@@ -154,11 +145,6 @@ class SyncUtils {
     } finally {
       _syncProcessTimer?.cancel();
       _syncProcessTimer = null;
-      EventStream().publish(AppEvent(
-          type: EventType.syncStatus,
-          id: "",
-          key: EventKey.stopped,
-          value: null));
     }
   }
 

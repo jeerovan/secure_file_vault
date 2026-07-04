@@ -1,5 +1,3 @@
-import 'package:file_vault_bb/services/service_events.dart';
-
 import '../utils/common.dart';
 import '../utils/enums.dart';
 
@@ -58,33 +56,12 @@ class ModelItemTask {
     if (task == null) {
       ModelItemTask newTask = await fromMap({"id": id, "task": taskType});
       await newTask.insert();
-      if (taskType == ItemTask.download.value) {
-        EventStream().publish(AppEvent(
-            type: EventType.updateItem,
-            id: id,
-            key: EventKey.downloadProgress,
-            value: 0));
-      } else {
-        EventStream().publish(AppEvent(
-            type: EventType.updateItem,
-            id: id,
-            key: EventKey.uploadProgress,
-            value: 0));
-      }
     }
   }
 
   static Future<void> completeTask(String id) async {
     ModelItemTask? task = await get(id);
     if (task != null) {
-      int taskType = task.task;
-      if (taskType == ItemTask.download.value) {
-        EventStream().publish(AppEvent(
-            type: EventType.updateItem, id: id, key: EventKey.downloaded));
-      } else {
-        EventStream().publish(AppEvent(
-            type: EventType.updateItem, id: id, key: EventKey.uploaded));
-      }
       await task.delete();
     }
   }
@@ -131,19 +108,6 @@ class ModelItemTask {
     }
     int updated =
         await dbHelper.update(Tables.itemTasks.string, updatedMap, id);
-    if (task == ItemTask.download.value) {
-      EventStream().publish(AppEvent(
-          type: EventType.updateItem,
-          id: id,
-          key: EventKey.downloadProgress,
-          value: progress));
-    } else {
-      EventStream().publish(AppEvent(
-          type: EventType.updateItem,
-          id: id,
-          key: EventKey.uploadProgress,
-          value: progress));
-    }
     return updated;
   }
 

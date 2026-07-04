@@ -7,6 +7,7 @@ import 'package:file_vault_bb/ui/pages/page_subscription.dart';
 import 'package:sodium/sodium_sumo.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/model_state.dart';
 import '../../repositories/repository_item_task.dart';
 import '../../storage/storage_channel.dart';
 import '../../ui/pages/page_devices.dart';
@@ -82,7 +83,7 @@ class _FilePaneState extends State<FilePane> {
       ValueNotifier({});
   final ValueNotifier<bool> _isMultiSelectNotifier = ValueNotifier(false);
 
-  Timer? _reloadTimer;
+  Timer? _refreshStateTimer;
 
   ModelItem? currentItem;
   ModelItem? previousItem;
@@ -103,24 +104,26 @@ class _FilePaneState extends State<FilePane> {
     super.initState();
     EventStream().notifier.addListener(_handleAppEvents);
     _loadFiles();
-    _startReloadTimer();
+    _refreshState();
+    _startRefreshStateTimer();
   }
 
-  void _startReloadTimer() {
-    _reloadTimer?.cancel();
-    _reloadTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+  void _startRefreshStateTimer() {
+    _refreshStateTimer?.cancel();
+    _refreshStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       _loadFiles(isSilent: true);
+      _refreshState();
     });
   }
 
-  void _stopReloadTimer() {
-    _reloadTimer?.cancel();
-    _reloadTimer = null;
+  void _stopRefreshStateTimer() {
+    _refreshStateTimer?.cancel();
+    _refreshStateTimer = null;
   }
 
   @override
   void dispose() {
-    _stopReloadTimer();
+    _stopRefreshStateTimer();
     EventStream().notifier.removeListener(_handleAppEvents);
     _breadcrumbController.dispose();
     _itemsNotifier.dispose();
@@ -129,50 +132,54 @@ class _FilePaneState extends State<FilePane> {
     super.dispose();
   }
 
+  Future<void> _refreshState() async {
+    String lastReconAtString =
+        await ModelState.get(AppString.lastReconRunningAt.string);
+    int? lastReconAt =
+        lastReconAtString.isEmpty ? null : int.parse(lastReconAtString);
+
+    String lastSyncAtString =
+        await ModelState.get(AppString.lastSyncRunningAt.string);
+    int? lastSyncAt =
+        lastSyncAtString.isEmpty ? null : int.parse(lastSyncAtString);
+
+    int startedAt = DateTime.now().millisecondsSinceEpoch;
+
+    if ((lastReconAt != null && (startedAt - lastReconAt < 2000)) ||
+        (lastSyncAt != null && (startedAt - lastSyncAt < 2000))) {
+      if (mounted) {
+        setState(() {
+          _syncInProgress = true;
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _syncInProgress = false;
+        });
+      }
+    }
+
+    bool storageFull = await ModelState.get(AppString.storageFull.string,
+            defaultValue: "no") ==
+        "yes";
+    if (storageFull) {
+      if (mounted) {
+        setState(() {
+          _storageFull = true;
+        });
+      }
+    } else if (mounted) {
+      setState(() {
+        _storageFull = false;
+      });
+    }
+  }
+
   Future<void> _handleAppEvents() async {
     final AppEvent? event = EventStream().notifier.value;
     if (event == null) return;
     switch (event.type) {
-      case EventType.updateItem:
-        if (event.key == EventKey.added) {
-          ModelItem? item = await ModelItem.get(event.id);
-          if (item != null &&
-              currentItem != null &&
-              item.parentId == currentItem!.id) {
-            final currentItems = List<ModelItem>.from(_itemsNotifier.value);
-            if (item.isFolder) {
-              currentItems.insert(0, item);
-            } else {
-              currentItems.add(item);
-            }
-            _itemsNotifier.value = currentItems;
-          }
-        } else if (event.key == EventKey.removed) {
-          final removedId = event.id;
-          final currentItems = List<ModelItem>.from(_itemsNotifier.value);
-          currentItems.removeWhere((item) => item.id == removedId);
-          _itemsNotifier.value = currentItems;
-        }
-        break;
-      case EventType.syncStatus:
-        if (event.key == EventKey.running) {
-          if (mounted) {
-            setState(() {
-              _syncInProgress = true;
-            });
-          }
-        } else if (event.key == EventKey.stopped) {
-          if (mounted) {
-            setState(() {
-              _syncInProgress = false;
-            });
-          }
-        } else if (event.key == EventKey.storageFull) {
-          if (mounted) {
-            _storageFull = event.id == "yes";
-          }
-        }
-        break;
       case EventType.settings:
         if (event.key == EventKey.logging) {
           _loggingEnabled = event.id == "yes";
