@@ -35,19 +35,20 @@ class AppLocalizationsHi extends AppLocalizations {
   String get logging => 'लॉगिंग';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'क्विक सिंक नोटिफिकेशन';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'फ़ाइल सिंक सेवा';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText =>
+      'सिंक करने के लिए नीचे दिए गए बटन पर टैप करें';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'अभी सिंक करें';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'प्रक्रिया जारी है...';
 
   @override
   String get reportIssue => 'समस्या की रिपोर्ट करें';

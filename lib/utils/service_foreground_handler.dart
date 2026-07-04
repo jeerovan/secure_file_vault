@@ -59,8 +59,9 @@ class ForegroundTaskHandler extends TaskHandler {
 
   Future<void> startSyncTask() async {
     try {
-      final String appLocale =
-          ModelSetting.get(AppString.locale.string, defaultValue: "en");
+      final String appLocale = await ModelSetting.getRaw(
+          AppString.locale.string,
+          defaultValue: "en");
       final Locale locale = Locale(appLocale);
       final AppLocalizations localizations = lookupAppLocalizations(locale);
       FlutterForegroundTask.updateService(

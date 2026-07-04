@@ -130,16 +130,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    logger.info("App State:$state");
-    /* if (Platform.isIOS || Platform.isAndroid) {
-      if (state == AppLifecycleState.resumed) {
-        context.read<AppSetupState>().recheckStatus();
-      }
-    } */
-  }
-
-  @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();

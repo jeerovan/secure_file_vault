@@ -11,6 +11,17 @@ class ModelSetting {
     await dbHelper.insert(Tables.settings.string, {'id': key, 'value': value});
   }
 
+  static Future<String> getRaw(String key, {String defaultValue = ""}) async {
+    final dbHelper = StorageSqlite.instance;
+    List<Map<String, dynamic>> list =
+        await dbHelper.getWithId(Tables.settings.string, key);
+    if (list.isNotEmpty) {
+      Map<String, dynamic> map = list.first;
+      return map["value"];
+    }
+    return defaultValue;
+  }
+
   static String get(String key, {String defaultValue = ""}) {
     if (settingJson.containsKey(key)) {
       String? value = settingJson[key];

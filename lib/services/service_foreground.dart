@@ -1,9 +1,8 @@
 import 'dart:ui';
 
 import 'package:file_vault_bb/main.dart';
-import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
-import 'package:file_vault_bb/utils/enums.dart';
+import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
@@ -41,8 +40,7 @@ class ServiceForeground {
     } else {
       logger.info("Starting");
       try {
-        final String appLocale =
-            ModelSetting.get(AppString.locale.string, defaultValue: "en");
+        final String appLocale = await getAppLocale();
         final Locale locale = Locale(appLocale);
         final AppLocalizations localizations = lookupAppLocalizations(locale);
         final ServiceRequestResult result =

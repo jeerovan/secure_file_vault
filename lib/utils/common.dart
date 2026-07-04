@@ -775,6 +775,12 @@ Future<String?> getFileHashKey() async {
   return fileHashKeyBase64;
 }
 
+Future<String> getAppLocale() async {
+  String localeString = Platform.localeName.split("_")[0];
+  return await ModelSetting.getRaw(AppString.locale.string,
+      defaultValue: localeString);
+}
+
 Future<bool> isRecordOrSyncInProgress() async {
   String lastReconAtString =
       await ModelState.get(AppString.lastReconRunningAt.string);

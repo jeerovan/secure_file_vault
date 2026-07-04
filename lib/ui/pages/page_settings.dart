@@ -396,7 +396,7 @@ class SettingsPageState extends State<SettingsPage> {
                   ListTile(
                     leading:
                         const Icon(LucideIcons.refreshCcw, color: Colors.grey),
-                    title: Text("Quick Sync Notification"),
+                    title: Text(loc.quickSyncNotificationSettingTitle),
                     horizontalTitleGap: 24.0,
                     trailing: Transform.scale(
                       scale: 0.7,
