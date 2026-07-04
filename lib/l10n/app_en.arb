@@ -41,6 +41,26 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "quickSyncNotificationSettingTitle": "Quick sync notification",
+  "@quickSyncNotificationSettingTitle": {
+    "description": "Setting to show quick sync notification"
+  },
+  "quickSyncNotificationTitle": "File sync service",
+  "@quickSyncNotificationTitle": {
+    "description": "Quick sync notification title"
+  },
+  "quickSyncNotificationText": "Tap the button below to sync",
+  "@quickSyncNotificationText": {
+    "description": "Quick sync notification text"
+  },
+  "quickSyncNotificationButton": "Sync now",
+  "@quickSyncNotificationButton": {
+    "description": "Quick sync notification button text"
+  },
+  "quickSyncNotificationInProgress": "In progress...",
+  "@quickSyncNotificationInProgress": {
+    "description": "Quick sync notification text when in progress"
+  },
   "reportIssue": "Report Issue",
   "@reportIssue": {
     "description": "Action to navigate to the issue tracker"
@@ -710,10 +730,6 @@
   "@openSettings": {
     "description": "Button label used to open the system app settings screen"
   },
-  "storagePermissionRequiredToContinue": "Storage permission is required to continue",
-  "@storagePermissionRequiredToContinue": {
-    "description": "Snackbar message shown when the user denies storage permission"
-  },
   "secureLocalAccessTitle": "Secure Local Access",
   "@secureLocalAccessTitle": {
     "description": "Main title on the storage permission onboarding screen"
@@ -738,7 +754,7 @@
   "@notificationPermissionTitle": {
     "description": "Main title on the notification permission onboarding screen"
   },
-  "notificationPermissionPageDescription": "To keep your files in sync and provide real-time status updates in the background, we need permission to show notifications.",
+  "notificationPermissionPageDescription": "To quickly sync and upload your files in the background from the notification panel, we need permission to show a notification. You may disable it anytime from the settings.",
   "@notificationPermissionPageDescription": {
     "description": "Description on the notification permission page explaining why access is needed"
   },
@@ -746,13 +762,9 @@
   "@notificationPermissionGrantButton": {
     "description": "Primary button label used to request notification permission"
   },
-  "notificationPermissionSettingsDescription": "Notifications are required to monitor background synchronization. Please enable them in the system settings to ensure your data is always up to date.",
+  "notificationPermissionSettingsDescription": "Notifications are required to provide you a quick sync utility via notification panel. Please enable them in the system settings to ensure your data is all uploaded.",
   "@notificationPermissionSettingsDescription": {
     "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
-  },
-  "notificationPermissionRequiredToContinue": "Notification permission is required for background sync",
-  "@notificationPermissionRequiredToContinue": {
-    "description": "Snackbar message shown when the user denies notification permission"
   },
   "requiresAppPro": "Requires {appName} Pro.",
   "@requiresAppPro": {

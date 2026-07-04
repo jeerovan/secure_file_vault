@@ -35,6 +35,21 @@ class AppLocalizationsTh extends AppLocalizations {
   String get logging => 'บันทึกระบบ';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'รายงานปัญหา';
 
   @override
@@ -543,10 +558,6 @@ class AppLocalizationsTh extends AppLocalizations {
   String get openSettings => 'เปิดการตั้งค่า';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'จำเป็นต้องได้รับสิทธิ์เข้าถึงพื้นที่จัดเก็บเพื่อดำเนินการต่อ';
-
-  @override
   String get secureLocalAccessTitle => 'การเข้าถึงในเครื่องอย่างปลอดภัย';
 
   @override
@@ -576,10 +587,6 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'การแจ้งเตือนจำเป็นสำหรับการตรวจสอบการซิงก์ในเบื้องหลัง โปรดเปิดใช้งานในการตั้งค่าระบบเพื่อให้แน่ใจว่าข้อมูลของคุณเป็นปัจจุบันเสมอ';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'จำเป็นต้องได้รับอนุญาตการแจ้งเตือนสำหรับการซิงก์ในเบื้องหลัง';
 
   @override
   String requiresAppPro(String appName) {

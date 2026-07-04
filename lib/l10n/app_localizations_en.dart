@@ -35,6 +35,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logging => 'Logging';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'Report Issue';
 
   @override
@@ -545,10 +560,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get openSettings => 'Open Settings';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'Storage permission is required to continue';
-
-  @override
   String get secureLocalAccessTitle => 'Secure Local Access';
 
   @override
@@ -570,18 +581,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationPermissionPageDescription =>
-      'To keep your files in sync and provide real-time status updates in the background, we need permission to show notifications.';
+      'To quickly sync and upload your files in the background from the notification panel, we need permission to show a notification. You may disable it anytime from the settings.';
 
   @override
   String get notificationPermissionGrantButton => 'Allow Notifications';
 
   @override
   String get notificationPermissionSettingsDescription =>
-      'Notifications are required to monitor background synchronization. Please enable them in the system settings to ensure your data is always up to date.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'Notification permission is required for background sync';
+      'Notifications are required to provide you a quick sync utility via notification panel. Please enable them in the system settings to ensure your data is all uploaded.';
 
   @override
   String requiresAppPro(String appName) {

@@ -35,6 +35,21 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logging => 'Journaux';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'Signaler un problème';
 
   @override
@@ -551,10 +566,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get openSettings => 'Ouvrir les paramètres';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'L’autorisation de stockage est requise pour continuer';
-
-  @override
   String get secureLocalAccessTitle => 'Accès local sécurisé';
 
   @override
@@ -583,10 +594,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'Les notifications sont nécessaires pour surveiller la synchronisation en arrière-plan. Veuillez les activer dans les paramètres du système pour garantir que vos données sont toujours à jour.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'L\'autorisation de notification est requise pour la synchronisation en arrière-plan';
 
   @override
   String requiresAppPro(String appName) {

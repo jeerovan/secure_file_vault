@@ -35,6 +35,21 @@ class AppLocalizationsHe extends AppLocalizations {
   String get logging => 'יומנים';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'דיווח על תקלה';
 
   @override
@@ -543,10 +558,6 @@ class AppLocalizationsHe extends AppLocalizations {
   String get openSettings => 'פתח הגדרות';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'נדרשת הרשאת אחסון כדי להמשיך';
-
-  @override
   String get secureLocalAccessTitle => 'גישה מקומית מאובטחת';
 
   @override
@@ -576,10 +587,6 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'התראות נדרשות כדי לנטר את הסנכרון ברקע. אנא הפעל אותן בהגדרות המערכת כדי להבטיח שהנתונים שלך תמיד מעודכנים.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'הרשאת התראות נדרשת לסנכרון ברקע';
 
   @override
   String requiresAppPro(String appName) {

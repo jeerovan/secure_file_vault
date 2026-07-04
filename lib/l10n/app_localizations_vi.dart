@@ -35,6 +35,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logging => 'Nhật ký';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'Báo cáo sự cố';
 
   @override
@@ -547,10 +562,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get openSettings => 'Mở cài đặt';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'Cần có quyền truy cập bộ nhớ để tiếp tục';
-
-  @override
   String get secureLocalAccessTitle => 'Truy cập cục bộ an toàn';
 
   @override
@@ -579,10 +590,6 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'Thông báo là cần thiết để theo dõi quá trình đồng bộ hóa trong nền. Vui lòng bật chúng trong cài đặt hệ thống để đảm bảo dữ liệu của bạn luôn được cập nhật.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'Cần có quyền thông báo để đồng bộ hóa trong nền';
 
   @override
   String requiresAppPro(String appName) {

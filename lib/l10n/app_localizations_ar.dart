@@ -35,6 +35,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logging => 'سجل النظام';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'الإبلاغ عن مشكلة';
 
   @override
@@ -542,10 +557,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get openSettings => 'فتح الإعدادات';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'إذن الوصول إلى التخزين مطلوب للمتابعة';
-
-  @override
   String get secureLocalAccessTitle => 'وصول محلي آمن';
 
   @override
@@ -574,10 +585,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'الإشعارات مطلوبة لمراقبة المزامنة في الخلفية. يرجى تفعيلها في إعدادات النظام لضمان تحديث بياناتك دائمًا.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'إذن الإشعارات مطلوب للمزامنة في الخلفية';
 
   @override
   String requiresAppPro(String appName) {

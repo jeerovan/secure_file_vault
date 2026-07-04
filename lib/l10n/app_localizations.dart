@@ -184,6 +184,36 @@ abstract class AppLocalizations {
   /// **'Logging'**
   String get logging;
 
+  /// Setting to show quick sync notification
+  ///
+  /// In en, this message translates to:
+  /// **'Quick sync notification'**
+  String get quickSyncNotificationSettingTitle;
+
+  /// Quick sync notification title
+  ///
+  /// In en, this message translates to:
+  /// **'File sync service'**
+  String get quickSyncNotificationTitle;
+
+  /// Quick sync notification text
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the button below to sync'**
+  String get quickSyncNotificationText;
+
+  /// Quick sync notification button text
+  ///
+  /// In en, this message translates to:
+  /// **'Sync now'**
+  String get quickSyncNotificationButton;
+
+  /// Quick sync notification text when in progress
+  ///
+  /// In en, this message translates to:
+  /// **'In progress...'**
+  String get quickSyncNotificationInProgress;
+
   /// Action to navigate to the issue tracker
   ///
   /// In en, this message translates to:
@@ -1120,12 +1150,6 @@ abstract class AppLocalizations {
   /// **'Open Settings'**
   String get openSettings;
 
-  /// Snackbar message shown when the user denies storage permission
-  ///
-  /// In en, this message translates to:
-  /// **'Storage permission is required to continue'**
-  String get storagePermissionRequiredToContinue;
-
   /// Main title on the storage permission onboarding screen
   ///
   /// In en, this message translates to:
@@ -1165,7 +1189,7 @@ abstract class AppLocalizations {
   /// Description on the notification permission page explaining why access is needed
   ///
   /// In en, this message translates to:
-  /// **'To keep your files in sync and provide real-time status updates in the background, we need permission to show notifications.'**
+  /// **'To quickly sync and upload your files in the background from the notification panel, we need permission to show a notification. You may disable it anytime from the settings.'**
   String get notificationPermissionPageDescription;
 
   /// Primary button label used to request notification permission
@@ -1177,14 +1201,8 @@ abstract class AppLocalizations {
   /// Dialog description explaining why notification permission is needed and asking the user to open settings
   ///
   /// In en, this message translates to:
-  /// **'Notifications are required to monitor background synchronization. Please enable them in the system settings to ensure your data is always up to date.'**
+  /// **'Notifications are required to provide you a quick sync utility via notification panel. Please enable them in the system settings to ensure your data is all uploaded.'**
   String get notificationPermissionSettingsDescription;
-
-  /// Snackbar message shown when the user denies notification permission
-  ///
-  /// In en, this message translates to:
-  /// **'Notification permission is required for background sync'**
-  String get notificationPermissionRequiredToContinue;
 
   /// Snackbar message shown when a Pro subscription is required for modifying storage
   ///

@@ -35,6 +35,21 @@ class AppLocalizationsEl extends AppLocalizations {
   String get logging => 'Καταγραφή';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'Αναφορά προβλήματος';
 
   @override
@@ -551,10 +566,6 @@ class AppLocalizationsEl extends AppLocalizations {
   String get openSettings => 'Άνοιγμα ρυθμίσεων';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'Απαιτείται άδεια αποθήκευσης για να συνεχίσετε';
-
-  @override
   String get secureLocalAccessTitle => 'Ασφαλής τοπική πρόσβαση';
 
   @override
@@ -584,10 +595,6 @@ class AppLocalizationsEl extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'Οι ειδοποιήσεις είναι απαραίτητες για την παρακολούθηση του συγχρονισμού στο παρασκήνιο. Παρακαλώ ενεργοποιήστε τις στις ρυθμίσεις του συστήματος για να διασφαλίσετε ότι τα δεδομένα σας είναι πάντα up to date.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'Απαιτείται άδεια ειδοποιήσεων για συγχρονισμό στο παρασκήνιο';
 
   @override
   String requiresAppPro(String appName) {

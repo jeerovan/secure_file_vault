@@ -35,6 +35,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get logging => '로그';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => '문제 신고';
 
   @override
@@ -539,9 +554,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get openSettings => '설정 열기';
 
   @override
-  String get storagePermissionRequiredToContinue => '계속하려면 저장공간 권한이 필요합니다';
-
-  @override
   String get secureLocalAccessTitle => '안전한 로컬 접근';
 
   @override
@@ -570,10 +582,6 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       '백그라운드 동기화를 모니터링하려면 알림이 필요합니다. 데이터가 항상 최신 상태로 유지되도록 시스템 설정에서 알림을 활성화해 주세요.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      '백그라운드 동기화를 위해 알림 권한이 필요합니다';
 
   @override
   String requiresAppPro(String appName) {

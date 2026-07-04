@@ -35,6 +35,21 @@ class AppLocalizationsUk extends AppLocalizations {
   String get logging => 'Журналювання';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'Повідомити про проблему';
 
   @override
@@ -550,10 +565,6 @@ class AppLocalizationsUk extends AppLocalizations {
   String get openSettings => 'Відкрити налаштування';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'Для продовження потрібен дозвіл на доступ до сховища';
-
-  @override
   String get secureLocalAccessTitle => 'Безпечний локальний доступ';
 
   @override
@@ -583,10 +594,6 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'Сповіщення необхідні для моніторингу фонової синхронізації. Будь ласка, увімкніть їх у системних налаштуваннях, щоб ваші дані завжди були актуальними.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'Для фонової синхронізації потрібен дозвіл на сповіщення';
 
   @override
   String requiresAppPro(String appName) {

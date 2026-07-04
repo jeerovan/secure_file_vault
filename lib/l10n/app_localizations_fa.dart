@@ -35,6 +35,21 @@ class AppLocalizationsFa extends AppLocalizations {
   String get logging => 'گزارش‌ها';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'گزارش مشکل';
 
   @override
@@ -547,10 +562,6 @@ class AppLocalizationsFa extends AppLocalizations {
   String get openSettings => 'باز کردن تنظیمات';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'برای ادامه، مجوز دسترسی به فضای ذخیره‌سازی لازم است';
-
-  @override
   String get secureLocalAccessTitle => 'دسترسی محلی امن';
 
   @override
@@ -580,10 +591,6 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'اعلان‌ها برای نظارت بر همگام‌سازی پس‌زمینه ضروری هستند. لطفاً آن‌ها را در تنظیمات سیستم فعال کنید تا مطمئن شوید داده‌های شما همیشه به‌روز هستند.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'مجوز اعلان‌ها برای همگام‌سازی پس‌زمینه الزامی است';
 
   @override
   String requiresAppPro(String appName) {

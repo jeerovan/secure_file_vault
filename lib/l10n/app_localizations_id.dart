@@ -35,6 +35,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get logging => 'Log';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'Laporkan Masalah';
 
   @override
@@ -548,10 +563,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get openSettings => 'Buka Pengaturan';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'Izin penyimpanan diperlukan untuk melanjutkan';
-
-  @override
   String get secureLocalAccessTitle => 'Akses Lokal Aman';
 
   @override
@@ -581,10 +592,6 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'Notifikasi diperlukan untuk memantau sinkronisasi latar belakang. Silakan aktifkan di pengaturan sistem untuk memastikan data Anda selalu mutakhir.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'Izin notifikasi diperlukan untuk sinkronisasi latar belakang';
 
   @override
   String requiresAppPro(String appName) {

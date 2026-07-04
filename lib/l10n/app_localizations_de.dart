@@ -35,6 +35,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get logging => 'Protokollierung';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'Problem melden';
 
   @override
@@ -550,10 +565,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get openSettings => 'Einstellungen öffnen';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'Speicherzugriff ist erforderlich, um fortzufahren';
-
-  @override
   String get secureLocalAccessTitle => 'Sicherer lokaler Zugriff';
 
   @override
@@ -583,10 +594,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'Benachrichtigungen sind erforderlich, um die Hintergrundsynchronisierung zu überwachen. Bitte aktiviere sie in den Systemeinstellungen, um sicherzustellen, dass deine Daten immer aktuell sind.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'Benachrichtigungsberechtigung für Hintergrundsynchronisierung erforderlich';
 
   @override
   String requiresAppPro(String appName) {

@@ -35,6 +35,21 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logging => 'Günlükleme';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => 'Sorun bildir';
 
   @override
@@ -549,10 +564,6 @@ class AppLocalizationsTr extends AppLocalizations {
   String get openSettings => 'Ayarları Aç';
 
   @override
-  String get storagePermissionRequiredToContinue =>
-      'Devam etmek için depolama izni gereklidir';
-
-  @override
   String get secureLocalAccessTitle => 'Güvenli Yerel Erişim';
 
   @override
@@ -581,10 +592,6 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'Arka plan senkronizasyonunu izlemek için bildirimler gereklidir. Verilerinizin her zaman güncel olduğundan emin olmak için lütfen sistem ayarlarından bildirimleri etkinleştirin.';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'Arka plan senkronizasyonu için bildirim izni gereklidir';
 
   @override
   String requiresAppPro(String appName) {

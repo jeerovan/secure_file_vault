@@ -35,6 +35,21 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logging => '日志';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => '报告问题';
 
   @override
@@ -532,9 +547,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get openSettings => '打开设置';
 
   @override
-  String get storagePermissionRequiredToContinue => '需要存储权限才能继续';
-
-  @override
   String get secureLocalAccessTitle => '安全的本地访问';
 
   @override
@@ -562,9 +574,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       '通知对于监控后台同步至关重要。请在系统设置中启用通知，以确保您的数据始终是最新的。';
-
-  @override
-  String get notificationPermissionRequiredToContinue => '后台同步需要通知权限';
 
   @override
   String requiresAppPro(String appName) {

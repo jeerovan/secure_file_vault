@@ -35,6 +35,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get logging => 'ログ';
 
   @override
+  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+
+  @override
+  String get quickSyncNotificationTitle => 'File sync service';
+
+  @override
+  String get quickSyncNotificationText => 'Tap the button below to sync';
+
+  @override
+  String get quickSyncNotificationButton => 'Sync now';
+
+  @override
+  String get quickSyncNotificationInProgress => 'In progress...';
+
+  @override
   String get reportIssue => '問題を報告';
 
   @override
@@ -538,9 +553,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get openSettings => '設定を開く';
 
   @override
-  String get storagePermissionRequiredToContinue => '続行するにはストレージ権限が必要です';
-
-  @override
   String get secureLocalAccessTitle => '安全なローカルアクセス';
 
   @override
@@ -569,10 +581,6 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get notificationPermissionSettingsDescription =>
       'バックグラウンド同期を監視するには通知が必要です。データが常に最新の状態に保たれるよう、システム設定で通知を有効にしてください。';
-
-  @override
-  String get notificationPermissionRequiredToContinue =>
-      'バックグラウンド同期には通知の許可が必要です';
 
   @override
   String requiresAppPro(String appName) {

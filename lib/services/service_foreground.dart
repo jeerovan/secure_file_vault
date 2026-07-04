@@ -1,6 +1,12 @@
+import 'dart:ui';
+
 import 'package:file_vault_bb/main.dart';
+import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+
+import '../l10n/app_localizations.dart';
 
 class ServiceForeground {
   ServiceForeground._();
@@ -34,19 +40,29 @@ class ServiceForeground {
       await FlutterForegroundTask.restartService();
     } else {
       logger.info("Starting");
-      final ServiceRequestResult result =
-          await FlutterForegroundTask.startService(
-              serviceTypes: [ForegroundServiceTypes.dataSync],
-              serviceId: 300,
-              notificationTitle: 'File Sync Service',
-              notificationText: 'Tap the button below to sync',
-              callback: startForegroundTask,
-              notificationButtons: [
-                const NotificationButton(id: 'sync', text: 'Sync Now')
-              ]);
+      try {
+        final String appLocale =
+            ModelSetting.get(AppString.locale.string, defaultValue: "en");
+        final Locale locale = Locale(appLocale);
+        final AppLocalizations localizations = lookupAppLocalizations(locale);
+        final ServiceRequestResult result =
+            await FlutterForegroundTask.startService(
+                serviceTypes: [ForegroundServiceTypes.dataSync],
+                serviceId: 300,
+                notificationTitle: localizations.quickSyncNotificationTitle,
+                notificationText: localizations.quickSyncNotificationText,
+                callback: startForegroundTask,
+                notificationButtons: [
+                  NotificationButton(
+                      id: 'sync',
+                      text: localizations.quickSyncNotificationButton)
+                ]);
 
-      if (result is ServiceRequestFailure) {
-        logger.error("Failed to start", error: result.error);
+        if (result is ServiceRequestFailure) {
+          logger.error("Failed to start", error: result.error);
+        }
+      } catch (e) {
+        logger.error("Exception starting foreground service", error: e);
       }
     }
   }
