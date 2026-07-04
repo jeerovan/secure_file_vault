@@ -41,6 +41,26 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "quickSyncNotificationSettingTitle": "Quick-Sync-Benachrichtigung",
+  "@quickSyncNotificationSettingTitle": {
+    "description": "Setting to show quick sync notification"
+  },
+  "quickSyncNotificationTitle": "Datei-Sync-Dienst",
+  "@quickSyncNotificationTitle": {
+    "description": "Quick sync notification title"
+  },
+  "quickSyncNotificationText": "Tippe unten auf die Schaltfläche, um zu synchronisieren",
+  "@quickSyncNotificationText": {
+    "description": "Quick sync notification text"
+  },
+  "quickSyncNotificationButton": "Jetzt synchronisieren",
+  "@quickSyncNotificationButton": {
+    "description": "Quick sync notification button text"
+  },
+  "quickSyncNotificationInProgress": "Wird synchronisiert...",
+  "@quickSyncNotificationInProgress": {
+    "description": "Quick sync notification text when in progress"
+  },
   "reportIssue": "Problem melden",
   "@reportIssue": {
     "description": "Action to navigate to the issue tracker"

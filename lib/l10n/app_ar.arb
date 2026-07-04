@@ -41,6 +41,26 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "quickSyncNotificationSettingTitle": "إشعارات المزامنة السريعة",
+  "@quickSyncNotificationSettingTitle": {
+    "description": "Setting to show quick sync notification"
+  },
+  "quickSyncNotificationTitle": "خدمة مزامنة الملفات",
+  "@quickSyncNotificationTitle": {
+    "description": "Quick sync notification title"
+  },
+  "quickSyncNotificationText": "اضغط على الزر أدناه للمزامنة",
+  "@quickSyncNotificationText": {
+    "description": "Quick sync notification text"
+  },
+  "quickSyncNotificationButton": "مزامنة الآن",
+  "@quickSyncNotificationButton": {
+    "description": "Quick sync notification button text"
+  },
+  "quickSyncNotificationInProgress": "جارٍ المزامنة...",
+  "@quickSyncNotificationInProgress": {
+    "description": "Quick sync notification text when in progress"
+  },
   "reportIssue": "الإبلاغ عن مشكلة",
   "@reportIssue": {
     "description": "Action to navigate to the issue tracker"

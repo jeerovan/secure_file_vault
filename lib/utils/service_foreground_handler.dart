@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:file_vault_bb/l10n/app_localizations.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
-import '../models/model_setting.dart';
 import '../services/service_logger.dart';
 import '../storage/storage_sqlite.dart';
 import '../utils/common.dart';
@@ -59,9 +58,7 @@ class ForegroundTaskHandler extends TaskHandler {
 
   Future<void> startSyncTask() async {
     try {
-      final String appLocale = await ModelSetting.getRaw(
-          AppString.locale.string,
-          defaultValue: "en");
+      final String appLocale = await getAppLocale();
       final Locale locale = Locale(appLocale);
       final AppLocalizations localizations = lookupAppLocalizations(locale);
       FlutterForegroundTask.updateService(

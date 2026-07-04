@@ -424,7 +424,7 @@ class SettingsPageState extends State<SettingsPage> {
                   title: Text(loc.language),
                   horizontalTitleGap: 24.0,
                   subtitle: Text(
-                    _selectedLanguageOption()?.nativeName ?? 'Tap to select',
+                    _selectedLanguageOption()?.nativeName ?? loc.tapToSelect,
                   ),
                   onTap: () => _showLanguagePicker(context),
                   trailing: _selectedLanguageOption() != null
