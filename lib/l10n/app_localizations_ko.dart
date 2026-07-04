@@ -35,19 +35,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get logging => '로그';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => '빠른 동기화 알림';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => '파일 동기화 서비스';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText => '아래 버튼을 탭하여 동기화하세요';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => '지금 동기화';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => '진행 중...';
 
   @override
   String get reportIssue => '문제 신고';

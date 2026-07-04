@@ -35,19 +35,19 @@ class AppLocalizationsTh extends AppLocalizations {
   String get logging => 'บันทึกระบบ';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'การแจ้งเตือนการซิงก์ด่วน';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'บริการซิงก์ไฟล์';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText => 'แตะปุ่มด้านล่างเพื่อซิงก์';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'ซิงก์ตอนนี้';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'กำลังดำเนินการ...';
 
   @override
   String get reportIssue => 'รายงานปัญหา';

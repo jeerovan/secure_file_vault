@@ -35,19 +35,20 @@ class AppLocalizationsDe extends AppLocalizations {
   String get logging => 'Protokollierung';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'Quick-Sync-Benachrichtigung';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'Datei-Sync-Dienst';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText =>
+      'Tippe unten auf die Schaltfläche, um zu synchronisieren';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'Jetzt synchronisieren';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'Wird synchronisiert...';
 
   @override
   String get reportIssue => 'Problem melden';

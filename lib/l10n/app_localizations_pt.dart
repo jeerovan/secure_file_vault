@@ -35,19 +35,22 @@ class AppLocalizationsPt extends AppLocalizations {
   String get logging => 'Registos';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle =>
+      'Notificação de sincronização rápida';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle =>
+      'Serviço de sincronização de ficheiros';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText =>
+      'Toque no botão abaixo para sincronizar';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'Sincronizar agora';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'Em curso...';
 
   @override
   String get reportIssue => 'Reportar problema';

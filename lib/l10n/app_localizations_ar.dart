@@ -35,19 +35,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logging => 'سجل النظام';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'إشعارات المزامنة السريعة';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'خدمة مزامنة الملفات';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText => 'اضغط على الزر أدناه للمزامنة';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'مزامنة الآن';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'جارٍ المزامنة...';
 
   @override
   String get reportIssue => 'الإبلاغ عن مشكلة';

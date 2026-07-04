@@ -35,19 +35,21 @@ class AppLocalizationsUk extends AppLocalizations {
   String get logging => 'Журналювання';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle =>
+      'Сповіщення про швидку синхронізацію';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'Сервіс синхронізації файлів';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText =>
+      'Натисніть кнопку нижче, щоб синхронізувати';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'Синхронізувати зараз';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'Триває...';
 
   @override
   String get reportIssue => 'Повідомити про проблему';

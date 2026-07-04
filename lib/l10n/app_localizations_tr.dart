@@ -35,19 +35,20 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logging => 'Günlükleme';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'Hızlı eşitleme bildirimi';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'Dosya eşitleme servisi';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText =>
+      'Eşitlemek için aşağıdaki düğmeye dokunun';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'Şimdi eşitle';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'İşlem devam ediyor...';
 
   @override
   String get reportIssue => 'Sorun bildir';

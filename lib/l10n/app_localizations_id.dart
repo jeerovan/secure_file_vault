@@ -35,19 +35,21 @@ class AppLocalizationsId extends AppLocalizations {
   String get logging => 'Log';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle =>
+      'Notifikasi sinkronisasi cepat';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'Layanan sinkronisasi file';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText =>
+      'Ketuk tombol di bawah untuk sinkronisasi';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'Sinkronkan sekarang';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'Sedang diproses...';
 
   @override
   String get reportIssue => 'Laporkan Masalah';

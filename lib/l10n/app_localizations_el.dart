@@ -35,19 +35,21 @@ class AppLocalizationsEl extends AppLocalizations {
   String get logging => 'Καταγραφή';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle =>
+      'Ειδοποίηση γρήγορου συγχρονισμού';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'Υπηρεσία συγχρονισμού αρχείων';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText =>
+      'Πατήστε το παρακάτω κουμπί για συγχρονισμό';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'Συγχρονισμός τώρα';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'Σε εξέλιξη...';
 
   @override
   String get reportIssue => 'Αναφορά προβλήματος';

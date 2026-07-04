@@ -35,19 +35,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logging => 'Nhật ký';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'Thông báo đồng bộ nhanh';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'Dịch vụ đồng bộ tập tin';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText => 'Chạm vào nút bên dưới để đồng bộ';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'Đồng bộ ngay';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'Đang thực hiện...';
 
   @override
   String get reportIssue => 'Báo cáo sự cố';

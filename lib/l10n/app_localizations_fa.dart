@@ -35,19 +35,20 @@ class AppLocalizationsFa extends AppLocalizations {
   String get logging => 'گزارش‌ها';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'اعلان همگام‌سازی سریع';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'سرویس همگام‌سازی فایل‌ها';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText =>
+      'برای همگام‌سازی، روی دکمه زیر ضربه بزنید';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => 'همگام‌سازی اکنون';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => 'در حال انجام...';
 
   @override
   String get reportIssue => 'گزارش مشکل';

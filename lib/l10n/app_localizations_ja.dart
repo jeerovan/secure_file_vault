@@ -35,19 +35,19 @@ class AppLocalizationsJa extends AppLocalizations {
   String get logging => 'ログ';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'クイック同期通知';
 
   @override
-  String get quickSyncNotificationTitle => 'File sync service';
+  String get quickSyncNotificationTitle => 'ファイル同期サービス';
 
   @override
-  String get quickSyncNotificationText => 'Tap the button below to sync';
+  String get quickSyncNotificationText => '下のボタンをタップして同期';
 
   @override
-  String get quickSyncNotificationButton => 'Sync now';
+  String get quickSyncNotificationButton => '今すぐ同期';
 
   @override
-  String get quickSyncNotificationInProgress => 'In progress...';
+  String get quickSyncNotificationInProgress => '処理中...';
 
   @override
   String get reportIssue => '問題を報告';
