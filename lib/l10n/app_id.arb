@@ -41,6 +41,26 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "quickSyncNotificationSettingTitle": "Notifikasi sinkronisasi cepat",
+  "@quickSyncNotificationSettingTitle": {
+    "description": "Setting to show quick sync notification"
+  },
+  "quickSyncNotificationTitle": "Layanan sinkronisasi file",
+  "@quickSyncNotificationTitle": {
+    "description": "Quick sync notification title"
+  },
+  "quickSyncNotificationText": "Ketuk tombol di bawah untuk sinkronisasi",
+  "@quickSyncNotificationText": {
+    "description": "Quick sync notification text"
+  },
+  "quickSyncNotificationButton": "Sinkronkan sekarang",
+  "@quickSyncNotificationButton": {
+    "description": "Quick sync notification button text"
+  },
+  "quickSyncNotificationInProgress": "Sedang diproses...",
+  "@quickSyncNotificationInProgress": {
+    "description": "Quick sync notification text when in progress"
+  },
   "reportIssue": "Laporkan Masalah",
   "@reportIssue": {
     "description": "Action to navigate to the issue tracker"
