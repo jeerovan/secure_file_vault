@@ -133,20 +133,8 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Future<void> _refreshState() async {
-    String lastReconAtString =
-        await ModelState.get(AppString.lastReconRunningAt.string);
-    int? lastReconAt =
-        lastReconAtString.isEmpty ? null : int.parse(lastReconAtString);
-
-    String lastSyncAtString =
-        await ModelState.get(AppString.lastSyncRunningAt.string);
-    int? lastSyncAt =
-        lastSyncAtString.isEmpty ? null : int.parse(lastSyncAtString);
-
-    int startedAt = DateTime.now().millisecondsSinceEpoch;
-
-    if ((lastReconAt != null && (startedAt - lastReconAt < 2000)) ||
-        (lastSyncAt != null && (startedAt - lastSyncAt < 2000))) {
+    bool reconOrSyncInProgress = await isRecordOrSyncInProgress();
+    if (reconOrSyncInProgress) {
       if (mounted) {
         setState(() {
           _syncInProgress = true;

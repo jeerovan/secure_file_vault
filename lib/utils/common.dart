@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../models/model_state.dart';
 import '../utils/enums.dart';
 import '../models/model_setting.dart';
 import '../services/service_logger.dart';
@@ -772,6 +773,23 @@ Future<String?> getFileHashKey() async {
   String? fileHashKeyBase64 =
       await storage.read(key: AppString.fileHashKey.string);
   return fileHashKeyBase64;
+}
+
+Future<bool> isRecordOrSyncInProgress() async {
+  String lastReconAtString =
+      await ModelState.get(AppString.lastReconRunningAt.string);
+  int? lastReconAt =
+      lastReconAtString.isEmpty ? null : int.parse(lastReconAtString);
+
+  String lastSyncAtString =
+      await ModelState.get(AppString.lastSyncRunningAt.string);
+  int? lastSyncAt =
+      lastSyncAtString.isEmpty ? null : int.parse(lastSyncAtString);
+
+  int startedAt = DateTime.now().millisecondsSinceEpoch;
+
+  return ((lastReconAt != null && (startedAt - lastReconAt < 2000)) ||
+      (lastSyncAt != null && (startedAt - lastSyncAt < 2000)));
 }
 
 void safeParseJson(

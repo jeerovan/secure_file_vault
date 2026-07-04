@@ -6,6 +6,7 @@ import 'package:file_vault_bb/services/service_foreground.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/model_file.dart';
@@ -100,7 +101,11 @@ class AppSetupState extends ChangeNotifier {
           notifyListeners();
           return;
         } else {
-          ServiceForeground.instance.start();
+          bool isForegroundServiceRunning =
+              await FlutterForegroundTask.isRunningService;
+          if (!isForegroundServiceRunning) {
+            ServiceForeground.instance.start();
+          }
         }
       }
     }
