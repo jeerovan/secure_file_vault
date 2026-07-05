@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -19,8 +18,10 @@ class StorageSqlite {
   // Track execution mode to handle background isolate behaviors safely
   static ExecutionMode _currentMode = ExecutionMode.mainApp;
 
-  final logger = AppLogger(prefixes: ["StorageSqlite", _currentMode.string]);
-  StorageSqlite._init();
+  late AppLogger logger;
+  StorageSqlite._init() {
+    logger = AppLogger(prefixes: ["StorageSqlite", _currentMode.string]);
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -46,7 +47,7 @@ class StorageSqlite {
     try {
       String dbDir = await getDbStoragePath();
       final dbPath = join(dbDir, dbFileName);
-      log("DbPath:$dbPath");
+      logger.debug("DbPath: $dbPath");
 
       return await openDatabase(
         dbPath,
@@ -59,7 +60,7 @@ class StorageSqlite {
         onOpen: _onOpen,
       );
     } catch (e, stackTrace) {
-      log("Failed to initialize database", error: e, stackTrace: stackTrace);
+      logger.error("Failed to initialize database", error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -70,6 +71,7 @@ class StorageSqlite {
 
   static Future<void> initialize(ExecutionMode mode) async {
     _currentMode = mode; // Store mode for the lazy initializer
+    instance.logger = AppLogger(prefixes: ["StorageSqlite", mode.string]);
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
     }
@@ -84,7 +86,7 @@ class StorageSqlite {
       for (var pair in keyValuePairs) pair['id']: pair['value']
     };
 
-    AppLogger(prefixes: [mode.string]).info("Initialized SqliteDB");
+    instance.logger.info("Initialized SqliteDB");
   }
 
   Future close() async {

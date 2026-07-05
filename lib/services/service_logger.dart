@@ -2,8 +2,6 @@ import 'dart:developer' as dev;
 import 'dart:io';
 
 import '../utils/common.dart';
-import '../utils/enums.dart';
-import '../models/model_setting.dart';
 
 // Custom Logger Class
 class AppLogger {
@@ -63,17 +61,27 @@ class AppLogger {
       stdout.writeln(coloredMessage);
     }
 
-    if (ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
-        "yes") {
-      writeToLogFile(logMessage);
-    }
+    writeToLogFile(logMessage);
   }
 
   Future<void> writeToLogFile(String logMessage) async {
     try {
       final tempDir = await getAppTempDirectory();
       final logFile = File('${tempDir.path}/app_logs.txt');
-      await logFile.writeAsString('$logMessage\n', mode: FileMode.append);
+
+      List<String> lines = [];
+      if (await logFile.exists()) {
+        lines = await logFile.readAsLines();
+      }
+
+      lines.add(logMessage);
+
+      // Keep only the latest 200 entries
+      if (lines.length > 200) {
+        lines = lines.sublist(lines.length - 200);
+      }
+
+      await logFile.writeAsString(lines.join('\n') + '\n');
     } catch (e) {
       dev.log("Failed to write to log file", error: e);
     }
