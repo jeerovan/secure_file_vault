@@ -59,6 +59,8 @@ class ServiceForeground {
 
         if (result is ServiceRequestFailure) {
           logger.error("Failed to start", error: result.error);
+        } else {
+          logger.info("Started");
         }
       } catch (e) {
         logger.error("Exception starting foreground service", error: e);

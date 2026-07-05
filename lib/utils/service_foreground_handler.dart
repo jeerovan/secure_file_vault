@@ -10,10 +10,13 @@ import '../utils/enums.dart';
 import '../utils/utils_sync.dart';
 
 class ForegroundTaskHandler extends TaskHandler {
-  AppLogger logger = AppLogger(prefixes: ["Forground Service"]);
+  AppLogger logger = AppLogger(prefixes: ["Forground Handler"]);
   // Called when the task is started.
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    // Initialize database in this isolate
+    await StorageSqlite.initialize(ExecutionMode.foregroundService);
+    await initializeDependencies(ExecutionMode.foregroundService);
     logger.info(
       "OnStart: $starter",
     );
@@ -65,8 +68,6 @@ class ForegroundTaskHandler extends TaskHandler {
       FlutterForegroundTask.updateService(
           notificationButtons: [],
           notificationText: localizations.quickSyncNotificationInProgress);
-      await StorageSqlite.initialize(ExecutionMode.foregroundService);
-      await initializeDependencies(ExecutionMode.foregroundService);
       await SyncUtils().reconFolders(caller: "ForegroundService");
       FlutterForegroundTask.updateService(
           notificationText: localizations.quickSyncNotificationText,

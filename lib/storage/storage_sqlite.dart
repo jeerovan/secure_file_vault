@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -42,11 +43,10 @@ class StorageSqlite {
   }
 
   Future<Database> _initDB(String dbFileName) async {
-    logger.info("${_currentMode.string}: _initDb");
     try {
       String dbDir = await getDbStoragePath();
       final dbPath = join(dbDir, dbFileName);
-      logger.info("DbPath:$dbPath");
+      log("DbPath:$dbPath");
 
       return await openDatabase(
         dbPath,
@@ -59,8 +59,7 @@ class StorageSqlite {
         onOpen: _onOpen,
       );
     } catch (e, stackTrace) {
-      logger.error("Failed to initialize database",
-          error: e, stackTrace: stackTrace);
+      log("Failed to initialize database", error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -70,13 +69,10 @@ class StorageSqlite {
   }
 
   static Future<void> initialize(ExecutionMode mode) async {
-    AppLogger(prefixes: ["StorageSqlite", mode.string])
-        .info("Initializing SqliteDB");
     _currentMode = mode; // Store mode for the lazy initializer
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
     }
-
     // Force FFI on ALL platforms (Android, iOS, Desktop)
     databaseFactory = databaseFactoryFfi;
 

@@ -34,7 +34,7 @@ class SettingsPageState extends State<SettingsPage> {
   bool isAuthSupported = false;
   bool isAuthEnabled = false;
   bool loggingEnabled =
-      ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "yes") ==
+      ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
           "yes";
   bool quickSyncEnabled = ModelSetting.get(
           AppString.syncWithNotification.string,
