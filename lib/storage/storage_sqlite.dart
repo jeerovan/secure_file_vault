@@ -16,9 +16,9 @@ class StorageSqlite {
   static Completer<Database>? _databaseCompleter;
 
   // Track execution mode to handle background isolate behaviors safely
-  static ExecutionMode _currentMode = ExecutionMode.appForeground;
+  static ExecutionMode _currentMode = ExecutionMode.mainApp;
 
-  final logger = AppLogger(prefixes: ["StorageSqlite"]);
+  final logger = AppLogger(prefixes: ["StorageSqlite", _currentMode.string]);
   StorageSqlite._init();
 
   Future<Database> get database async {
@@ -42,6 +42,7 @@ class StorageSqlite {
   }
 
   Future<Database> _initDB(String dbFileName) async {
+    logger.info("${_currentMode.string}: _initDb");
     try {
       String dbDir = await getDbStoragePath();
       final dbPath = join(dbDir, dbFileName);
@@ -51,7 +52,7 @@ class StorageSqlite {
         dbPath,
         version: 2,
         // CRITICAL: Prevent isolate clashes. Use separate native instances in background.
-        singleInstance: _currentMode == ExecutionMode.appForeground,
+        singleInstance: _currentMode == ExecutionMode.mainApp,
         onConfigure: _onConfigure,
         onCreate: _onCreate,
         onUpgrade: _onUpgrade,
@@ -68,8 +69,9 @@ class StorageSqlite {
     await database;
   }
 
-  static Future<void> initialize(
-      {ExecutionMode mode = ExecutionMode.appForeground}) async {
+  static Future<void> initialize(ExecutionMode mode) async {
+    AppLogger(prefixes: ["StorageSqlite", mode.string])
+        .info("Initializing SqliteDB");
     _currentMode = mode; // Store mode for the lazy initializer
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
@@ -92,7 +94,7 @@ class StorageSqlite {
   Future close() async {
     // Guard: Never close the DB from a background isolate.
     // Doing so would kill the shared native connection for the foreground app.
-    if (_currentMode == ExecutionMode.appBackground) {
+    if (_currentMode == ExecutionMode.foregroundService) {
       logger.warning(
           "Ignored close() call from background isolate to protect foreground UI.");
       return;

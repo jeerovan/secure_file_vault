@@ -57,6 +57,7 @@ class ForegroundTaskHandler extends TaskHandler {
   }
 
   Future<void> startSyncTask() async {
+    logger.info("Starting Sync Task");
     try {
       final String appLocale = await getAppLocale();
       final Locale locale = Locale(appLocale);
@@ -64,8 +65,8 @@ class ForegroundTaskHandler extends TaskHandler {
       FlutterForegroundTask.updateService(
           notificationButtons: [],
           notificationText: localizations.quickSyncNotificationInProgress);
-      await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
-      await initializeDependencies(mode: ExecutionMode.appBackground);
+      await StorageSqlite.initialize(ExecutionMode.foregroundService);
+      await initializeDependencies(ExecutionMode.foregroundService);
       await SyncUtils().reconFolders(caller: "ForegroundService");
       FlutterForegroundTask.updateService(
           notificationText: localizations.quickSyncNotificationText,

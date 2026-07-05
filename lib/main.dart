@@ -40,7 +40,7 @@ void startForegroundTask() {
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await StorageSqlite.initialize(mode: ExecutionMode.appForeground);
+  await StorageSqlite.initialize(ExecutionMode.mainApp);
   await initializeInParallel();
   if (Platform.isIOS || Platform.isAndroid) {
     ServiceForeground.instance.init();
@@ -63,7 +63,7 @@ Future<void> main() async {
 
 Future<void> initializeInParallel() async {
   await Future.wait([
-    initializeDependencies(mode: ExecutionMode.appForeground),
+    initializeDependencies(ExecutionMode.mainApp),
     initializeAutoSyncOnDesktop(),
     initializePurchases(),
   ]);

@@ -92,7 +92,7 @@ class _FilePaneState extends State<FilePane> {
   bool _isDeviceRoot = false;
   bool _syncInProgress = false;
   bool _loggingEnabled =
-      ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
+      ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "yes") ==
           "yes";
   bool _storageFull =
       ModelSetting.get(AppString.storageFull.string, defaultValue: "no") ==

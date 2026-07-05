@@ -27,7 +27,7 @@ class ServiceForeground {
       foregroundTaskOptions: ForegroundTaskOptions(
         eventAction: ForegroundTaskEventAction.nothing(),
         autoRunOnBoot: false,
-        autoRunOnMyPackageReplaced: false,
+        autoRunOnMyPackageReplaced: true,
         allowWakeLock: true,
         allowWifiLock: true,
       ),
@@ -43,6 +43,7 @@ class ServiceForeground {
         final String appLocale = await getAppLocale();
         final Locale locale = Locale(appLocale);
         final AppLocalizations localizations = lookupAppLocalizations(locale);
+
         final ServiceRequestResult result =
             await FlutterForegroundTask.startService(
                 serviceTypes: [ForegroundServiceTypes.dataSync],

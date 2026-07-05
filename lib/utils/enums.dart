@@ -55,21 +55,15 @@ enum ExecutionStatus {
   success,
 }
 
-enum ExecutionMode {
-  appForeground,
-  appBackground,
-  fcmBackground,
-}
+enum ExecutionMode { mainApp, foregroundService }
 
 extension ExecutionModeExtension on ExecutionMode {
   String get string {
     switch (this) {
-      case ExecutionMode.appForeground:
-        return "AppForground";
-      case ExecutionMode.appBackground:
-        return "AppBackground";
-      case ExecutionMode.fcmBackground:
-        return "FcmBackground";
+      case ExecutionMode.mainApp:
+        return "MainApp";
+      case ExecutionMode.foregroundService:
+        return "ForegroundService";
     }
   }
 }
