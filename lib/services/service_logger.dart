@@ -1,8 +1,7 @@
 import 'dart:developer' as dev;
 import 'dart:io';
 
-import '../models/model_log.dart';
-
+import '../utils/common.dart';
 import '../utils/enums.dart';
 import '../models/model_setting.dart';
 
@@ -66,13 +65,18 @@ class AppLogger {
 
     if (ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
         "yes") {
-      insertToDb(logMessage);
+      writeToLogFile(logMessage);
     }
   }
 
-  Future<void> insertToDb(String logMessage) async {
-    ModelLog log = await ModelLog.fromMap({"log": logMessage});
-    await log.insert();
+  Future<void> writeToLogFile(String logMessage) async {
+    try {
+      final tempDir = await getAppTempDirectory();
+      final logFile = File('${tempDir.path}/app_logs.txt');
+      await logFile.writeAsString('$logMessage\n', mode: FileMode.append);
+    } catch (e) {
+      dev.log("Failed to write to log file", error: e);
+    }
   }
 
   /// Convenience methods
