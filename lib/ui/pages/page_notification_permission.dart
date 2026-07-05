@@ -57,9 +57,11 @@ class _NotificationPermissionPageState extends State<NotificationPermissionPage>
   Future<void> _checkPermission() async {
     PermissionStatus notificationPermission =
         await Permission.notification.status;
-    if (mounted && notificationPermission.isGranted) {
-      await context.read<AppSetupState>().recheckStatus();
-      // We start the notification service while rechecking
+    if (notificationPermission.isGranted) {
+      await ServiceForeground.instance.start();
+      if (mounted) {
+        await context.read<AppSetupState>().recheckStatus();
+      }
     }
   }
 
@@ -72,9 +74,10 @@ class _NotificationPermissionPageState extends State<NotificationPermissionPage>
       if (!mounted) return;
 
       if (notificationPermission.isGranted) {
-        ServiceForeground.instance.start();
-        // Transition to the next step in setup
-        await context.read<AppSetupState>().recheckStatus();
+        await ServiceForeground.instance.start();
+        if (mounted) {
+          await context.read<AppSetupState>().recheckStatus();
+        }
       } else {
         _showSettingsDialog();
       }

@@ -104,7 +104,7 @@ class AppSetupState extends ChangeNotifier {
           bool isForegroundServiceRunning =
               await FlutterForegroundTask.isRunningService;
           if (!isForegroundServiceRunning) {
-            ServiceForeground.instance.start();
+            await ServiceForeground.instance.start();
           }
         }
       }

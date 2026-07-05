@@ -261,8 +261,12 @@ class SyncUtils {
       ModelSetting.clear();
       await clearFiFeDirectory();
       // keep locale
-      await ModelSetting.set(AppString.locale.string, locale);
-      await ModelSetting.set(AppString.fcmId.string, fcmToken);
+      if (locale.isNotEmpty) {
+        await ModelSetting.set(AppString.locale.string, locale);
+      }
+      if (fcmToken.isNotEmpty) {
+        await ModelSetting.set(AppString.fcmId.string, fcmToken);
+      }
       await ModelSetting.set(AppString.onboarding.string, "yes");
       EventStream().publish(AppEvent(
           type: EventType.system, id: "signout", key: EventKey.signout));

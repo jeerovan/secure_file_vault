@@ -16,6 +16,9 @@ class AppLogger {
   static const String _red = '\x1B[31m';
   static const String _white = '\x1B[37m';
 
+  static File? _logFile;
+  static const int _maxLogSize = 1024 * 1024; // 1MB rotation limit
+
   /// Get color based on log level
   String _getColor(AppLogLevel level) {
     switch (level) {
@@ -28,6 +31,14 @@ class AppLogger {
       default:
         return _white; // Default (info)
     }
+  }
+
+  /// Internal helper to get or initialize the log file
+  static Future<File> _getLogFile() async {
+    if (_logFile != null) return _logFile!;
+    final tempDir = await getAppTempDirectory();
+    _logFile = File('${tempDir.path}/app_logs.txt');
+    return _logFile!;
   }
 
   /// Log a message with an optional error and stack trace
@@ -66,22 +77,24 @@ class AppLogger {
 
   Future<void> writeToLogFile(String logMessage) async {
     try {
-      final tempDir = await getAppTempDirectory();
-      final logFile = File('${tempDir.path}/app_logs.txt');
+      final file = await _getLogFile();
 
-      List<String> lines = [];
-      if (await logFile.exists()) {
-        lines = await logFile.readAsLines();
+      // Production-grade rotation: If file exceeds size limit, rotate to .old
+      if (await file.exists() && await file.length() > _maxLogSize) {
+        try {
+          final oldFile = File('${file.path}.old');
+          if (await oldFile.exists()) {
+            await oldFile.delete();
+          }
+          await file.rename(oldFile.path);
+        } catch (e) {
+          // Ignore rotation errors (e.g., another isolate already rotated the file)
+        }
       }
 
-      lines.add(logMessage);
-
-      // Keep only the latest 200 entries
-      if (lines.length > 200) {
-        lines = lines.sublist(lines.length - 200);
-      }
-
-      await logFile.writeAsString(lines.join('\n') + '\n');
+      // Use FileMode.append for atomic writes across multiple isolates/processes.
+      // This prevents logs from being overwritten or disappearing.
+      await file.writeAsString('$logMessage\n', mode: FileMode.append);
     } catch (e) {
       dev.log("Failed to write to log file", error: e);
     }
