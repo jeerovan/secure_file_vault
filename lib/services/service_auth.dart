@@ -1,99 +1,93 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
-import 'package:dio/dio.dart';
-import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
-import 'package:cookie_jar/cookie_jar.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
 
 class NeonAuth {
-  late Dio _dio;
-  late PersistCookieJar _cookieJar;
   final SecureStorage _storage;
+  final http.Client _http;
   final String _neonAuthUrl;
+  final Duration timeout;
   final logger = AppLogger(prefixes: ["NeonAuth"]);
 
-  final Completer<void> _initCompleter = Completer<void>();
-  Completer<void>? _refreshJwtCompleter;
-  bool _isInitialized = false;
-
-  NeonAuth({SecureStorage? storage})
-      : _storage = storage ?? SecureStorage(),
+  NeonAuth({
+    SecureStorage? storage,
+    http.Client? httpClient,
+    this.timeout = const Duration(seconds: 20),
+  })  : _storage = storage ?? SecureStorage(),
+        _http = httpClient ?? http.Client(),
         _neonAuthUrl = AppEnv.neonAuthUrl {
     if (_neonAuthUrl.isEmpty) {
       throw StateError(
         'NEON_AUTH is empty.',
       );
     }
-    _initDio();
   }
 
-  Future<void> _ensureInitialized() async {
-    if (_isInitialized) return;
-    await _initCompleter.future;
-  }
+  Completer<void>? _refreshJwtCompleter;
 
-  Future<void> _initDio() async {
-    try {
-      final appDocDir = await getApplicationDocumentsDirectory();
-      final cookiePath = '${appDocDir.path}/.cookies/';
-      _cookieJar = PersistCookieJar(
-        storage: FileStorage(cookiePath),
-        ignoreExpires: false,
-      );
-
-      await _migrateOldCookiesIfNecessary();
-
-      _dio = Dio(BaseOptions(
-        baseUrl: _neonAuthUrl,
-        connectTimeout: const Duration(seconds: 20),
-        receiveTimeout: const Duration(seconds: 30),
-        contentType: Headers.jsonContentType,
-      ));
-
-      _dio.interceptors.add(CookieManager(_cookieJar));
-
-      /* _dio.interceptors.add(LogInterceptor(
-        requestHeader: false,
-        responseHeader: true,
-        requestBody: true,
-      )); */
-      _isInitialized = true;
-      _initCompleter.complete();
-    } catch (e) {
-      _initCompleter.completeError(e);
+  String? _getHeader(Map<String, String> headers, String key) {
+    final lowerKey = key.toLowerCase();
+    for (var entry in headers.entries) {
+      if (entry.key.toLowerCase() == lowerKey) {
+        return entry.value;
+      }
     }
+    return null;
   }
 
-  Future<Response> sendOTP(String email) async {
-    await _ensureInitialized();
-    return await _dio.post(
-      '/email-otp/send-verification-otp',
-      data: {'email': email, 'type': 'sign-in'},
+  Future<http.Response> sendOTP(String email) async {
+    Uri otpUrl = Uri.parse('$_neonAuthUrl/email-otp/send-verification-otp');
+    final response = await _http.post(
+      otpUrl,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'type': 'sign-in' // Specifying 'sign-in' triggers the passwordless flow
+      }),
     );
+    return response;
   }
 
   Future<String?> verifyOTP(String email, String otp) async {
-    await _ensureInitialized();
-    final response = await _dio.post(
-      '/sign-in/email-otp',
-      data: {'email': email, 'otp': otp},
+    final url = Uri.parse('$_neonAuthUrl/sign-in/email-otp');
+    final response = await _http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'otp': otp,
+        // Optional: Pass 'name' or 'image' here if you want to set them during auto-registration
+      }),
     );
-
+    String? userId;
     if (response.statusCode == 200) {
-      final data = response.data;
-      final String userId = data['user']['id'];
+      // Extract the full cookie string from the header
+      final rawCookie = _getHeader(response.headers, 'set-cookie');
+      if (rawCookie != null) {
+        // Parse out the __Secure-neon-auth.session_token
+        final cookieMatch = RegExp(r'__Secure-neon-auth\.session_token=([^;]+)')
+            .firstMatch(rawCookie);
+        if (cookieMatch != null) {
+          final sessionCookie = cookieMatch.group(1)!;
+          await _storage.write(
+              key: AppString.sessionCookie.string, value: sessionCookie);
 
-      // Fetch JWT using the session cookie now stored in _cookieJar
-      await refreshSessionAndGetJWT();
-      return userId;
+          // create profile before fetch jwtToken
+          final data = jsonDecode(response.body);
+          userId = data['user']['id'];
+          // Immediately fetch the JWT
+          await refreshSessionAndGetJWT();
+        }
+      }
     }
-    return null;
+    return userId;
   }
 
   bool _isTokenExpiringSoon(String token, Duration buffer) {
@@ -111,7 +105,7 @@ class NeonAuth {
       // 'exp' is in seconds since epoch
       final expSeconds = payloadMap['exp'] as int;
       final expiryDate = DateTime.fromMillisecondsSinceEpoch(expSeconds * 1000);
-
+      logger.debug("Token Expiry: $expiryDate");
       // Check if the current time + 2 minutes is past the expiration date
       final timeWithBuffer = DateTime.now().add(buffer);
       return timeWithBuffer.isAfter(expiryDate);
@@ -122,84 +116,123 @@ class NeonAuth {
   }
 
   Future<void> refreshSessionAndGetJWT() async {
-    if (simulateTesting()) return;
-    await _ensureInitialized();
-    if (_refreshJwtCompleter != null) return _refreshJwtCompleter!.future;
+    if (simulateTesting()) {
+      return;
+    }
+    if (_refreshJwtCompleter != null) {
+      logger.info("JWT refresh already in progress. Waiting...");
+      return _refreshJwtCompleter!.future;
+    }
 
     _refreshJwtCompleter = Completer<void>();
     try {
-      // Check if we even have a JWT cached
-      final currentJwt = await _storage.read(key: AppString.jwtToken.string);
+      final currentJwtToken =
+          await _storage.read(key: AppString.jwtToken.string);
 
-      // If we have a JWT and it's fresh, skip network call
-      if (currentJwt != null &&
-          !_isTokenExpiringSoon(currentJwt, const Duration(minutes: 2))) {
+      if (currentJwtToken != null) {
+        final needsRefresh = _isTokenExpiringSoon(
+          currentJwtToken,
+          const Duration(minutes: 2),
+        );
+
+        if (!needsRefresh) {
+          // Token is still valid and not within the 2-minute buffer. Abort refresh.
+          return;
+        }
+        logger
+            .info("JWT is expiring within 2 minutes. Proceeding with refresh.");
+      }
+
+      final sessionCookie =
+          await _storage.read(key: AppString.sessionCookie.string);
+      if (sessionCookie == null) {
+        logger.error("Session cookie not found while refreshing JWT.");
+        await SyncUtils.signout();
         return;
       }
 
-      // Dio automatically attaches the session cookie from the CookieJar here!
-      final response = await _dio.get('/get-session');
+      final response = await _http.get(
+        Uri.parse('$_neonAuthUrl/get-session'),
+        headers: {
+          'Cookie': '__Secure-neon-auth.session_token=$sessionCookie;',
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+      ).timeout(const Duration(seconds: 30)); // Prevents hanging network calls
 
       if (response.statusCode == 200) {
-        final jwt = response.headers.value('set-auth-jwt');
+        final jwt = _getHeader(response.headers, 'set-auth-jwt');
         if (jwt != null && jwt.isNotEmpty) {
           await _storage.write(key: AppString.jwtToken.string, value: jwt);
           logger.info("Successfully refreshed jwtToken.");
         } else {
-          logger.error("Referesh Token success but missing jwt");
-          // Resetting device
-          await _cookieJar.deleteAll();
+          logger.warning(
+              "Server returned 200 but 'set-auth-jwt' header was missing.");
           await SyncUtils.resetDevice();
         }
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
+      }
+      // Legit situations to sign out: Session is definitively invalid or expired
+      else if (response.statusCode == 401 || response.statusCode == 403) {
+        logger.warning(
+            "Session invalid or expired (Status: ${response.statusCode}). Forcing sign-out.");
         await SyncUtils.signout();
       }
-    } on DioException catch (e) {
-      logger.error("Dio error during JWT refresh: ${e.message}");
-    } catch (e, stack) {
+      // 5xx (Server Errors), 429 (Rate Limit), etc. Do NOT sign out.
+      else {
+        logger.error(
+            "Failed to refresh session. Server returned status: ${response.statusCode}. Retrying later.");
+      }
+    } on SocketException catch (e) {
+      // Standard exception for no internet connection or DNS lookup failure
+      logger.warning("No internet connection while refreshing JWT: $e");
+    } on TimeoutException catch (e) {
+      // Request took too long (poor network conditions)
+      logger.warning("Timeout while refreshing JWT: $e");
+    } catch (e, stackTrace) {
+      // Catch-all for formatting errors, parse errors, etc.
       logger.error("Unexpected error during JWT refresh",
-          error: e, stackTrace: stack);
+          error: e, stackTrace: stackTrace);
     } finally {
-      if (!_refreshJwtCompleter!.isCompleted) _refreshJwtCompleter!.complete();
+      // Always complete and reset the lock, regardless of success or failure
+      if (!_refreshJwtCompleter!.isCompleted) {
+        _refreshJwtCompleter!.complete();
+      }
       _refreshJwtCompleter = null;
     }
   }
 
   Future<bool> signOut() async {
-    await _ensureInitialized();
-    try {
-      final response = await _dio.post('/sign-out');
-
-      await _cookieJar.deleteAll();
-
-      return response.statusCode == 200;
-    } catch (e) {
-      logger.error('Failed to sign-out: $e');
-      return false;
-    }
-  }
-
-  Future<void> _migrateOldCookiesIfNecessary() async {
-    final oldCookieValue =
+    bool success = false;
+    String? sessionCookie =
         await _storage.read(key: AppString.sessionCookie.string);
-
-    if (oldCookieValue != null && oldCookieValue.isNotEmpty) {
-      logger.info("Migrating old session cookie to CookieJar...");
-
+    if (sessionCookie != null) {
       try {
-        final cookie =
-            Cookie('__Secure-neon-auth.session_token', oldCookieValue)
-              ..secure = true;
+        final url = Uri.parse('$_neonAuthUrl/sign-out');
 
-        final uri = Uri.parse(_neonAuthUrl);
-        await _cookieJar.saveFromResponse(uri, [cookie]);
+        // 2. Call the sign-out endpoint to invalidate the session on the server
+        final response = await _http.post(url,
+            headers: {
+              // Provide the session cookie so the server knows what to destroy
+              'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
+              'Content-Type': 'application/json',
+              'Origin': _neonAuthUrl
+            },
+            body: '{}');
 
-        await _storage.delete(key: AppString.sessionCookie.string);
-
-        logger.info("Migration successful.");
+        if (response.statusCode != 200) {
+          // Log the error, but continue to clear local storage anyway
+          logger.error(
+              'Server sign-out error: ${response.statusCode} - ${response.body}');
+        } else {
+          success = true;
+        }
       } catch (e) {
-        logger.error("Failed to migrate cookies: $e");
+        // Handle network errors gracefully
+        logger.error('Failed to reach auth server during sign-out: $e');
       }
+    } else {
+      logger.error("Error signing out", error: "Session cookie not found");
     }
+    return success;
   }
 }
