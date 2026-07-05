@@ -624,7 +624,7 @@ Future<int> getDeviceType() async {
 }
 
 Future<String> getDeviceHash() async {
-  String savedHash = ModelSetting.get(AppString.deviceHash.string);
+  String savedHash = await ModelSetting.getRaw(AppString.deviceHash.string);
   if (savedHash.isNotEmpty) {
     return savedHash;
   } else {
@@ -655,7 +655,7 @@ Future<String> getDeviceHash() async {
 }
 
 Future<String> getDeviceUuid() async {
-  return ModelSetting.get(AppString.deviceUuid.string);
+  return await ModelSetting.getRaw(AppString.deviceUuid.string);
 }
 
 // storage permission
@@ -711,7 +711,8 @@ Future<void> addTrustedCertificates() async {
 }
 
 Future<void> refreshNeonAuth() async {
-  if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+  if (await ModelSetting.getRaw(AppString.signedIn.string,
+          defaultValue: "no") ==
       "yes") {
     await NeonAuth().refreshSessionAndGetJWT();
   }
@@ -719,7 +720,8 @@ Future<void> refreshNeonAuth() async {
 
 Future<String?> getSignedInUserId() async {
   if (simulateTesting()) {
-    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+    if (await ModelSetting.getRaw(AppString.signedIn.string,
+            defaultValue: "no") ==
         "yes") {
       return "fife";
     } else {
@@ -736,7 +738,8 @@ Future<String?> getSignedInUserId() async {
 
 Future<String?> getSignedInEmailId() async {
   if (simulateTesting()) {
-    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+    if (await ModelSetting.getRaw(AppString.signedIn.string,
+            defaultValue: "no") ==
         "yes") {
       return testEmailId;
     } else {

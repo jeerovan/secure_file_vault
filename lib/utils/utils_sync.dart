@@ -256,16 +256,12 @@ class SyncUtils {
       await storage.clear();
       final dbHelper = StorageSqlite.instance;
       await dbHelper.clearDb();
-      String locale = ModelSetting.get(AppString.locale.string);
-      String fcmToken = ModelSetting.get(AppString.fcmId.string);
+      String locale = await ModelSetting.getRaw(AppString.locale.string);
       ModelSetting.clear();
       await clearFiFeDirectory();
       // keep locale
       if (locale.isNotEmpty) {
         await ModelSetting.set(AppString.locale.string, locale);
-      }
-      if (fcmToken.isNotEmpty) {
-        await ModelSetting.set(AppString.fcmId.string, fcmToken);
       }
       await ModelSetting.set(AppString.onboarding.string, "yes");
       EventStream().publish(AppEvent(

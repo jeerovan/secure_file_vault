@@ -43,9 +43,9 @@ class AppSetupState extends ChangeNotifier {
     _currentStep = SetupStep.loading;
     notifyListeners();
 
-    bool onboarded =
-        ModelSetting.get(AppString.onboarding.string, defaultValue: "no") ==
-            "yes";
+    bool onboarded = await ModelSetting.getRaw(AppString.onboarding.string,
+            defaultValue: "no") ==
+        "yes";
     if (!onboarded) {
       logger.info("Onboarding");
       _currentStep = SetupStep.onboard;
@@ -53,7 +53,8 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+    if (await ModelSetting.getRaw(AppString.signedIn.string,
+            defaultValue: "no") ==
         "no") {
       logger.info("Signin");
       _currentStep = SetupStep.signin;

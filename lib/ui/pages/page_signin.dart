@@ -123,7 +123,8 @@ class _PageSigninState extends State<PageSignin> {
   Future<void> verifyOtp(String text) async {
     if (processing) return;
     final otp = text.trim();
-    final String savedEmail = ModelSetting.get(AppString.otpSentTo.string);
+    final String savedEmail =
+        await ModelSetting.getRaw(AppString.otpSentTo.string);
 
     if (savedEmail.isEmpty || otp.isEmpty) return;
 

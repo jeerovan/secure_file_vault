@@ -166,7 +166,7 @@ class NeonAuth {
           await _storage.write(key: AppString.jwtToken.string, value: jwt);
           logger.info("Successfully refreshed jwtToken.");
         } else {
-          logger.warning(
+          logger.error(
               "Server returned 200 but 'set-auth-jwt' header was missing.");
           await SyncUtils.resetDevice();
         }
