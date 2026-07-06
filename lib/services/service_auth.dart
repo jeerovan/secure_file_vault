@@ -30,8 +30,6 @@ class NeonAuth {
     }
   }
 
-  Completer<void>? _refreshJwtCompleter;
-
   String? _getHeader(Map<String, String> headers, String key) {
     final lowerKey = key.toLowerCase();
     for (var entry in headers.entries) {
@@ -116,15 +114,11 @@ class NeonAuth {
   }
 
   Future<void> refreshSessionAndGetJWT() async {
+    logger.info("refreshSessionAndGetJWT called");
     if (simulateTesting()) {
+      logger.info("Skipping refresh due to simulateTesting()");
       return;
     }
-    if (_refreshJwtCompleter != null) {
-      logger.info("JWT refresh already in progress. Waiting...");
-      return _refreshJwtCompleter!.future;
-    }
-
-    _refreshJwtCompleter = Completer<void>();
     try {
       final currentJwtToken =
           await _storage.read(key: AppString.jwtToken.string);
@@ -141,6 +135,8 @@ class NeonAuth {
         }
         logger
             .info("JWT is expiring within 2 minutes. Proceeding with refresh.");
+      } else {
+        logger.error("Can't refresh, Current JWT Token is Null");
       }
 
       final sessionCookie =
@@ -192,12 +188,6 @@ class NeonAuth {
       // Catch-all for formatting errors, parse errors, etc.
       logger.error("Unexpected error during JWT refresh",
           error: e, stackTrace: stackTrace);
-    } finally {
-      // Always complete and reset the lock, regardless of success or failure
-      if (!_refreshJwtCompleter!.isCompleted) {
-        _refreshJwtCompleter!.complete();
-      }
-      _refreshJwtCompleter = null;
     }
   }
 

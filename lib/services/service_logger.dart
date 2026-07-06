@@ -35,7 +35,7 @@ class AppLogger {
 
   /// Internal helper to get or initialize the log file
   static Future<File> _getLogFile() async {
-    if (_logFile != null) return _logFile!;
+    if (_logFile != null && await _logFile!.exists()) return _logFile!;
     final tempDir = await getAppTempDirectory();
     _logFile = File('${tempDir.path}/app_logs.txt');
     return _logFile!;

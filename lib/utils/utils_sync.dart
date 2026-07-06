@@ -59,6 +59,7 @@ class SyncUtils {
     }
     bool canAccessSecureStorage = await canSync();
     if (!canAccessSecureStorage) {
+      logger.error("Can not access secure storage");
       return;
     }
 
