@@ -18,6 +18,8 @@ class AppLogger {
 
   static File? _logFile;
   static const int _maxLogSize = 1024 * 1024; // 1MB rotation limit
+  static final List<String> _logQueue = [];
+  static bool _isWriting = false;
 
   /// Get color based on log level
   String _getColor(AppLogLevel level) {
@@ -72,31 +74,46 @@ class AppLogger {
       stdout.writeln(coloredMessage);
     }
 
-    writeToLogFile(logMessage);
+    _enqueueLog(logMessage);
   }
 
-  Future<void> writeToLogFile(String logMessage) async {
+  static void _enqueueLog(String logMessage) {
+    _logQueue.add(logMessage);
+    _processQueue();
+  }
+
+  static Future<void> _processQueue() async {
+    if (_isWriting) return;
+    _isWriting = true;
+
     try {
-      final file = await _getLogFile();
+      while (_logQueue.isNotEmpty) {
+        final messages = List<String>.from(_logQueue);
+        _logQueue.clear();
 
-      // Production-grade rotation: If file exceeds size limit, rotate to .old
-      if (await file.exists() && await file.length() > _maxLogSize) {
-        try {
-          final oldFile = File('${file.path}.old');
-          if (await oldFile.exists()) {
-            await oldFile.delete();
+        final file = await _getLogFile();
+
+        // Production-grade rotation: If file exceeds size limit, rotate to .old
+        if (await file.exists() && await file.length() > _maxLogSize) {
+          try {
+            final oldFile = File('${file.path}.old');
+            if (await oldFile.exists()) {
+              await oldFile.delete();
+            }
+            await file.rename(oldFile.path);
+          } catch (e) {
+            // Ignore rotation errors (e.g., another isolate already rotated the file)
           }
-          await file.rename(oldFile.path);
-        } catch (e) {
-          // Ignore rotation errors (e.g., another isolate already rotated the file)
         }
-      }
 
-      // Use FileMode.append for atomic writes across multiple isolates/processes.
-      // This prevents logs from being overwritten or disappearing.
-      await file.writeAsString('$logMessage\n', mode: FileMode.append);
+        // Use FileMode.append for atomic writes across multiple isolates/processes.
+        await file.writeAsString('${messages.join('\n')}\n',
+            mode: FileMode.append);
+      }
     } catch (e) {
-      dev.log("Failed to write to log file", error: e);
+      dev.log("Failed to write to log file queue", error: e);
+    } finally {
+      _isWriting = false;
     }
   }
 

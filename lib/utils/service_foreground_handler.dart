@@ -1,6 +1,5 @@
-import 'dart:ui';
-
 import 'package:file_vault_bb/l10n/app_localizations.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../services/service_logger.dart';
@@ -14,6 +13,7 @@ class ForegroundTaskHandler extends TaskHandler {
   // Called when the task is started.
   @override
   Future<void> onStart(DateTime timestamp, TaskStarter starter) async {
+    WidgetsFlutterBinding.ensureInitialized();
     // Initialize database in this isolate
     await StorageSqlite.initialize(ExecutionMode.foregroundService);
     await initializeDependencies(ExecutionMode.foregroundService);
