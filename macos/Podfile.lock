@@ -11,13 +11,16 @@ PODS:
   - FlutterMacOS (1.0.0)
   - package_info_plus (0.0.1):
     - FlutterMacOS
-  - purchases_flutter (10.2.2):
+  - purchases_flutter (10.4.0):
     - FlutterMacOS
-    - PurchasesHybridCommon (= 18.10.0)
-  - PurchasesHybridCommon (18.10.0):
-    - RevenueCat (= 5.76.0)
-  - RevenueCat (5.76.0)
+    - PurchasesHybridCommon (= 18.18.0)
+  - PurchasesHybridCommon (18.18.0):
+    - RevenueCat (= 5.80.0)
+  - RevenueCat (5.80.0)
   - share_plus (0.0.1):
+    - FlutterMacOS
+  - shared_preferences_foundation (0.0.1):
+    - Flutter
     - FlutterMacOS
   - sqflite_darwin (0.0.4):
     - Flutter
@@ -34,6 +37,7 @@ DEPENDENCIES:
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - purchases_flutter (from `Flutter/ephemeral/.symlinks/plugins/purchases_flutter/macos`)
   - share_plus (from `Flutter/ephemeral/.symlinks/plugins/share_plus/macos`)
+  - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
 
@@ -59,6 +63,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/purchases_flutter/macos
   share_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/share_plus/macos
+  shared_preferences_foundation:
+    :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin
   sqflite_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin
   url_launcher_macos:
@@ -71,10 +77,11 @@ SPEC CHECKSUMS:
   flutter_secure_storage_darwin: 557817588b80e60213cbecb573c45c76b788018d
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b
-  purchases_flutter: 0b20e3043e01426013ce2fe63de3b244911af7d7
-  PurchasesHybridCommon: 3e650c7f56ebcd63b37a708685fbf98515305d14
-  RevenueCat: 792388288b4207a5056550fbf8f673090f1fbe22
+  purchases_flutter: 21428e64e51e8e73652406e2c4bc388d79fd18e3
+  PurchasesHybridCommon: a5c81898ee5e1fa4a679c3c12e948ce3b4f4e341
+  RevenueCat: f4427b8a1daa7a04a26cb20d60807aa818d9420b
   share_plus: 1fa619de8392a4398bfaf176d441853922614e89
+  shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
   sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
   url_launcher_macos: 175a54c831f4375a6cf895875f716ee5af3888ce
 

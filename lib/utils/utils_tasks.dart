@@ -463,16 +463,25 @@ class TaskManager {
     int parts = modelFile.parts;
     String name = modelItem.name;
     Directory tempStorage = await getAppTempDirectory();
-    String filePath = path_lib.join(tempStorage.path, name);
+    String filePathInAppTemp = path_lib.join(tempStorage.path, name);
     int partsHave = 0;
     FileSplitter fileSplitter = FileSplitter(fileSize: size);
-    if (File(filePath).existsSync()) {
-      partsHave = fileSplitter.getPartsInSize(File(filePath).lengthSync());
+    File fileInAppTemp = File(filePathInAppTemp);
+    if (await fileInAppTemp.exists()) {
+      partsHave =
+          fileSplitter.getPartsInSize(File(filePathInAppTemp).lengthSync());
+    } else {
+      if (!await fileInAppTemp.parent.exists()) {
+        await fileInAppTemp.parent.create(recursive: true);
+      }
+      if (!await fileInAppTemp.exists()) {
+        await fileInAppTemp.create();
+      }
     }
     if (partsHave == parts) {
       String finalFilePath = await ModelItem.getPathForItem(modelItem.id);
       try {
-        await moveFileSafely(filePath, finalFilePath);
+        await moveFileSafely(filePathInAppTemp, finalFilePath);
       } catch (e) {
         logger.error("failed to move download temp file", error: e);
       }
@@ -489,6 +498,12 @@ class TaskManager {
       Directory tempDir = await getTemporaryDirectory();
       String tempFilePath = "${tempDir.path}/$fileHashPart";
       File tempFile = File(tempFilePath);
+      if (!await tempFile.parent.exists()) {
+        await tempFile.parent.create(recursive: true);
+      }
+      if (!await tempFile.exists()) {
+        await tempFile.create();
+      }
       IOSink fileSink = tempFile.openWrite();
       int downloadedRequestState = await downloadFileStream(
           url: downloadUrl, headers: null, fileOut: fileSink, onProgress: null);
@@ -511,13 +526,13 @@ class TaskManager {
                   keyCipherBase64, keyNonceBase64, masterKeyBase64);
           if (fileEncryptionKeyBytes != null) {
             ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
-                tempFilePath, filePath, fileEncryptionKeyBytes);
+                tempFilePath, filePathInAppTemp, fileEncryptionKeyBytes);
             if (decryptionResult.isSuccess) {
               logger.info("$name:$partToDownload:Fetched & decrypted");
               if (partToDownload == parts) {
                 String finalFilePath =
                     await ModelItem.getPathForItem(modelItem.id);
-                await File(filePath).rename(finalFilePath);
+                await File(filePathInAppTemp).rename(finalFilePath);
                 await ModelItemTask.completeTask(itemTask.id);
               } else {
                 // Broadcast download progress
