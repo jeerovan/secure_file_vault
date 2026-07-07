@@ -5,7 +5,6 @@
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>
 		<string>com.jeerovan.fife.data_sync</string>
-		<!-- Workmanager defaults (Required to prevent crashes on some versions) -->
 		<string>workmanager.background.task</string>
 		<string>be.tramckrijte.workmanager.background.task</string>
 	</array>
@@ -64,6 +63,7 @@
 	<array>
 		<string>processing</string>
 		<string>fetch</string>
+		<string>remote-notification</string>
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>

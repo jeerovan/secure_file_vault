@@ -562,6 +562,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get zeroKnowledgeEncryptedStorage => 'تخزين مشفّر دون معرفة';
 
   @override
+  String get notificationPermissionTitle => 'وصول الإشعارات';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'للحفاظ على مزامنة ملفاتك وتقديم تحديثات الحالة في الوقت الفعلي في الخلفية، نحتاج إلى إذن لإظهار الإشعارات.';
+
+  @override
+  String get notificationPermissionGrantButton => 'السماح بالإشعارات';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'الإشعارات مطلوبة لمراقبة المزامنة في الخلفية. يرجى تفعيلها في إعدادات النظام لضمان تحديث بياناتك دائمًا.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'إذن الإشعارات مطلوب للمزامنة في الخلفية';
+
+  @override
   String requiresAppPro(String appName) {
     return 'يتطلب $appName Pro.';
   }

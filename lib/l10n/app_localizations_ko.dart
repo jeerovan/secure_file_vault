@@ -558,6 +558,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get zeroKnowledgeEncryptedStorage => '제로 지식 암호화 스토리지';
 
   @override
+  String get notificationPermissionTitle => '알림 권한';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      '파일을 계속 동기화하고 백그라운드에서 실시간 상태 업데이트를 제공하려면 알림 권한이 필요합니다.';
+
+  @override
+  String get notificationPermissionGrantButton => '알림 허용';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      '백그라운드 동기화를 모니터링하려면 알림이 필요합니다. 데이터가 항상 최신 상태로 유지되도록 시스템 설정에서 알림을 활성화해 주세요.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      '백그라운드 동기화를 위해 알림 권한이 필요합니다';
+
+  @override
   String requiresAppPro(String appName) {
     return '$appName Pro가 필요합니다.';
   }

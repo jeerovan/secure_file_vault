@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "Benachrichtigungszugriff",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "Um deine Dateien synchron zu halten und Status-Updates in Echtzeit im Hintergrund bereitzustellen, benötigen wir die Erlaubnis, Benachrichtigungen anzuzeigen.",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "Benachrichtigungen zulassen",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "Benachrichtigungen sind erforderlich, um die Hintergrundsynchronisierung zu überwachen. Bitte aktiviere sie in den Systemeinstellungen, um sicherzustellen, dass deine Daten immer aktuell sind.",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "Benachrichtigungsberechtigung für Hintergrundsynchronisierung erforderlich",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "Erfordert {appName} Pro.",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

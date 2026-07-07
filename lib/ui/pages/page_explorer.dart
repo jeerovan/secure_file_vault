@@ -202,7 +202,7 @@ class _FilePaneState extends State<FilePane> {
     setState(() {
       _syncInProgress = true;
     });
-    await SyncUtils().reconFolders();
+    await SyncUtils().reconFolders(awaited: true, caller: "Explorer");
     _loadFiles();
   }
 
@@ -639,7 +639,7 @@ class _FilePaneState extends State<FilePane> {
     final reconService = ReconciliationService(sodium);
     await reconService.reconcile(item);
     _loadFiles();
-    SyncUtils.waitAndSyncChanges();
+    SyncUtils.waitAndSyncChanges("Explorer");
   }
 
   void addFolderConfirm(String folderPath, String? bookmark) {

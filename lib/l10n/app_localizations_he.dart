@@ -564,6 +564,24 @@ class AppLocalizationsHe extends AppLocalizations {
       'אחסון מוצפן בשיטת Zero-Knowledge';
 
   @override
+  String get notificationPermissionTitle => 'גישה להתראות';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'כדי לשמור על הקבצים שלך מסונכרנים ולספק עדכוני סטטוס בזמן אמת ברקע, אנו זקוקים להרשאה להצגת התראות.';
+
+  @override
+  String get notificationPermissionGrantButton => 'אפשר התראות';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'התראות נדרשות כדי לנטר את הסנכרון ברקע. אנא הפעל אותן בהגדרות המערכת כדי להבטיח שהנתונים שלך תמיד מעודכנים.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'הרשאת התראות נדרשת לסנכרון ברקע';
+
+  @override
   String requiresAppPro(String appName) {
     return 'נדרש $appName Pro.';
   }

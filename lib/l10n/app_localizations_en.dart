@@ -566,6 +566,24 @@ class AppLocalizationsEn extends AppLocalizations {
       'Zero-knowledge encrypted storage';
 
   @override
+  String get notificationPermissionTitle => 'Notifications Access';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'To keep your files in sync and provide real-time status updates in the background, we need permission to show notifications.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Allow Notifications';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Notifications are required to monitor background synchronization. Please enable them in the system settings to ensure your data is always up to date.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'Notification permission is required for background sync';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Requires $appName Pro.';
   }

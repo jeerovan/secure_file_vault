@@ -659,21 +659,16 @@ Future<String> getDeviceUuid() async {
 Future<void> initializeDependencies(
     {ExecutionMode mode = ExecutionMode.appForeground}) async {
   // initialize in parallel
-  await Future.wait(([
-    addTrustedCertificates(mode: mode),
-    initializePackages(mode: mode),
-    refreshNeonAuth()
-  ]));
+  await Future.wait(
+      ([addTrustedCertificates(), initializePackages(), refreshNeonAuth()]));
   AppLogger(prefixes: [mode.string]).info("Initialized Dependencies");
 }
 
-Future<void> initializePackages(
-    {ExecutionMode mode = ExecutionMode.appForeground}) async {
+Future<void> initializePackages() async {
   CryptoUtils.init();
 }
 
-Future<void> addTrustedCertificates(
-    {ExecutionMode mode = ExecutionMode.appForeground}) async {
+Future<void> addTrustedCertificates() async {
   // load certificate
   ByteData certData = await PlatformAssetBundle().load('assets/cacert.pem');
   SecurityContext.defaultContext

@@ -569,6 +569,24 @@ class AppLocalizationsTr extends AppLocalizations {
   String get zeroKnowledgeEncryptedStorage => 'Zero-knowledge şifreli depolama';
 
   @override
+  String get notificationPermissionTitle => 'Bildirim Erişimi';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Dosyalarınızın senkronize kalmasını sağlamak ve arka planda gerçek zamanlı durum güncellemeleri sunmak için bildirimleri gösterme iznine ihtiyacımız var.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Bildirimlere İzin Ver';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Arka plan senkronizasyonunu izlemek için bildirimler gereklidir. Verilerinizin her zaman güncel olduğundan emin olmak için lütfen sistem ayarlarından bildirimleri etkinleştirin.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'Arka plan senkronizasyonu için bildirim izni gereklidir';
+
+  @override
   String requiresAppPro(String appName) {
     return '$appName Pro gerektirir.';
   }

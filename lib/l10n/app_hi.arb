@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "नोटिफिकेशन एक्सेस",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "आपकी फ़ाइलों को सिंक रखने और बैकग्राउंड में रीयल-टाइम स्टेटस अपडेट देने के लिए, हमें नोटिफिकेशन दिखाने की अनुमति चाहिए।",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "नोटिफिकेशन की अनुमति दें",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "बैकग्राउंड सिंक्रोनाइज़ेशन की निगरानी के लिए नोटिफिकेशन आवश्यक हैं। कृपया सिस्टम सेटिंग्स में इन्हें सक्षम करें ताकि आपका डेटा हमेशा अपडेट रहे।",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "बैकग्राउंड सिंक के लिए नोटिफिकेशन अनुमति आवश्यक है",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "{appName} Pro आवश्यक है।",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

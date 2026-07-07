@@ -1,5 +1,8 @@
 import 'dart:io';
 
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:file_vault_bb/services/service_notification.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_device_register.dart';
@@ -27,28 +30,49 @@ import '../utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'utils/utils_sync.dart';
+import 'firebase_options.dart';
 
 // Mobile-specific callback - must be top-level function
 @pragma('vm:entry-point')
 void backgroundTaskDispatcher() {
   Workmanager().executeTask((taskName, inputData) async {
-    AppLogger(prefixes: ["Background"]).info("Task Triggered: $taskName");
+    AppLogger(prefixes: ["Workmanager"]).info("Task Triggered: $taskName");
     WidgetsFlutterBinding.ensureInitialized();
     try {
       await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
       await initializeDependencies(mode: ExecutionMode.appBackground);
     } catch (e, s) {
-      AppLogger(prefixes: ["Background"])
+      AppLogger(prefixes: ["Workmanager"])
           .error("Initialize failed", error: e, stackTrace: s);
       return Future.value(false);
     }
     try {
-      await SyncUtils().reconFolders(inBackground: true);
+      await SyncUtils().reconFolders(inBackground: true, caller: "Workmanager");
       return Future.value(true);
     } catch (e) {
       return Future.value(false);
     }
   });
+}
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  AppLogger(prefixes: ["FCM-BG"])
+      .info("Received background message: ${message.data.toString()}");
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  if (message.data['type'] == 'Sync') {
+    try {
+      await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
+      await initializeDependencies(mode: ExecutionMode.appBackground);
+      await SyncUtils().reconFolders(inBackground: true, caller: "FCM-BG");
+    } catch (e, s) {
+      AppLogger(prefixes: ["FCM-BG"])
+          .error("FCM Background Sync failed", error: e, stackTrace: s);
+    }
+  }
 }
 
 final logger = AppLogger(prefixes: ["Main"]);
@@ -75,9 +99,29 @@ Future<void> main() async {
 Future<void> initializeInParallel() async {
   await Future.wait([
     initializeDependencies(mode: ExecutionMode.appForeground),
+    initializeFirebase(),
     initializeBackgroundSync(),
-    initializePurchases()
+    initializePurchases(),
   ]);
+}
+
+Future<void> initializeFirebase() async {
+  if (runningOnMobile) {
+    // Initialize Firebase
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      logger.info("initialized firebase");
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
+      logger.info("initialized firebase background handler");
+      await ServiceNotification.initialize();
+      logger.info("initialized notification service");
+    } catch (e) {
+      logger.error("Firebase Init failed", error: e);
+    }
+  }
 }
 
 Future<void> initializePurchases() async {
@@ -248,17 +292,6 @@ class DataSync {
   static final logger = AppLogger(prefixes: ["DataSync"]);
   // Initialize background sync based on platform
   static Future<void> initialize() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      await _initializeBackgroundForMobile();
-    } else {
-      // start auto sync
-      SyncUtils().startAutoSync();
-      logger.info("Started autosync");
-    }
-  }
-
-  // Mobile-specific initialization using Workmanager
-  static Future<void> _initializeBackgroundForMobile() async {
     await Workmanager().initialize(backgroundTaskDispatcher);
     await Workmanager().registerPeriodicTask(
       syncTaskId,

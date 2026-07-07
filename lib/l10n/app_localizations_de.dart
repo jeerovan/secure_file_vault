@@ -571,6 +571,24 @@ class AppLocalizationsDe extends AppLocalizations {
       'Zero-Knowledge-verschlüsselter Speicher';
 
   @override
+  String get notificationPermissionTitle => 'Benachrichtigungszugriff';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Um deine Dateien synchron zu halten und Status-Updates in Echtzeit im Hintergrund bereitzustellen, benötigen wir die Erlaubnis, Benachrichtigungen anzuzeigen.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Benachrichtigungen zulassen';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Benachrichtigungen sind erforderlich, um die Hintergrundsynchronisierung zu überwachen. Bitte aktiviere sie in den Systemeinstellungen, um sicherzustellen, dass deine Daten immer aktuell sind.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'Benachrichtigungsberechtigung für Hintergrundsynchronisierung erforderlich';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Erfordert $appName Pro.';
   }

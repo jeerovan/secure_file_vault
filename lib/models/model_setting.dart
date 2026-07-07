@@ -24,6 +24,17 @@ class ModelSetting {
     }
   }
 
+  static Future<String> getRaw(String key, {String defaultValue = ""}) async {
+    final dbHelper = StorageSqlite.instance;
+    List<Map<String, dynamic>> list =
+        await dbHelper.getWithId(Tables.settings.string, key);
+    if (list.isNotEmpty) {
+      Map<String, dynamic> map = list.first;
+      return map["value"];
+    }
+    return defaultValue;
+  }
+
   static Future<void> delete(String key) async {
     settingJson.remove(key);
     final dbHelper = StorageSqlite.instance;

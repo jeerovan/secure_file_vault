@@ -572,6 +572,24 @@ class AppLocalizationsEl extends AppLocalizations {
       'Κρυπτογραφημένη αποθήκευση zero-knowledge';
 
   @override
+  String get notificationPermissionTitle => 'Πρόσβαση σε Ειδοποιήσεις';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Για να διατηρούνται τα αρχεία σας συγχρονισμένα και να παρέχονται ενημερώσεις κατάστασης σε πραγματικό χρόνο στο παρασκήνιο, χρειαζόμαστε άδεια για να εμφανίσουμε ειδοποιήσεις.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Επιτρέψτε Ειδοποιήσεις';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Οι ειδοποιήσεις είναι απαραίτητες για την παρακολούθηση του συγχρονισμού στο παρασκήνιο. Παρακαλώ ενεργοποιήστε τις στις ρυθμίσεις του συστήματος για να διασφαλίσετε ότι τα δεδομένα σας είναι πάντα up to date.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'Απαιτείται άδεια ειδοποιήσεων για συγχρονισμό στο παρασκήνιο';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Απαιτείται $appName Pro.';
   }

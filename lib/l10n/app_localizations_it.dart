@@ -571,6 +571,24 @@ class AppLocalizationsIt extends AppLocalizations {
       'Archiviazione crittografata zero-knowledge';
 
   @override
+  String get notificationPermissionTitle => 'Accesso alle notifiche';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Per mantenere i tuoi file sincronizzati e fornire aggiornamenti sullo stato in tempo reale in background, abbiamo bisogno del permesso di mostrare le notifiche.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Consenti notifiche';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Le notifiche sono necessarie per monitorare la sincronizzazione in background. Ti preghiamo di abilitarle nelle impostazioni di sistema per assicurarti che i tuoi dati siano sempre aggiornati.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'L\'autorizzazione alle notifiche è richiesta per la sincronizzazione in background';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Richiede $appName Pro.';
   }

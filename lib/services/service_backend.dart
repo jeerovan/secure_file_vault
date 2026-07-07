@@ -101,7 +101,7 @@ class BackendApi {
         response = map;
         if (response["success"] == 0) {
           String message = response["message"].toString();
-          String mappedMessage = "Unknown";
+          String mappedMessage = "Unknown Error";
           switch (message) {
             case "1":
               mappedMessage = "No User";
@@ -154,7 +154,7 @@ class BackendApi {
               mappedMessage = "Requires FiFe Pro";
               break;
             default:
-              mappedMessage = "Unknown Error";
+              mappedMessage = message;
               break;
           }
           logger.error(mappedMessage);

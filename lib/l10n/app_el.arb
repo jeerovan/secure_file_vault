@@ -734,6 +734,26 @@
   "@zeroKnowledgeEncryptedStorage": {
     "description": "Footer note emphasizing the app's privacy model on the storage permission screen"
   },
+  "notificationPermissionTitle": "Πρόσβαση σε Ειδοποιήσεις",
+  "@notificationPermissionTitle": {
+    "description": "Main title on the notification permission onboarding screen"
+  },
+  "notificationPermissionPageDescription": "Για να διατηρούνται τα αρχεία σας συγχρονισμένα και να παρέχονται ενημερώσεις κατάστασης σε πραγματικό χρόνο στο παρασκήνιο, χρειαζόμαστε άδεια για να εμφανίσουμε ειδοποιήσεις.",
+  "@notificationPermissionPageDescription": {
+    "description": "Description on the notification permission page explaining why access is needed"
+  },
+  "notificationPermissionGrantButton": "Επιτρέψτε Ειδοποιήσεις",
+  "@notificationPermissionGrantButton": {
+    "description": "Primary button label used to request notification permission"
+  },
+  "notificationPermissionSettingsDescription": "Οι ειδοποιήσεις είναι απαραίτητες για την παρακολούθηση του συγχρονισμού στο παρασκήνιο. Παρακαλώ ενεργοποιήστε τις στις ρυθμίσεις του συστήματος για να διασφαλίσετε ότι τα δεδομένα σας είναι πάντα up to date.",
+  "@notificationPermissionSettingsDescription": {
+    "description": "Dialog description explaining why notification permission is needed and asking the user to open settings"
+  },
+  "notificationPermissionRequiredToContinue": "Απαιτείται άδεια ειδοποιήσεων για συγχρονισμό στο παρασκήνιο",
+  "@notificationPermissionRequiredToContinue": {
+    "description": "Snackbar message shown when the user denies notification permission"
+  },
   "requiresAppPro": "Απαιτείται {appName} Pro.",
   "@requiresAppPro": {
     "description": "Snackbar message shown when a Pro subscription is required for modifying storage",

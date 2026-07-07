@@ -567,6 +567,24 @@ class AppLocalizationsVi extends AppLocalizations {
   String get zeroKnowledgeEncryptedStorage => 'Lưu trữ mã hóa zero-knowledge';
 
   @override
+  String get notificationPermissionTitle => 'Truy cập Thông báo';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Để giữ cho các tập tin của bạn luôn được đồng bộ và cung cấp cập nhật trạng thái theo thời gian thực trong nền, chúng tôi cần quyền hiển thị thông báo.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Cho phép Thông báo';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Thông báo là cần thiết để theo dõi quá trình đồng bộ hóa trong nền. Vui lòng bật chúng trong cài đặt hệ thống để đảm bảo dữ liệu của bạn luôn được cập nhật.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'Cần có quyền thông báo để đồng bộ hóa trong nền';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Yêu cầu $appName Pro.';
   }

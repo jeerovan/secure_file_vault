@@ -571,6 +571,24 @@ class AppLocalizationsPt extends AppLocalizations {
       'Armazenamento encriptado zero-knowledge';
 
   @override
+  String get notificationPermissionTitle => 'Acesso a Notificações';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Para manter os seus ficheiros sincronizados e fornecer atualizações de estado em tempo real em segundo plano, precisamos de permissão para mostrar notificações.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Permitir Notificações';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'As notificações são necessárias para monitorizar a sincronização em segundo plano. Por favor, ative-as nas definições do sistema para garantir que os seus dados estão sempre atualizados.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'A permissão de notificações é necessária para a sincronização em segundo plano';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Requer $appName Pro.';
   }

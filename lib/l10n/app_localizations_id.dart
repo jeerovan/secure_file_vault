@@ -569,6 +569,24 @@ class AppLocalizationsId extends AppLocalizations {
       'Penyimpanan terenkripsi zero-knowledge';
 
   @override
+  String get notificationPermissionTitle => 'Akses Notifikasi';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Untuk menjaga file Anda tetap sinkron dan memberikan pembaruan status waktu nyata di latar belakang, kami memerlukan izin untuk menampilkan notifikasi.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Izinkan Notifikasi';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Notifikasi diperlukan untuk memantau sinkronisasi latar belakang. Silakan aktifkan di pengaturan sistem untuk memastikan data Anda selalu mutakhir.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'Izin notifikasi diperlukan untuk sinkronisasi latar belakang';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Memerlukan $appName Pro.';
   }

@@ -568,6 +568,24 @@ class AppLocalizationsNl extends AppLocalizations {
       'Zero-knowledge versleutelde opslag';
 
   @override
+  String get notificationPermissionTitle => 'Toegang tot meldingen';
+
+  @override
+  String get notificationPermissionPageDescription =>
+      'Om je bestanden gesynchroniseerd te houden en real-time statusupdates op de achtergrond te geven, hebben we toestemming nodig om meldingen te tonen.';
+
+  @override
+  String get notificationPermissionGrantButton => 'Meldingen toestaan';
+
+  @override
+  String get notificationPermissionSettingsDescription =>
+      'Meldingen zijn vereist om synchronisatie op de achtergrond te bewaken. Schakel deze in de systeeminstellingen in om er zeker van te zijn dat je gegevens altijd up-to-date zijn.';
+
+  @override
+  String get notificationPermissionRequiredToContinue =>
+      'Toestemming voor meldingen is vereist voor synchronisatie op de achtergrond';
+
+  @override
   String requiresAppPro(String appName) {
     return 'Vereist $appName Pro.';
   }

@@ -12,7 +12,19 @@ import {
 	tempStorage,
 	provider
 } from '$lib/server/db/schema';
-import { eq, and, ne, gt, count, desc, sql, getTableColumns, inArray } from 'drizzle-orm';
+import {
+	eq,
+	and,
+	ne,
+	gt,
+	count,
+	desc,
+	sql,
+	getTableColumns,
+	inArray,
+	isNotNull,
+	lt
+} from 'drizzle-orm';
 import {
 	UserKeys,
 	UserDeviceKeys,
@@ -349,6 +361,34 @@ export async function updateDeviceStatus(
 			)
 		);
 	return json({ success: 1 });
+}
+
+export async function fetchFcmIds(db: Db | Tx, rowId: number, limit: number, minutes: number) {
+	const threshold = Date.now() - minutes * 60 * 1000;
+	const results = await db
+		.selectDistinct({
+			fcmId: userDevice[UserDeviceKeys.NOTIFICATION_ID],
+			id: userDevice[UserDeviceKeys.ID]
+		})
+		.from(userDevice)
+		.where(
+			and(
+				eq(userDevice[UserDeviceKeys.ACTIVE], 1),
+				gt(userDevice[UserDeviceKeys.ID], rowId),
+				isNotNull(userDevice[UserDeviceKeys.NOTIFICATION_ID]),
+				lt(userDevice[UserDeviceKeys.SERVER_UPDATED_AT], threshold)
+			)
+		)
+		.orderBy(userDevice[UserDeviceKeys.ID])
+		.limit(limit);
+
+	return results;
+}
+export async function removeFcmIds(db: Db | Tx, tokens: string[]) {
+	await db
+		.update(userDevice)
+		.set({ [UserDeviceKeys.NOTIFICATION_ID]: null })
+		.where(inArray(userDevice[UserDeviceKeys.NOTIFICATION_ID], tokens));
 }
 
 export async function fetchChanges(
