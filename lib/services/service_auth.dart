@@ -103,7 +103,7 @@ class NeonAuth {
       // 'exp' is in seconds since epoch
       final expSeconds = payloadMap['exp'] as int;
       final expiryDate = DateTime.fromMillisecondsSinceEpoch(expSeconds * 1000);
-
+      logger.debug("Token expires at: $expiryDate");
       // Check if the current time + 2 minutes is past the expiration date
       final timeWithBuffer = DateTime.now().add(buffer);
       return timeWithBuffer.isAfter(expiryDate);
@@ -114,7 +114,7 @@ class NeonAuth {
   }
 
   Future<void> refreshSessionAndGetJWT() async {
-    logger.info("refreshSessionAndGetJWT called");
+    logger.info("Check and refresh session and get JWT");
     if (simulateTesting()) {
       logger.info("Skipping refresh due to simulateTesting()");
       return;
@@ -133,8 +133,8 @@ class NeonAuth {
           // Token is still valid and not within the 2-minute buffer. Abort refresh.
           return;
         }
-        logger.info(
-            "JWT is missing or expiring within 2 minutes. Proceeding with refresh.");
+        logger
+            .info("JWT is expiring within 2 minutes. Proceeding with refresh.");
       } else {
         logger.error("Can't refresh, Current JWT Token is Null");
       }

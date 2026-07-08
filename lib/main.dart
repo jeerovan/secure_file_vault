@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:file_vault_bb/services/service_notification.dart';
@@ -126,20 +124,13 @@ Future<void> initializeFirebase() async {
 
 Future<void> initializePurchases() async {
   if (revenueCatSupported) {
-    String rcKey = "";
-    if (Platform.isAndroid) {
-      rcKey = AppEnv.rcAndroidKey;
-    } else if (Platform.isIOS || Platform.isMacOS) {
-      rcKey = AppEnv.rcIosKey;
+    String rcKey = AppEnv.rcIosKey;
+    if (isDebugEnabled) {
+      await Purchases.setLogLevel(LogLevel.debug);
     }
-    if (rcKey.isNotEmpty) {
-      if (isDebugEnabled) {
-        await Purchases.setLogLevel(LogLevel.debug);
-      }
-      PurchasesConfiguration configuration = PurchasesConfiguration(rcKey);
-      await Purchases.configure(configuration);
-      logger.info("Initialized purchases");
-    }
+    PurchasesConfiguration configuration = PurchasesConfiguration(rcKey);
+    await Purchases.configure(configuration);
+    logger.info("Initialized purchases");
   }
 }
 

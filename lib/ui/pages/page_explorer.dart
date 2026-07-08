@@ -101,6 +101,7 @@ class _FilePaneState extends State<FilePane> {
     _loadFiles();
     _refreshState();
     _startRefreshStateTimer();
+    _syncRootFolders();
   }
 
   void _startRefreshStateTimer() {
