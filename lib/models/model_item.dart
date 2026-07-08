@@ -5,7 +5,6 @@ import 'package:file_vault_bb/models/model_part.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../services/service_events.dart';
 import '../utils/utils_sync.dart';
 import 'package:flutter/foundation.dart';
 
@@ -450,21 +449,11 @@ class ModelItem {
         await dbHelper.getWithId(Tables.items.string, id);
     if (rows.isEmpty) {
       result = await dbHelper.insert(Tables.items.string, map);
-      EventStream().publish(AppEvent(
-          type: EventType.updateItem,
-          id: id,
-          key: EventKey.added,
-          value: null));
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];
       if (incomingUpdatedAt > existingUpdatedAt) {
         result = await dbHelper.update(Tables.items.string, map, id);
-        EventStream().publish(AppEvent(
-            type: EventType.updateItem,
-            id: id,
-            key: EventKey.object,
-            value: null));
       } else {
         result = 0;
       }
@@ -486,11 +475,6 @@ class ModelItem {
         deleteTask: deleteTask,
       );
     }
-    EventStream().publish(AppEvent(
-        type: EventType.updateItem,
-        id: id,
-        key: EventKey.removed,
-        value: null));
     return deleted;
   }
 

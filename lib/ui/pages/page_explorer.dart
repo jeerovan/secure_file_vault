@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/ui/pages/page_logs.dart';
 import 'package:file_vault_bb/ui/pages/page_sqlite.dart';
@@ -5,6 +7,8 @@ import 'package:file_vault_bb/ui/pages/page_subscription.dart';
 import 'package:sodium/sodium_sumo.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/model_state.dart';
+import '../../repositories/repository_item_task.dart';
 import '../../storage/storage_channel.dart';
 import '../../ui/pages/page_devices.dart';
 import '../../ui/pages/page_file_info.dart';
@@ -77,8 +81,9 @@ class _FilePaneState extends State<FilePane> {
   final ValueNotifier<Set<ModelItem>> _selectedItemsNotifier =
       ValueNotifier({});
   final ValueNotifier<bool> _isMultiSelectNotifier = ValueNotifier(false);
-
+  Timer? _refreshStateTimer;
   ModelItem? currentItem;
+  ModelItem? previousItem;
   bool _isLoading = false;
   bool _isLocalPath = false;
   bool _isDeviceRoot = false;
@@ -86,9 +91,7 @@ class _FilePaneState extends State<FilePane> {
   bool _loggingEnabled =
       ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
           "yes";
-  bool _storageFull =
-      ModelSetting.get(AppString.storageFull.string, defaultValue: "no") ==
-          "yes";
+  bool _storageFull = false;
   List<ModelItem> parentChilds = [];
   String? deviceHash;
   @override
@@ -96,11 +99,26 @@ class _FilePaneState extends State<FilePane> {
     super.initState();
     EventStream().notifier.addListener(_handleAppEvents);
     _loadFiles();
-    _syncRootFolders();
+    _refreshState();
+    _startRefreshStateTimer();
+  }
+
+  void _startRefreshStateTimer() {
+    _refreshStateTimer?.cancel();
+    _refreshStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      _loadFiles(isSilent: true);
+      _refreshState();
+    });
+  }
+
+  void _stopRefreshStateTimer() {
+    _refreshStateTimer?.cancel();
+    _refreshStateTimer = null;
   }
 
   @override
   void dispose() {
+    _stopRefreshStateTimer();
     EventStream().notifier.removeListener(_handleAppEvents);
     _breadcrumbController.dispose();
     _itemsNotifier.dispose();
@@ -109,50 +127,41 @@ class _FilePaneState extends State<FilePane> {
     super.dispose();
   }
 
+  Future<void> _refreshState() async {
+    if (await isReconOrSyncInProgress()) {
+      if (mounted) {
+        setState(() {
+          _syncInProgress = true;
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _syncInProgress = false;
+        });
+      }
+    }
+
+    bool storageFull = await ModelState.get(AppString.storageFull.string,
+            defaultValue: "no") ==
+        "yes";
+    if (storageFull) {
+      if (mounted) {
+        setState(() {
+          _storageFull = true;
+        });
+      }
+    } else if (mounted) {
+      setState(() {
+        _storageFull = false;
+      });
+    }
+  }
+
   Future<void> _handleAppEvents() async {
     final AppEvent? event = EventStream().notifier.value;
     if (event == null) return;
     switch (event.type) {
-      case EventType.updateItem:
-        if (event.key == EventKey.added) {
-          ModelItem? item = await ModelItem.get(event.id);
-          if (item != null &&
-              currentItem != null &&
-              item.parentId == currentItem!.id) {
-            final currentItems = List<ModelItem>.from(_itemsNotifier.value);
-            if (item.isFolder) {
-              currentItems.insert(0, item);
-            } else {
-              currentItems.add(item);
-            }
-            _itemsNotifier.value = currentItems;
-          }
-        } else if (event.key == EventKey.removed) {
-          final removedId = event.id;
-          final currentItems = List<ModelItem>.from(_itemsNotifier.value);
-          currentItems.removeWhere((item) => item.id == removedId);
-          _itemsNotifier.value = currentItems;
-        }
-        break;
-      case EventType.syncStatus:
-        if (event.key == EventKey.running) {
-          if (mounted) {
-            setState(() {
-              _syncInProgress = true;
-            });
-          }
-        } else if (event.key == EventKey.stopped) {
-          if (mounted) {
-            setState(() {
-              _syncInProgress = false;
-            });
-          }
-        } else if (event.key == EventKey.storageFull) {
-          if (mounted) {
-            _storageFull = event.id == "yes";
-          }
-        }
-        break;
       case EventType.settings:
         if (event.key == EventKey.logging) {
           _loggingEnabled = event.id == "yes";
@@ -166,7 +175,7 @@ class _FilePaneState extends State<FilePane> {
     }
   }
 
-  Future<void> _loadFiles() async {
+  Future<void> _loadFiles({bool isSilent = false}) async {
     if (currentItem == null) {
       deviceHash = await getDeviceHash();
       ModelItem? rootFife = await ModelItem.get("fife");
@@ -180,16 +189,33 @@ class _FilePaneState extends State<FilePane> {
       return;
     }
 
-    if (mounted) {
+    if (!isSilent && mounted) {
       setState(() => _isLoading = true);
     }
+
     final items = await ModelItem.getDisplayItems(currentItem);
     _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
     String deviceRootHash = await getDeviceHash();
     _isDeviceRoot = currentItem?.id == deviceRootHash;
+
     if (mounted) {
-      setState(() {
+      if (currentItem != previousItem) {
+        // Folder changed: full update
         _itemsNotifier.value = items;
+        previousItem = currentItem;
+      } else {
+        // Same folder: apply atomic changes
+        final currentList = _itemsNotifier.value;
+        final currentIds = currentList.map((e) => e.id).toSet();
+        final newIds = items.map((e) => e.id).toSet();
+
+        if (currentIds.length != newIds.length ||
+            currentIds.any((id) => !newIds.contains(id))) {
+          _itemsNotifier.value = items;
+        }
+      }
+
+      setState(() {
         _isLoading = false;
       });
     }
@@ -457,11 +483,12 @@ class _FilePaneState extends State<FilePane> {
                   tooltip: AppLocalizations.of(context)!.info,
                   onPressed: showInfo,
                 ),
-              IconButton(
-                icon: const Icon(LucideIcons.downloadCloud),
-                tooltip: AppLocalizations.of(context)!.download,
-                onPressed: downloadItems,
-              ),
+              if (!simulateTesting())
+                IconButton(
+                  icon: const Icon(LucideIcons.downloadCloud),
+                  tooltip: AppLocalizations.of(context)!.download,
+                  onPressed: downloadItems,
+                ),
               IconButton(
                 icon: const Icon(LucideIcons.archive),
                 tooltip: AppLocalizations.of(context)!.archive,
@@ -639,7 +666,7 @@ class _FilePaneState extends State<FilePane> {
     final reconService = ReconciliationService(sodium);
     await reconService.reconcile(item);
     _loadFiles();
-    SyncUtils.waitAndSyncChanges("Explorer");
+    SyncUtils.syncChanges("Explorer");
   }
 
   void addFolderConfirm(String folderPath, String? bookmark) {
@@ -720,22 +747,28 @@ class _FilePaneState extends State<FilePane> {
               );
             }
           }
-          return ListView.builder(
-            reverse: true,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-
-              return FileListItem(
-                key: ValueKey(item.id),
-                item: item,
-                selectedItemsNotifier: _selectedItemsNotifier,
-                isMultiSelectNotifier: _isMultiSelectNotifier,
-                onTap: () => _onTap(item),
-                onLongPress: () => _onLongPress(item),
-              );
-            },
-          );
+          return StreamBuilder<Map<String, TaskStatus>>(
+              stream: RepositoryItemTask.instance.getTaskSnapshotStream(),
+              builder: (context, snapshot) {
+                final taskMap = snapshot.data ?? {};
+                return ListView.builder(
+                  reverse: true,
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    TaskStatus? taskStatus = taskMap[item.id];
+                    return FileListItem(
+                      key: ValueKey(item.id),
+                      item: item,
+                      taskStatus: taskStatus,
+                      selectedItemsNotifier: _selectedItemsNotifier,
+                      isMultiSelectNotifier: _isMultiSelectNotifier,
+                      onTap: () => _onTap(item),
+                      onLongPress: () => _onLongPress(item),
+                    );
+                  },
+                );
+              });
         });
   }
 }

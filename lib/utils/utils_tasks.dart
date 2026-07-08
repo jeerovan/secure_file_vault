@@ -7,9 +7,7 @@ import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
-import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
-import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
@@ -19,6 +17,7 @@ import 'package:internet_connection_checker_plus/internet_connection_checker_plu
 import 'package:path_provider/path_provider.dart';
 import 'package:sodium/sodium_sumo.dart';
 
+import '../models/model_state.dart';
 import '../services/service_logger.dart';
 import 'utils_crypto.dart';
 
@@ -87,8 +86,8 @@ class TaskManager {
     if (!_inBackground) return true;
 
     final int elapsedMs = DateTime.now().difference(_startTime).inMilliseconds;
-    // 30 seconds for iOS, 3 minutes for Android
-    final int maxAllowedMs = Platform.isIOS ? 30000 : 180000;
+    // 30 seconds for iOS
+    final int maxAllowedMs = 30000;
     final int remainingMs = maxAllowedMs - elapsedMs;
 
     // Calculate rolling average
@@ -312,11 +311,7 @@ class TaskManager {
         final status = providerResult["success"];
         if (status <= 0) {
           logger.error('Get storage provider: ${jsonEncode(providerResult)}');
-          await ModelSetting.set(AppString.storageFull.string, "yes");
-          EventStream().publish(AppEvent(
-              type: EventType.syncStatus,
-              id: "yes",
-              key: EventKey.storageFull));
+          await ModelState.set(AppString.storageFull.string, "yes");
           return false;
         } else {
           final providerData = providerResult["data"];
@@ -324,9 +319,7 @@ class TaskManager {
           modelFile.providerId = providerData["provider_id"];
           List<String> attrs = ["storage_id", "provider_id"];
           await modelFile.update(attrs);
-          await ModelSetting.set(AppString.storageFull.string, "no");
-          EventStream().publish(AppEvent(
-              type: EventType.syncStatus, id: "no", key: EventKey.storageFull));
+          await ModelState.set(AppString.storageFull.string, "no");
         }
       }
     }
@@ -531,16 +524,25 @@ class TaskManager {
     int parts = modelFile.parts;
     String name = modelItem.name;
     Directory tempStorage = await getAppTempDirectory();
-    String filePath = path_lib.join(tempStorage.path, name);
+    String filePathInAppTemp = path_lib.join(tempStorage.path, name);
     int partsHave = 0;
     FileSplitter fileSplitter = FileSplitter(fileSize: size);
-    if (File(filePath).existsSync()) {
-      partsHave = fileSplitter.getPartsInSize(File(filePath).lengthSync());
+    File fileInAppTemp = File(filePathInAppTemp);
+    if (await fileInAppTemp.exists()) {
+      partsHave =
+          fileSplitter.getPartsInSize(File(filePathInAppTemp).lengthSync());
+    } else {
+      if (!await fileInAppTemp.parent.exists()) {
+        await fileInAppTemp.parent.create(recursive: true);
+      }
+      if (!await fileInAppTemp.exists()) {
+        await fileInAppTemp.create();
+      }
     }
     if (partsHave == parts) {
       String finalFilePath = await ModelItem.getPathForItem(modelItem.id);
       try {
-        await moveFileSafely(filePath, finalFilePath);
+        await moveFileSafely(filePathInAppTemp, finalFilePath);
       } catch (e) {
         logger.error("failed to move download temp file", error: e);
       }
@@ -557,6 +559,12 @@ class TaskManager {
       Directory tempDir = await getTemporaryDirectory();
       String tempFilePath = "${tempDir.path}/$fileHashPart";
       File tempFile = File(tempFilePath);
+      if (!await tempFile.parent.exists()) {
+        await tempFile.parent.create(recursive: true);
+      }
+      if (!await tempFile.exists()) {
+        await tempFile.create();
+      }
       IOSink fileSink = tempFile.openWrite();
       int downloadedRequestState = await downloadFileStream(
           url: downloadUrl, headers: null, fileOut: fileSink, onProgress: null);
@@ -579,13 +587,13 @@ class TaskManager {
                   keyCipherBase64, keyNonceBase64, masterKeyBase64);
           if (fileEncryptionKeyBytes != null) {
             ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
-                tempFilePath, filePath, fileEncryptionKeyBytes);
+                tempFilePath, filePathInAppTemp, fileEncryptionKeyBytes);
             if (decryptionResult.isSuccess) {
               logger.info("$name:$partToDownload:Fetched & decrypted");
               if (partToDownload == parts) {
                 String finalFilePath =
                     await ModelItem.getPathForItem(modelItem.id);
-                await File(filePath).rename(finalFilePath);
+                await File(filePathInAppTemp).rename(finalFilePath);
                 await ModelItemTask.completeTask(itemTask.id);
               } else {
                 // Broadcast download progress

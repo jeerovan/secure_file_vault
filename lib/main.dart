@@ -40,7 +40,7 @@ void backgroundTaskDispatcher() {
     WidgetsFlutterBinding.ensureInitialized();
     try {
       await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
-      await initializeDependencies(mode: ExecutionMode.appBackground);
+      await initializeDependencies(ExecutionMode.appBackground);
     } catch (e, s) {
       AppLogger(prefixes: ["Workmanager"])
           .error("Initialize failed", error: e, stackTrace: s);
@@ -66,7 +66,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   if (message.data['type'] == 'Sync') {
     try {
       await StorageSqlite.initialize(mode: ExecutionMode.appBackground);
-      await initializeDependencies(mode: ExecutionMode.appBackground);
+      await initializeDependencies(ExecutionMode.appBackground);
       await SyncUtils().reconFolders(inBackground: true, caller: "FCM-BG");
     } catch (e, s) {
       AppLogger(prefixes: ["FCM-BG"])
@@ -98,7 +98,7 @@ Future<void> main() async {
 
 Future<void> initializeInParallel() async {
   await Future.wait([
-    initializeDependencies(mode: ExecutionMode.appForeground),
+    initializeDependencies(ExecutionMode.appForeground),
     initializeFirebase(),
     initializeBackgroundSync(),
     initializePurchases(),
@@ -181,16 +181,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         break;
     }
     WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    logger.info("App State:$state");
-    /* if (Platform.isIOS || Platform.isAndroid) {
-      if (state == AppLifecycleState.resumed) {
-        context.read<AppSetupState>().recheckStatus();
-      }
-    } */
   }
 
   @override

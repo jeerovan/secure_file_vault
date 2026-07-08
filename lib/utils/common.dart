@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_vault_bb/models/model_profile.dart';
+import 'package:file_vault_bb/models/model_state.dart';
 import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/utils/utils_crypto.dart';
 import 'package:flutter/foundation.dart';
@@ -622,7 +623,7 @@ Future<int> getDeviceType() async {
 }
 
 Future<String> getDeviceHash() async {
-  String savedHash = ModelSetting.get(AppString.deviceHash.string);
+  String savedHash = await ModelSetting.getRaw(AppString.deviceHash.string);
   if (savedHash.isNotEmpty) {
     return savedHash;
   } else {
@@ -653,11 +654,10 @@ Future<String> getDeviceHash() async {
 }
 
 Future<String> getDeviceUuid() async {
-  return ModelSetting.get(AppString.deviceUuid.string);
+  return await ModelSetting.getRaw(AppString.deviceUuid.string);
 }
 
-Future<void> initializeDependencies(
-    {ExecutionMode mode = ExecutionMode.appForeground}) async {
+Future<void> initializeDependencies(ExecutionMode mode) async {
   // initialize in parallel
   await Future.wait(
       ([addTrustedCertificates(), initializePackages(), refreshNeonAuth()]));
@@ -676,7 +676,8 @@ Future<void> addTrustedCertificates() async {
 }
 
 Future<void> refreshNeonAuth() async {
-  if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+  if (await ModelSetting.getRaw(AppString.signedIn.string,
+          defaultValue: "no") ==
       "yes") {
     await NeonAuth().refreshSessionAndGetJWT();
   }
@@ -684,7 +685,8 @@ Future<void> refreshNeonAuth() async {
 
 Future<String?> getSignedInUserId() async {
   if (simulateTesting()) {
-    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+    if (await ModelSetting.getRaw(AppString.signedIn.string,
+            defaultValue: "no") ==
         "yes") {
       return "fife";
     } else {
@@ -701,7 +703,8 @@ Future<String?> getSignedInUserId() async {
 
 Future<String?> getSignedInEmailId() async {
   if (simulateTesting()) {
-    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+    if (await ModelSetting.getRaw(AppString.signedIn.string,
+            defaultValue: "no") ==
         "yes") {
       return testEmailId;
     } else {
@@ -732,6 +735,30 @@ Future<String?> getFileHashKey() async {
   String? fileHashKeyBase64 =
       await storage.read(key: AppString.fileHashKey.string);
   return fileHashKeyBase64;
+}
+
+Future<String> getAppLocale() async {
+  String localeString = Platform.localeName.split("_")[0];
+  String locale = await ModelSetting.getRaw(AppString.locale.string,
+      defaultValue: localeString);
+  return locale.isEmpty ? "en" : locale;
+}
+
+Future<bool> isReconOrSyncInProgress() async {
+  String lastReconAtString =
+      await ModelState.get(AppString.lastReconRunningAt.string);
+  int? lastReconAt =
+      lastReconAtString.isEmpty ? null : int.parse(lastReconAtString);
+
+  String lastSyncAtString =
+      await ModelState.get(AppString.lastSyncRunningAt.string);
+  int? lastSyncAt =
+      lastSyncAtString.isEmpty ? null : int.parse(lastSyncAtString);
+
+  int startedAt = DateTime.now().millisecondsSinceEpoch;
+
+  return ((lastReconAt != null && (startedAt - lastReconAt < 2000)) ||
+      (lastSyncAt != null && (startedAt - lastSyncAt < 2000)));
 }
 
 void safeParseJson(

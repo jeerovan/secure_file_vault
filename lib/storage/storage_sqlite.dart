@@ -18,8 +18,10 @@ class StorageSqlite {
   // Track execution mode to handle background isolate behaviors safely
   static ExecutionMode _currentMode = ExecutionMode.appForeground;
 
-  final logger = AppLogger(prefixes: ["StorageSqlite"]);
-  StorageSqlite._init();
+  late AppLogger logger;
+  StorageSqlite._init() {
+    logger = AppLogger(prefixes: ["StorageSqlite", _currentMode.string]);
+  }
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -45,7 +47,7 @@ class StorageSqlite {
     try {
       String dbDir = await getDbStoragePath();
       final dbPath = join(dbDir, dbFileName);
-      logger.info("DbPath:$dbPath");
+      logger.debug("DbPath:$dbPath");
 
       return await openDatabase(
         dbPath,
@@ -71,6 +73,7 @@ class StorageSqlite {
   static Future<void> initialize(
       {ExecutionMode mode = ExecutionMode.appForeground}) async {
     _currentMode = mode; // Store mode for the lazy initializer
+    instance.logger = AppLogger(prefixes: ["StorageSqlite", mode.string]);
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       sqfliteFfiInit();
     }
@@ -86,7 +89,7 @@ class StorageSqlite {
       for (var pair in keyValuePairs) pair['id']: pair['value']
     };
 
-    AppLogger(prefixes: [mode.string]).info("Initialized SqliteDB");
+    instance.logger.info("Initialized SqliteDB");
   }
 
   Future close() async {

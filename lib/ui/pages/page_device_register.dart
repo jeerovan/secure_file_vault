@@ -46,12 +46,12 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     int deviceType = await getDeviceType();
     bool deviceRegistered = false;
     if (!simulateTesting()) {
-      String? fcmToken = await storage.read(key: AppString.fcmId.string);
+      String fcmToken = await ModelSetting.getRaw(AppString.fcmId.string);
       final result = await api.post(endpoint: '/devices', jsonBody: {
         "device_uuid": deviceUuid,
         "title": deviceName,
         "type": deviceType,
-        "notificationId": fcmToken,
+        "notificationId": fcmToken.isEmpty ? null : fcmToken,
       });
       final status = result["success"];
       if (status <= 0) {

@@ -9,8 +9,6 @@ import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:http/http.dart' as http;
 
-Completer<void>? _refreshJwtCompleter;
-
 class NeonAuth {
   final SecureStorage _storage;
   final http.Client _http;
@@ -30,6 +28,16 @@ class NeonAuth {
         'NEON_AUTH is empty.',
       );
     }
+  }
+
+  String? _getHeader(Map<String, String> headers, String key) {
+    final lowerKey = key.toLowerCase();
+    for (var entry in headers.entries) {
+      if (entry.key.toLowerCase() == lowerKey) {
+        return entry.value;
+      }
+    }
+    return null;
   }
 
   Future<http.Response> sendOTP(String email) async {
@@ -59,7 +67,7 @@ class NeonAuth {
     String? userId;
     if (response.statusCode == 200) {
       // Extract the full cookie string from the header
-      final rawCookie = response.headers['set-cookie'];
+      final rawCookie = _getHeader(response.headers, 'set-cookie');
       if (rawCookie != null) {
         // Parse out the __Secure-neon-auth.session_token
         final cookieMatch = RegExp(r'__Secure-neon-auth\.session_token=([^;]+)')
@@ -106,15 +114,11 @@ class NeonAuth {
   }
 
   Future<void> refreshSessionAndGetJWT() async {
+    logger.info("refreshSessionAndGetJWT called");
     if (simulateTesting()) {
+      logger.info("Skipping refresh due to simulateTesting()");
       return;
     }
-    if (_refreshJwtCompleter != null) {
-      logger.info("JWT refresh already in progress. Waiting...");
-      return _refreshJwtCompleter!.future;
-    }
-
-    _refreshJwtCompleter = Completer<void>();
     try {
       final currentJwtToken =
           await _storage.read(key: AppString.jwtToken.string);
@@ -131,6 +135,8 @@ class NeonAuth {
         }
         logger.info(
             "JWT is missing or expiring within 2 minutes. Proceeding with refresh.");
+      } else {
+        logger.error("Can't refresh, Current JWT Token is Null");
       }
 
       final sessionCookie =
@@ -146,18 +152,20 @@ class NeonAuth {
         Uri.parse('$_neonAuthUrl/get-session'),
         headers: {
           'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
       ).timeout(const Duration(seconds: 30)); // Prevents hanging network calls
 
       if (response.statusCode == 200) {
-        final jwt = response.headers['set-auth-jwt'];
+        final jwt = _getHeader(response.headers, 'set-auth-jwt');
         if (jwt != null && jwt.isNotEmpty) {
           await _storage.write(key: AppString.jwtToken.string, value: jwt);
           logger.info("Successfully refreshed jwtToken.");
         } else {
-          logger.warning(
+          logger.error(
               "Server returned 200 but 'set-auth-jwt' header was missing.");
+          await SyncUtils.resetDevice();
         }
       }
       // Legit situations to sign out: Session is definitively invalid or expired
@@ -181,12 +189,6 @@ class NeonAuth {
       // Catch-all for formatting errors, parse errors, etc.
       logger.error("Unexpected error during JWT refresh",
           error: e, stackTrace: stackTrace);
-    } finally {
-      // Always complete and reset the lock, regardless of success or failure
-      if (!_refreshJwtCompleter!.isCompleted) {
-        _refreshJwtCompleter!.complete();
-      }
-      _refreshJwtCompleter = null;
     }
   }
 

@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:developer' as dev;
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
-import '../../models/model_log.dart';
 import '../common_widgets.dart';
+import '../../utils/common.dart';
 
 class PageLogs extends StatefulWidget {
   const PageLogs({super.key});
@@ -15,7 +17,7 @@ class PageLogs extends StatefulWidget {
 }
 
 class _PageLogsState extends State<PageLogs> {
-  late Future<List<ModelLog>> _logsFuture;
+  late Future<List<String>> _logsFuture;
   String? _filterText;
   String _filterType = 'All';
   final List<String> _logTypes = ['All', 'INFO', 'DEBUG', 'WARNING', 'ERROR'];
@@ -41,15 +43,50 @@ class _PageLogsState extends State<PageLogs> {
     if (mounted) {
       setState(() {});
     }
-    List<String> searches = [_filterType];
-    if (_filterText != null && _filterText!.isNotEmpty) {
-      searches.add(_filterText!);
+    _logsFuture = _readAndFilterLogs();
+  }
+
+  Future<List<String>> _readAndFilterLogs() async {
+    try {
+      final tempDir = await getAppTempDirectory();
+      final logFile = File('${tempDir.path}/app_logs.txt');
+      if (!await logFile.exists()) {
+        return [];
+      }
+
+      final lines = await logFile.readAsLines();
+
+      return lines.where((line) {
+        // Filter by type
+        if (_filterType != 'All') {
+          if (!line.contains('[$_filterType]')) {
+            return false;
+          }
+        }
+        // Filter by text
+        if (_filterText != null && _filterText!.isNotEmpty) {
+          if (!line.toLowerCase().contains(_filterText!.toLowerCase())) {
+            return false;
+          }
+        }
+        return true;
+      }).toList()
+        ..reversed.forEach((_) {}); // Keep order as is, but UI handles reverse
+    } catch (e) {
+      rethrow;
     }
-    _logsFuture = ModelLog.all(searches);
   }
 
   Future<void> _clearLogs() async {
-    await ModelLog.clear();
+    try {
+      final tempDir = await getAppTempDirectory();
+      final logFile = File('${tempDir.path}/app_logs.txt');
+      if (await logFile.exists()) {
+        await logFile.writeAsString('');
+      }
+    } catch (e) {
+      dev.log("Failed to clear logs", error: e);
+    }
     _loadLogs();
   }
 
@@ -81,7 +118,7 @@ class _PageLogsState extends State<PageLogs> {
                 onRefresh: () async {
                   _loadLogs();
                 },
-                child: FutureBuilder<List<ModelLog>>(
+                child: FutureBuilder<List<String>>(
                   future: _logsFuture,
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -105,7 +142,10 @@ class _PageLogsState extends State<PageLogs> {
                         reverse: true,
                         itemCount: logs.length,
                         itemBuilder: (context, index) {
-                          final log = logs[index];
+                          // Since reverse: true, index 0 is bottom.
+                          // To show newest at bottom, we need the list to be [oldest, ..., newest]
+                          // and access them as logs[logs.length - 1 - index]
+                          final log = logs[logs.length - 1 - index];
                           return Card(
                             margin: const EdgeInsets.symmetric(
                               horizontal: 8,
@@ -113,7 +153,7 @@ class _PageLogsState extends State<PageLogs> {
                             ),
                             child: ListTile(
                               title: Text(
-                                log.log,
+                                log,
                                 style: const TextStyle(fontSize: 10),
                               ),
                             ),

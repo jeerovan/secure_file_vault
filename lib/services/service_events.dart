@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-enum EventType { updateItem, syncStatus, settings, system }
+enum EventType { settings, system }
 
 enum EventKey {
   object,

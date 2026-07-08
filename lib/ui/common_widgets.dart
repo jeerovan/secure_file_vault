@@ -10,7 +10,6 @@ import '../l10n/app_localizations.dart';
 import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../models/model_item_task.dart';
-import '../services/service_events.dart';
 import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
 import 'package:flutter/material.dart';
@@ -41,9 +40,9 @@ class AppSetupState extends ChangeNotifier {
     _currentStep = SetupStep.loading;
     notifyListeners();
 
-    bool onboarded =
-        ModelSetting.get(AppString.onboarding.string, defaultValue: "no") ==
-            "yes";
+    bool onboarded = await ModelSetting.getRaw(AppString.onboarding.string,
+            defaultValue: "no") ==
+        "yes";
     if (!onboarded) {
       logger.info("Onboarding");
       _currentStep = SetupStep.onboard;
@@ -51,7 +50,8 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+    if (await ModelSetting.getRaw(AppString.signedIn.string,
+            defaultValue: "no") ==
         "no") {
       logger.info("Signin");
       _currentStep = SetupStep.signin;
@@ -923,6 +923,7 @@ class UploadDownloadIndicatorState extends State<UploadDownloadIndicator>
 
 class FileListItem extends StatefulWidget {
   final ModelItem item;
+  final TaskStatus? taskStatus;
   final ValueNotifier<Set<ModelItem>> selectedItemsNotifier;
   final ValueNotifier<bool> isMultiSelectNotifier;
   final VoidCallback onTap;
@@ -931,6 +932,7 @@ class FileListItem extends StatefulWidget {
   const FileListItem({
     required super.key,
     required this.item,
+    this.taskStatus,
     required this.selectedItemsNotifier,
     required this.isMultiSelectNotifier,
     required this.onTap,
@@ -942,19 +944,18 @@ class FileListItem extends StatefulWidget {
 }
 
 class _FileListItemState extends State<FileListItem> {
+  AppLogger logger = AppLogger(prefixes: ["FileListItem"]);
   bool? _isLocal;
   bool? _isUploaded;
   bool _isUploading = false;
   bool _isDownloading = false;
   bool _requiresBookmark = false;
   int transferProgress = 0;
-  AppLogger logger = AppLogger(prefixes: ["FileListItem"]);
 
   @override
   void initState() {
     super.initState();
     _checkFileStates();
-    EventStream().notifier.addListener(_handleItemUpdateEvent);
   }
 
   @override
@@ -964,55 +965,22 @@ class _FileListItemState extends State<FileListItem> {
     if (oldWidget.item != widget.item) {
       _checkFileStates();
     }
+    if (oldWidget.taskStatus != widget.taskStatus) {
+      _updateTaskState();
+    }
   }
 
   @override
   void dispose() {
-    EventStream().notifier.removeListener(_handleItemUpdateEvent);
     super.dispose();
   }
 
-  void _handleItemUpdateEvent() {
-    if (!mounted) return;
-    final AppEvent? event = EventStream().notifier.value;
-    if (event == null) return;
-
-    switch (event.type) {
-      case EventType.updateItem:
-        if (event.key == EventKey.uploaded) {
-          if (event.id == widget.item.id) {
-            setState(() {
-              _isUploaded = true;
-              _isUploading = false;
-              transferProgress = 0;
-            });
-          }
-        } else if (event.key == EventKey.downloaded) {
-          if (event.id == widget.item.id) {
-            setState(() {
-              _isLocal = true;
-              _isDownloading = false;
-              transferProgress = 0;
-            });
-          }
-        } else if (event.key == EventKey.uploadProgress) {
-          if (event.id == widget.item.id) {
-            setState(() {
-              transferProgress = event.value;
-              _isUploading = true;
-            });
-          }
-        } else if (event.key == EventKey.downloadProgress) {
-          if (event.id == widget.item.id) {
-            setState(() {
-              transferProgress = event.value;
-              _isDownloading = true;
-            });
-          }
-        }
-        break;
-      default:
-        break;
+  void _updateTaskState() {
+    _isUploading = widget.taskStatus?.task == ItemTask.upload.value;
+    _isDownloading = widget.taskStatus?.task == ItemTask.download.value;
+    transferProgress = widget.taskStatus?.progress ?? 0;
+    if (widget.taskStatus == null) {
+      _checkFileStates();
     }
   }
 
@@ -1043,24 +1011,6 @@ class _FileListItemState extends State<FileListItem> {
     return false;
   }
 
-  Future<int> getUploadProgress(ModelItem item) async {
-    ModelItemTask? itemTask = await ModelItemTask.get(item.id);
-    if (itemTask != null && itemTask.task == ItemTask.upload.value) {
-      return itemTask.progress;
-    } else {
-      return -1;
-    }
-  }
-
-  Future<int> getDownloadProgress(ModelItem item) async {
-    ModelItemTask? itemTask = await ModelItemTask.get(item.id);
-    if (itemTask != null && itemTask.task == ItemTask.download.value) {
-      return itemTask.progress;
-    } else {
-      return -1;
-    }
-  }
-
   Future<void> _checkFileStates() async {
     // Run both async tasks concurrently for optimal performance
     final stateResults = await Future.wait([
@@ -1073,11 +1023,6 @@ class _FileListItemState extends State<FileListItem> {
       widget.item.isFolder ? requiresBookmark(widget.item) : Future.value(false)
     ]);
 
-    final transferResults = await Future.wait([
-      widget.item.isFolder ? Future.value(-1) : getUploadProgress(widget.item),
-      widget.item.isFolder ? Future.value(-1) : getDownloadProgress(widget.item)
-    ]);
-
     // Always check if the widget is still in the tree before calling setState
     if (!mounted) return;
 
@@ -1085,13 +1030,6 @@ class _FileListItemState extends State<FileListItem> {
       _isLocal = stateResults[0];
       _isUploaded = stateResults[1];
       _requiresBookmark = stateResults[2];
-      if (transferResults[0] > -1) {
-        _isUploading = true;
-        transferProgress = transferResults[0];
-      } else if (transferResults[1] > -1) {
-        _isDownloading = true;
-        transferProgress = transferResults[1];
-      }
     });
   }
 

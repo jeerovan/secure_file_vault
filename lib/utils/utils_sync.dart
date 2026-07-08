@@ -30,27 +30,10 @@ class SyncUtils {
   factory SyncUtils() => _instance;
   SyncUtils._internal();
 
-  Timer? _debounceTimer;
-  Timer? _foregroundSyncTimer;
   Timer? _syncProcessTimer;
   Timer? _reconProcessTimer;
 
-  bool _hasPendingChanges = false;
-
   static final logger = AppLogger(prefixes: ["Sync"]);
-
-  void startAutoSync() {
-    final minutes = isDebugEnabled ? 2 : 10;
-    _foregroundSyncTimer?.cancel();
-    _foregroundSyncTimer = Timer.periodic(Duration(minutes: minutes), (timer) {
-      reconFolders(inBackground: false, caller: "AutoSync");
-    });
-  }
-
-  void stopAutoSync() {
-    _foregroundSyncTimer?.cancel();
-    _foregroundSyncTimer = null;
-  }
 
   // Pass inBackground flag to determine if we should await everything
   Future<void> reconFolders(
@@ -63,29 +46,25 @@ class SyncUtils {
     }
     bool canAccessSecureStorage = await canSync();
     if (!canAccessSecureStorage) {
+      logger.error("Can not access secure storage");
       return;
     }
     String mode = inBackground ? "Background" : "Foreground";
 
     int startedAt = DateTime.now().millisecondsSinceEpoch;
     String lastRunningAtString =
-        ModelSetting.get(AppString.lastReconRunningAt.string);
+        await ModelState.get(AppString.lastReconRunningAt.string);
     int? lastRunningAt =
         lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
     if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
       logger.warning("Recon already in progress, skipping in $mode.");
       return;
     }
-    EventStream().publish(AppEvent(
-        type: EventType.syncStatus,
-        id: "",
-        key: EventKey.running,
-        value: null));
-    await ModelSetting.set(
+    await ModelState.set(
         AppString.lastReconRunningAt.string, startedAt.toString());
     // set timer to update running state every seconds
     _reconProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      await ModelSetting.set(AppString.lastReconRunningAt.string,
+      await ModelState.set(AppString.lastReconRunningAt.string,
           DateTime.now().millisecondsSinceEpoch.toString());
     });
 
@@ -98,34 +77,21 @@ class SyncUtils {
       }
     } catch (e) {
       logger.error("Recon failed", error: e);
+    } finally {
+      _reconProcessTimer?.cancel();
+      _reconProcessTimer = null;
     }
-    _reconProcessTimer?.cancel();
-    _reconProcessTimer = null;
-
     // If in background, await directly to prevent isolate termination
     if (inBackground || awaited) {
       await triggerSync(inBackground: inBackground, caller: caller);
     } else {
-      waitAndSyncChanges(caller);
+      syncChanges(caller);
     }
   }
 
-  static void waitAndSyncChanges(String caller) {
+  static void syncChanges(String caller) {
     logger.info("wait and sync (Foreground)");
-    _instance._handleChange(caller);
-  }
-
-  void _handleChange(String caller) {
-    _hasPendingChanges = true;
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(seconds: 1), () {
-      if (_hasPendingChanges) {
-        _hasPendingChanges = false;
-        triggerSync(
-            inBackground: false,
-            caller: caller); // Fire and forget for foreground
-      }
-    });
+    _instance.triggerSync(inBackground: false, caller: caller);
   }
 
   Future<void> triggerSync(
@@ -134,7 +100,7 @@ class SyncUtils {
     // Drop the request if a sync is already actively running
     int startedAt = DateTime.now().millisecondsSinceEpoch;
     String lastRunningAtString =
-        ModelSetting.get(AppString.lastSyncRunningAt.string);
+        await ModelState.get(AppString.lastSyncRunningAt.string);
     int? lastRunningAt =
         lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
     if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
@@ -144,12 +110,7 @@ class SyncUtils {
     }
     // set timer to update running state every seconds
     _syncProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      EventStream().publish(AppEvent(
-          type: EventType.syncStatus,
-          id: "",
-          key: EventKey.running,
-          value: null));
-      await ModelSetting.set(AppString.lastSyncRunningAt.string,
+      await ModelState.set(AppString.lastSyncRunningAt.string,
           DateTime.now().millisecondsSinceEpoch.toString());
     });
 
@@ -179,11 +140,6 @@ class SyncUtils {
     } finally {
       _syncProcessTimer?.cancel();
       _syncProcessTimer = null;
-      EventStream().publish(AppEvent(
-          type: EventType.syncStatus,
-          id: "",
-          key: EventKey.stopped,
-          value: null));
     }
   }
 
@@ -256,7 +212,6 @@ class SyncUtils {
     String? userId = await getSignedInUserId();
     if (userId != null) {
       String deviceUuid = await getDeviceUuid();
-      SecureStorage storage = SecureStorage();
       try {
         if (!simulateTesting()) {
           if (deviceUuid.isNotEmpty) {
@@ -272,32 +227,45 @@ class SyncUtils {
           if (!success) {
             return false;
           }
-          if (revenueCatSupported) {
-            final isAnonymous = await Purchases.isAnonymous;
-            if (!isAnonymous) {
-              await Purchases.logOut();
-            }
-          }
         }
-        await storage.clear();
-        final dbHelper = StorageSqlite.instance;
-        await dbHelper.clearDb();
-        String locale = ModelSetting.get(AppString.locale.string);
-        String fcmToken = ModelSetting.get(AppString.fcmId.string);
-        ModelSetting.clear();
-        await clearFiFeDirectory();
-        // keep locale
-        await ModelSetting.set(AppString.locale.string, locale);
-        await ModelSetting.set(AppString.fcmId.string, fcmToken);
-        await ModelSetting.set(AppString.onboarding.string, "yes");
-        EventStream().publish(AppEvent(
-            type: EventType.system, id: "signout", key: EventKey.signout));
+        await resetDevice();
         success = true;
       } catch (e, s) {
         logger.error("signout", error: e, stackTrace: s);
       }
     }
     return success;
+  }
+
+  static Future<void> resetDevice() async {
+    SecureStorage storage = SecureStorage();
+    try {
+      if (!simulateTesting() && revenueCatSupported) {
+        final isAnonymous = await Purchases.isAnonymous;
+        if (!isAnonymous) {
+          await Purchases.logOut();
+        }
+      }
+      await storage.clear();
+      final dbHelper = StorageSqlite.instance;
+      await dbHelper.clearDb();
+      String locale = await ModelSetting.getRaw(AppString.locale.string);
+      String fcmToken = await ModelSetting.getRaw(AppString.fcmId.string);
+      ModelSetting.clear();
+      await clearFiFeDirectory();
+      // keep locale
+      if (locale.isNotEmpty) {
+        await ModelSetting.set(AppString.locale.string, locale);
+      }
+      if (fcmToken.isNotEmpty) {
+        await ModelSetting.set(AppString.fcmId.string, fcmToken);
+      }
+      await ModelSetting.set(AppString.onboarding.string, "yes");
+      EventStream().publish(AppEvent(
+          type: EventType.system, id: "signout", key: EventKey.signout));
+    } catch (e, s) {
+      logger.error("Resetting device", error: e, stackTrace: s);
+    }
   }
 
   static Future<void> logChangeToPush(Map<String, dynamic> map,

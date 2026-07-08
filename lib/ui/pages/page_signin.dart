@@ -44,12 +44,14 @@ class _PageSigninState extends State<PageSignin> {
     _checkInitialAuthState();
   }
 
-  void _checkInitialAuthState() {
-    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+  Future<void> _checkInitialAuthState() async {
+    if (await ModelSetting.getRaw(AppString.signedIn.string,
+            defaultValue: "no") ==
         "no") {
       logger.info("Not signed in");
       int sentOtpAt = int.parse(
-        ModelSetting.get(AppString.otpSentAt.string, defaultValue: "0"),
+        await ModelSetting.getRaw(AppString.otpSentAt.string,
+            defaultValue: "0"),
       );
       int nowUtc = DateTime.now().toUtc().millisecondsSinceEpoch;
 
@@ -123,7 +125,8 @@ class _PageSigninState extends State<PageSignin> {
   Future<void> verifyOtp(String text) async {
     if (processing) return;
     final otp = text.trim();
-    final String savedEmail = ModelSetting.get(AppString.otpSentTo.string);
+    final String savedEmail =
+        await ModelSetting.getRaw(AppString.otpSentTo.string);
 
     if (savedEmail.isEmpty || otp.isEmpty) return;
 
