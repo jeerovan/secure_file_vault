@@ -158,6 +158,18 @@ Adding a provider requires, at minimum:
 - All metadata, task, and change-journal mutations for one root reconciliation commit transactionally or roll back together.
 - A folder move must not introduce a parent cycle.
 
+### 5.8 Transfer safety
+
+- Upload source size and keyed content hash must match reconciled metadata before encryption; a source that changes during encryption is blocked until reconciliation runs again.
+- Encrypted upload artifacts use partial and ready states. Existence alone never proves an artifact complete; ready artifacts must match committed part size and checksum metadata.
+- Download staging is isolated by opaque item identity, never basename. A persisted manifest binds staging to item ID, file hash, part count, expected plaintext length, and verified per-part checksums.
+- A downloaded part becomes resumable only after transport, encrypted size/checksum, authenticated decryption, ready-file promotion, and manifest commit succeed.
+- Final plaintext size and keyed content hash must match metadata before and after destination finalization. Transfer task completion is recorded only after destination verification. A different file or directory already occupying the destination is preserved and blocks finalization.
+- Transfer tasks persist state, attempt count, next-attempt time, and non-sensitive error category. Retryable failures use exponential backoff with stable jitter, capped at fifteen minutes and ten attempts; later user/reconciliation action may requeue a failed task.
+- `blocked`, `failed`, and `cancelled` tasks are not automatically dispatched. Interrupted `running` tasks become retryable after their lease expires.
+- Auth refresh is single-flight. Idempotent operations may retry once only when refresh changes authorization; non-idempotent POST operations require explicit retry opt-in.
+- Transfer and auth network operations use finite connection/response/stream timeouts.
+
 ## 6. Security and Privacy Invariants
 
 These requirements are non-negotiable unless this specification is deliberately revised:
@@ -258,7 +270,7 @@ These subjects need explicit decisions before an AI agent should materially chan
 
 - synchronization conflict-resolution rules;
 - deletion propagation, trash retention, and permanent-delete semantics;
-- offline queue ordering, retry policy, and retry limits;
+- offline queue ordering and user-facing retry controls;
 - multi-device limits and device-revocation behavior;
 - subscription tiers, quotas, and expiry behavior;
 - encryption-key recovery, rotation, and lost-device workflows;

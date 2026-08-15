@@ -9,7 +9,25 @@ import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:http/http.dart' as http;
 
+class AuthRefreshSingleFlight {
+  Future<void>? _inFlight;
+
+  Future<void> run(Future<void> Function() refresh) async {
+    final existing = _inFlight;
+    if (existing != null) return existing;
+    final operation = refresh();
+    _inFlight = operation;
+    try {
+      await operation;
+    } finally {
+      if (identical(_inFlight, operation)) _inFlight = null;
+    }
+  }
+}
+
 class NeonAuth {
+  static final AuthRefreshSingleFlight _refreshSingleFlight =
+      AuthRefreshSingleFlight();
   final SecureStorage _storage;
   final http.Client _http;
   final String _neonAuthUrl;
@@ -42,28 +60,33 @@ class NeonAuth {
 
   Future<http.Response> sendOTP(String email) async {
     Uri otpUrl = Uri.parse('$_neonAuthUrl/email-otp/send-verification-otp');
-    final response = await _http.post(
-      otpUrl,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'type': 'sign-in' // Specifying 'sign-in' triggers the passwordless flow
-      }),
-    );
+    final response = await _http
+        .post(
+          otpUrl,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email,
+            'type':
+                'sign-in' // Specifying 'sign-in' triggers the passwordless flow
+          }),
+        )
+        .timeout(timeout);
     return response;
   }
 
   Future<String?> verifyOTP(String email, String otp) async {
     final url = Uri.parse('$_neonAuthUrl/sign-in/email-otp');
-    final response = await _http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'email': email,
-        'otp': otp,
-        // Optional: Pass 'name' or 'image' here if you want to set them during auto-registration
-      }),
-    );
+    final response = await _http
+        .post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': email,
+            'otp': otp,
+            // Optional: Pass 'name' or 'image' here if you want to set them during auto-registration
+          }),
+        )
+        .timeout(timeout);
     String? userId;
     if (response.statusCode == 200) {
       // Extract the full cookie string from the header
@@ -114,6 +137,10 @@ class NeonAuth {
   }
 
   Future<void> refreshSessionAndGetJWT() async {
+    await _refreshSingleFlight.run(_refreshSessionAndGetJWT);
+  }
+
+  Future<void> _refreshSessionAndGetJWT() async {
     logger.info("refreshSessionAndGetJWT called");
     if (simulateTesting()) {
       logger.info("Skipping refresh due to simulateTesting()");
@@ -154,7 +181,7 @@ class NeonAuth {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-      ).timeout(const Duration(seconds: 30)); // Prevents hanging network calls
+      ).timeout(timeout);
 
       if (response.statusCode == 200) {
         final jwt = _getHeader(response.headers, 'set-auth-jwt');
@@ -200,14 +227,16 @@ class NeonAuth {
         final url = Uri.parse('$_neonAuthUrl/sign-out');
 
         // 2. Call the sign-out endpoint to invalidate the session on the server
-        final response = await _http.post(url,
-            headers: {
-              // Provide the session cookie so the server knows what to destroy
-              'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
-              'Content-Type': 'application/json',
-              'Origin': _neonAuthUrl
-            },
-            body: '{}');
+        final response = await _http
+            .post(url,
+                headers: {
+                  // Provide the session cookie so the server knows what to destroy
+                  'Cookie': '__Secure-neon-auth.session_token=$sessionCookie',
+                  'Content-Type': 'application/json',
+                  'Origin': _neonAuthUrl
+                },
+                body: '{}')
+            .timeout(timeout);
 
         if (response.statusCode != 200) {
           // Log the error, but continue to clear local storage anyway

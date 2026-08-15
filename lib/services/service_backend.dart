@@ -13,15 +13,27 @@ class BackendApi {
   final http.Client _http;
   final Uri _base;
   final Duration timeout;
+  final Future<String?> Function()? _accessTokenProvider;
+  final Future<String?> Function()? _signedEmailIdProvider;
+  final Future<String> Function()? _deviceUuidProvider;
+  final Future<void> Function() _refreshAuth;
   final logger = AppLogger(prefixes: ["BackendAPI"]);
 
   BackendApi({
     SecureStorage? storage,
     http.Client? httpClient,
     String? baseUrlOverride,
+    Future<String?> Function()? accessTokenProvider,
+    Future<String?> Function()? signedEmailIdProvider,
+    Future<String> Function()? deviceUuidProvider,
+    Future<void> Function()? refreshAuth,
     this.timeout = const Duration(seconds: 30),
   })  : _storage = storage ?? SecureStorage(),
         _http = httpClient ?? http.Client(),
+        _accessTokenProvider = accessTokenProvider,
+        _signedEmailIdProvider = signedEmailIdProvider,
+        _deviceUuidProvider = deviceUuidProvider,
+        _refreshAuth = refreshAuth ?? refreshNeonAuth,
         _base = Uri.parse(
             _normalizeBaseUrl(baseUrlOverride ?? '${AppEnv.apiBaseUrl}/api')) {
     final raw = (baseUrlOverride ?? '${AppEnv.apiBaseUrl}/api').trim();
@@ -39,6 +51,7 @@ class BackendApi {
   }
 
   Future<String?> _getAccessToken() async {
+    if (_accessTokenProvider != null) return _accessTokenProvider();
     String? jwtToken = await _storage.read(key: AppString.jwtToken.string);
     /* if (jwtToken != null) {
       logger.info(jwtToken);
@@ -71,7 +84,7 @@ class BackendApi {
       'Service': 'neon'
     };
     if (extra != null) h.addAll(extra);
-    final deviceUuid = await getDeviceUuid();
+    final deviceUuid = await (_deviceUuidProvider?.call() ?? getDeviceUuid());
     if (deviceUuid.isNotEmpty) {
       h.addAll({'device_uuid': deviceUuid});
     }
@@ -144,8 +157,6 @@ class BackendApi {
               break;
             case "14":
               mappedMessage = "Unauthorized";
-              // refresh jwt
-              unawaited(refreshNeonAuth());
               break;
             case "15":
               mappedMessage = "Invalid Data";
@@ -177,21 +188,58 @@ class BackendApi {
       e is HttpException ||
       e is http.ClientException;
 
+  bool _isUnauthorized(http.Response response) {
+    if (response.statusCode == 401 || response.statusCode == 403) return true;
+    final decoded = _tryDecodeJson(response.body);
+    return decoded is Map &&
+        decoded['success'] == 0 &&
+        decoded['message'].toString() == '14';
+  }
+
+  Future<bool> _shouldAuthenticate() async {
+    final signedEmailId =
+        await (_signedEmailIdProvider?.call() ?? getSignedInEmailId());
+    return signedEmailId != null && signedEmailId != testEmailId;
+  }
+
+  Future<http.Response> _sendWithAuthRetry({
+    required bool withAuth,
+    required bool retryUnauthorized,
+    required Map<String, String>? extraHeaders,
+    required Future<http.Response> Function(Map<String, String>) send,
+  }) async {
+    final initialHeaders =
+        await _headers(withAuth: withAuth, extra: extraHeaders);
+    var response = await send(initialHeaders).timeout(timeout);
+    if (withAuth && retryUnauthorized && _isUnauthorized(response)) {
+      final previousAuthorization = initialHeaders['Authorization'];
+      await _refreshAuth();
+      final refreshedHeaders =
+          await _headers(withAuth: true, extra: extraHeaders);
+      if (refreshedHeaders['Authorization'] != previousAuthorization) {
+        response = await send(refreshedHeaders).timeout(timeout);
+      }
+    }
+    return response;
+  }
+
   Future<Map<String, dynamic>> get({
     required String endpoint,
     Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
   }) async {
     try {
-      String? signedEmailId = await getSignedInEmailId();
-      bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
+      final withAuth = await _shouldAuthenticate();
       logger.info('GET $endpoint');
-      final res = await _http
-          .get(
-            _buildUri(endpoint, queryParameters: queryParameters),
-            headers: await _headers(withAuth: withAuth, extra: headers),
-          )
-          .timeout(timeout);
+      final res = await _sendWithAuthRetry(
+        withAuth: withAuth,
+        retryUnauthorized: true,
+        extraHeaders: headers,
+        send: (requestHeaders) => _http.get(
+          _buildUri(endpoint, queryParameters: queryParameters),
+          headers: requestHeaders,
+        ),
+      );
       return _formatResponse(res);
     } catch (e) {
       logger.error(e.toString());
@@ -206,18 +254,22 @@ class BackendApi {
     required String endpoint,
     required Map<String, dynamic> jsonBody,
     Map<String, String>? headers,
+    bool retryUnauthorized = false,
   }) async {
     try {
-      String? signedEmailId = await getSignedInEmailId();
-      bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
+      final withAuth = await _shouldAuthenticate();
       logger.info('POST $endpoint');
-      final res = await _http
-          .post(
-            _buildUri(endpoint),
-            headers: await _headers(withAuth: withAuth, extra: headers),
-            body: jsonEncode(jsonBody),
-          )
-          .timeout(timeout);
+      final encodedBody = jsonEncode(jsonBody);
+      final res = await _sendWithAuthRetry(
+        withAuth: withAuth,
+        retryUnauthorized: retryUnauthorized,
+        extraHeaders: headers,
+        send: (requestHeaders) => _http.post(
+          _buildUri(endpoint),
+          headers: requestHeaders,
+          body: encodedBody,
+        ),
+      );
       return _formatResponse(res);
     } catch (e) {
       logger.error(endpoint, error: e.toString());
@@ -234,15 +286,17 @@ class BackendApi {
     Map<String, String>? headers,
   }) async {
     try {
-      String? signedEmailId = await getSignedInEmailId();
-      bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
+      final withAuth = await _shouldAuthenticate();
       logger.info('DELETE $endpoint');
-      final res = await _http
-          .delete(
-            _buildUri(endpoint, queryParameters: queryParameters),
-            headers: await _headers(withAuth: withAuth, extra: headers),
-          )
-          .timeout(timeout);
+      final res = await _sendWithAuthRetry(
+        withAuth: withAuth,
+        retryUnauthorized: true,
+        extraHeaders: headers,
+        send: (requestHeaders) => _http.delete(
+          _buildUri(endpoint, queryParameters: queryParameters),
+          headers: requestHeaders,
+        ),
+      );
       return _formatResponse(res);
     } catch (e) {
       logger.error(e.toString());

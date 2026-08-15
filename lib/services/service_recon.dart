@@ -767,7 +767,8 @@ class ReconciliationService {
           for (final filePath in filePaths) {
             final entity = File(filePath);
             try {
-              final fileSize = await entity.length();
+              final before = await entity.stat();
+              final fileSize = before.size;
               Uint8List digest;
 
               if (fileSize < 10 * 1024 * 1024) {
@@ -792,6 +793,13 @@ class ReconciliationService {
                 digest = await hashConsumer.hash;
               }
 
+              final after = await entity.stat();
+              if (before.size != after.size ||
+                  before.modified != after.modified ||
+                  before.changed != after.changed) {
+                complete = false;
+                continue;
+              }
               resultMap[filePath] = base64UrlEncode(digest).replaceAll('=', '');
             } catch (_) {
               complete = false;

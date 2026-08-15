@@ -107,7 +107,7 @@ class StorageSqlite {
       final dbPath = join(dbDir, dbFileName);
       return await openDatabase(
         dbPath,
-        version: 2,
+        version: 3,
         // CRITICAL: Prevent isolate clashes. Use separate native instances in background.
         singleInstance: _currentMode == ExecutionMode.mainApp,
         onConfigure: _onConfigure,
@@ -189,8 +189,11 @@ class StorageSqlite {
   }
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    if (oldVersion == 1) {
+    if (oldVersion < 2) {
       await dbMigration_2(db);
+    }
+    if (oldVersion < 3) {
+      await dbMigration_3(db);
     }
     logger.info('Database upgraded from version $oldVersion to $newVersion');
   }
@@ -310,8 +313,16 @@ class StorageSqlite {
         id TEXT PRIMARY KEY,
         task INTEGER DEFAULT 0,
         progress INTEGER DEFAULT 0,
+        state TEXT NOT NULL DEFAULT 'pending',
+        attempt_count INTEGER NOT NULL DEFAULT 0,
+        next_attempt_at INTEGER NOT NULL DEFAULT 0,
+        last_error TEXT,
         updated_at INTEGER
       )
+    ''');
+    await db.execute('''
+      CREATE INDEX idx_item_tasks_ready
+      ON item_tasks (state, next_attempt_at, updated_at)
     ''');
     await db.execute('''
       CREATE TABLE settings (
@@ -336,6 +347,22 @@ class StorageSqlite {
 
   Future<void> dbMigration_2(Database db) async {
     await db.execute("ALTER TABLE items ADD COLUMN bookmark TEXT");
+  }
+
+  Future<void> dbMigration_3(Database db) async {
+    await migrateItemTasksV3(db);
+  }
+
+  static Future<void> migrateItemTasksV3(DatabaseExecutor db) async {
+    await db.execute(
+        "ALTER TABLE item_tasks ADD COLUMN state TEXT NOT NULL DEFAULT 'pending'");
+    await db.execute(
+        "ALTER TABLE item_tasks ADD COLUMN attempt_count INTEGER NOT NULL DEFAULT 0");
+    await db.execute(
+        "ALTER TABLE item_tasks ADD COLUMN next_attempt_at INTEGER NOT NULL DEFAULT 0");
+    await db.execute("ALTER TABLE item_tasks ADD COLUMN last_error TEXT");
+    await db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_item_tasks_ready ON item_tasks (state, next_attempt_at, updated_at)");
   }
 
   Future<Uint8List> loadImageAsUint8List(String assetPath) async {

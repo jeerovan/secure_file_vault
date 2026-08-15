@@ -243,4 +243,22 @@ void main() {
       expect(await ModelItem.wouldCreateCycle('child', 'parent'), isFalse);
     });
   });
+
+  test('task migration adds persistent state and retry columns', () async {
+    await db.execute(
+      'CREATE TABLE item_tasks ('
+      'id TEXT PRIMARY KEY, task INTEGER, progress INTEGER, updated_at INTEGER)',
+    );
+
+    await StorageSqlite.migrateItemTasksV3(db);
+
+    final columns = await db.rawQuery('PRAGMA table_info(item_tasks)');
+    final names = columns.map((column) => column['name']).toSet();
+    expect(
+      names,
+      containsAll(
+        ['state', 'attempt_count', 'next_attempt_at', 'last_error'],
+      ),
+    );
+  });
 }

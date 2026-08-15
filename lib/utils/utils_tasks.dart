@@ -9,9 +9,11 @@ import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/models/model_state.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:file_vault_bb/services/service_reconciliation_coordinator.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
+import 'package:file_vault_bb/utils/utils_transfer_staging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path_lib;
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
@@ -58,6 +60,8 @@ class TaskManager {
       }
       return;
     }
+
+    await ModelItemTask.recoverInterruptedTasks();
 
     _instance._syncCompleter = Completer<void>();
 
@@ -132,19 +136,39 @@ class TaskManager {
   /// Internal processor handling individual tasks
   Future<void> dispatchTask(String taskId) async {
     final DateTime taskStartTime = DateTime.now();
-    bool queueNext = true;
+    String? failure;
+    OperationLease? lease;
+    var queueNext = true;
     try {
+      final queuedTask = await ModelItemTask.get(taskId);
+      if (queuedTask == null) return;
+      final operationId = await _operationIdForTask(queuedTask);
+      lease = await ExclusiveOperationCoordinator.tryAcquire(operationId);
+      if (lease == null) {
+        queueNext = false;
+        return;
+      }
       ModelItemTask? itemTask = await ModelItemTask.get(taskId);
       if (itemTask == null) return;
+      await itemTask.markRunning();
 
       if (itemTask.task == ItemTask.download.value) {
         await checkInitDownload(itemTask);
       } else if (itemTask.task == ItemTask.upload.value) {
-        queueNext = await checkInitUpload(itemTask);
+        await checkInitUpload(itemTask);
+      } else {
+        await itemTask.markBlocked('unknown_task_type');
       }
     } catch (e, s) {
+      failure = e.runtimeType.toString();
       logger.error("Transfer task failed", error: e.toString(), stackTrace: s);
     } finally {
+      await lease?.release();
+      final remainingTask = await ModelItemTask.get(taskId);
+      if (remainingTask != null &&
+          remainingTask.state == TransferTaskState.running) {
+        await remainingTask.scheduleRetry(failure ?? 'transfer_incomplete');
+      }
       // Remove from active processes using the identifiable parameter
       _activeTaskIds.remove(taskId);
 
@@ -152,16 +176,25 @@ class TaskManager {
           DateTime.now().difference(taskStartTime).inMilliseconds;
       _recordTaskDuration(individualTaskMs);
 
-      // Call dispatcher function to enqueue new task process
+      // Continue with other eligible tasks. Retry-waiting tasks remain persisted.
       if (queueNext) {
-        // check jwtToken before requests
-        await refreshNeonAuth();
         start();
       } else {
-        // If we shouldn't queue next, verify if all remaining concurrent tasks are also done
         _checkCompletion();
       }
     }
+  }
+
+  Future<String> _operationIdForTask(ModelItemTask task) async {
+    if (task.task == ItemTask.upload.value) {
+      final item = await ModelItem.get(task.id);
+      final fileHash = item?.fileHash;
+      if (fileHash != null) {
+        final opaqueHash = sha256.convert(utf8.encode(fileHash)).toString();
+        return 'transfer:upload:$opaqueHash';
+      }
+    }
+    return 'transfer:download:${task.id}';
   }
 
   /// Evaluates if the task queue has fully emptied, allowing the isolate to shut down gracefully
@@ -192,6 +225,12 @@ class TaskManager {
       await itemTask.delete();
       return true;
     }
+    if (await inFile.length() != modelItem.size ||
+        !await _fileMatchesHash(inFile, modelFile.id)) {
+      await itemTask.markBlocked('upload_source_changed');
+      logger.warning('Upload paused because source changed');
+      return false;
+    }
     // check if already uploaded
     if (modelFile.uploadedAt > 0) {
       await ModelItemTask.completeTask(itemTask.id);
@@ -216,7 +255,10 @@ class TaskManager {
         await modelFile.update(attrs);
       } else {
         final filePartResult = await api.post(
-            endpoint: '/get-file-parts', jsonBody: {"file_hash": modelFile.id});
+          endpoint: '/get-file-parts',
+          jsonBody: {"file_hash": modelFile.id},
+          retryUnauthorized: true,
+        );
         final fileStatus = filePartResult["success"];
         if (fileStatus == 1) {
           final filePartData = filePartResult["data"];
@@ -228,6 +270,7 @@ class TaskManager {
             final partModel = await ModelPart.fromServerMap(partMap);
             await partModel.upcertFromServer(overwrite: true);
           }
+          await itemTask.markPending();
           return true;
         } else {
           final errorMessageCode =
@@ -251,6 +294,7 @@ class TaskManager {
         if (status <= 0) {
           logger.error('Failed to select upload storage provider');
           await ModelState.set(AppString.storageFull.string, "yes");
+          await itemTask.markBlocked('storage_full');
           return false;
         } else {
           final providerData = providerResult["data"];
@@ -263,6 +307,7 @@ class TaskManager {
       }
     }
     if (modelFile.providerId == 0) {
+      await itemTask.markBlocked('invalid_storage_provider');
       return true;
     }
 
@@ -270,8 +315,10 @@ class TaskManager {
     if (modelFile.providerId == StorageProvider.fife.value ||
         modelFile.providerId == StorageProvider.backblaze.value) {
       final urlResult = await api.post(
-          endpoint: '/b2/get-upload-url',
-          jsonBody: {"storage_id": modelFile.storageId});
+        endpoint: '/b2/get-upload-url',
+        jsonBody: {"storage_id": modelFile.storageId},
+        retryUnauthorized: true,
+      );
       final status = urlResult["success"];
       if (status <= 0) {
         logger.error('Failed to get B2 upload authorization');
@@ -293,8 +340,10 @@ class TaskManager {
         providerPath = "e2";
       }
       final urlResult = await api.post(
-          endpoint: '/$providerPath/get-upload-url',
-          jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId});
+        endpoint: '/$providerPath/get-upload-url',
+        jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId},
+        retryUnauthorized: true,
+      );
       final status = urlResult["success"];
       if (status <= 0) {
         logger.error('Failed to get upload authorization');
@@ -323,6 +372,7 @@ class TaskManager {
       final int uploaded = percent.clamp(0, 100);
       itemTask.progress = uploaded;
       await itemTask.update(["progress"]);
+      await itemTask.markPending();
       await Future.delayed(const Duration(seconds: 1));
     }
     if (uploadInfo.containsKey("provider")) {
@@ -337,30 +387,51 @@ class TaskManager {
     String fileHashPart = '${fileHash}_$part';
     Directory tempDir = await getTemporaryDirectory();
     String encryptedFilePath =
-        path_lib.join(tempDir.path, "$fileHashPart.crypt");
-    if (!File(encryptedFilePath).existsSync()) {
+        path_lib.join(tempDir.path, "$fileHashPart.crypt.ready");
+    final encryptedFile = File(encryptedFilePath);
+    final existingPart = await ModelPart.get(fileHashPart);
+    var artifactReady = await encryptedFile.exists() && existingPart != null;
+    if (artifactReady) {
+      final artifactSha1 = await _sha1ForFile(encryptedFile);
+      artifactReady = await encryptedFile.length() == existingPart.size &&
+          existingPart.data['sha1'] == artifactSha1;
+    }
+    if (!artifactReady) {
+      if (await encryptedFile.exists()) await encryptedFile.delete();
+      await itemTask.markPending();
+      final partialFile = File('$encryptedFilePath.partial');
+      if (await partialFile.exists()) await partialFile.delete();
+      final sourceFile = File(inFilePath);
+      final sourceBefore = await sourceFile.stat();
       FileSplitter fileSplitter = FileSplitter(file: File(inFilePath));
       final range = fileSplitter.getStartEndIndexForPart(part);
       SodiumSumo sodium = await SodiumSumoInit.init();
       CryptoUtils cryptoUtils = CryptoUtils(sodium);
       ExecutionResult fileEncryptionResult = await cryptoUtils.encryptFile(
-          inFilePath, encryptedFilePath,
+          inFilePath, partialFile.path,
           start: range.start, end: range.end);
       if (fileEncryptionResult.isSuccess) {
+        final sourceAfter = await sourceFile.stat();
+        if (sourceBefore.size != sourceAfter.size ||
+            sourceBefore.modified != sourceAfter.modified ||
+            !await _fileMatchesHash(sourceFile, fileHash)) {
+          if (await partialFile.exists()) await partialFile.delete();
+          await itemTask.markBlocked('upload_source_changed');
+          return false;
+        }
         // may fail due to low storage
         String encryptionKeyBase64 = fileEncryptionResult.getResult()!["key"];
         Uint8List encryptionKeyBytes = base64Decode(encryptionKeyBase64);
         String? masterKeyBase64 = await getMasterKey();
         if (masterKeyBase64 == null) {
+          if (await partialFile.exists()) await partialFile.delete();
           return false;
         }
         Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
         Map<String, dynamic> encryptionKeyCipher = cryptoUtils
             .getFileEncryptionKeyCipher(encryptionKeyBytes, masterKeyBytes);
-        File encryptedFile = File(encryptedFilePath);
-        int fileSize = encryptedFile.lengthSync();
-        Uint8List fileBytes = File(encryptedFilePath).readAsBytesSync();
-        String sha1Hash = sha1.convert(fileBytes).toString();
+        int fileSize = await partialFile.length();
+        String sha1Hash = await _sha1ForFile(partialFile);
         Map<String, dynamic> partData = {
           "id": fileHashPart,
           "data": {"sha1": sha1Hash},
@@ -371,16 +442,18 @@ class TaskManager {
         };
         ModelPart modelPart = await ModelPart.fromMap(partData);
         await modelPart.insert();
+        await partialFile.rename(encryptedFile.path);
       } else {
+        if (await partialFile.exists()) await partialFile.delete();
         logger.error("Encryption failed",
             error: fileEncryptionResult.failureReason);
         return false;
       }
     }
-    Uint8List fileBytes = File(encryptedFilePath).readAsBytesSync();
+    Uint8List fileBytes = await encryptedFile.readAsBytes();
     Map<String, String> headers = {};
 
-    String sha1Hash = sha1.convert(fileBytes).toString();
+    String sha1Hash = await _sha1ForFile(encryptedFile);
     int contentLength = fileBytes.length;
     String method = 'POST';
     if (uploadInfo["provider"] == "b2") {
@@ -401,10 +474,10 @@ class TaskManager {
     }
     String uploadUrl = uploadInfo["url"];
     logger.info("Uploading encrypted file part");
-    Map<String, dynamic> uploadResult = await uploadFileBytes(
+    final uploadResult = await uploadFileBytes(
         method: method, bytes: fileBytes, url: uploadUrl, headers: headers);
     // update uploaded
-    if (uploadResult["error"].isEmpty) {
+    if (uploadResult.succeeded) {
       logger.info("Encrypted file part uploaded");
 
       //update
@@ -416,8 +489,8 @@ class TaskManager {
       modelPart.uploaded = 1;
       List<String> partAttrs = ["uploaded"];
 
-      if (uploadResult.containsKey("fileId")) {
-        String b2FileId = uploadResult["fileId"];
+      if (uploadResult.data.containsKey("fileId")) {
+        String b2FileId = uploadResult.data["fileId"];
         Map<String, dynamic> partData = modelPart.data;
         partData["fileId"] = b2FileId;
         modelPart.data = partData;
@@ -435,13 +508,13 @@ class TaskManager {
         itemTask.progress = uploaded;
         await itemTask.update(["progress"]);
       }
+      if (await encryptedFile.exists()) await encryptedFile.delete();
     } else {
       logger.error("Upload file part failed");
-    }
-    try {
-      await File(encryptedFilePath).delete();
-    } catch (e) {
-      // could not delete temp file
+      if (!uploadResult.isRetryable) {
+        await itemTask.markBlocked(
+            'upload_${uploadResult.failureKind?.name ?? 'failed'}');
+      }
     }
     return true;
   }
@@ -457,60 +530,55 @@ class TaskManager {
       await itemTask.delete();
       return;
     }
-    int size = modelItem.size;
-    int parts = modelFile.parts;
-    String name = modelItem.name;
-    Directory tempStorage = await getAppTempDirectory();
-    String filePathInAppTemp = path_lib.join(tempStorage.path, name);
-    int partsHave = 0;
-    FileSplitter fileSplitter = FileSplitter(fileSize: size);
-    File fileInAppTemp = File(filePathInAppTemp);
-    if (await fileInAppTemp.exists()) {
-      partsHave =
-          fileSplitter.getPartsInSize(File(filePathInAppTemp).lengthSync());
-    } else {
-      if (!await fileInAppTemp.parent.exists()) {
-        await fileInAppTemp.parent.create(recursive: true);
-      }
-      if (!await fileInAppTemp.exists()) {
-        await fileInAppTemp.create();
-      }
-    }
-    if (partsHave == parts) {
-      String finalFilePath = await ModelItem.getPathForItem(modelItem.id);
-      try {
-        await moveFileSafely(filePathInAppTemp, finalFilePath);
-      } catch (e) {
-        logger.error("failed to move download temp file", error: e);
-      }
-      await ModelItemTask.completeTask(itemTask.id);
+    final parts = modelFile.parts;
+    if (parts <= 0) {
+      await itemTask.markBlocked('invalid_part_count');
       return;
     }
-    int partToDownload = partsHave + 1;
+    final staging = DownloadStaging(
+      baseDirectory: await getAppTempDirectory(),
+      itemId: modelItem.id,
+      fileHash: modelFile.id,
+      partCount: parts,
+      expectedPlaintextLength: modelItem.size,
+    );
+    final manifest = await staging.load();
+    int? partToDownload;
+    for (var part = 1; part <= parts; part++) {
+      if (!manifest.completedParts.contains(part)) {
+        partToDownload = part;
+        break;
+      }
+    }
+
+    if (partToDownload == null) {
+      await _finalizeDownload(itemTask, modelItem, staging);
+      return;
+    }
     String fileHashPart = '${modelFile.id}_$partToDownload';
     ModelPart? modelPart = await ModelPart.get(fileHashPart);
-    if (modelPart == null) return;
+    if (modelPart == null ||
+        modelPart.cipher == null ||
+        modelPart.nonce == null) {
+      await itemTask.markBlocked('missing_part_metadata');
+      return;
+    }
     String downloadUrl = await getDownloadUrl(modelFile, partToDownload);
     if (downloadUrl.isNotEmpty) {
       logger.info("Fetched download authorization");
-      Directory tempDir = await getTemporaryDirectory();
-      String tempFilePath = "${tempDir.path}/$fileHashPart";
-      File tempFile = File(tempFilePath);
-      if (!await tempFile.parent.exists()) {
-        await tempFile.parent.create(recursive: true);
-      }
-      if (!await tempFile.exists()) {
-        await tempFile.create();
-      }
-      IOSink fileSink = tempFile.openWrite();
+      final tempFile = staging.encryptedPart(partToDownload);
+      final fileSink = tempFile.openWrite(mode: FileMode.write);
       final downloadResult = await downloadFileStream(
           url: downloadUrl, headers: null, fileOut: fileSink, onProgress: null);
       if (downloadResult.succeeded) {
         logger.info("Downloaded encrypted file part");
-        // match length
-        Uint8List fileBytes = File(tempFilePath).readAsBytesSync();
-        int contentLength = fileBytes.length;
-        if (modelPart.size == contentLength) {
+        final contentLength = await tempFile.length();
+        final expectedSha1 = modelPart.data['sha1']?.toString();
+        final actualSha1 = await _sha1ForFile(tempFile);
+        final checksumMatches = expectedSha1 == null ||
+            expectedSha1.isEmpty ||
+            expectedSha1 == actualSha1;
+        if (modelPart.size == contentLength && checksumMatches) {
           String keyCipherBase64 = modelPart.cipher!;
           String keyNonceBase64 = modelPart.nonce!;
           SodiumSumo sodium = await SodiumSumoInit.init();
@@ -523,21 +591,22 @@ class TaskManager {
               cryptoUtils.getFileEncryptionKeyBytes(
                   keyCipherBase64, keyNonceBase64, masterKeyBase64);
           if (fileEncryptionKeyBytes != null) {
+            final plainPartial = staging.plainPartPartial(partToDownload);
             ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
-                tempFilePath, filePathInAppTemp, fileEncryptionKeyBytes);
+                tempFile.path, plainPartial.path, fileEncryptionKeyBytes,
+                writeMode: FileMode.write);
             if (decryptionResult.isSuccess) {
               logger.info("Decrypted file part");
-              if (partToDownload == parts) {
-                String finalFilePath =
-                    await ModelItem.getPathForItem(modelItem.id);
-                await File(filePathInAppTemp).rename(finalFilePath);
-                await ModelItemTask.completeTask(itemTask.id);
+              final readyPart = staging.readyPart(partToDownload);
+              if (await readyPart.exists()) await readyPart.delete();
+              await plainPartial.rename(readyPart.path);
+              await staging.markComplete(manifest, partToDownload);
+              itemTask.progress = (partToDownload * 100 ~/ parts).clamp(0, 100);
+              await itemTask.update(["progress"]);
+              if (manifest.completedParts.length == parts) {
+                await _finalizeDownload(itemTask, modelItem, staging);
               } else {
-                // Broadcast download progress
-                final int percent = parts > 0 ? (partToDownload ~/ parts) : 0;
-                final int downloaded = percent.clamp(0, 100);
-                itemTask.progress = downloaded;
-                await itemTask.update(["progress"]);
+                await itemTask.markPending();
               }
             } else {
               String error = decryptionResult.failureReason ?? "";
@@ -545,18 +614,79 @@ class TaskManager {
             }
           }
         } else {
-          logger.error("Downloaded file part length did not match");
+          logger.error("Downloaded file part integrity check failed");
         }
-        try {
-          await tempFile.delete();
-        } catch (e) {
-          // could not delete temp file
-        }
+        if (await tempFile.exists()) await tempFile.delete();
       } else {
         final retry =
             downloadResult.isRetryable ? "retryable" : "non-retryable";
         logger.warning("Download failed ($retry); retaining metadata and task");
+        if (!downloadResult.isRetryable) {
+          await itemTask.markBlocked(
+              'download_${downloadResult.failureKind?.name ?? 'failed'}');
+        }
       }
+    }
+  }
+
+  Future<void> _finalizeDownload(ModelItemTask itemTask, ModelItem modelItem,
+      DownloadStaging staging) async {
+    await staging.assemble();
+    if (await staging.assembledFile.length() != modelItem.size ||
+        !await _fileMatchesHash(staging.assembledFile, modelItem.fileHash!)) {
+      await itemTask.markBlocked('download_integrity_mismatch');
+      logger.error('Final download integrity check failed');
+      return;
+    }
+
+    final finalFilePath = await ModelItem.getPathForItem(modelItem.id);
+    await File(finalFilePath).parent.create(recursive: true);
+    final finalFile = File(finalFilePath);
+    if (await Directory(finalFilePath).exists()) {
+      await itemTask.markBlocked('destination_conflict');
+      return;
+    }
+    if (await finalFile.exists()) {
+      if (await _fileMatchesHash(finalFile, modelItem.fileHash!)) {
+        await ModelItemTask.completeTask(itemTask.id);
+        await staging.cleanup();
+      } else {
+        await itemTask.markBlocked('destination_conflict');
+      }
+      return;
+    }
+    await moveFileSafely(staging.assembledFile.path, finalFilePath);
+    if (!await finalFile.exists() ||
+        !await _fileMatchesHash(finalFile, modelItem.fileHash!)) {
+      throw const FileSystemException('Finalized download verification failed');
+    }
+    await ModelItemTask.completeTask(itemTask.id);
+    await staging.cleanup();
+  }
+
+  static Future<String> _sha1ForFile(File file) async {
+    return (await sha1.bind(file.openRead()).first).toString();
+  }
+
+  static Future<bool> _fileMatchesHash(File file, String expectedHash) async {
+    final fileHashKey = await getFileHashKey();
+    if (fileHashKey == null || !await file.exists()) return false;
+    final sodium = await SodiumSumoInit.init();
+    final secureKey = sodium.secureCopy(base64Decode(fileHashKey));
+    try {
+      final consumer = sodium.crypto.genericHash.createConsumer(
+        key: secureKey,
+        outLen: sodium.crypto.genericHash.bytes,
+      );
+      await file
+          .openRead()
+          .map(
+              (chunk) => chunk is Uint8List ? chunk : Uint8List.fromList(chunk))
+          .pipe(consumer);
+      final digest = await consumer.hash;
+      return base64UrlEncode(digest).replaceAll('=', '') == expectedHash;
+    } finally {
+      secureKey.dispose();
     }
   }
 
@@ -571,11 +701,13 @@ class TaskManager {
       providerPath = "e2";
     }
     final downloadResult = await api.post(
-        endpoint: '/$providerPath/get-download-url',
-        jsonBody: {
-          "storage_id": modelFile.storageId,
-          "file_id": '${modelFile.id}_$part'
-        });
+      endpoint: '/$providerPath/get-download-url',
+      jsonBody: {
+        "storage_id": modelFile.storageId,
+        "file_id": '${modelFile.id}_$part'
+      },
+      retryUnauthorized: true,
+    );
     final status = downloadResult["success"];
     String downloadUrl = "";
     if (status > 0) {

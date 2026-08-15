@@ -459,10 +459,12 @@ Future<void> moveFileSafely(String sourcePath, String destPath) async {
     await parentDir.create(recursive: true);
   }
 
-  // 3. Optional: Check if a directory mistakenly exists at the destination path
-  // (Fixing the ghost folder issue from your previous run)
+  // Never destroy a directory because a file was expected at the same path.
   if (await Directory(destPath).exists()) {
-    await Directory(destPath).delete(recursive: true);
+    throw FileSystemException('Destination is a directory.', destPath);
+  }
+  if (await destFile.exists()) {
+    throw FileSystemException('Destination file already exists.', destPath);
   }
 
   // 4. Perform the rename (with EXDEV fallback)
@@ -471,8 +473,17 @@ Future<void> moveFileSafely(String sourcePath, String destPath) async {
   } on FileSystemException catch (e) {
     if (e.osError?.errorCode == 18) {
       // EXDEV: Cross-device link
-      await sourceFile.copy(destPath);
-      await sourceFile.delete();
+      try {
+        await sourceFile.copy(destPath);
+        if (await sourceFile.length() != await destFile.length()) {
+          throw FileSystemException(
+              'Cross-device copy length mismatch.', destPath);
+        }
+        await sourceFile.delete();
+      } catch (_) {
+        if (await destFile.exists()) await destFile.delete();
+        rethrow;
+      }
     } else {
       rethrow;
     }

@@ -171,19 +171,78 @@ class DownloadStreamResult {
       };
 }
 
+enum UploadFailureKind {
+  authorization,
+  rateLimited,
+  server,
+  otherHttp,
+  transport,
+  invalidRequest,
+  unexpected,
+}
+
+class UploadFileResult {
+  final bool succeeded;
+  final int? statusCode;
+  final UploadFailureKind? failureKind;
+  final Map<String, dynamic> data;
+
+  const UploadFileResult._({
+    required this.succeeded,
+    required this.data,
+    this.statusCode,
+    this.failureKind,
+  });
+
+  factory UploadFileResult.success(Map<String, dynamic> data) =>
+      UploadFileResult._(succeeded: true, data: data);
+
+  factory UploadFileResult.httpFailure(
+    int statusCode,
+    Map<String, dynamic> data,
+  ) {
+    final kind = switch (statusCode) {
+      401 || 403 => UploadFailureKind.authorization,
+      408 || 429 => UploadFailureKind.rateLimited,
+      >= 500 => UploadFailureKind.server,
+      _ => UploadFailureKind.otherHttp,
+    };
+    return UploadFileResult._(
+      succeeded: false,
+      data: data,
+      statusCode: statusCode,
+      failureKind: kind,
+    );
+  }
+
+  factory UploadFileResult.failure(UploadFailureKind kind) =>
+      UploadFileResult._(succeeded: false, data: const {}, failureKind: kind);
+
+  bool get isRetryable => switch (failureKind) {
+        UploadFailureKind.authorization ||
+        UploadFailureKind.rateLimited ||
+        UploadFailureKind.server ||
+        UploadFailureKind.transport =>
+          true,
+        _ => false,
+      };
+}
+
 /// Downloads a file as a stream directly to an [IOSink] to prevent memory overuse.
 Future<DownloadStreamResult> downloadFileStream({
   required String url,
   required Map<String, String>? headers,
   required IOSink fileOut,
   required ProgressCallback? onProgress,
+  Duration timeout = const Duration(seconds: 30),
 }) async {
   final client = HttpClient();
+  client.connectionTimeout = timeout;
   AppLogger logger = AppLogger(prefixes: ["Downloader"]);
   DownloadStreamResult result = const DownloadStreamResult.transportFailure();
   try {
     // 1. Initialize the GET request
-    final request = await client.getUrl(Uri.parse(url));
+    final request = await client.getUrl(Uri.parse(url)).timeout(timeout);
 
     // 2. Attach any provided headers (e.g., Auth tokens, custom Cloud sync headers)
     if (headers != null) {
@@ -193,7 +252,7 @@ Future<DownloadStreamResult> downloadFileStream({
     }
 
     // 3. Execute the request
-    final response = await request.close();
+    final response = await request.close().timeout(timeout);
 
     // 4. Ensure the request was successful
     if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -202,7 +261,7 @@ Future<DownloadStreamResult> downloadFileStream({
       int received = 0;
 
       // 5. Stream the response directly into the IOSink chunk by chunk
-      await for (final List<int> chunk in response) {
+      await for (final List<int> chunk in response.timeout(timeout)) {
         fileOut.add(chunk);
         received += chunk.length;
         // Trigger the callback for your UI's progress bar
@@ -225,14 +284,15 @@ Future<DownloadStreamResult> downloadFileStream({
   return result;
 }
 
-Future<Map<String, dynamic>> uploadFileBytes({
+Future<UploadFileResult> uploadFileBytes({
   required String method,
   required Uint8List bytes,
   required String url,
   required Map<String, String>? headers,
+  Duration timeout = const Duration(seconds: 30),
 }) async {
   AppLogger logger = AppLogger(prefixes: ["Uploader"]);
-  Map<String, dynamic> data = {"error": ""};
+  Map<String, dynamic> data = {};
   try {
     // Create multipart request
     var request = http_lib.Request(method, Uri.parse(url));
@@ -245,40 +305,33 @@ Future<Map<String, dynamic>> uploadFileBytes({
     request.bodyBytes = bytes;
 
     // Send request and get response
-    var streamedResponse = await request.send();
-    var response = await http_lib.Response.fromStream(streamedResponse);
+    var streamedResponse = await request.send().timeout(timeout);
+    var response =
+        await http_lib.Response.fromStream(streamedResponse).timeout(timeout);
 
     // Check response
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      // Success Range
       safeParseJson(response.body, data, logger);
-    } else if (response.statusCode >= 400 && response.statusCode < 500) {
-      // Client Error Range (e.g., 400 Bad Request, 401 Unauthorized, 413 Payload Too Large)
-      data["error"] =
-          'Client Error (${response.statusCode}): ${response.reasonPhrase ?? 'Unknown'}';
-      safeParseJson(response.body, data, logger);
-    } else if (response.statusCode >= 500) {
-      // Server Error Range (e.g., 500 Internal Error, 502 Bad Gateway)
-      data["error"] =
-          'Server Error (${response.statusCode}): Backup service is currently unavailable.';
-      // We generally avoid parsing JSON on 500s as servers often return raw HTML error pages
+      return UploadFileResult.success(data);
     } else {
-      // Unhandled/Unexpected Status Codes
-      data["error"] = 'Unexpected Error: HTTP ${response.statusCode}';
+      safeParseJson(response.body, data, logger);
+      return UploadFileResult.httpFailure(response.statusCode, data);
     }
   } on SocketException catch (e, s) {
     // Handle no internet connection / DNS failures
     logger.error("Upload Failed: No Internet Connection",
         error: e, stackTrace: s);
-    data["error"] = 'Network Error: Please check your internet connection.';
+    return UploadFileResult.failure(UploadFailureKind.transport);
+  } on TimeoutException catch (e, s) {
+    logger.error("Upload Failed: Timeout", error: e, stackTrace: s);
+    return UploadFileResult.failure(UploadFailureKind.transport);
   } on FormatException catch (e, s) {
     // Handle malformed URLs or JSON
     logger.error("Upload Failed: Format Exception", error: e, stackTrace: s);
-    data["error"] = 'Format Error: Failed to process the request or response.';
+    return UploadFileResult.failure(UploadFailureKind.invalidRequest);
   } catch (e, s) {
     // Catch-all for unexpected errors
     logger.error("Upload Failed: Unexpected Error", error: e, stackTrace: s);
-    data["error"] = e.toString();
+    return UploadFileResult.failure(UploadFailureKind.unexpected);
   }
-  return data;
 }
