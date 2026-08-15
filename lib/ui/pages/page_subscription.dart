@@ -95,7 +95,6 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
       final params =
           PurchaseParams.package(_proPackage!, customerEmail: userEmail);
       final purchaseResult = await Purchases.purchase(params);
-      logger.debug(purchaseResult.toString());
       final isEntitled = purchaseResult
               .customerInfo.entitlements.all[entitlementId]?.isActive ??
           false;

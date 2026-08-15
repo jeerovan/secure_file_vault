@@ -118,8 +118,61 @@ class FileSplitter {
 
 typedef ProgressCallback = void Function(int received, int total);
 
+enum DownloadFailureKind {
+  authorization,
+  notFound,
+  rateLimited,
+  server,
+  otherHttp,
+  transport,
+}
+
+class DownloadStreamResult {
+  final bool succeeded;
+  final int? statusCode;
+  final DownloadFailureKind? failureKind;
+
+  const DownloadStreamResult._({
+    required this.succeeded,
+    this.statusCode,
+    this.failureKind,
+  });
+
+  const DownloadStreamResult.success() : this._(succeeded: true);
+
+  const DownloadStreamResult.transportFailure()
+      : this._(
+          succeeded: false,
+          failureKind: DownloadFailureKind.transport,
+        );
+
+  factory DownloadStreamResult.httpFailure(int statusCode) {
+    final kind = switch (statusCode) {
+      401 || 403 => DownloadFailureKind.authorization,
+      404 => DownloadFailureKind.notFound,
+      429 => DownloadFailureKind.rateLimited,
+      >= 500 => DownloadFailureKind.server,
+      _ => DownloadFailureKind.otherHttp,
+    };
+    return DownloadStreamResult._(
+      succeeded: false,
+      statusCode: statusCode,
+      failureKind: kind,
+    );
+  }
+
+  bool get isRetryable => switch (failureKind) {
+        DownloadFailureKind.authorization ||
+        DownloadFailureKind.rateLimited ||
+        DownloadFailureKind.server ||
+        DownloadFailureKind.transport =>
+          true,
+        _ => false,
+      };
+}
+
 /// Downloads a file as a stream directly to an [IOSink] to prevent memory overuse.
-Future<int> downloadFileStream({
+Future<DownloadStreamResult> downloadFileStream({
   required String url,
   required Map<String, String>? headers,
   required IOSink fileOut,
@@ -127,7 +180,7 @@ Future<int> downloadFileStream({
 }) async {
   final client = HttpClient();
   AppLogger logger = AppLogger(prefixes: ["Downloader"]);
-  int state = 0;
+  DownloadStreamResult result = const DownloadStreamResult.transportFailure();
   try {
     // 1. Initialize the GET request
     final request = await client.getUrl(Uri.parse(url));
@@ -157,9 +210,9 @@ Future<int> downloadFileStream({
           onProgress(received, total);
         }
       }
-      state = 1;
+      result = const DownloadStreamResult.success();
     } else {
-      state = -1;
+      result = DownloadStreamResult.httpFailure(response.statusCode);
     }
   } catch (e, s) {
     logger.error("Failed", error: e.toString(), stackTrace: s);
@@ -169,7 +222,7 @@ Future<int> downloadFileStream({
     await fileOut.flush();
     await fileOut.close();
   }
-  return state;
+  return result;
 }
 
 Future<Map<String, dynamic>> uploadFileBytes({

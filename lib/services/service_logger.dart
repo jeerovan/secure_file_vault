@@ -21,6 +21,51 @@ class AppLogger {
   static final List<String> _logQueue = [];
   static bool _isWriting = false;
 
+  static final RegExp _authorizationPattern = RegExp(
+    r'\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]+',
+    caseSensitive: false,
+  );
+  static final RegExp _cookiePattern = RegExp(
+    r'(__Secure-[A-Za-z0-9._-]+)=[^;\s]+',
+    caseSensitive: false,
+  );
+  static final RegExp _emailPattern = RegExp(
+    r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b',
+    caseSensitive: false,
+  );
+  static final RegExp _urlPattern = RegExp(
+    r'https?://[^\s)\]}>]+',
+    caseSensitive: false,
+  );
+  static final RegExp _absolutePathPattern = RegExp(
+    r'(?<![A-Za-z0-9])(?:[A-Za-z]:\\(?:[^\\\s]+\\)+[^\\\s]*|/(?:[^/\s]+/)+[^/\s]*)',
+  );
+  static final RegExp _hashPattern = RegExp(r'\b[A-Fa-f0-9]{32,}\b');
+  static final RegExp _sensitiveAssignmentPattern = RegExp(
+    r'''(["']?(?:authorization|token|access[_-]?token|refresh[_-]?token|session[_-]?cookie|cookie|app[_-]?key|secret[_-]?key|private[_-]?key|master[_-]?key|file[_-]?hash[_-]?key|key[_-]?cipher|cipher|nonce|otp|password)["']?\s*[:=]\s*)(?:"[^"]*"|'[^']*'|[^,\s}\]]+)''',
+    caseSensitive: false,
+  );
+
+  static String sanitize(String value) {
+    return value
+        .replaceAllMapped(
+          _authorizationPattern,
+          (match) => '${match.group(1)} [REDACTED]',
+        )
+        .replaceAllMapped(
+          _sensitiveAssignmentPattern,
+          (match) => '${match.group(1)}[REDACTED]',
+        )
+        .replaceAllMapped(
+          _cookiePattern,
+          (match) => '${match.group(1)}=[REDACTED]',
+        )
+        .replaceAll(_emailPattern, '[REDACTED_EMAIL]')
+        .replaceAll(_urlPattern, '[REDACTED_URL]')
+        .replaceAll(_absolutePathPattern, '[REDACTED_PATH]')
+        .replaceAll(_hashPattern, '[REDACTED_HASH]');
+  }
+
   /// Get color based on log level
   String _getColor(AppLogLevel level) {
     switch (level) {
@@ -55,18 +100,24 @@ class AppLogger {
     final prefixString = prefixes.map((p) => "[$p]").join(' ');
 
     // Format log message
-    String logMessage = "FiFe $prefixString [$levelStr] [$timestamp] $message";
+    final safeMessage = sanitize(message);
+    final safeError = error == null ? null : sanitize(error.toString());
+    final safeStackTrace = stackTrace == null
+        ? null
+        : StackTrace.fromString(sanitize(stackTrace.toString()));
+    String logMessage =
+        "FiFe $prefixString [$levelStr] [$timestamp] $safeMessage";
 
     // Use dart:developer for efficient logging
     if (Platform.isAndroid || Platform.isIOS) {
-      dev.log(logMessage, error: error, stackTrace: stackTrace);
+      dev.log(logMessage, error: safeError, stackTrace: safeStackTrace);
     }
 
-    if (error != null) {
-      logMessage += " $error";
+    if (safeError != null) {
+      logMessage += " $safeError";
     }
-    if (stackTrace != null) {
-      logMessage += " $stackTrace";
+    if (safeStackTrace != null) {
+      logMessage += " $safeStackTrace";
     }
     // Optionally print in debug mode
     if (!const bool.fromEnvironment('dart.vm.product')) {

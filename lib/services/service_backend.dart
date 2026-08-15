@@ -166,7 +166,7 @@ class BackendApi {
         };
       }
     }
-    logger.info(response.toString());
+    logger.info('HTTP response status=$code');
     return response;
   }
 
@@ -185,7 +185,7 @@ class BackendApi {
     try {
       String? signedEmailId = await getSignedInEmailId();
       bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
-      logger.info('GET $endpoint ${queryParameters.toString()}');
+      logger.info('GET $endpoint');
       final res = await _http
           .get(
             _buildUri(endpoint, queryParameters: queryParameters),
@@ -210,7 +210,7 @@ class BackendApi {
     try {
       String? signedEmailId = await getSignedInEmailId();
       bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
-      logger.info('POST $endpoint ${jsonEncode(jsonBody)}');
+      logger.info('POST $endpoint');
       final res = await _http
           .post(
             _buildUri(endpoint),
@@ -236,7 +236,7 @@ class BackendApi {
     try {
       String? signedEmailId = await getSignedInEmailId();
       bool withAuth = signedEmailId != null && signedEmailId != testEmailId;
-      logger.info('DELETE $endpoint ${queryParameters.toString()}');
+      logger.info('DELETE $endpoint');
       final res = await _http
           .delete(
             _buildUri(endpoint, queryParameters: queryParameters),

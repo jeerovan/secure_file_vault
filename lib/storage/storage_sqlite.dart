@@ -47,8 +47,6 @@ class StorageSqlite {
     try {
       String dbDir = await getDbStoragePath();
       final dbPath = join(dbDir, dbFileName);
-      logger.debug("DbPath: $dbPath");
-
       return await openDatabase(
         dbPath,
         version: 2,
@@ -60,7 +58,8 @@ class StorageSqlite {
         onOpen: _onOpen,
       );
     } catch (e, stackTrace) {
-      logger.error("Failed to initialize database", error: e, stackTrace: stackTrace);
+      logger.error("Failed to initialize database",
+          error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -313,6 +312,98 @@ class StorageSqlite {
     return await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<int> insertWithChange(
+    String tableName,
+    Map<String, dynamic> row,
+    Map<String, dynamic>? changeRow,
+  ) async {
+    final db = await instance.database;
+    return insertWithChangeInDatabase(db, tableName, row, changeRow);
+  }
+
+  static Future<int> insertWithChangeInDatabase(
+    Database db,
+    String tableName,
+    Map<String, dynamic> row,
+    Map<String, dynamic>? changeRow,
+  ) {
+    return db.transaction((txn) async {
+      final result = await txn.insert(
+        tableName,
+        row,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      if (changeRow != null) {
+        await txn.insert(
+          Tables.changes.string,
+          changeRow,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      return result;
+    });
+  }
+
+  Future<int> updateWithChange(
+    String tableName,
+    Map<String, dynamic> row,
+    dynamic id,
+    Map<String, dynamic>? changeRow,
+  ) async {
+    final db = await instance.database;
+    return updateWithChangeInDatabase(db, tableName, row, id, changeRow);
+  }
+
+  static Future<int> updateWithChangeInDatabase(
+    Database db,
+    String tableName,
+    Map<String, dynamic> row,
+    dynamic id,
+    Map<String, dynamic>? changeRow,
+  ) {
+    return db.transaction((txn) async {
+      final result =
+          await txn.update(tableName, row, where: 'id = ?', whereArgs: [id]);
+      if (changeRow != null) {
+        await txn.insert(
+          Tables.changes.string,
+          changeRow,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      return result;
+    });
+  }
+
+  Future<int> deleteWithChange(
+    String tableName,
+    dynamic id,
+    Map<String, dynamic>? changeRow,
+  ) async {
+    final db = await instance.database;
+    return deleteWithChangeInDatabase(db, tableName, id, changeRow);
+  }
+
+  static Future<int> deleteWithChangeInDatabase(
+    Database db,
+    String tableName,
+    dynamic id,
+    Map<String, dynamic>? changeRow,
+  ) {
+    return db.transaction((txn) async {
+      final result =
+          await txn.delete(tableName, where: 'id = ?', whereArgs: [id]);
+      if (changeRow != null) {
+        await txn.insert(
+          Tables.changes.string,
+          changeRow,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      return result;
+    });
+  }
+
   Future<List<Map<String, dynamic>>> getWithId(
       String tableName, dynamic id) async {
     final db = await instance.database;
@@ -330,6 +421,7 @@ class StorageSqlite {
   }
 
   Future<void> clearDb() async {
+    final db = await instance.database;
     List<String> tables = [
       "profiles",
       "files",
@@ -341,8 +433,10 @@ class StorageSqlite {
       "states",
       "logs"
     ];
-    for (String table in tables) {
-      clearTable(table);
-    }
+    await db.transaction((txn) async {
+      for (String table in tables) {
+        await txn.delete(table);
+      }
+    });
   }
 }

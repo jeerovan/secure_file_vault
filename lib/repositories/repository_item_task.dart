@@ -10,7 +10,7 @@ class RepositoryItemTask {
   Stream<Map<String, TaskStatus>>? _taskStream;
 
   Stream<Map<String, TaskStatus>> getTaskSnapshotStream() {
-    _taskStream ??= Stream.periodic(const Duration(seconds: 2), (_) => _)
+    _taskStream ??= Stream.periodic(const Duration(seconds: 2), (tick) => tick)
         .asyncMap((_) => fetchTaskSnapshot())
         .distinct() // Do not emit if the data is identical to the previous fetch
         .asBroadcastStream();

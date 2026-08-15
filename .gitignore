@@ -108,6 +108,16 @@ app.*.map.json
 *.sym
 /dist/
 node_modules
-mermaid.*.md
-SPEC.md
-*PLAN.md
+.codebase-memory/
+
+# local venv
+/venv/
+
+# AI
+.codex/
+
+# Markdowns
+*.md
+!README.md
+!LICENSE.md
+!SPEC.md

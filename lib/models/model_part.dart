@@ -139,12 +139,10 @@ class ModelPart {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert(Tables.parts.string, map);
-    map["table"] = Tables.parts.string;
-    SyncUtils.logChangeToPush(
-      map,
-    );
-    return inserted;
+    final changeMap = Map<String, dynamic>.from(map)
+      ..["table"] = Tables.parts.string;
+    final change = await SyncUtils.prepareChangeToPush(changeMap);
+    return dbHelper.insertWithChange(Tables.parts.string, map, change);
   }
 
   Future<int> update(List<String> attrs, {bool pushToSync = true}) async {
@@ -155,15 +153,14 @@ class ModelPart {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update(Tables.parts.string, updatedMap, id);
+    Map<String, dynamic>? change;
     if (pushToSync) {
       map["updated_at"] = utcNow;
       map["table"] = Tables.parts.string;
-      SyncUtils.logChangeToPush(
-        map,
-      );
+      change = await SyncUtils.prepareChangeToPush(map);
     }
-    return updated;
+    return dbHelper.updateWithChange(
+        Tables.parts.string, updatedMap, id, change);
   }
 
   Future<int> upcertFromServer({bool overwrite = false}) async {
@@ -175,7 +172,7 @@ class ModelPart {
     if (rows.isEmpty) {
       result = await dbHelper.insert(Tables.parts.string, map);
     } else if (overwrite) {
-      result = await dbHelper.update(Tables.files.string, map, id);
+      result = await dbHelper.update(Tables.parts.string, map, id);
     } else {
       int existingUpdatedAt = rows[0]["updated_at"];
       int incomingUpdatedAt = map["updated_at"];

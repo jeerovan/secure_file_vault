@@ -706,7 +706,6 @@ class _FilePaneState extends State<FilePane> {
       final result = await ChannelStorage.pickDirectory(
           initialDirectory: initialDirectory);
       if (result != null) {
-        logger.debug(result.toString());
         folderPath = result["path"];
         bookmark = result["bookmark"];
       }

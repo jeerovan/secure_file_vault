@@ -132,7 +132,6 @@ class _PageSigninState extends State<PageSignin> {
       processing = true;
       errorVerifyingOtp = false;
     });
-    logger.debug("$savedEmail:$otp");
     try {
       String? userId;
       if (simulateTesting()) {

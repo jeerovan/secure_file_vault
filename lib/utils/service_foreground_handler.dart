@@ -37,13 +37,13 @@ class ForegroundTaskHandler extends TaskHandler {
   // Called when data is sent using `FlutterForegroundTask.sendDataToTask`.
   @override
   void onReceiveData(Object data) {
-    logger.info('onReceiveData: $data');
+    logger.info('Foreground service data received');
   }
 
   // Called when the notification button is pressed.
   @override
   void onNotificationButtonPressed(String id) {
-    logger.info('onNotificationButtonPressed: $id');
+    logger.info('Foreground notification button pressed');
     startSyncTask();
   }
 

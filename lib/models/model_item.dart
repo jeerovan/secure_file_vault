@@ -412,13 +412,11 @@ class ModelItem {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert(Tables.items.string, map);
-    map["table"] = Tables.items.string;
-    map["bookmark"] = "";
-    SyncUtils.logChangeToPush(
-      map,
-    );
-    return inserted;
+    final changeMap = Map<String, dynamic>.from(map)
+      ..["table"] = Tables.items.string
+      ..["bookmark"] = "";
+    final change = await SyncUtils.prepareChangeToPush(changeMap);
+    return dbHelper.insertWithChange(Tables.items.string, map, change);
   }
 
   Future<int> update(List<String> attrs, {bool pushToSync = true}) async {
@@ -429,16 +427,15 @@ class ModelItem {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update(Tables.items.string, updatedMap, id);
+    Map<String, dynamic>? change;
     if (pushToSync) {
       map["updated_at"] = utcNow;
       map["table"] = Tables.items.string;
       map["bookmark"] = "";
-      SyncUtils.logChangeToPush(
-        map,
-      );
+      change = await SyncUtils.prepareChangeToPush(map);
     }
-    return updated;
+    return dbHelper.updateWithChange(
+        Tables.items.string, updatedMap, id, change);
   }
 
   Future<int> upcertFromServer() async {
@@ -465,17 +462,17 @@ class ModelItem {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 1;
     Map<String, dynamic> map = toMap();
-    int deleted = await dbHelper.delete("items", id);
+    Map<String, dynamic>? change;
     if (pushToSync) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
       map["table"] = Tables.items.string;
       map["bookmark"] = "";
-      SyncUtils.logChangeToPush(
+      change = await SyncUtils.prepareChangeToPush(
         map,
         deleteTask: deleteTask,
       );
     }
-    return deleted;
+    return dbHelper.deleteWithChange(Tables.items.string, id, change);
   }
 
   static Future<void> deletedFromServer(String id, int remoteUpdatedAt) async {
@@ -503,7 +500,7 @@ class ModelItem {
       for (ModelItem item in items) {
         await item.remove();
       }
-      delete();
+      await delete();
     } else {
       String fileId = fileHash!;
       ModelFile? modelFile = await ModelFile.get(fileId);

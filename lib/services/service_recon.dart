@@ -38,7 +38,7 @@ class ReconciliationService {
     //time to calculate hashes
     final stopwatch = Stopwatch()..start();
     String? directoryPath = rootItem.path;
-    logger.info("Directory Path: $directoryPath");
+    logger.info("Starting reconciliation scan");
     String? bookmark;
     if (Platform.isIOS) {
       bookmark = rootItem.bookmark;
@@ -46,7 +46,7 @@ class ReconciliationService {
         String? accessPath = await ChannelStorage.startAccessing(bookmark);
         if (accessPath != null) {
           directoryPath = accessPath;
-          logger.info("iOS Path: $directoryPath");
+          logger.info("Platform directory access acquired");
         }
       }
     }
@@ -55,7 +55,6 @@ class ReconciliationService {
     }
     Map<String, String> fileHashes = await _computeFileHashes(directoryPath);
 
-    logger.debug("fileHashes: $fileHashes");
     stopwatch.stop();
     final secondsTaken = stopwatch.elapsedMilliseconds / 1000.0;
     logger
@@ -129,8 +128,7 @@ class ReconciliationService {
             final duplicates = validCandidates.skip(1);
 
             for (final duplicate in duplicates) {
-              logger.info(
-                  '🗑️ Removing duplicate DB item: ${duplicate.name} (${duplicate.id})');
+              logger.info('Removing duplicate DB item');
               await duplicate.remove();
             }
           }
@@ -159,7 +157,7 @@ class ReconciliationService {
               await _handleModifiedFile(
                   dbChild, fsChild, childPath, fsHash, timestamp);
             } else {
-              await checkCreateUploadTask(dbChild.id, fsPath, fsHash);
+              await checkCreateUploadTask(dbChild.id, File(childPath), fsHash);
             }
           }
         }
@@ -178,7 +176,7 @@ class ReconciliationService {
           }
         }
         if (renamed) {
-          logger.info("  ~ Renamed: $childPath");
+          logger.info("Renamed item");
         } else {
           ModelItem? movedDbItem;
           if (fsChild.isFolder) {
@@ -194,15 +192,13 @@ class ReconciliationService {
 
           if (movedDbItem != null) {
             // --- MOVE DETECTED ---
-            String dbItemPath =
-                await ModelItem.getPathForLocalItem(movedDbItem.id);
             movedDbItem.name = fsChild.name;
             movedDbItem.parentId = dbParentId;
             movedDbItem.scanState = ScanState.modified.value;
             movedDbItem.archivedAt = 0;
             await movedDbItem
                 .update(["name", "parent_id", "scan_state", "archived_at"]);
-            logger.info("  ~ Moved: $dbItemPath to $childPath");
+            logger.info("Moved item");
             if (fsChild.isFolder) {
               await _reconcileNode(
                   rootItemId: rootItemId,
@@ -416,8 +412,8 @@ class ReconciliationService {
       await oldModelFile.updateCount(newItemCount);
     }
 
-    await checkCreateUploadTask(dbItem.id, fsPath, fsHash);
-    logger.info('  ~ Modified: ${fsItem.name}');
+    await checkCreateUploadTask(dbItem.id, File(fsPath), fsHash);
+    logger.info('Modified file');
   }
 
   Future<void> _handleFileCreation(
@@ -439,8 +435,8 @@ class ReconciliationService {
     await modelItem.insert();
     String itemId = modelItem.id;
 
-    await checkCreateUploadTask(itemId, fsPath, fsHash);
-    logger.info('  + Created File: ${fsItem.name}');
+    await checkCreateUploadTask(itemId, File(fsPath), fsHash);
+    logger.info('Created file');
   }
 
   Future<void> _handleFolderCreation(String rootItemId, FSItem fsItem,
@@ -455,7 +451,7 @@ class ReconciliationService {
       'scan_state': 1,
     });
     await modelItem.insert();
-    logger.info('  + Created Folder: ${fsItem.name}');
+    logger.info('Created folder');
 
     // Recurse into the newly created folder to process its children
     await _reconcileNode(
@@ -469,7 +465,7 @@ class ReconciliationService {
     if (item.isFolder) {
       // Only empty folders are deleted.
       await item.delete();
-      logger.info('  - Deleted Folder: ${item.name}');
+      logger.info('Deleted folder');
     } else {
       // Do not delete if already uploaded
       ModelFile? modelFile = await ModelFile.get(item.fileHash!);
@@ -478,7 +474,7 @@ class ReconciliationService {
         ModelItemTask? uploadTask = await ModelItemTask.get(item.id);
         if (uploadTask == null) {
           await item.remove();
-          logger.info('  - Deleted File: ${item.name}');
+          logger.info('Deleted file');
         }
       }
     }
@@ -486,11 +482,15 @@ class ReconciliationService {
 
   // For a newly created item
   Future<void> checkCreateUploadTask(
-      String newItemId, String fsPath, String hash) async {
+      String newItemId, File sourceFile, String hash) async {
+    if (!await sourceFile.exists()) {
+      logger.warning('Skipped upload task for invalid file source');
+      return;
+    }
     ModelFile? hashFile = await ModelFile.get(hash);
     bool createUploadTask = false;
     if (hashFile == null) {
-      FileSplitter fileSplitter = FileSplitter(file: File(fsPath));
+      FileSplitter fileSplitter = FileSplitter(file: sourceFile);
       int parts = fileSplitter.partSizes.length;
       final modelFile = await ModelFile.fromMap({'id': hash, 'parts': parts});
       await modelFile.insert();
@@ -601,7 +601,7 @@ class ReconciliationService {
               } catch (e) {
                 // If a single file fails (e.g., OS permission denied, file locked),
                 // skip it so the rest of the directory can successfully sync.
-                logger.error("failed to read: $path");
+                logger.error("Failed to read file during reconciliation");
               }
             }
           }
@@ -639,7 +639,7 @@ class ReconciliationService {
           size: isFolder ? 0 : stats.size,
         ));
       } catch (e) {
-        logger.info('Error scanning ${entity.path}: $e');
+        logger.info('Skipped unreadable filesystem entry');
       }
     }
 

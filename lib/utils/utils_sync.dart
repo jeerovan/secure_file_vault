@@ -232,8 +232,7 @@ class SyncUtils {
             return false;
           }
         }
-        await resetDevice();
-        success = true;
+        success = await resetDevice();
       } catch (e, s) {
         logger.error("signout", error: e, stackTrace: s);
       }
@@ -241,7 +240,7 @@ class SyncUtils {
     return success;
   }
 
-  static Future<void> resetDevice() async {
+  static Future<bool> resetDevice() async {
     SecureStorage storage = SecureStorage();
     try {
       if (!simulateTesting() && revenueCatSupported) {
@@ -252,12 +251,12 @@ class SyncUtils {
       }
       if (Platform.isAndroid || Platform.isIOS) {
         // Stop foreground service
-        ServiceForeground.instance.stop();
+        await ServiceForeground.instance.stop();
       }
+      final locale = await ModelSetting.getRaw(AppString.locale.string);
       await storage.clear();
       final dbHelper = StorageSqlite.instance;
       await dbHelper.clearDb();
-      String locale = await ModelSetting.getRaw(AppString.locale.string);
       ModelSetting.clear();
       await clearFiFeDirectory();
       // keep locale
@@ -267,26 +266,30 @@ class SyncUtils {
       await ModelSetting.set(AppString.onboarding.string, "yes");
       EventStream().publish(AppEvent(
           type: EventType.system, id: "signout", key: EventKey.signout));
+      return true;
     } catch (e, s) {
       logger.error("Resetting device", error: e, stackTrace: s);
+      return false;
     }
   }
 
-  static Future<void> logChangeToPush(Map<String, dynamic> map,
+  static Future<Map<String, dynamic>?> prepareChangeToPush(
+      Map<String, dynamic> map,
       {int deleteTask = 0}) async {
     String? masterKeyBase64 = await getMasterKey();
     String? userId = await getSignedInUserId();
     if (masterKeyBase64 != null && userId != null && !simulateTesting()) {
-      String table = map["table"];
-      String rowId = map['id'];
+      final payload = Map<String, dynamic>.from(map);
+      String table = payload["table"];
+      String rowId = payload['id'];
       String changeId = '$table|$rowId';
-      map["deleted"] = deleteTask;
+      payload["deleted"] = deleteTask;
 
       ModelChange change = await ModelChange.fromMap(
-          {"id": changeId, "data": map, "table_name": table});
-      await change.insert();
-      logger.info("encryptAndPushChange:$table|$changeId");
+          {"id": changeId, "data": payload, "table_name": table});
+      return change.toMap();
     }
+    return null;
   }
 
   static Future<bool> pushMapChanges() async {
@@ -433,7 +436,9 @@ class SyncUtils {
               int clientTS = int.parse(changeMap["11"].toString());
               Uint8List? decryptedBytes =
                   cryptoUtils.getDecryptedBytesFromMap(map, masterKeyBytes);
-              if (decryptedBytes == null) continue;
+              if (decryptedBytes == null) {
+                throw const FormatException("Unable to decrypt sync item");
+              }
               String jsonString = utf8.decode(decryptedBytes);
               Map<String, dynamic> itemMap = jsonDecode(jsonString);
               int deleteTask = int.parse(itemMap["deleted"].toString());
@@ -456,7 +461,7 @@ class SyncUtils {
               if (deleteTask > 0) {
                 await ModelFile.deletedFromServer(fileHash, clientTS);
               } else {
-                newModelFile.upcertFromServer();
+                await newModelFile.upcertFromServer();
               }
               if (fileServerTS > lastFileTS) {
                 lastFileTS = fileServerTS;
@@ -501,6 +506,9 @@ class SyncUtils {
         logger.info("Fetched Map Changes");
       } catch (e, s) {
         logger.error("fetchMapChanges", error: e, stackTrace: s);
+        allFetched = false;
+        changesAvailable = false;
+        break;
       }
     }
     return allFetched;

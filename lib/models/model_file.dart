@@ -96,12 +96,10 @@ class ModelFile {
   Future<int> insert() async {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert(Tables.files.string, map);
-    map["table"] = Tables.files.string;
-    SyncUtils.logChangeToPush(
-      map,
-    );
-    return inserted;
+    final changeMap = Map<String, dynamic>.from(map)
+      ..["table"] = Tables.files.string;
+    final change = await SyncUtils.prepareChangeToPush(changeMap);
+    return dbHelper.insertWithChange(Tables.files.string, map, change);
   }
 
   Future<int> update(List<String> attrs, {bool pushToSync = true}) async {
@@ -112,15 +110,14 @@ class ModelFile {
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated = await dbHelper.update(Tables.files.string, updatedMap, id);
+    Map<String, dynamic>? change;
     if (pushToSync) {
       map["updated_at"] = utcNow;
       map["table"] = Tables.files.string;
-      SyncUtils.logChangeToPush(
-        map,
-      );
+      change = await SyncUtils.prepareChangeToPush(map);
     }
-    return updated;
+    return dbHelper.updateWithChange(
+        Tables.files.string, updatedMap, id, change);
   }
 
   Future<int> upcertFromServer({bool overwrite = false}) async {
@@ -149,16 +146,16 @@ class ModelFile {
     final dbHelper = StorageSqlite.instance;
     int deleteTask = 1;
     Map<String, dynamic> map = toMap();
-    int deleted = await dbHelper.delete(Tables.files.string, id);
+    Map<String, dynamic>? change;
     if (pushToSync) {
       map["updated_at"] = DateTime.now().toUtc().millisecondsSinceEpoch;
       map["table"] = Tables.files.string;
-      SyncUtils.logChangeToPush(
+      change = await SyncUtils.prepareChangeToPush(
         map,
         deleteTask: deleteTask,
       );
     }
-    return deleted;
+    return dbHelper.deleteWithChange(Tables.files.string, id, change);
   }
 
   static Future<void> deletedFromServer(String id, int remoteUpdatedAt) async {

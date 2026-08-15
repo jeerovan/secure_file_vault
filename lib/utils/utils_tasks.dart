@@ -109,7 +109,7 @@ class TaskManager {
         // Ensure we don't start the same task twice concurrently
         if (!_activeTaskIds.contains(pendingTaskId)) {
           _activeTaskIds.add(pendingTaskId);
-          logger.info("Starting task: $pendingTaskId");
+          logger.info("Starting queued transfer task");
           tasksDispatched = true;
           // Initiate task process without awaiting to allow parallel execution up to the limit
           dispatchTask(pendingTaskId);
@@ -143,7 +143,7 @@ class TaskManager {
         queueNext = await checkInitUpload(itemTask);
       }
     } catch (e, s) {
-      logger.error("Task $taskId failed", error: e.toString(), stackTrace: s);
+      logger.error("Transfer task failed", error: e.toString(), stackTrace: s);
     } finally {
       // Remove from active processes using the identifiable parameter
       _activeTaskIds.remove(taskId);
@@ -249,7 +249,7 @@ class TaskManager {
             jsonBody: {"file_hash": modelFile.id, "file_size": expectedSize});
         final status = providerResult["success"];
         if (status <= 0) {
-          logger.error('Get storage provider: ${jsonEncode(providerResult)}');
+          logger.error('Failed to select upload storage provider');
           await ModelState.set(AppString.storageFull.string, "yes");
           return false;
         } else {
@@ -274,7 +274,7 @@ class TaskManager {
           jsonBody: {"storage_id": modelFile.storageId});
       final status = urlResult["success"];
       if (status <= 0) {
-        logger.error('Get B2 upload url: ${jsonEncode(urlResult)}');
+        logger.error('Failed to get B2 upload authorization');
         return true;
       } else {
         final urlData = urlResult["data"];
@@ -297,7 +297,7 @@ class TaskManager {
           jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId});
       final status = urlResult["success"];
       if (status <= 0) {
-        logger.error('Get upload url: ${jsonEncode(urlResult)}');
+        logger.error('Failed to get upload authorization');
         return true;
       } else {
         uploadInfo["provider"] = "s3";
@@ -400,14 +400,12 @@ class TaskManager {
       };
     }
     String uploadUrl = uploadInfo["url"];
-    logger.info(
-        "pushFilePart|$fileHash|$part| uploading bytes to upload url with headers");
+    logger.info("Uploading encrypted file part");
     Map<String, dynamic> uploadResult = await uploadFileBytes(
         method: method, bytes: fileBytes, url: uploadUrl, headers: headers);
-    logger.info("UploadedBytes:${jsonEncode(uploadResult)}");
     // update uploaded
     if (uploadResult["error"].isEmpty) {
-      logger.info("pushFilePart|$fileHash|$part| bytes uploaded");
+      logger.info("Encrypted file part uploaded");
 
       //update
       ModelPart? modelPart = await ModelPart.get(fileHashPart);
@@ -438,10 +436,10 @@ class TaskManager {
         await itemTask.update(["progress"]);
       }
     } else {
-      logger.error("Upload File Part", error: jsonEncode(uploadResult));
+      logger.error("Upload file part failed");
     }
     try {
-      File(encryptedFilePath).delete();
+      await File(encryptedFilePath).delete();
     } catch (e) {
       // could not delete temp file
     }
@@ -494,7 +492,7 @@ class TaskManager {
     if (modelPart == null) return;
     String downloadUrl = await getDownloadUrl(modelFile, partToDownload);
     if (downloadUrl.isNotEmpty) {
-      logger.info("$name:$partToDownload: fetched download url");
+      logger.info("Fetched download authorization");
       Directory tempDir = await getTemporaryDirectory();
       String tempFilePath = "${tempDir.path}/$fileHashPart";
       File tempFile = File(tempFilePath);
@@ -505,10 +503,10 @@ class TaskManager {
         await tempFile.create();
       }
       IOSink fileSink = tempFile.openWrite();
-      int downloadedRequestState = await downloadFileStream(
+      final downloadResult = await downloadFileStream(
           url: downloadUrl, headers: null, fileOut: fileSink, onProgress: null);
-      if (downloadedRequestState == 1) {
-        logger.info("$name:$partToDownload: Downloaded");
+      if (downloadResult.succeeded) {
+        logger.info("Downloaded encrypted file part");
         // match length
         Uint8List fileBytes = File(tempFilePath).readAsBytesSync();
         int contentLength = fileBytes.length;
@@ -528,7 +526,7 @@ class TaskManager {
             ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
                 tempFilePath, filePathInAppTemp, fileEncryptionKeyBytes);
             if (decryptionResult.isSuccess) {
-              logger.info("$name:$partToDownload:Fetched & decrypted");
+              logger.info("Decrypted file part");
               if (partToDownload == parts) {
                 String finalFilePath =
                     await ModelItem.getPathForItem(modelItem.id);
@@ -543,21 +541,21 @@ class TaskManager {
               }
             } else {
               String error = decryptionResult.failureReason ?? "";
-              logger.error(
-                  "$name:$partToDownload:Fetched but decryption failed",
-                  error: error);
+              logger.error("File part decryption failed", error: error);
             }
           }
         } else {
-          logger.error("$name:$partToDownload: length did not match");
+          logger.error("Downloaded file part length did not match");
         }
         try {
-          tempFile.delete();
+          await tempFile.delete();
         } catch (e) {
           // could not delete temp file
         }
-      } else if (downloadedRequestState == -1) {
-        await modelItem.forceRemove();
+      } else {
+        final retry =
+            downloadResult.isRetryable ? "retryable" : "non-retryable";
+        logger.warning("Download failed ($retry); retaining metadata and task");
       }
     }
   }
@@ -583,7 +581,7 @@ class TaskManager {
     if (status > 0) {
       downloadUrl = downloadResult["data"];
     } else {
-      logger.error("Get download url", error: jsonEncode(downloadResult));
+      logger.error("Failed to get download authorization");
     }
     return downloadUrl;
   }
