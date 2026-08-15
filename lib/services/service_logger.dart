@@ -18,6 +18,7 @@ class AppLogger {
 
   static File? _logFile;
   static const int _maxLogSize = 1024 * 1024; // 1MB rotation limit
+  static const String _privacyCleanupMarker = '.fife_log_redaction_v1';
   static final List<String> _logQueue = [];
   static bool _isWriting = false;
 
@@ -64,6 +65,28 @@ class AppLogger {
         .replaceAll(_urlPattern, '[REDACTED_URL]')
         .replaceAll(_absolutePathPattern, '[REDACTED_PATH]')
         .replaceAll(_hashPattern, '[REDACTED_HASH]');
+  }
+
+  static Future<bool> clearLegacyLogsOnce({Directory? directory}) async {
+    try {
+      final logDirectory = directory ?? await getAppTempDirectory();
+      final marker = File('${logDirectory.path}/$_privacyCleanupMarker');
+      if (await marker.exists()) return false;
+
+      for (final name in ['app_logs.txt', 'app_logs.txt.old']) {
+        final legacyLog = File('${logDirectory.path}/$name');
+        if (await legacyLog.exists()) {
+          await legacyLog.delete();
+        }
+      }
+
+      _logFile = null;
+      await marker.writeAsString('completed', flush: true);
+      return true;
+    } catch (e) {
+      dev.log('Failed to clear legacy logs', error: sanitize(e.toString()));
+      return false;
+    }
   }
 
   /// Get color based on log level

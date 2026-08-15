@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/services/service_foreground.dart';
@@ -417,6 +416,7 @@ class SyncUtils {
           allFetched = false;
           break;
         }
+        final mutations = <SyncPageMutation>[];
         Map<String, dynamic> tableChanges = responseData["data"];
         for (String table in tables) {
           if (!tableChanges.containsKey(table)) continue;
@@ -444,10 +444,31 @@ class SyncUtils {
               int deleteTask = int.parse(itemMap["deleted"].toString());
               if (deleteTask > 0) {
                 String itemId = itemMap["id"];
-                await ModelItem.deletedFromServer(itemId, clientTS);
+                final existingItem = await ModelItem.get(itemId);
+                var shouldDelete = existingItem != null &&
+                    existingItem.updatedAt <= clientTS &&
+                    !existingItem.isFolder;
+                if (existingItem != null &&
+                    existingItem.updatedAt <= clientTS &&
+                    existingItem.isFolder) {
+                  final itemPath = await ModelItem.getPathForItem(itemId);
+                  shouldDelete = !File(itemPath).existsSync();
+                }
+                if (shouldDelete) {
+                  mutations.add(SyncPageMutation.deleteIfNotNewer(
+                    table: Tables.items.string,
+                    id: itemId,
+                    remoteUpdatedAt: clientTS,
+                  ));
+                }
               } else {
                 ModelItem newModelItem = await ModelItem.fromMap(itemMap);
-                await newModelItem.upcertFromServer();
+                mutations.add(SyncPageMutation.upsertIfNewer(
+                  table: Tables.items.string,
+                  id: newModelItem.id,
+                  row: newModelItem.toMap(),
+                  remoteUpdatedAt: newModelItem.updatedAt,
+                ));
               }
               if (itemTS > lastItemTS) {
                 lastItemTS = itemTS;
@@ -459,9 +480,18 @@ class SyncUtils {
               int clientTS = newModelFile.updatedAt;
               int deleteTask = int.parse(changeMap["14"].toString());
               if (deleteTask > 0) {
-                await ModelFile.deletedFromServer(fileHash, clientTS);
+                mutations.add(SyncPageMutation.deleteIfNotNewer(
+                  table: Tables.files.string,
+                  id: fileHash,
+                  remoteUpdatedAt: clientTS,
+                ));
               } else {
-                await newModelFile.upcertFromServer();
+                mutations.add(SyncPageMutation.upsertIfNewer(
+                  table: Tables.files.string,
+                  id: fileHash,
+                  row: newModelFile.toMap(),
+                  remoteUpdatedAt: clientTS,
+                ));
               }
               if (fileServerTS > lastFileTS) {
                 lastFileTS = fileServerTS;
@@ -473,9 +503,18 @@ class SyncUtils {
               int clientTS = newModelPart.updatedAt;
               int deleteTask = int.parse(changeMap["13"].toString());
               if (deleteTask > 0) {
-                await ModelPart.deletedFromServer(partId, clientTS);
+                mutations.add(SyncPageMutation.deleteIfNotNewer(
+                  table: Tables.parts.string,
+                  id: partId,
+                  remoteUpdatedAt: clientTS,
+                ));
               } else {
-                await newModelPart.upcertFromServer();
+                mutations.add(SyncPageMutation.upsertIfNewer(
+                  table: Tables.parts.string,
+                  id: partId,
+                  row: newModelPart.toMap(),
+                  remoteUpdatedAt: clientTS,
+                ));
               }
               if (partServerTS > lastPartTS) {
                 lastPartTS = partServerTS;
@@ -487,22 +526,23 @@ class SyncUtils {
               map["image"] = changeMap["8"];
               map["plan_expires_at"] = int.parse(
                   getValueFromMap(changeMap, "9", defaultValue: 0).toString());
-              await ModelProfile.upcertFromServer(profileId, map);
+              mutations.add(SyncPageMutation.updateExisting(
+                table: Tables.profiles.string,
+                id: profileId,
+                row: map,
+              ));
               if (profileTS > lastProfileTS) {
                 lastProfileTS = profileTS;
               }
             }
           }
         }
-        // update last TSs
-        await ModelState.set(
-            AppString.lastFileTS.string, lastFileTS.toString());
-        await ModelState.set(
-            AppString.lastPartTS.string, lastPartTS.toString());
-        await ModelState.set(
-            AppString.lastItemTS.string, lastItemTS.toString());
-        await ModelState.set(
-            AppString.lastProfileTS.string, lastProfileTS.toString());
+        await StorageSqlite.instance.applySyncPage(mutations, {
+          AppString.lastFileTS.string: lastFileTS,
+          AppString.lastPartTS.string: lastPartTS,
+          AppString.lastItemTS.string: lastItemTS,
+          AppString.lastProfileTS.string: lastProfileTS,
+        });
         logger.info("Fetched Map Changes");
       } catch (e, s) {
         logger.error("fetchMapChanges", error: e, stackTrace: s);

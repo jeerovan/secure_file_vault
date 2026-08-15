@@ -10,6 +10,37 @@ import '../utils/common.dart';
 import '../models/model_setting.dart';
 import '../services/service_logger.dart';
 
+enum SyncPageMutationType { upsertIfNewer, deleteIfNotNewer, updateExisting }
+
+class SyncPageMutation {
+  final SyncPageMutationType type;
+  final String table;
+  final String id;
+  final Map<String, dynamic>? row;
+  final int? remoteUpdatedAt;
+
+  const SyncPageMutation.upsertIfNewer({
+    required this.table,
+    required this.id,
+    required Map<String, dynamic> this.row,
+    required int this.remoteUpdatedAt,
+  }) : type = SyncPageMutationType.upsertIfNewer;
+
+  const SyncPageMutation.deleteIfNotNewer({
+    required this.table,
+    required this.id,
+    required int this.remoteUpdatedAt,
+  })  : type = SyncPageMutationType.deleteIfNotNewer,
+        row = null;
+
+  const SyncPageMutation.updateExisting({
+    required this.table,
+    required this.id,
+    required Map<String, dynamic> this.row,
+  })  : type = SyncPageMutationType.updateExisting,
+        remoteUpdatedAt = null;
+}
+
 class StorageSqlite {
   static final StorageSqlite instance = StorageSqlite._init();
   static Database? _database;
@@ -418,6 +449,85 @@ class StorageSqlite {
   Future<void> clearTable(String tableName) async {
     final db = await instance.database;
     await db.delete(tableName);
+  }
+
+  Future<void> applySyncPage(
+    List<SyncPageMutation> mutations,
+    Map<String, int> cursors,
+  ) async {
+    final db = await instance.database;
+    await applySyncPageInDatabase(db, mutations, cursors);
+  }
+
+  static Future<void> applySyncPageInDatabase(
+    Database db,
+    List<SyncPageMutation> mutations,
+    Map<String, int> cursors,
+  ) async {
+    await db.transaction((txn) async {
+      for (final mutation in mutations) {
+        switch (mutation.type) {
+          case SyncPageMutationType.upsertIfNewer:
+            final existing = await txn.query(
+              mutation.table,
+              columns: ['updated_at'],
+              where: 'id = ?',
+              whereArgs: [mutation.id],
+              limit: 1,
+            );
+            if (existing.isEmpty) {
+              await txn.insert(
+                mutation.table,
+                mutation.row!,
+                conflictAlgorithm: ConflictAlgorithm.replace,
+              );
+            } else {
+              final existingUpdatedAt = existing.single['updated_at'] as int;
+              if (mutation.remoteUpdatedAt! > existingUpdatedAt) {
+                await txn.update(
+                  mutation.table,
+                  mutation.row!,
+                  where: 'id = ?',
+                  whereArgs: [mutation.id],
+                );
+              }
+            }
+          case SyncPageMutationType.deleteIfNotNewer:
+            final existing = await txn.query(
+              mutation.table,
+              columns: ['updated_at'],
+              where: 'id = ?',
+              whereArgs: [mutation.id],
+              limit: 1,
+            );
+            if (existing.isNotEmpty) {
+              final existingUpdatedAt = existing.single['updated_at'] as int;
+              if (existingUpdatedAt <= mutation.remoteUpdatedAt!) {
+                await txn.delete(
+                  mutation.table,
+                  where: 'id = ?',
+                  whereArgs: [mutation.id],
+                );
+              }
+            }
+          case SyncPageMutationType.updateExisting:
+            await txn.update(
+              mutation.table,
+              mutation.row!,
+              where: 'id = ?',
+              whereArgs: [mutation.id],
+            );
+        }
+      }
+
+      for (final cursor in cursors.entries) {
+        await txn.insert(
+          Tables.states.string,
+          {'id': cursor.key, 'value': cursor.value.toString()},
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+    });
   }
 
   Future<void> clearDb() async {

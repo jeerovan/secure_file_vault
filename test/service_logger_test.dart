@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -47,5 +49,29 @@ void main() {
       expect(sanitized, isNot(contains(windowsPath)));
       expect(sanitized, isNot(contains(hash)));
     });
+  });
+
+  test('legacy log cleanup deletes active and rotated logs only once',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('fife-logs-');
+    addTearDown(() => directory.delete(recursive: true));
+    final active = File('${directory.path}/app_logs.txt');
+    final rotated = File('${directory.path}/app_logs.txt.old');
+    await active.writeAsString('secret');
+    await rotated.writeAsString('older secret');
+
+    expect(
+      await AppLogger.clearLegacyLogsOnce(directory: directory),
+      isTrue,
+    );
+    expect(await active.exists(), isFalse);
+    expect(await rotated.exists(), isFalse);
+
+    await active.writeAsString('new redacted log');
+    expect(
+      await AppLogger.clearLegacyLogsOnce(directory: directory),
+      isFalse,
+    );
+    expect(await active.readAsString(), 'new redacted log');
   });
 }

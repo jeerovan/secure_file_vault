@@ -40,6 +40,7 @@ void startForegroundTask() {
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppLogger.clearLegacyLogsOnce();
   await StorageSqlite.initialize(ExecutionMode.mainApp);
   await initializeInParallel();
   if (Platform.isIOS || Platform.isAndroid) {

@@ -481,9 +481,18 @@ class ReconciliationService {
   }
 
   // For a newly created item
+  static Future<bool> isValidUploadSource(File sourceFile) async {
+    if (!await sourceFile.exists()) return false;
+    return await FileSystemEntity.type(
+          sourceFile.path,
+          followLinks: false,
+        ) ==
+        FileSystemEntityType.file;
+  }
+
   Future<void> checkCreateUploadTask(
       String newItemId, File sourceFile, String hash) async {
-    if (!await sourceFile.exists()) {
+    if (!await isValidUploadSource(sourceFile)) {
       logger.warning('Skipped upload task for invalid file source');
       return;
     }
