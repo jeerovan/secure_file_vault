@@ -145,6 +145,19 @@ Adding a provider requires, at minimum:
 - Sensitive secrets must use platform-backed secure storage where supported, not ordinary preferences or logs.
 - Schema changes must include safe migrations for existing installations.
 
+### 5.7 Reconciliation safety
+
+- A filesystem scan must complete before reconciliation mutates local metadata.
+- Missing, inaccessible, partially readable, or partially hashed roots must never be interpreted as empty roots and must never authorize deletion.
+- Filesystem basenames are identity data and must be preserved exactly; display normalization must not alter stored paths.
+- Hidden files and hidden directories are excluded consistently, and symbolic links are not followed.
+- When an original and an identical copy both exist, the copy receives a distinct `ModelItem` identity while both items may reference the same deduplicated `ModelFile`.
+- Rename or move identity is retained only when the old path is absent from the same immutable snapshot and exactly one sufficiently strong candidate exists.
+- Ambiguous or low-information candidates are treated as new items, never as authorization to mutate an existing identity.
+- Reconciliation and sync commits use atomic owner-token leases with stale recovery; timestamps are observability data, not locks.
+- All metadata, task, and change-journal mutations for one root reconciliation commit transactionally or roll back together.
+- A folder move must not introduce a parent cycle.
+
 ## 6. Security and Privacy Invariants
 
 These requirements are non-negotiable unless this specification is deliberately revised:

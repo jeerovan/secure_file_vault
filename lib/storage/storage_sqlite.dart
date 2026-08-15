@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
@@ -45,6 +46,7 @@ class StorageSqlite {
   static final StorageSqlite instance = StorageSqlite._init();
   static Database? _database;
   static Completer<Database>? _databaseCompleter;
+  static final Object _transactionExecutorKey = Object();
 
   // Track execution mode to handle background isolate behaviors safely
   static ExecutionMode _currentMode = ExecutionMode.mainApp;
@@ -72,6 +74,31 @@ class StorageSqlite {
       rethrow;
     }
     return _databaseCompleter!.future; // Safely return the future
+  }
+
+  DatabaseExecutor? get _transactionExecutor =>
+      Zone.current[_transactionExecutorKey] as DatabaseExecutor?;
+
+  Future<DatabaseExecutor> get executor async =>
+      _transactionExecutor ?? await database;
+
+  Future<T> runInTransaction<T>(Future<T> Function() action) async {
+    if (_transactionExecutor != null) return action();
+    final db = await database;
+    return runInDatabaseTransaction(db, action);
+  }
+
+  static Future<T> runInDatabaseTransaction<T>(
+    Database db,
+    Future<T> Function() action,
+  ) {
+    return db.transaction(
+      (txn) => runZoned(
+        action,
+        zoneValues: {_transactionExecutorKey: txn},
+      ),
+      exclusive: true,
+    );
   }
 
   Future<Database> _initDB(String dbFileName) async {
@@ -324,8 +351,8 @@ class StorageSqlite {
   }
 
   Future<int> insert(String tableName, Map<String, dynamic> row) async {
-    final db = await instance.database;
-    return await db.insert(
+    final db = await executor;
+    return db.insert(
       tableName,
       row,
       conflictAlgorithm: ConflictAlgorithm.replace,
@@ -334,13 +361,13 @@ class StorageSqlite {
 
   Future<int> update(
       String tableName, Map<String, dynamic> row, dynamic id) async {
-    final db = await instance.database;
-    return await db.update(tableName, row, where: 'id = ?', whereArgs: [id]);
+    final db = await executor;
+    return db.update(tableName, row, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> delete(String tableName, dynamic id) async {
-    final db = await instance.database;
-    return await db.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    final db = await executor;
+    return db.delete(tableName, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> insertWithChange(
@@ -348,6 +375,22 @@ class StorageSqlite {
     Map<String, dynamic> row,
     Map<String, dynamic>? changeRow,
   ) async {
+    final current = _transactionExecutor;
+    if (current != null) {
+      final result = await current.insert(
+        tableName,
+        row,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      if (changeRow != null) {
+        await current.insert(
+          Tables.changes.string,
+          changeRow,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      return result;
+    }
     final db = await instance.database;
     return insertWithChangeInDatabase(db, tableName, row, changeRow);
   }
@@ -381,6 +424,19 @@ class StorageSqlite {
     dynamic id,
     Map<String, dynamic>? changeRow,
   ) async {
+    final current = _transactionExecutor;
+    if (current != null) {
+      final result = await current
+          .update(tableName, row, where: 'id = ?', whereArgs: [id]);
+      if (changeRow != null) {
+        await current.insert(
+          Tables.changes.string,
+          changeRow,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      return result;
+    }
     final db = await instance.database;
     return updateWithChangeInDatabase(db, tableName, row, id, changeRow);
   }
@@ -411,6 +467,19 @@ class StorageSqlite {
     dynamic id,
     Map<String, dynamic>? changeRow,
   ) async {
+    final current = _transactionExecutor;
+    if (current != null) {
+      final result =
+          await current.delete(tableName, where: 'id = ?', whereArgs: [id]);
+      if (changeRow != null) {
+        await current.insert(
+          Tables.changes.string,
+          changeRow,
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      return result;
+    }
     final db = await instance.database;
     return deleteWithChangeInDatabase(db, tableName, id, changeRow);
   }
@@ -437,17 +506,17 @@ class StorageSqlite {
 
   Future<List<Map<String, dynamic>>> getWithId(
       String tableName, dynamic id) async {
-    final db = await instance.database;
-    return await db.query(tableName, where: "id = ?", whereArgs: [id]);
+    final db = await executor;
+    return db.query(tableName, where: "id = ?", whereArgs: [id]);
   }
 
   Future<List<Map<String, dynamic>>> getAll(String tableName) async {
-    final db = await instance.database;
-    return await db.query(tableName);
+    final db = await executor;
+    return db.query(tableName);
   }
 
   Future<void> clearTable(String tableName) async {
-    final db = await instance.database;
+    final db = await executor;
     await db.delete(tableName);
   }
 
@@ -457,6 +526,157 @@ class StorageSqlite {
   ) async {
     final db = await instance.database;
     await applySyncPageInDatabase(db, mutations, cursors);
+  }
+
+  Future<bool> tryAcquireLease({
+    required String key,
+    required String owner,
+    required int now,
+    required int expiresAt,
+  }) async {
+    final db = await instance.database;
+    return tryAcquireLeaseInDatabase(
+      db,
+      key: key,
+      owner: owner,
+      now: now,
+      expiresAt: expiresAt,
+    );
+  }
+
+  static Future<bool> tryAcquireLeaseInDatabase(
+    Database db, {
+    required String key,
+    required String owner,
+    required int now,
+    required int expiresAt,
+  }) {
+    return db.transaction((txn) async {
+      final rows = await txn.query(
+        Tables.states.string,
+        columns: ['value'],
+        where: 'id = ?',
+        whereArgs: [key],
+        limit: 1,
+      );
+      if (rows.isNotEmpty) {
+        try {
+          final current = jsonDecode(rows.single['value'] as String)
+              as Map<String, dynamic>;
+          final currentExpiry = current['expires_at'] as int;
+          if (currentExpiry > now) return false;
+        } catch (_) {
+          // Malformed leases are treated as stale and safely replaced.
+        }
+      }
+      await txn.insert(
+        Tables.states.string,
+        {
+          'id': key,
+          'value': jsonEncode({'owner': owner, 'expires_at': expiresAt}),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      return true;
+    }, exclusive: true);
+  }
+
+  Future<bool> renewLease({
+    required String key,
+    required String owner,
+    required int expiresAt,
+  }) async {
+    final db = await instance.database;
+    return renewLeaseInDatabase(
+      db,
+      key: key,
+      owner: owner,
+      expiresAt: expiresAt,
+    );
+  }
+
+  static Future<bool> renewLeaseInDatabase(
+    Database db, {
+    required String key,
+    required String owner,
+    required int expiresAt,
+  }) {
+    return db.transaction((txn) async {
+      final rows = await txn.query(
+        Tables.states.string,
+        columns: ['value'],
+        where: 'id = ?',
+        whereArgs: [key],
+        limit: 1,
+      );
+      if (rows.isEmpty) return false;
+      final current =
+          jsonDecode(rows.single['value'] as String) as Map<String, dynamic>;
+      if (current['owner'] != owner) return false;
+      await txn.update(
+        Tables.states.string,
+        {
+          'value': jsonEncode({'owner': owner, 'expires_at': expiresAt})
+        },
+        where: 'id = ?',
+        whereArgs: [key],
+      );
+      return true;
+    }, exclusive: true);
+  }
+
+  Future<void> releaseLease({
+    required String key,
+    required String owner,
+  }) async {
+    final db = await instance.database;
+    await releaseLeaseInDatabase(db, key: key, owner: owner);
+  }
+
+  static Future<void> releaseLeaseInDatabase(
+    Database db, {
+    required String key,
+    required String owner,
+  }) {
+    return db.transaction((txn) async {
+      final rows = await txn.query(
+        Tables.states.string,
+        columns: ['value'],
+        where: 'id = ?',
+        whereArgs: [key],
+        limit: 1,
+      );
+      if (rows.isEmpty) return;
+      final current =
+          jsonDecode(rows.single['value'] as String) as Map<String, dynamic>;
+      if (current['owner'] == owner) {
+        await txn.delete(
+          Tables.states.string,
+          where: 'id = ?',
+          whereArgs: [key],
+        );
+      }
+    }, exclusive: true);
+  }
+
+  Future<bool> hasActiveLeasePrefix(String prefix, int now) async {
+    final db = await instance.database;
+    final rows = await db.query(
+      Tables.states.string,
+      columns: ['value'],
+      where: 'id LIKE ?',
+      whereArgs: ['$prefix%'],
+    );
+    for (final row in rows) {
+      try {
+        final lease =
+            jsonDecode(row['value'] as String) as Map<String, dynamic>;
+        if ((lease['expires_at'] as int) > now) return true;
+      } catch (_) {
+        // Ignore malformed/stale lease rows.
+      }
+    }
+    return false;
   }
 
   static Future<void> applySyncPageInDatabase(

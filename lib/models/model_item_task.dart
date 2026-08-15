@@ -68,7 +68,7 @@ class ModelItemTask {
 
   static Future<String?> fetchPendingTask(Set<String> activeTasks) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
 
     String query = 'SELECT id FROM item_tasks';
     List<dynamic> args = [];
@@ -120,7 +120,7 @@ class ModelItemTask {
 
   static Future<void> clear() async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     await db.delete(Tables.itemTasks.string);
   }
 }

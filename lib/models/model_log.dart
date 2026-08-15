@@ -29,7 +29,7 @@ class ModelLog {
 
   static Future<List<ModelLog>> all(List<String> words) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<String> searches = [];
     for (String word in words) {
       if (word != 'All') {
@@ -78,7 +78,7 @@ class ModelLog {
 
   static Future<void> clear() async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     await db.delete(Tables.logs.string);
   }
 }

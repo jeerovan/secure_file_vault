@@ -12,6 +12,7 @@ import 'package:flutter/foundation.dart';
 import '../services/service_backend.dart';
 import '../services/service_events.dart';
 import '../services/service_recon.dart';
+import '../services/service_reconciliation_coordinator.dart';
 import '../storage/storage_sqlite.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
@@ -32,8 +33,6 @@ class SyncUtils {
   SyncUtils._internal();
 
   Timer? _foregroundSyncTimer;
-  Timer? _syncProcessTimer;
-  Timer? _reconProcessTimer;
 
   static final logger = AppLogger(prefixes: ["Sync"]);
 
@@ -62,24 +61,6 @@ class SyncUtils {
       return;
     }
 
-    int startedAt = DateTime.now().millisecondsSinceEpoch;
-    String lastRunningAtString =
-        await ModelState.get(AppString.lastReconRunningAt.string);
-    int? lastRunningAt =
-        lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
-    if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
-      logger.warning("Recon already in progress, from $caller.");
-      return;
-    }
-
-    await ModelState.set(
-        AppString.lastReconRunningAt.string, startedAt.toString());
-    // set timer to update running state every seconds
-    _reconProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      await ModelState.set(AppString.lastReconRunningAt.string,
-          DateTime.now().millisecondsSinceEpoch.toString());
-    });
-
     logger.info("Start recon from $caller");
     try {
       SodiumSumo sodium = await SodiumSumoInit.init();
@@ -89,9 +70,6 @@ class SyncUtils {
       }
     } catch (e) {
       logger.error("Recon failed", error: e);
-    } finally {
-      _reconProcessTimer?.cancel();
-      _reconProcessTimer = null;
     }
     await triggerSync(caller: caller);
   }
@@ -102,24 +80,11 @@ class SyncUtils {
   }
 
   Future<void> triggerSync({String caller = ""}) async {
-    // Drop the request if a sync is already actively running
-    int startedAt = DateTime.now().millisecondsSinceEpoch;
-    String lastRunningAtString =
-        await ModelState.get(AppString.lastSyncRunningAt.string);
-    int? lastRunningAt =
-        lastRunningAtString.isEmpty ? null : int.parse(lastRunningAtString);
-    if (lastRunningAt != null && (startedAt - lastRunningAt < 2000)) {
+    final lease = await ExclusiveOperationCoordinator.tryAcquire('metadata');
+    if (lease == null) {
       logger.warning("Sync already in progress. from $caller.");
       return;
     }
-    // update state immediately
-    await ModelState.set(AppString.lastSyncRunningAt.string,
-        DateTime.now().millisecondsSinceEpoch.toString());
-    // set timer to update running state every seconds
-    _syncProcessTimer = Timer.periodic(Duration(seconds: 1), (timer) async {
-      await ModelState.set(AppString.lastSyncRunningAt.string,
-          DateTime.now().millisecondsSinceEpoch.toString());
-    });
 
     try {
       logger.info("sync request from $caller");
@@ -143,8 +108,7 @@ class SyncUtils {
     } catch (e, stack) {
       logger.error("Sync failed", error: e, stackTrace: stack);
     } finally {
-      _syncProcessTimer?.cancel();
-      _syncProcessTimer = null;
+      await lease.release();
     }
   }
 

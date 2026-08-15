@@ -98,7 +98,7 @@ class ModelItem {
   static Future<List<ModelItem>> getAllInFolder(ModelItem? item) async {
     if (item == null) return [];
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.items.string,
       where: "parent_id = ?",
@@ -112,7 +112,7 @@ class ModelItem {
   static Future<List<ModelItem>> getDisplayItems(ModelItem? item) async {
     if (item == null) return [];
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(Tables.items.string,
         where: "parent_id = ? AND archived_at = ?",
         whereArgs: [item.id, 0],
@@ -136,7 +136,7 @@ class ModelItem {
   static Future<List<ModelItem>> getAllUnScannedFolderForRootItemId(
       String itemId) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.items.string,
       where: "root_id = ? AND is_folder = ? AND scan_state = ?",
@@ -148,7 +148,7 @@ class ModelItem {
   static Future<List<ModelItem>> getAllUnScannedFilesForRootItemIdMatchingSize(
       String itemId, int size) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.items.string,
       where: "root_id = ? AND is_folder = ? AND scan_state = ? AND size = ?",
@@ -160,7 +160,7 @@ class ModelItem {
   static Future<List<ModelItem>> getAllUnScannedFilesForRootItemIdMatchingHash(
       String itemId, String hash) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.items.string,
       where:
@@ -173,7 +173,7 @@ class ModelItem {
   static Future<List<ModelItem>> getAllUnScannedItemsForRootItemId(
       String itemId) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.items.string,
       where: "root_id = ? AND scan_state = ?",
@@ -184,7 +184,7 @@ class ModelItem {
 
   static Future<List<ModelItem>> getArchived() async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.items.string,
       where: "archived_at > ?",
@@ -197,7 +197,7 @@ class ModelItem {
   static Future<List<Map<String, dynamic>>> getPathRowsForItem(
       String targetId) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
 
     // This fetches the target item and all its ancestors in a single query natively in SQLite.
     final List<Map<String, dynamic>> results = await db.rawQuery('''
@@ -305,7 +305,7 @@ class ModelItem {
   static Future<ModelItem?> syncFolderExists(String path) async {
     String deviceRootPathHash = await getDeviceHash();
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.items.string,
       where: "path = ? AND parent_id = ?",
@@ -316,14 +316,14 @@ class ModelItem {
 
   static Future<void> resetScanState(String rootItemId) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     await db.update(Tables.items.string, {"scan_state": 0},
         where: "root_id = ?", whereArgs: [rootItemId]);
   }
 
   static Future<void> setScanState(String itemId, int state) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     await db.update(
         Tables.items.string, {"scan_state": state, "archived_at": 0},
         where: "id = ?", whereArgs: [itemId]);
@@ -331,7 +331,7 @@ class ModelItem {
 
   static Future<void> updateBookmark(String itemId, String bookmark) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     await db.update(Tables.items.string, {"bookmark": bookmark},
         where: "id = ?", whereArgs: [itemId]);
   }
@@ -339,7 +339,7 @@ class ModelItem {
   static Future<void> removeAllSyncedFolders() async {
     final deviceRoot = await getDeviceHash();
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     await db.delete(Tables.items.string,
         where: "path != ? AND parent_id = ?", whereArgs: [null, deviceRoot]);
   }
@@ -347,7 +347,7 @@ class ModelItem {
   static Future<List<ModelItem>> getAllSyncedFolders() async {
     final deviceRoot = await getDeviceHash();
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(Tables.items.string,
         where: "parent_id = ?", whereArgs: [deviceRoot]);
     return await Future.wait(rows.map((map) => fromMap(map)));
@@ -355,7 +355,7 @@ class ModelItem {
 
   static Future<int> getItemCountForFileHash(String hash) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> result = await db.query(Tables.items.string,
         columns: ['COUNT(*)'], where: 'file_hash = ?', whereArgs: [hash]);
     return Sqflite.firstIntValue(result) ?? 0;
@@ -363,7 +363,7 @@ class ModelItem {
 
   static Future<List<ModelItem>> searchItem(String term) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = [];
 
     try {
@@ -407,6 +407,25 @@ class ModelItem {
       return await fromMap(map);
     }
     return null;
+  }
+
+  static Future<bool> wouldCreateCycle(
+      String itemId, String newParentId) async {
+    if (itemId == newParentId) return true;
+    final dbHelper = StorageSqlite.instance;
+    final db = await dbHelper.executor;
+    final rows = await db.rawQuery('''
+      WITH RECURSIVE ancestors(id, parent_id, depth) AS (
+        SELECT id, parent_id, 0 FROM items WHERE id = ?
+        UNION ALL
+        SELECT i.id, i.parent_id, a.depth + 1
+        FROM items i
+        JOIN ancestors a ON i.id = a.parent_id
+        WHERE a.parent_id IS NOT NULL AND a.parent_id != '' AND a.depth < 50
+      )
+      SELECT 1 FROM ancestors WHERE id = ? LIMIT 1
+    ''', [newParentId, itemId]);
+    return rows.isNotEmpty;
   }
 
   Future<int> insert() async {

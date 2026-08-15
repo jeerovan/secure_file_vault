@@ -71,7 +71,7 @@ class ModelFile {
 
   static Future<List<ModelFile>> pendingForUpload() async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db
         .query(Tables.files.string, where: "uploaded_at = ?", whereArgs: [0]);
     return await Future.wait(rows.map((map) => fromMap(map)));

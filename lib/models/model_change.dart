@@ -40,7 +40,7 @@ class ModelChange {
 
   static Future<List<ModelChange>> all() async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.changes.string,
     );
@@ -50,7 +50,7 @@ class ModelChange {
   static Future<List<ModelChange>> fetchForTable(String table,
       {int singlePushLimit = 100}) async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(Tables.changes.string,
         where: "table_name = ?", whereArgs: [table], limit: singlePushLimit);
     return await Future.wait(rows.map((map) => fromMap(map)));

@@ -49,7 +49,7 @@ class ModelProfile {
 
   static Future<List<ModelProfile>> all() async {
     final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.database;
+    final db = await dbHelper.executor;
     List<Map<String, dynamic>> rows = await db.query(
       Tables.profiles.string,
     );

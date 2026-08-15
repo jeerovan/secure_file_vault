@@ -780,20 +780,12 @@ Future<String> getAppLocale() async {
 }
 
 Future<bool> isRecordOrSyncInProgress() async {
-  String lastReconAtString =
-      await ModelState.get(AppString.lastReconRunningAt.string);
-  int? lastReconAt =
-      lastReconAtString.isEmpty ? null : int.parse(lastReconAtString);
-
-  String lastSyncAtString =
-      await ModelState.get(AppString.lastSyncRunningAt.string);
-  int? lastSyncAt =
-      lastSyncAtString.isEmpty ? null : int.parse(lastSyncAtString);
-
-  int startedAt = DateTime.now().millisecondsSinceEpoch;
-
-  return ((lastReconAt != null && (startedAt - lastReconAt < 2000)) ||
-      (lastSyncAt != null && (startedAt - lastSyncAt < 2000)));
+  final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+  return await ModelState.hasActiveLeasePrefix(
+        'operation_lease:reconciliation:',
+        now,
+      ) ||
+      await ModelState.hasActiveLeasePrefix('operation_lease:metadata', now);
 }
 
 void safeParseJson(

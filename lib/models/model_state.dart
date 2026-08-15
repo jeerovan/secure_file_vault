@@ -23,4 +23,7 @@ class ModelState {
     final dbHelper = StorageSqlite.instance;
     int _ = await dbHelper.delete(Tables.states.string, key);
   }
+
+  static Future<bool> hasActiveLeasePrefix(String prefix, int now) =>
+      StorageSqlite.instance.hasActiveLeasePrefix(prefix, now);
 }
