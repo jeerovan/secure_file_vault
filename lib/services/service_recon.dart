@@ -10,6 +10,7 @@ import '../utils/enums.dart';
 import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../services/service_logger.dart';
+import '../services/service_events.dart';
 import '../services/service_reconciliation_coordinator.dart';
 import '../services/service_reconciliation_planner.dart';
 import '../utils/common.dart';
@@ -106,6 +107,11 @@ class ReconciliationService {
       return const ReconciliationResult(ReconciliationStatus.failed);
     }
 
+    EventStream().publish(AppEvent(
+      type: EventType.system,
+      id: rootItem.id,
+      key: EventKey.running,
+    ));
     String? acquiredAccessPath;
     OperationLease? metadataLease;
     try {
@@ -217,6 +223,11 @@ class ReconciliationService {
         logger.error('Failed to release reconciliation lease',
             error: e, stackTrace: s);
       }
+      EventStream().publish(AppEvent(
+        type: EventType.system,
+        id: rootItem.id,
+        key: EventKey.stopped,
+      ));
     }
   }
 

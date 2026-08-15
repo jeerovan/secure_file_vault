@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_vault_bb/services/service_foreground.dart';
+import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/ui/pages/page_notification_permission.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
@@ -133,6 +134,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    themeNotifier.dispose();
+    AppHttpClients.closeAll();
     super.dispose();
   }
 

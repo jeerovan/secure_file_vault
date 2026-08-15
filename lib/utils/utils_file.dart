@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:http/http.dart' as http_lib;
 
@@ -117,6 +118,7 @@ class FileSplitter {
 }
 
 typedef ProgressCallback = void Function(int received, int total);
+typedef AsyncProgressCallback = FutureOr<void> Function(int sent, int total);
 
 enum DownloadFailureKind {
   authorization,
@@ -284,28 +286,44 @@ Future<DownloadStreamResult> downloadFileStream({
   return result;
 }
 
-Future<UploadFileResult> uploadFileBytes({
+Future<UploadFileResult> uploadFileStream({
   required String method,
-  required Uint8List bytes,
+  required File file,
   required String url,
   required Map<String, String>? headers,
+  AsyncProgressCallback? onProgress,
+  http_lib.Client? httpClient,
   Duration timeout = const Duration(seconds: 30),
 }) async {
   AppLogger logger = AppLogger(prefixes: ["Uploader"]);
   Map<String, dynamic> data = {};
+  http_lib.StreamedRequest? request;
   try {
-    // Create multipart request
-    var request = http_lib.Request(method, Uri.parse(url));
+    final contentLength = await file.length();
+    request = http_lib.StreamedRequest(method, Uri.parse(url));
 
-    // Add headers
     if (headers != null) {
       request.headers.addAll(headers);
     }
+    request.contentLength = contentLength;
 
-    request.bodyBytes = bytes;
+    final client = httpClient ?? AppHttpClients.transfer;
+    final responseFuture = client.send(request);
+    var sent = 0;
+    var lastReportedPercent = -1;
+    final uploadStream = file.openRead().asyncMap<List<int>>((chunk) async {
+      sent += chunk.length;
+      final percent = contentLength == 0 ? 100 : sent * 100 ~/ contentLength;
+      if (onProgress != null && percent != lastReportedPercent) {
+        lastReportedPercent = percent;
+        await onProgress(sent, contentLength);
+      }
+      return chunk;
+    });
 
-    // Send request and get response
-    var streamedResponse = await request.send().timeout(timeout);
+    await request.sink.addStream(uploadStream.timeout(timeout));
+    await request.sink.close();
+    var streamedResponse = await responseFuture.timeout(timeout);
     var response =
         await http_lib.Response.fromStream(streamedResponse).timeout(timeout);
 
@@ -333,5 +351,9 @@ Future<UploadFileResult> uploadFileBytes({
     // Catch-all for unexpected errors
     logger.error("Upload Failed: Unexpected Error", error: e, stackTrace: s);
     return UploadFileResult.failure(UploadFailureKind.unexpected);
+  } finally {
+    try {
+      await request?.sink.close();
+    } catch (_) {}
   }
 }

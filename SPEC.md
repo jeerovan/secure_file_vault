@@ -170,6 +170,15 @@ Adding a provider requires, at minimum:
 - Auth refresh is single-flight. Idempotent operations may retry once only when refresh changes authorization; non-idempotent POST operations require explicit retry opt-in.
 - Transfer and auth network operations use finite connection/response/stream timeouts.
 
+### 5.9 Resource and lifecycle safety
+
+- Transfer payloads and checksums must stream from disk; multipart payload size must not determine process memory growth.
+- Concurrent transfer execution is bounded by platform policy: mobile may run at most two transfers and desktop at most three unless profiling supports a deliberate policy change.
+- Backend, authentication, and upload HTTP clients are shared and lifecycle-managed. Injected clients retain explicit ownership; scoped clients close in `finally`.
+- Transfer progress is monotonic and uses a 0–100 scale. Multipart progress includes completed parts and current-part bytes where available.
+- Reconciliation, synchronization, storage-capacity, and task changes publish events. UI consumers must not poll SQLite on short periodic timers when equivalent events exist.
+- UI-triggered reconciliation, refresh, and required follow-up synchronization are awaited. Busy state is repaired in mounted lifecycle guards even after failure.
+
 ## 6. Security and Privacy Invariants
 
 These requirements are non-negotiable unless this specification is deliberately revised:

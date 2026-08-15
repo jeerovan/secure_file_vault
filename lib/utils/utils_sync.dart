@@ -74,9 +74,9 @@ class SyncUtils {
     await triggerSync(caller: caller);
   }
 
-  static void waitAndSyncChanges(String caller) {
+  static Future<void> waitAndSyncChanges(String caller) async {
     logger.info("wait and sync (Foreground)");
-    _instance.triggerSync(caller: caller);
+    await _instance.triggerSync(caller: caller);
   }
 
   Future<void> triggerSync({String caller = ""}) async {
@@ -86,6 +86,11 @@ class SyncUtils {
       return;
     }
 
+    EventStream().publish(AppEvent(
+      type: EventType.system,
+      id: 'metadata',
+      key: EventKey.running,
+    ));
     try {
       logger.info("sync request from $caller");
 
@@ -109,6 +114,11 @@ class SyncUtils {
       logger.error("Sync failed", error: e, stackTrace: stack);
     } finally {
       await lease.release();
+      EventStream().publish(AppEvent(
+        type: EventType.system,
+        id: 'metadata',
+        key: EventKey.stopped,
+      ));
     }
   }
 

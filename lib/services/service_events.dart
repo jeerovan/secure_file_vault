@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 
 enum EventType { settings, system }
@@ -48,12 +50,16 @@ class EventStream {
 
   // ValueNotifier to hold and notify about event data
   final ValueNotifier<AppEvent?> _eventNotifier = ValueNotifier(null);
+  final StreamController<AppEvent> _eventController =
+      StreamController<AppEvent>.broadcast(sync: true);
 
   // Method to publish a new event
   void publish(AppEvent event) {
     _eventNotifier.value = event;
+    _eventController.add(event);
   }
 
   // Getter for the notifier
   ValueNotifier<AppEvent?> get notifier => _eventNotifier;
+  Stream<AppEvent> get events => _eventController.stream;
 }

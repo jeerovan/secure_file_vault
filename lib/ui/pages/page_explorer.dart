@@ -83,8 +83,6 @@ class _FilePaneState extends State<FilePane> {
       ValueNotifier({});
   final ValueNotifier<bool> _isMultiSelectNotifier = ValueNotifier(false);
 
-  Timer? _refreshStateTimer;
-
   ModelItem? currentItem;
   ModelItem? previousItem;
   bool _isLoading = false;
@@ -103,27 +101,12 @@ class _FilePaneState extends State<FilePane> {
   void initState() {
     super.initState();
     EventStream().notifier.addListener(_handleAppEvents);
-    _loadFiles();
-    _refreshState();
-    _startRefreshStateTimer();
-  }
-
-  void _startRefreshStateTimer() {
-    _refreshStateTimer?.cancel();
-    _refreshStateTimer = Timer.periodic(const Duration(seconds: 2), (_) {
-      _loadFiles(isSilent: true);
-      _refreshState();
-    });
-  }
-
-  void _stopRefreshStateTimer() {
-    _refreshStateTimer?.cancel();
-    _refreshStateTimer = null;
+    unawaited(_loadFiles());
+    unawaited(_refreshState());
   }
 
   @override
   void dispose() {
-    _stopRefreshStateTimer();
     EventStream().notifier.removeListener(_handleAppEvents);
     _breadcrumbController.dispose();
     _itemsNotifier.dispose();
@@ -133,33 +116,16 @@ class _FilePaneState extends State<FilePane> {
   }
 
   Future<void> _refreshState() async {
-    bool reconOrSyncInProgress = await isRecordOrSyncInProgress();
-    if (reconOrSyncInProgress) {
-      if (mounted) {
-        setState(() {
-          _syncInProgress = true;
-        });
-      }
-    } else {
-      if (mounted) {
-        setState(() {
-          _syncInProgress = false;
-        });
-      }
-    }
-
-    bool storageFull = await ModelState.get(AppString.storageFull.string,
+    final reconOrSyncInProgress = await isRecordOrSyncInProgress();
+    final storageFull = await ModelState.get(AppString.storageFull.string,
             defaultValue: "no") ==
         "yes";
-    if (storageFull) {
-      if (mounted) {
-        setState(() {
-          _storageFull = true;
-        });
-      }
-    } else if (mounted) {
+    if (mounted &&
+        (_syncInProgress != reconOrSyncInProgress ||
+            _storageFull != storageFull)) {
       setState(() {
-        _storageFull = false;
+        _syncInProgress = reconOrSyncInProgress;
+        _storageFull = storageFull;
       });
     }
   }
@@ -175,7 +141,16 @@ class _FilePaneState extends State<FilePane> {
         break;
       case EventType.system:
         if (event.key == EventKey.signout) {
-          context.read<AppSetupState>().recheckStatus();
+          if (mounted) {
+            await context.read<AppSetupState>().recheckStatus();
+          }
+        } else if (event.key == EventKey.running ||
+            event.key == EventKey.stopped ||
+            event.key == EventKey.storageFull) {
+          await _refreshState();
+          if (event.key == EventKey.stopped) {
+            await _loadFiles(isSilent: true);
+          }
         }
         break;
     }
@@ -231,11 +206,16 @@ class _FilePaneState extends State<FilePane> {
     if (_syncInProgress) {
       return;
     }
-    setState(() {
-      _syncInProgress = true;
-    });
-    await SyncUtils().reconFolders(caller: "Explorer");
-    _loadFiles();
+    if (mounted) setState(() => _syncInProgress = true);
+    try {
+      await SyncUtils().reconFolders(caller: "Explorer");
+      await _loadFiles(isSilent: true);
+    } catch (error, stackTrace) {
+      logger.error("Root folder sync failed",
+          error: error, stackTrace: stackTrace);
+    } finally {
+      await _refreshState();
+    }
   }
 
   Future<void> _onTap(ModelItem item) async {
@@ -668,11 +648,18 @@ class _FilePaneState extends State<FilePane> {
         _syncInProgress = true;
       });
     }
-    SodiumSumo sodium = await SodiumSumoInit.init();
-    final reconService = ReconciliationService(sodium);
-    await reconService.reconcile(item);
-    _loadFiles();
-    SyncUtils.waitAndSyncChanges("Explorer");
+    try {
+      SodiumSumo sodium = await SodiumSumoInit.init();
+      final reconService = ReconciliationService(sodium);
+      await reconService.reconcile(item);
+      await _loadFiles(isSilent: true);
+      await SyncUtils.waitAndSyncChanges("Explorer");
+    } catch (error, stackTrace) {
+      logger.error("Folder reconciliation failed",
+          error: error, stackTrace: stackTrace);
+    } finally {
+      await _refreshState();
+    }
   }
 
   void addFolderConfirm(String folderPath, String? bookmark) {

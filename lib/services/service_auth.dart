@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -39,7 +40,7 @@ class NeonAuth {
     http.Client? httpClient,
     this.timeout = const Duration(seconds: 20),
   })  : _storage = storage ?? SecureStorage(),
-        _http = httpClient ?? http.Client(),
+        _http = httpClient ?? AppHttpClients.auth,
         _neonAuthUrl = AppEnv.neonAuthUrl {
     if (_neonAuthUrl.isEmpty) {
       throw StateError(

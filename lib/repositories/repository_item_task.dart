@@ -1,4 +1,5 @@
 import '../models/model_item_task.dart';
+import '../services/service_events.dart';
 import '../storage/storage_sqlite.dart';
 import '../utils/enums.dart';
 
@@ -6,16 +7,42 @@ class RepositoryItemTask {
   static final RepositoryItemTask instance = RepositoryItemTask._init();
   RepositoryItemTask._init();
 
-  // Create a broadcast stream so multiple widgets can listen simultaneously
-  Stream<Map<String, TaskStatus>>? _taskStream;
-
   Stream<Map<String, TaskStatus>> getTaskSnapshotStream() {
-    _taskStream ??= Stream.periodic(const Duration(seconds: 2), (tick) => tick)
-        .asyncMap((_) => fetchTaskSnapshot())
-        .distinct() // Do not emit if the data is identical to the previous fetch
-        .asBroadcastStream();
+    return _watchTaskSnapshots().distinct(_snapshotsEqual);
+  }
 
-    return _taskStream!;
+  Stream<Map<String, TaskStatus>> _watchTaskSnapshots() async* {
+    yield await fetchTaskSnapshot();
+    await for (final event in EventStream().events) {
+      if (event.type != EventType.system ||
+          !const {
+            EventKey.added,
+            EventKey.updated,
+            EventKey.removed,
+            EventKey.uploadProgress,
+            EventKey.downloadProgress,
+          }.contains(event.key)) {
+        continue;
+      }
+      yield await fetchTaskSnapshot();
+    }
+  }
+
+  bool _snapshotsEqual(
+    Map<String, TaskStatus> previous,
+    Map<String, TaskStatus> next,
+  ) {
+    if (previous.length != next.length) return false;
+    for (final entry in previous.entries) {
+      final candidate = next[entry.key];
+      if (candidate == null ||
+          candidate.task != entry.value.task ||
+          candidate.progress != entry.value.progress ||
+          candidate.state != entry.value.state) {
+        return false;
+      }
+    }
+    return true;
   }
 
   Future<Map<String, TaskStatus>> fetchTaskSnapshot() async {
@@ -29,6 +56,10 @@ class RepositoryItemTask {
           row['id'] as String: TaskStatus(
             task: row['task'] as int,
             progress: row['progress'] as int,
+            state: TransferTaskState.values.firstWhere(
+              (value) => value.name == row['state'],
+              orElse: () => TransferTaskState.pending,
+            ),
           )
       };
     } catch (e) {

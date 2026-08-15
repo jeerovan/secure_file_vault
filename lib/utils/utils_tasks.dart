@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/models/model_item.dart';
@@ -9,12 +10,13 @@ import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/models/model_state.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/services/service_reconciliation_coordinator.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
 import 'package:file_vault_bb/utils/utils_transfer_staging.dart';
-import 'package:flutter/foundation.dart';
+import 'package:file_vault_bb/utils/utils_transfer_policy.dart';
 import 'package:path/path.dart' as path_lib;
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -97,7 +99,9 @@ class TaskManager {
       }
 
       // Concurrency limits
-      final int maxConcurrentProcesses = 3;
+      final maxConcurrentProcesses = TransferConcurrencyPolicy.maxConcurrent(
+        isMobile: Platform.isAndroid || Platform.isIOS,
+      );
       bool tasksDispatched = false;
 
       while (_activeTaskIds.length < maxConcurrentProcesses) {
@@ -294,6 +298,12 @@ class TaskManager {
         if (status <= 0) {
           logger.error('Failed to select upload storage provider');
           await ModelState.set(AppString.storageFull.string, "yes");
+          EventStream().publish(AppEvent(
+            type: EventType.system,
+            id: modelFile.id,
+            key: EventKey.storageFull,
+            value: true,
+          ));
           await itemTask.markBlocked('storage_full');
           return false;
         } else {
@@ -303,6 +313,12 @@ class TaskManager {
           List<String> attrs = ["storage_id", "provider_id"];
           await modelFile.update(attrs);
           await ModelState.set(AppString.storageFull.string, "no");
+          EventStream().publish(AppEvent(
+            type: EventType.system,
+            id: modelFile.id,
+            key: EventKey.storageFull,
+            value: false,
+          ));
         }
       }
     }
@@ -450,11 +466,10 @@ class TaskManager {
         return false;
       }
     }
-    Uint8List fileBytes = await encryptedFile.readAsBytes();
     Map<String, String> headers = {};
 
     String sha1Hash = await _sha1ForFile(encryptedFile);
-    int contentLength = fileBytes.length;
+    int contentLength = await encryptedFile.length();
     String method = 'POST';
     if (uploadInfo["provider"] == "b2") {
       String? userId = await getSignedInUserId();
@@ -474,8 +489,24 @@ class TaskManager {
     }
     String uploadUrl = uploadInfo["url"];
     logger.info("Uploading encrypted file part");
-    final uploadResult = await uploadFileBytes(
-        method: method, bytes: fileBytes, url: uploadUrl, headers: headers);
+    final modelFile = await ModelFile.get(fileHash);
+    final partCount = modelFile?.parts ?? 1;
+    var lastProgress = itemTask.progress;
+    final uploadResult = await uploadFileStream(
+      method: method,
+      file: encryptedFile,
+      url: uploadUrl,
+      headers: headers,
+      onProgress: (sent, total) async {
+        final currentPartPercent = total <= 0 ? 100 : sent * 100 ~/ total;
+        final overall =
+            (((part - 1) * 100 + currentPartPercent) ~/ partCount).clamp(0, 99);
+        if (overall <= lastProgress) return;
+        lastProgress = overall;
+        itemTask.progress = overall;
+        await itemTask.update(["progress"]);
+      },
+    );
     // update uploaded
     if (uploadResult.succeeded) {
       logger.info("Encrypted file part uploaded");
@@ -498,7 +529,6 @@ class TaskManager {
       }
       await modelPart.update(partAttrs);
       // Broadcast upload progress
-      ModelFile? modelFile = await ModelFile.get(fileHash);
       if (modelFile != null) {
         int parts = modelFile.parts;
         int partsUploaded =

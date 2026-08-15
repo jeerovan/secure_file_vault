@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_vault_bb/services/service_logger.dart';
+import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -11,6 +12,7 @@ import 'package:http/http.dart' as http;
 class BackendApi {
   final SecureStorage _storage;
   final http.Client _http;
+  final bool _ownsHttpClient;
   final Uri _base;
   final Duration timeout;
   final Future<String?> Function()? _accessTokenProvider;
@@ -29,7 +31,8 @@ class BackendApi {
     Future<void> Function()? refreshAuth,
     this.timeout = const Duration(seconds: 30),
   })  : _storage = storage ?? SecureStorage(),
-        _http = httpClient ?? http.Client(),
+        _http = httpClient ?? AppHttpClients.backend,
+        _ownsHttpClient = httpClient != null,
         _accessTokenProvider = accessTokenProvider,
         _signedEmailIdProvider = signedEmailIdProvider,
         _deviceUuidProvider = deviceUuidProvider,
@@ -307,5 +310,8 @@ class BackendApi {
     }
   }
 
-  void close() => _http.close();
+  /// Shared default clients are closed by [AppHttpClients.closeAll].
+  void close() {
+    if (_ownsHttpClient) _http.close();
+  }
 }

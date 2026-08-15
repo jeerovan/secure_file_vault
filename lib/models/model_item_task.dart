@@ -2,6 +2,7 @@ import '../utils/common.dart';
 import '../utils/enums.dart';
 
 import '../storage/storage_sqlite.dart';
+import '../services/service_events.dart';
 
 enum TransferTaskState {
   pending,
@@ -15,8 +16,13 @@ enum TransferTaskState {
 class TaskStatus {
   final int task;
   final int progress;
+  final TransferTaskState state;
 
-  TaskStatus({required this.task, required this.progress});
+  TaskStatus({
+    required this.task,
+    required this.progress,
+    required this.state,
+  });
 }
 
 class ModelItemTask {
@@ -162,6 +168,7 @@ class ModelItemTask {
     final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     int inserted = await dbHelper.insert(Tables.itemTasks.string, map);
+    _publishChange(EventKey.added);
     return inserted;
   }
 
@@ -175,6 +182,7 @@ class ModelItemTask {
     }
     int updated =
         await dbHelper.update(Tables.itemTasks.string, updatedMap, id);
+    _publishChange(EventKey.updated);
     return updated;
   }
 
@@ -251,7 +259,7 @@ class ModelItemTask {
   Future<int> delete() async {
     final dbHelper = StorageSqlite.instance;
     int deleted = await dbHelper.delete(Tables.itemTasks.string, id);
-    // delete related categories
+    _publishChange(EventKey.removed);
     return deleted;
   }
 
@@ -259,5 +267,19 @@ class ModelItemTask {
     final dbHelper = StorageSqlite.instance;
     final db = await dbHelper.executor;
     await db.delete(Tables.itemTasks.string);
+    EventStream().publish(AppEvent(
+      type: EventType.system,
+      id: 'all',
+      key: EventKey.removed,
+    ));
+  }
+
+  void _publishChange(EventKey key) {
+    EventStream().publish(AppEvent(
+      type: EventType.system,
+      id: id,
+      key: key,
+      value: {'task': task, 'progress': progress, 'state': state.name},
+    ));
   }
 }

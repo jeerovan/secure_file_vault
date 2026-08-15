@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
@@ -86,10 +85,13 @@ void main() {
         await request.response.close();
       } catch (_) {}
     });
+    final directory = await Directory.systemTemp.createTemp('fife-upload-');
+    final source = File('${directory.path}/source');
+    await source.writeAsBytes([1, 2, 3]);
     try {
-      final result = await uploadFileBytes(
+      final result = await uploadFileStream(
         method: 'PUT',
-        bytes: Uint8List.fromList([1, 2, 3]),
+        file: source,
         url: 'http://${server.address.host}:${server.port}/file',
         headers: null,
         timeout: const Duration(milliseconds: 30),
@@ -99,6 +101,46 @@ void main() {
       expect(result.isRetryable, isTrue);
     } finally {
       await server.close(force: true);
+      await directory.delete(recursive: true);
+    }
+  });
+
+  test('upload streams complete file and reports monotonic progress', () async {
+    final server = await HttpServer.bind(InternetAddress.loopbackIPv4, 0);
+    var received = 0;
+    server.listen((request) async {
+      await for (final chunk in request) {
+        received += chunk.length;
+      }
+      request.response
+        ..statusCode = HttpStatus.ok
+        ..write('{}');
+      await request.response.close();
+    });
+    final directory = await Directory.systemTemp.createTemp('fife-stream-');
+    final source = File('${directory.path}/source');
+    const size = 512 * 1024;
+    await source.writeAsBytes(List<int>.filled(size, 7));
+    final progress = <int>[];
+    try {
+      final result = await uploadFileStream(
+        method: 'PUT',
+        file: source,
+        url: 'http://${server.address.host}:${server.port}/file',
+        headers: null,
+        onProgress: (sent, total) => progress.add(sent),
+      );
+
+      expect(result.succeeded, isTrue);
+      expect(received, size);
+      expect(progress, isNotEmpty);
+      expect(progress.last, size);
+      for (var index = 1; index < progress.length; index++) {
+        expect(progress[index], greaterThan(progress[index - 1]));
+      }
+    } finally {
+      await server.close(force: true);
+      await directory.delete(recursive: true);
     }
   });
 
