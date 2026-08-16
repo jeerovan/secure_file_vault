@@ -84,7 +84,6 @@ class _FilePaneState extends State<FilePane> {
   final ValueNotifier<bool> _isMultiSelectNotifier = ValueNotifier(false);
 
   ModelItem? currentItem;
-  ModelItem? previousItem;
   bool _isLoading = false;
   bool _isLocalPath = false;
   bool _isDeviceRoot = false;
@@ -180,21 +179,10 @@ class _FilePaneState extends State<FilePane> {
     _isDeviceRoot = currentItem?.id == deviceRootHash;
 
     if (mounted) {
-      if (currentItem != previousItem) {
-        // Folder changed: full update
-        _itemsNotifier.value = items;
-        previousItem = currentItem;
-      } else {
-        // Same folder: apply atomic changes
-        final currentList = _itemsNotifier.value;
-        final currentIds = currentList.map((e) => e.id).toSet();
-        final newIds = items.map((e) => e.id).toSet();
-
-        if (currentIds.length != newIds.length ||
-            currentIds.any((id) => !newIds.contains(id))) {
-          _itemsNotifier.value = items;
-        }
-      }
+      // Same-ID rows can still change name, size, hash, archive state, or
+      // timestamps during reconciliation. Always publish the fresh snapshot;
+      // comparing IDs alone leaves visible metadata stale until navigation.
+      _itemsNotifier.value = items;
 
       setState(() {
         _isLoading = false;

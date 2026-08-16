@@ -113,6 +113,8 @@ Adding a provider requires, at minimum:
 ### 5.1 Account and device access
 
 - Users must authenticate before accessing protected backend resources.
+- Builds that use the deployed FiFe backend must provide `API_BASE_URL` through `--dart-define`; onboarding provider discovery must fail with actionable configuration/network feedback rather than an empty or unusable screen.
+- A persisted test-account session must start without constructing or accessing Neon Auth configuration. Test credentials must not be committed to repository documentation or source.
 - Backend authorization must scope data to the authenticated user.
 - Registered-device state must be enforceable by the client and backend.
 - Sign-out and device reset must remove or invalidate sensitive local session state as appropriate.
@@ -186,6 +188,7 @@ Adding a provider requires, at minimum:
 - Transfer progress is monotonic and uses a 0–100 scale. Multipart progress includes completed parts and current-part bytes where available.
 - Reconciliation, synchronization, storage-capacity, and task changes publish events. UI consumers must not poll SQLite on short periodic timers when equivalent events exist.
 - UI-triggered reconciliation, refresh, and required follow-up synchronization are awaited. Busy state is repaired in mounted lifecycle guards even after failure.
+- Explorer publishes each fresh folder snapshot after reconciliation even when item IDs are unchanged; visible name, size, hash, archive state, and timestamps must not require navigation to refresh.
 
 ### 5.10 Confirmed reconciliation and transfer policies
 

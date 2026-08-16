@@ -722,6 +722,10 @@ Future<void> addTrustedCertificates() async {
 }
 
 Future<void> refreshNeonAuth() async {
+  // Test-account sessions intentionally have no Neon session cookie and may be
+  // built without NEON_AUTH. Skip before constructing NeonAuth so app startup
+  // remains valid after a test-account login.
+  if (simulateTesting()) return;
   if (await ModelSetting.getRaw(AppString.signedIn.string,
           defaultValue: "no") ==
       "yes") {
