@@ -4,6 +4,9 @@ class ChannelStorage {
   static const MethodChannel _channel =
       MethodChannel('com.jeerovan.fife/channel_storage');
 
+  static bool hasUsableBookmark(String? bookmark) =>
+      bookmark != null && bookmark.isNotEmpty && bookmark != 'sandboxed';
+
   static Future<Map<String, String>?> pickDirectory(
       {String? initialDirectory}) async {
     final Map<String, dynamic>? args =

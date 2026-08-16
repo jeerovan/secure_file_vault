@@ -120,18 +120,16 @@ class ReconciliationService {
 
       if (Platform.isIOS || Platform.isMacOS) {
         final bookmark = rootItem.bookmark;
-        if (bookmark == null || bookmark.isEmpty) {
+        if (!ChannelStorage.hasUsableBookmark(bookmark)) {
           return const ReconciliationResult(ReconciliationStatus.unavailable);
         }
-        if (Platform.isIOS) {
-          final accessPath = await ChannelStorage.startAccessing(bookmark);
-          if (accessPath == null) {
-            return const ReconciliationResult(ReconciliationStatus.unavailable);
-          }
-          acquiredAccessPath = accessPath;
-          directoryPath = accessPath;
-          logger.info("Platform directory access acquired");
+        final accessPath = await ChannelStorage.startAccessing(bookmark!);
+        if (accessPath == null) {
+          return const ReconciliationResult(ReconciliationStatus.unavailable);
         }
+        acquiredAccessPath = accessPath;
+        directoryPath = accessPath;
+        logger.info("Platform directory access acquired");
       }
       if (directoryPath == null || directoryPath.isEmpty) {
         return const ReconciliationResult(ReconciliationStatus.unavailable);

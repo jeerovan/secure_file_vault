@@ -222,8 +222,7 @@ class _FilePaneState extends State<FilePane> {
     if (Platform.isIOS || Platform.isMacOS) {
       String deviceHash = await getDeviceHash();
       if (item.parentId == deviceHash) {
-        if (item.bookmark == null ||
-            (item.bookmark != null && item.bookmark!.isEmpty)) {
+        if (!ChannelStorage.hasUsableBookmark(item.bookmark)) {
           if (item.path != null) {
             addSyncFolder(initialDirectory: item.path);
             return;
@@ -689,7 +688,7 @@ class _FilePaneState extends State<FilePane> {
   Future<void> addSyncFolder({String? initialDirectory}) async {
     String? folderPath;
     String? bookmark;
-    if (Platform.isIOS) {
+    if (Platform.isIOS || Platform.isMacOS) {
       final result = await ChannelStorage.pickDirectory(
           initialDirectory: initialDirectory);
       if (result != null) {
@@ -706,7 +705,7 @@ class _FilePaneState extends State<FilePane> {
       if (existingFolder == null) {
         addFolderConfirm(folderPath, bookmark);
       } else {
-        bookmark ??= "sandboxed";
+        bookmark ??= Platform.isMacOS || Platform.isIOS ? "" : "sandboxed";
         await ModelItem.updateBookmark(existingFolder.id, bookmark);
         await reconFolder(existingFolder);
       }

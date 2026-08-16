@@ -68,6 +68,14 @@ The `main` branch is the source branch for:
 
 Changes on `main` must preserve these four targets unless a change is explicitly platform-specific and safely isolated.
 
+Platform filesystem access rules:
+
+- macOS sandboxed folder selection must persist real security-scoped bookmark data, never a sentinel value;
+- macOS reconciliation must resolve and start bookmark access before scanning, fail closed when access cannot be acquired, and balance every successful start with a stop in `finally`;
+- legacy or missing macOS bookmarks require explicit folder re-selection;
+- filesystem identity must preserve exact names, including whitespace, case, and Unicode normalization differences where the host filesystem supports them;
+- symlinks are ignored during reconciliation and hidden directories are pruned according to the shared hidden-content policy.
+
 ### 3.2 iOS branch
 
 iOS is maintained and developed separately on the `ios` branch.

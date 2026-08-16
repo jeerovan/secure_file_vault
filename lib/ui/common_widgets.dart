@@ -12,6 +12,7 @@ import '../l10n/app_localizations.dart';
 import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../models/model_item_task.dart';
+import '../storage/storage_channel.dart';
 import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
 import 'package:flutter/material.dart';
@@ -1023,11 +1024,7 @@ class _FileListItemState extends State<FileListItem> {
     if (Platform.isIOS || Platform.isMacOS) {
       String deviceHash = await getDeviceHash();
       if (item.parentId == deviceHash) {
-        if (item.bookmark == null) {
-          return true;
-        } else if (item.bookmark!.isEmpty) {
-          return true;
-        }
+        return !ChannelStorage.hasUsableBookmark(item.bookmark);
       }
     }
     return false;
