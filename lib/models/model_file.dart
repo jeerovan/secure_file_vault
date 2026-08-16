@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../repositories/repository_entity.dart';
 import '../utils/utils_sync.dart';
 
 import '../utils/common.dart';
@@ -7,6 +8,9 @@ import '../utils/enums.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelFile {
+  static final RepositoryFile<ModelFile> _repository =
+      RepositoryFile<ModelFile>(decoder: fromMap);
+
   String id;
   int itemCount;
   int parts;
@@ -69,23 +73,8 @@ class ModelFile {
     );
   }
 
-  static Future<List<ModelFile>> pendingForUpload() async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.executor;
-    List<Map<String, dynamic>> rows = await db
-        .query(Tables.files.string, where: "uploaded_at = ?", whereArgs: [0]);
-    return await Future.wait(rows.map((map) => fromMap(map)));
-  }
-
   static Future<ModelFile?> get(String id) async {
-    final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> rows =
-        await dbHelper.getWithId(Tables.files.string, id);
-    if (rows.isNotEmpty) {
-      Map<String, dynamic> map = rows.first;
-      return await fromMap(map);
-    }
-    return null;
+    return _repository.get(id);
   }
 
   Future<void> updateCount(int count) async {
@@ -121,25 +110,7 @@ class ModelFile {
   }
 
   Future<int> upcertFromServer({bool overwrite = false}) async {
-    int result;
-    final dbHelper = StorageSqlite.instance;
-    Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows =
-        await dbHelper.getWithId(Tables.files.string, id);
-    if (rows.isEmpty) {
-      result = await dbHelper.insert(Tables.files.string, map);
-    } else if (overwrite) {
-      result = await dbHelper.update(Tables.files.string, map, id);
-    } else {
-      int existingUpdatedAt = rows[0]["updated_at"];
-      int incomingUpdatedAt = map["updated_at"];
-      if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update(Tables.files.string, map, id);
-      } else {
-        result = 0;
-      }
-    }
-    return result;
+    return _repository.upsertFromServer(toMap(), overwrite: overwrite);
   }
 
   Future<int> delete({bool pushToSync = true}) async {

@@ -179,6 +179,16 @@ Adding a provider requires, at minimum:
 - Reconciliation, synchronization, storage-capacity, and task changes publish events. UI consumers must not poll SQLite on short periodic timers when equivalent events exist.
 - UI-triggered reconciliation, refresh, and required follow-up synchronization are awaited. Busy state is repaired in mounted lifecycle guards even after failure.
 
+### 5.10 Confirmed reconciliation and transfer policies
+
+- A missing local file does not authorize broad metadata deletion. Reconciliation may remove metadata for never-uploaded content only when no upload task protects it; uploaded content remains represented until explicit archive/deletion policy handles it.
+- User removal of synchronized items records archive metadata. Cross-device permanent deletion and retention duration remain product decisions.
+- Existing destination files and directories are conflict boundaries: restore never overwrites them implicitly, and staging remains available for retry or user resolution.
+- Rename/move conflicts use conservative identity rules from Section 5.7. No timestamp-only or first-match rule may choose between ambiguous candidates.
+- A basename beginning with `.` excludes that entity. Excluded directories prune their entire subtree, and symbolic links are never followed during reconciliation.
+- Retryable transfers use persisted exponential backoff; blocked, failed, or cancelled work requires explicit requeue. Authentication retry remains limited to one safe/idempotent retry after changed authorization.
+- Item, file, part, and task models use typed repository boundaries for shared lookup, server-upsert, and task-queue persistence behavior. Raw SQL remains limited to specialized transactional/query operations.
+
 ## 6. Security and Privacy Invariants
 
 These requirements are non-negotiable unless this specification is deliberately revised:
@@ -277,8 +287,8 @@ For each change:
 
 These subjects need explicit decisions before an AI agent should materially change their behavior:
 
-- synchronization conflict-resolution rules;
-- deletion propagation, trash retention, and permanent-delete semantics;
+- synchronization conflict-resolution rules beyond the conservative identity and destination-conflict behavior in Section 5;
+- remote deletion propagation, trash retention duration, and permanent-delete semantics beyond the safety rules in Section 5;
 - offline queue ordering and user-facing retry controls;
 - multi-device limits and device-revocation behavior;
 - subscription tiers, quotas, and expiry behavior;

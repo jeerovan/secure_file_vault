@@ -1,7 +1,6 @@
 import '../utils/common.dart';
-import '../utils/enums.dart';
 
-import '../storage/storage_sqlite.dart';
+import '../repositories/repository_entity.dart';
 import '../services/service_events.dart';
 
 enum TransferTaskState {
@@ -27,6 +26,8 @@ class TaskStatus {
 
 class ModelItemTask {
   static const int maxRetryAttempts = 10;
+  static final RepositoryTask<ModelItemTask> _repository =
+      RepositoryTask<ModelItemTask>(decoder: fromMap);
   String id;
   int task;
   int progress;
@@ -78,14 +79,7 @@ class ModelItemTask {
   }
 
   static Future<ModelItemTask?> get(String id) async {
-    final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> list =
-        await dbHelper.getWithId(Tables.itemTasks.string, id);
-    if (list.isNotEmpty) {
-      Map<String, dynamic> map = list.first;
-      return await fromMap(map);
-    }
-    return null;
+    return _repository.get(id);
   }
 
   static Future<void> addTask(String id, int taskType) async {
@@ -115,73 +109,30 @@ class ModelItemTask {
   }
 
   static Future<void> recoverInterruptedTasks() async {
-    final db = await StorageSqlite.instance.executor;
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    await db.rawUpdate(
-      'UPDATE item_tasks SET state = ?, next_attempt_at = ?, '
-      'last_error = ?, updated_at = ? '
-      'WHERE state = ? AND next_attempt_at <= ?',
-      [
-        TransferTaskState.retryWaiting.name,
-        now,
-        'process_interrupted',
-        now,
-        TransferTaskState.running.name,
-        now,
-      ],
-    );
+    await _repository.recoverInterrupted(now: now);
   }
 
   static Future<String?> fetchPendingTask(Set<String> activeTasks) async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.executor;
-
-    String query = 'SELECT id FROM item_tasks WHERE '
-        'state IN (?, ?) AND next_attempt_at <= ?';
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
-    List<dynamic> args = [
-      TransferTaskState.pending.name,
-      TransferTaskState.retryWaiting.name,
-      now,
-    ];
-
-    // Dynamically exclude currently running taskIds (item_id)
-    if (activeTasks.isNotEmpty) {
-      final String placeholders =
-          List.filled(activeTasks.length, '?').join(',');
-      query += ' AND id NOT IN ($placeholders)';
-      args.addAll(activeTasks);
-    }
-
-    // Process oldest created/updated task first
-    query += ' ORDER BY updated_at ASC LIMIT 1';
-
-    final List<Map<String, dynamic>> results = await db.rawQuery(query, args);
-
-    if (results.isNotEmpty) {
-      return results.first['id'] as String;
-    }
-    return null;
+    return _repository.fetchPendingId(activeTasks, now: now);
   }
 
   Future<int> insert() async {
-    final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
-    int inserted = await dbHelper.insert(Tables.itemTasks.string, map);
+    int inserted = await _repository.insert(map);
     _publishChange(EventKey.added);
     return inserted;
   }
 
   Future<int> update(List<String> attrs) async {
-    final dbHelper = StorageSqlite.instance;
     Map<String, dynamic> map = toMap();
     updatedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
     Map<String, dynamic> updatedMap = {"updated_at": updatedAt};
     for (String attr in attrs) {
       updatedMap[attr] = map[attr];
     }
-    int updated =
-        await dbHelper.update(Tables.itemTasks.string, updatedMap, id);
+    int updated = await _repository.update(id, updatedMap);
     _publishChange(EventKey.updated);
     return updated;
   }
@@ -257,16 +208,13 @@ class ModelItemTask {
   }
 
   Future<int> delete() async {
-    final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete(Tables.itemTasks.string, id);
+    int deleted = await _repository.delete(id);
     _publishChange(EventKey.removed);
     return deleted;
   }
 
   static Future<void> clear() async {
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.executor;
-    await db.delete(Tables.itemTasks.string);
+    await _repository.clear();
     EventStream().publish(AppEvent(
       type: EventType.system,
       id: 'all',

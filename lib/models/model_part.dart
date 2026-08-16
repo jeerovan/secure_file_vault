@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../repositories/repository_entity.dart';
 import '../utils/enums.dart';
 import '../utils/utils_sync.dart';
 
@@ -7,6 +8,9 @@ import '../utils/common.dart';
 import '../storage/storage_sqlite.dart';
 
 class ModelPart {
+  static final RepositoryPart<ModelPart> _repository =
+      RepositoryPart<ModelPart>(decoder: fromMap);
+
   String id;
   int size;
   int uploaded;
@@ -126,14 +130,7 @@ class ModelPart {
   }
 
   static Future<ModelPart?> get(String id) async {
-    final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> list =
-        await dbHelper.getWithId(Tables.parts.string, id);
-    if (list.isNotEmpty) {
-      Map<String, dynamic> map = list.first;
-      return await fromMap(map);
-    }
-    return null;
+    return _repository.get(id);
   }
 
   Future<int> insert() async {
@@ -164,31 +161,11 @@ class ModelPart {
   }
 
   Future<int> upcertFromServer({bool overwrite = false}) async {
-    int result;
-    final dbHelper = StorageSqlite.instance;
-    Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows =
-        await dbHelper.getWithId(Tables.parts.string, id);
-    if (rows.isEmpty) {
-      result = await dbHelper.insert(Tables.parts.string, map);
-    } else if (overwrite) {
-      result = await dbHelper.update(Tables.parts.string, map, id);
-    } else {
-      int existingUpdatedAt = rows[0]["updated_at"];
-      int incomingUpdatedAt = map["updated_at"];
-      if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update(Tables.parts.string, map, id);
-      } else {
-        result = 0;
-      }
-    }
-    return result;
+    return _repository.upsertFromServer(toMap(), overwrite: overwrite);
   }
 
   Future<int> delete() async {
-    final dbHelper = StorageSqlite.instance;
-    int deleted = await dbHelper.delete(Tables.parts.string, id);
-    return deleted;
+    return _repository.delete(id);
   }
 
   static Future<void> deletedFromServer(String id, int remoteUpdatedAt) async {

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_vault_bb/models/model_part.dart';
+import 'package:file_vault_bb/repositories/repository_entity.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -17,6 +18,9 @@ import 'package:path/path.dart' as path_lib;
 import 'model_file.dart';
 
 class ModelItem {
+  static final RepositoryItem<ModelItem> _repository =
+      RepositoryItem<ModelItem>(decoder: fromMap);
+
   String id;
   String? path;
   String name;
@@ -304,14 +308,7 @@ class ModelItem {
 
   static Future<ModelItem?> syncFolderExists(String path) async {
     String deviceRootPathHash = await getDeviceHash();
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.executor;
-    List<Map<String, dynamic>> rows = await db.query(
-      Tables.items.string,
-      where: "path = ? AND parent_id = ?",
-      whereArgs: [path, deviceRootPathHash],
-    );
-    return rows.isNotEmpty ? await fromMap(rows.first) : null;
+    return _repository.findSyncedFolder(deviceRootPathHash, path);
   }
 
   static Future<void> resetScanState(String rootItemId) async {
@@ -336,21 +333,9 @@ class ModelItem {
         where: "id = ?", whereArgs: [itemId]);
   }
 
-  static Future<void> removeAllSyncedFolders() async {
-    final deviceRoot = await getDeviceHash();
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.executor;
-    await db.delete(Tables.items.string,
-        where: "path != ? AND parent_id = ?", whereArgs: [null, deviceRoot]);
-  }
-
   static Future<List<ModelItem>> getAllSyncedFolders() async {
     final deviceRoot = await getDeviceHash();
-    final dbHelper = StorageSqlite.instance;
-    final db = await dbHelper.executor;
-    List<Map<String, dynamic>> rows = await db.query(Tables.items.string,
-        where: "parent_id = ?", whereArgs: [deviceRoot]);
-    return await Future.wait(rows.map((map) => fromMap(map)));
+    return _repository.getSyncedFolders(deviceRoot);
   }
 
   static Future<int> getItemCountForFileHash(String hash) async {
@@ -399,14 +384,7 @@ class ModelItem {
   }
 
   static Future<ModelItem?> get(String id) async {
-    final dbHelper = StorageSqlite.instance;
-    List<Map<String, dynamic>> rows =
-        await dbHelper.getWithId(Tables.items.string, id);
-    if (rows.isNotEmpty) {
-      Map<String, dynamic> map = rows.first;
-      return await fromMap(map);
-    }
-    return null;
+    return _repository.get(id);
   }
 
   static Future<bool> wouldCreateCycle(
@@ -458,23 +436,7 @@ class ModelItem {
   }
 
   Future<int> upcertFromServer() async {
-    int result;
-    final dbHelper = StorageSqlite.instance;
-    Map<String, dynamic> map = toMap();
-    List<Map<String, dynamic>> rows =
-        await dbHelper.getWithId(Tables.items.string, id);
-    if (rows.isEmpty) {
-      result = await dbHelper.insert(Tables.items.string, map);
-    } else {
-      int existingUpdatedAt = rows[0]["updated_at"];
-      int incomingUpdatedAt = map["updated_at"];
-      if (incomingUpdatedAt > existingUpdatedAt) {
-        result = await dbHelper.update(Tables.items.string, map, id);
-      } else {
-        result = 0;
-      }
-    }
-    return result;
+    return _repository.upsertFromServer(toMap());
   }
 
   Future<int> delete({bool pushToSync = true}) async {
@@ -535,21 +497,6 @@ class ModelItem {
           await ModelPart.deleteAllForFile(fileId, parts);
         }
       }
-    }
-  }
-
-  Future<void> forceRemove() async {
-    String fileId = fileHash!;
-    ModelFile? modelFile = await ModelFile.get(fileId);
-    await delete();
-    if (modelFile != null) {
-      int count = 0;
-      await modelFile.updateCount(count);
-      int parts = modelFile.parts;
-      // Changes saved, delete file
-      await modelFile.delete();
-      // Delete all parts along
-      await ModelPart.deleteAllForFile(fileId, parts);
     }
   }
 }
