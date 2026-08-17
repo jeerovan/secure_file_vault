@@ -147,11 +147,9 @@ class StorageSqlite {
   }
 
   Future close() async {
-    // Guard: Never close the DB from a background isolate.
-    // Doing so would kill the shared native connection for the foreground app.
     if (_currentMode == ExecutionMode.foregroundService) {
       logger.warning(
-          "Ignored close() call from background isolate to protect foreground UI.");
+          "Ignored close() call from foreground-service isolate while it is active.");
       return;
     }
 

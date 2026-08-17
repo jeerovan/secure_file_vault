@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:file_vault_bb/models/model_setting.dart';
-import 'package:file_vault_bb/services/service_foreground.dart';
+import 'package:file_vault_bb/services/service_background_execution.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/model_file.dart';
@@ -89,7 +88,7 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (Platform.isAndroid) {
       PermissionStatus notificationPermission =
           await Permission.notification.status;
       bool quickSyncRequired = ModelSetting.get(
@@ -103,12 +102,18 @@ class AppSetupState extends ChangeNotifier {
           notifyListeners();
           return;
         } else {
-          bool isForegroundServiceRunning =
-              await FlutterForegroundTask.isRunningService;
-          if (!isForegroundServiceRunning) {
-            await ServiceForeground.instance.start();
-          }
+          await BackgroundExecutionService.instance.setEnabled(true);
         }
+      }
+    }
+
+    if (Platform.isIOS) {
+      final backgroundSyncRequired = ModelSetting.get(
+              AppString.backgroundSync.string,
+              defaultValue: "no") ==
+          "yes";
+      if (backgroundSyncRequired) {
+        await BackgroundExecutionService.instance.setEnabled(true);
       }
     }
 

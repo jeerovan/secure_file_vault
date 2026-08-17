@@ -33,9 +33,6 @@ migrate_working_dir/
 /build/
 **/doc/api/
 
-# Different pubspec.yaml in iOS branch
-pubspec.lock
-
 # Android
 **/android/.gradle
 **/android/captures/

@@ -1,23 +1,21 @@
 import UIKit
 import Flutter
+import UniformTypeIdentifiers
 import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
-    
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-
         WorkmanagerPlugin.registerPeriodicTask(
-          withIdentifier: "com.jeerovan.fife.data_sync",
-          frequency: NSNumber(value: 16 * 60)
+            withIdentifier: "com.jeerovan.fife.data_sync",
+            earliestBeginInSeconds: NSNumber(value: 15 * 60)
         )
         WorkmanagerPlugin.setPluginRegistrantCallback { registry in
             GeneratedPluginRegistrant.register(with: registry)
             if let flutterEngine = registry as? FlutterEngine {
-                // Background MethodChannel binding
                 SecureStorageManager.register(with: flutterEngine.binaryMessenger)
             }
         }
@@ -33,12 +31,16 @@ import workmanager_apple
 // MARK: - Secure Storage Manager Singleton
 
 class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
-    
-    // Singleton instance to hold state securely across the app lifecycle
     static let shared = SecureStorageManager()
-    
-    var activeUrls: [String: URL] = [:]
-    var pendingResult: FlutterResult? // Temporarily holds the Flutter result while picker is open
+
+    private struct ActiveAccess {
+        let url: URL
+        var referenceCount: Int
+    }
+
+    private var activeAccesses: [String: ActiveAccess] = [:]
+    private let accessLock = NSLock()
+    private var pendingResult: FlutterResult?
     
     // Static method that can be called from the C-style closure without capturing context
     static func register(with messenger: FlutterBinaryMessenger) {
@@ -71,8 +73,11 @@ class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
     // MARK: - Directory Picker Logic
     
     func pickDirectory(initialPath: String?,result: @escaping FlutterResult) {
-        // Must run on main thread since it's a UI operation
         DispatchQueue.main.async {
+            guard self.pendingResult == nil else {
+                result(FlutterError(code: "PICKER_BUSY", message: "A document picker is already active", details: nil))
+                return
+            }
             self.pendingResult = result
             let documentPicker = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
             if let path = initialPath {
@@ -125,26 +130,62 @@ class SecureStorageManager: NSObject, UIDocumentPickerDelegate {
         
         do {
             var isStale = false
-            let url = try URL(resolvingBookmarkData: data, options: .withoutUI, relativeTo: nil, bookmarkDataIsStale: &isStale)
-            
-            if url.startAccessingSecurityScopedResource() {
-                activeUrls[url.path] = url
-                result(url.path)
-            } else {
-                result(FlutterError(code: "ACCESS_DENIED", message: "Failed to access scoped resource", details: nil))
+            let resolvedURL = try URL(
+                resolvingBookmarkData: data,
+                options: .withoutUI,
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            )
+            guard !isStale else {
+                result(FlutterError(code: "STALE_BOOKMARK", message: "Folder access must be selected again", details: nil))
+                return
             }
+
+            let canonicalURL = resolvedURL.resolvingSymlinksInPath().standardizedFileURL
+            let canonicalPath = canonicalURL.path
+
+            accessLock.lock()
+            if var activeAccess = activeAccesses[canonicalPath] {
+                activeAccess.referenceCount += 1
+                activeAccesses[canonicalPath] = activeAccess
+                accessLock.unlock()
+                result(canonicalPath)
+                return
+            }
+
+            guard canonicalURL.startAccessingSecurityScopedResource() else {
+                accessLock.unlock()
+                result(FlutterError(code: "ACCESS_DENIED", message: "Failed to access scoped resource", details: nil))
+                return
+            }
+            activeAccesses[canonicalPath] = ActiveAccess(url: canonicalURL, referenceCount: 1)
+            accessLock.unlock()
+            result(canonicalPath)
         } catch {
             result(FlutterError(code: "RESOLVE_ERROR", message: error.localizedDescription, details: nil))
         }
     }
     
     func stopAccessing(path: String, result: FlutterResult) {
-        if let url = activeUrls[path] {
-            url.stopAccessingSecurityScopedResource()
-            activeUrls.removeValue(forKey: path)
-            result(true)
-        } else {
-            result(false) // Was not actively accessing
+        let canonicalPath = URL(fileURLWithPath: path)
+            .resolvingSymlinksInPath()
+            .standardizedFileURL.path
+
+        accessLock.lock()
+        guard var activeAccess = activeAccesses[canonicalPath] else {
+            accessLock.unlock()
+            result(false)
+            return
         }
+
+        activeAccess.referenceCount -= 1
+        if activeAccess.referenceCount == 0 {
+            activeAccesses.removeValue(forKey: canonicalPath)
+            activeAccess.url.stopAccessingSecurityScopedResource()
+        } else {
+            activeAccesses[canonicalPath] = activeAccess
+        }
+        accessLock.unlock()
+        result(true)
     }
 }

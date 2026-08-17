@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:file_vault_bb/services/service_events.dart';
-import 'package:file_vault_bb/services/service_foreground.dart';
+import 'package:file_vault_bb/services/service_background_execution.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -40,6 +40,9 @@ class SettingsPageState extends State<SettingsPage> {
           AppString.syncWithNotification.string,
           defaultValue: "yes") ==
       "yes";
+  bool backgroundSyncEnabled =
+      ModelSetting.get(AppString.backgroundSync.string, defaultValue: "no") ==
+          "yes";
   late bool isDarkMode;
   String? emailId = "";
 
@@ -97,14 +100,25 @@ class SettingsPageState extends State<SettingsPage> {
   Future<void> setQuickSyncWithNotification(bool enable) async {
     if (enable) {
       await ModelSetting.set(AppString.syncWithNotification.string, "yes");
-      ServiceForeground.instance.start();
+      await BackgroundExecutionService.instance.setEnabled(true);
     } else {
       await ModelSetting.set(AppString.syncWithNotification.string, "no");
-      ServiceForeground.instance.stop();
+      await BackgroundExecutionService.instance.setEnabled(false);
     }
     if (mounted) {
       setState(() {
         quickSyncEnabled = enable;
+      });
+    }
+  }
+
+  Future<void> setIosBackgroundSync(bool enable) async {
+    await ModelSetting.set(
+        AppString.backgroundSync.string, enable ? "yes" : "no");
+    await BackgroundExecutionService.instance.setEnabled(enable);
+    if (mounted) {
+      setState(() {
+        backgroundSyncEnabled = enable;
       });
     }
   }
@@ -392,7 +406,7 @@ class SettingsPageState extends State<SettingsPage> {
                     onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
                   ),
                 ),
-                if (Platform.isAndroid || Platform.isIOS)
+                if (Platform.isAndroid)
                   ListTile(
                     leading:
                         const Icon(LucideIcons.refreshCcw, color: Colors.grey),
@@ -403,6 +417,22 @@ class SettingsPageState extends State<SettingsPage> {
                       child: Switch(
                         value: quickSyncEnabled,
                         onChanged: setQuickSyncWithNotification,
+                      ),
+                    ),
+                  ),
+                if (Platform.isIOS)
+                  ListTile(
+                    leading:
+                        const Icon(LucideIcons.refreshCcw, color: Colors.grey),
+                    title: const Text('Background sync'),
+                    subtitle: const Text(
+                        'iOS schedules sync opportunistically and requires Background App Refresh.'),
+                    horizontalTitleGap: 24.0,
+                    trailing: Transform.scale(
+                      scale: 0.7,
+                      child: Switch(
+                        value: backgroundSyncEnabled,
+                        onChanged: setIosBackgroundSync,
                       ),
                     ),
                   ),

@@ -55,7 +55,7 @@ enum ExecutionStatus {
   success,
 }
 
-enum ExecutionMode { mainApp, foregroundService }
+enum ExecutionMode { mainApp, foregroundService, backgroundWorker }
 
 extension ExecutionModeExtension on ExecutionMode {
   String get string {
@@ -64,6 +64,8 @@ extension ExecutionModeExtension on ExecutionMode {
         return "MainApp";
       case ExecutionMode.foregroundService:
         return "ForegroundService";
+      case ExecutionMode.backgroundWorker:
+        return "BackgroundWorker";
     }
   }
 }
@@ -93,6 +95,7 @@ enum AppString {
   // Sync
   lastReconRunningAt,
   syncWithNotification,
+  backgroundSync,
   encryptionKeyType,
   hasEncryptionKeys,
   lastSyncRunningAt,
@@ -146,6 +149,8 @@ extension AppStringExtension on AppString {
         return "last_recon_running_at";
       case AppString.syncWithNotification:
         return "sync_with_notification";
+      case AppString.backgroundSync:
+        return "background_sync";
       case AppString.theme:
         return "theme";
       case AppString.onboarding:

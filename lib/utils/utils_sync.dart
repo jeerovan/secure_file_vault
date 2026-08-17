@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/services/service_foreground.dart';
+import 'package:file_vault_bb/services/service_background_execution.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../models/model_change.dart';
@@ -50,28 +51,36 @@ class SyncUtils {
   }
 
   // Pass inBackground flag to determine if we should await everything
-  Future<void> reconFolders({String caller = ""}) async {
+  Future<bool> reconFolders({String caller = ""}) async {
     String? userId = await getSignedInUserId();
     if (userId == null) {
-      return;
+      return true;
     }
     bool canAccessSecureStorage = await canSync();
     if (!canAccessSecureStorage) {
       logger.error("Can not access secure storage");
-      return;
+      return true;
     }
 
     logger.info("Start recon from $caller");
+    bool reconciliationSucceeded = true;
     try {
       SodiumSumo sodium = await SodiumSumoInit.init();
       List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
       for (ModelItem syncFolder in syncFolders) {
-        await ReconciliationService(sodium).reconcile(syncFolder);
+        final result =
+            await ReconciliationService(sodium).reconcile(syncFolder);
+        if (result.status == ReconciliationStatus.failed ||
+            result.status == ReconciliationStatus.partial) {
+          reconciliationSucceeded = false;
+        }
       }
-    } catch (e) {
-      logger.error("Recon failed", error: e);
+    } catch (e, stackTrace) {
+      logger.error("Recon failed", error: e, stackTrace: stackTrace);
+      reconciliationSucceeded = false;
     }
-    await triggerSync(caller: caller);
+    final syncSucceeded = await triggerSync(caller: caller);
+    return reconciliationSucceeded && syncSucceeded;
   }
 
   static Future<void> waitAndSyncChanges(String caller) async {
@@ -79,11 +88,11 @@ class SyncUtils {
     await _instance.triggerSync(caller: caller);
   }
 
-  Future<void> triggerSync({String caller = ""}) async {
+  Future<bool> triggerSync({String caller = ""}) async {
     final lease = await ExclusiveOperationCoordinator.tryAcquire('metadata');
     if (lease == null) {
       logger.warning("Sync already in progress. from $caller.");
-      return;
+      return true;
     }
 
     EventStream().publish(AppEvent(
@@ -97,21 +106,22 @@ class SyncUtils {
       bool canSync = await SyncUtils.canSync();
       if (!canSync) {
         logger.warning("can not sync. from $caller");
-        return;
+        return true;
       }
 
       // Note: Workmanager already ensures network connectivity via constraints on Android
       bool hasInternet = await InternetConnection().hasInternetAccess;
       if (!hasInternet) {
         logger.info("No internet, from $caller");
-        return;
+        return false;
       }
       // refresh jwt first
       await refreshNeonAuth();
 
-      await _performSyncOperations(caller);
+      return await _performSyncOperations(caller);
     } catch (e, stack) {
       logger.error("Sync failed", error: e, stackTrace: stack);
+      return false;
     } finally {
       await lease.release();
       EventStream().publish(AppEvent(
@@ -122,29 +132,26 @@ class SyncUtils {
     }
   }
 
-  Future<void> _performSyncOperations(String caller) async {
+  Future<bool> _performSyncOperations(String caller) async {
     logger.info("$caller|------------------START----------------");
     try {
       bool removed = await checkDeviceStatus();
-      if (!removed) {
-        bool allfetched = await fetchMapChanges(); // fetch server changes first
-        bool allpushed = false;
-        if (allfetched) {
-          allpushed =
-              await pushMapChanges(); // send items/files changes before client uploads them
-        }
-        if (allpushed) {
-          await TaskManager.init(); // upload actual files
-          bool _ = await pushMapChanges(); // send upload changes to server
-        }
-      }
+      if (removed) return true;
+      final allFetched = await fetchMapChanges();
+      if (!allFetched) return false;
+      final allPushed = await pushMapChanges();
+      if (!allPushed) return false;
+      await TaskManager.init();
+      return await pushMapChanges();
     } catch (e, s) {
-      logger.error("⚠ Sync failed", error: e.toString(), stackTrace: s);
+      logger.error("Sync failed", error: e, stackTrace: s);
+      return false;
+    } finally {
+      if (simulateTesting()) {
+        await Future.delayed(const Duration(seconds: 10));
+      }
+      logger.info("$caller|------------------ENDED----------------");
     }
-    if (simulateTesting()) {
-      await Future.delayed(const Duration(seconds: 10));
-    }
-    logger.info("$caller|------------------ENDED----------------");
   }
 
   // to sync, one must have masterKey with
@@ -222,9 +229,10 @@ class SyncUtils {
           await Purchases.logOut();
         }
       }
-      if (Platform.isAndroid || Platform.isIOS) {
-        // Stop foreground service
+      if (Platform.isAndroid) {
         await ServiceForeground.instance.stop();
+      } else if (Platform.isIOS) {
+        await BackgroundExecutionService.instance.cancelIosWork();
       }
       final locale = await ModelSetting.getRaw(AppString.locale.string);
       await storage.clear();

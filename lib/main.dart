@@ -1,6 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
-import 'package:file_vault_bb/services/service_foreground.dart';
+import 'package:file_vault_bb/services/service_background_execution.dart';
 import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/ui/pages/page_notification_permission.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
@@ -30,6 +31,7 @@ import '../utils/common.dart';
 import '../utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:workmanager/workmanager.dart';
 import 'utils/service_foreground_handler.dart';
 import 'utils/utils_sync.dart';
 
@@ -38,15 +40,38 @@ void startForegroundTask() {
   FlutterForegroundTask.setTaskHandler(ForegroundTaskHandler());
 }
 
+@pragma('vm:entry-point')
+void backgroundTaskDispatcher() {
+  Workmanager().executeTask((taskName, inputData) async {
+    final workerLogger = AppLogger(prefixes: ['Workmanager']);
+    return runBackgroundWorkerSafely(
+      task: () async {
+        WidgetsFlutterBinding.ensureInitialized();
+        await StorageSqlite.initialize(ExecutionMode.backgroundWorker);
+        await initializeDependencies(ExecutionMode.backgroundWorker);
+        return SyncUtils().reconFolders(caller: 'Workmanager');
+      },
+      cleanupActions: [
+        BackgroundCleanupAction('HTTP clients', AppHttpClients.closeAll),
+        BackgroundCleanupAction('SQLite', StorageSqlite.instance.close),
+      ],
+      onError: (operation, error, stackTrace) {
+        workerLogger.error(
+          'Background sync $operation failed',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      },
+    );
+  });
+}
+
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppLogger.clearLegacyLogsOnce();
   await StorageSqlite.initialize(ExecutionMode.mainApp);
   await initializeInParallel();
-  if (Platform.isIOS || Platform.isAndroid) {
-    ServiceForeground.instance.init();
-  }
   SecureStorage prefs = SecureStorage();
   runApp(
     MultiProvider(
@@ -64,11 +89,35 @@ Future<void> main() async {
 }
 
 Future<void> initializeInParallel() async {
-  await Future.wait([
+  final startupTasks = <Future<void>>[
     initializeDependencies(ExecutionMode.mainApp),
-    initializeAutoSyncOnDesktop(),
     initializePurchases(),
-  ]);
+  ];
+  if (Platform.isIOS) {
+    // iOS background execution is optional and must never delay foreground UI.
+    unawaited(initializeBackgroundExecution());
+  } else {
+    startupTasks.add(initializeBackgroundExecution());
+  }
+  await Future.wait(startupTasks);
+}
+
+Future<void> initializeBackgroundExecution() async {
+  try {
+    await BackgroundExecutionService.instance.initialize(
+      iosCallbackDispatcher: backgroundTaskDispatcher,
+    );
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      SyncUtils().startAutoSync();
+      logger.info("initialized autosync");
+    }
+  } catch (error, stackTrace) {
+    logger.error(
+      "Background execution initialization failed; foreground app will continue",
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
 }
 
 Future<void> initializePurchases() async {
@@ -87,13 +136,6 @@ Future<void> initializePurchases() async {
       await Purchases.configure(configuration);
       logger.info("Initialized purchases");
     }
-  }
-}
-
-Future<void> initializeAutoSyncOnDesktop() async {
-  if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-    SyncUtils().startAutoSync();
-    logger.info("initialized autosync");
   }
 }
 

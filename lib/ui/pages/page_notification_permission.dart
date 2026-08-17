@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:file_vault_bb/services/service_foreground.dart';
+import 'package:file_vault_bb/services/service_background_execution.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
@@ -58,7 +58,7 @@ class _NotificationPermissionPageState extends State<NotificationPermissionPage>
     PermissionStatus notificationPermission =
         await Permission.notification.status;
     if (notificationPermission.isGranted) {
-      await ServiceForeground.instance.start();
+      await BackgroundExecutionService.instance.setEnabled(true);
       if (mounted) {
         await context.read<AppSetupState>().recheckStatus();
       }
@@ -74,7 +74,7 @@ class _NotificationPermissionPageState extends State<NotificationPermissionPage>
       if (!mounted) return;
 
       if (notificationPermission.isGranted) {
-        await ServiceForeground.instance.start();
+        await BackgroundExecutionService.instance.setEnabled(true);
         if (mounted) {
           await context.read<AppSetupState>().recheckStatus();
         }

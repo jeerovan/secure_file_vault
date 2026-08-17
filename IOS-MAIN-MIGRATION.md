@@ -1,6 +1,6 @@
 # iOS Support on `main`: Migration and macOS Handoff
 
-**Status:** READY FOR MACOS IMPLEMENTATION  
+**Status:** MERGE CANDIDATE WITH OPT-IN FAIL-SAFE BACKGROUND SYNC; PHYSICAL VALIDATION PENDING
 **Prepared:** 2026-08-16  
 **Remote state verified:** 2026-08-16  
 **Recommended base:** `origin/main` at `402466d`  
@@ -121,25 +121,43 @@ Required invariants:
 
 ### Phase A — Establish migration branch
 
-**Status:** REMOTE MAIN READY; MACOS CHECKOUT NOT STARTED
+**Status:** MACOS BASELINE VERIFIED; IOS BUILD BLOCKED ON PHASE B DEPENDENCY RESTORATION
 
 - [x] Push latest repaired main commits; `main` and `origin/main` now both resolve to `402466d`.
-- [ ] Commit this guide alone on `feat/ios-main-support` from main.
-- [ ] Clone/fetch `feat/ios-main-support` on macOS and verify its main parent is `402466d`.
-- [ ] Confirm analyzer is clean and all 57 main tests pass before migration edits.
-- [ ] Record Xcode, Flutter, Dart, CocoaPods, and physical-device versions.
+- [x] Commit this guide alone on `feat/ios-main-support` from main.
+- [x] Clone/fetch `feat/ios-main-support` on macOS and verify its main parent is `402466d`.
+- [x] Confirm analyzer is clean and the 57-test main suite passes before migration edits.
+- [x] Record Xcode, Flutter, Dart, and CocoaPods versions.
+- [ ] Record a physical-device version when a supported iPhone or iPad is connected.
+
+MacOS baseline recorded on 2026-08-16:
+
+- branch `feat/ios-main-support` at `d20854d`, with direct parent `402466d`;
+- Flutter `3.41.9` stable, Dart `3.11.5`, DevTools `2.54.2`;
+- Xcode `26.2` (`17C52`) and CocoaPods `1.16.2`;
+- macOS `26.5.2` (`25F84`) on Apple silicon;
+- analyzer clean;
+- 57-test suite successful: 56 executed tests passed and the Linux-only test was skipped as designed on macOS;
+- no physical iOS device connected during the baseline;
+- no-codesign iOS debug build reached Swift compilation, then failed because repaired main's `AppDelegate.swift` imports `workmanager_apple` while main's `pubspec.yaml` intentionally does not yet include Workmanager. Restoring that dependency belongs to Phase B; no Phase B edits were made during this baseline.
+- subsequent migration validation used an iPhone 16e simulator running iOS 26.2; the migrated app built, launched, rendered onboarding, and reported no Dart runtime errors;
+- the simulator test-account secret-key flow completed after native Workmanager task registration was added; `com.jeerovan.fife.data_sync` was submitted without the prior `NSInternalInconsistencyException`/`SIGABRT` crash;
+- the final simulator smoke test rendered the signed-in Explorer after pinning `path_provider_foundation` to `2.5.1`, avoiding the upstream `2.6.0` Objective-C native-assets loader regression;
+- the expanded suite completed with 67 passing tests and the expected Linux-only skip; analyzer, unsigned iOS device build, Android debug build, and Android profile build all passed from the final dependency lock;
+- Android validation used an Android 17/API 37 arm64 emulator with JDK 21; the migrated debug app built, installed, launched, and remained running without Dart runtime errors, and the profile APK build also succeeded.
 
 ### Phase B — Restore iOS build dependencies safely
 
-**Status:** NOT STARTED
+**Status:** IMPLEMENTED; ANDROID DEBUG/PROFILE BUILDS VALIDATED
 
-- [ ] Add `workmanager` to main's dependencies.
-- [ ] Retain `flutter_foreground_task`, `permission_handler`, and `file_picker`; Android still needs them.
-- [ ] Do not add Firebase packages during the first migration slice.
-- [ ] Regenerate and commit `pubspec.lock` from macOS.
-- [ ] Set one consistent minimum iOS target. Prefer 15 unless product requirements demand iOS 14.
-- [ ] Set the same target in Xcode project, Podfile, and generated pod build settings.
-- [ ] Run `pod install` through normal Flutter tooling and open `ios/Runner.xcworkspace`, not the project file.
+- [x] Add `workmanager` to main's dependencies.
+- [x] Retain `flutter_foreground_task`, `permission_handler`, and `file_picker`; Android still needs them.
+- [x] Do not add Firebase packages during the first migration slice.
+- [x] Regenerate `pubspec.lock` from macOS.
+- [ ] Commit `pubspec.lock` with the migration changes.
+- [x] Set one consistent minimum iOS target. Prefer 15 unless product requirements demand iOS 14.
+- [x] Set the same target in Xcode project, Podfile, and generated pod build settings.
+- [x] Run `pod install` through normal Flutter tooling; use `ios/Runner.xcworkspace` for manual Xcode work.
 
 Acceptance:
 
@@ -149,17 +167,17 @@ Acceptance:
 
 ### Phase C — Repair native iOS bookmarks
 
-**Status:** NOT STARTED
+**Status:** IMPLEMENTED; PHYSICAL REVOCATION/RESTORATION VALIDATION PENDING
 
-- [ ] Port directory picker and MethodChannel registration from `ios/Runner/AppDelegate.swift`.
-- [ ] Register the storage channel for both foreground engine and Workmanager background engine.
-- [ ] Preserve main's `ChannelStorage.hasUsableBookmark` checks.
-- [ ] Return the resolved path from `startAccessing`.
-- [ ] Pass that resolved path—not bookmark data—to `stopAccessing`.
-- [ ] Add reference counts keyed by canonical resolved path.
-- [ ] Detect stale bookmarks. Refresh stored bookmark data when possible; otherwise require explicit re-selection.
-- [ ] Never present a document picker from a headless background isolate.
-- [ ] Release all acquired resources in `finally`.
+- [x] Port directory picker and MethodChannel registration from `ios/Runner/AppDelegate.swift`.
+- [x] Register the storage channel for both foreground engine and Workmanager background engine.
+- [x] Preserve main's `ChannelStorage.hasUsableBookmark` checks.
+- [x] Return the resolved path from `startAccessing`.
+- [x] Pass that resolved path—not bookmark data—to `stopAccessing`.
+- [x] Add reference counts keyed by canonical resolved path.
+- [x] Detect stale bookmarks and require explicit re-selection instead of reusing invalid access.
+- [x] Never present a document picker from a headless background isolate.
+- [x] Release all acquired resources in `finally`.
 
 Acceptance:
 
@@ -170,17 +188,20 @@ Acceptance:
 
 ### Phase D — Add platform-specific execution service
 
-**Status:** NOT STARTED
+**Status:** CORE IMPLEMENTATION COMPLETE
 
-- [ ] Replace direct platform checks scattered through startup/setup/settings with one execution service.
-- [ ] Initialize `ServiceForeground` only on Android.
-- [ ] Schedule Workmanager only on iOS.
-- [ ] Keep desktop autosync behavior unchanged.
-- [ ] Add a dedicated `ExecutionMode.backgroundWorker` or equivalent; do not pretend the iOS isolate is an Android foreground service.
-- [ ] Add `@pragma('vm:entry-point')` to the top-level Workmanager dispatcher.
-- [ ] Initialize bindings, SQLite, settings cache, crypto, auth, clients, and logger inside the background isolate.
-- [ ] Close isolate-owned resources on completion without closing resources owned by another isolate.
-- [ ] Make scheduling idempotent and cancellable when user signs out or disables background sync.
+- [x] Replace direct platform checks scattered through startup/setup/settings with one execution service.
+- [x] Initialize `ServiceForeground` only on Android.
+- [x] Schedule Workmanager only on iOS.
+- [x] Keep desktop autosync behavior unchanged.
+- [x] Add a dedicated `ExecutionMode.backgroundWorker` or equivalent; do not pretend the iOS isolate is an Android foreground service.
+- [x] Add `@pragma('vm:entry-point')` to the top-level Workmanager dispatcher.
+- [x] Initialize bindings, SQLite, settings cache, crypto, auth, clients, and logger inside the background isolate.
+- [x] Close isolate-owned resources on completion without closing resources owned by another isolate.
+- [x] Make scheduling idempotent and cancellable when user signs out or disables background sync.
+- [x] Keep iOS background sync off by default until the user explicitly enables it.
+- [x] Keep Workmanager initialization off the foreground startup critical path.
+- [x] Contain initialization, scheduling, cancellation, execution, and cleanup failures without propagating them into the foreground app.
 
 Suggested task identifier:
 
@@ -192,7 +213,7 @@ Keep identifier identical in Dart, AppDelegate registration, and `BGTaskSchedule
 
 ### Phase E — Make background work bounded and resumable
 
-**Status:** NOT STARTED
+**Status:** DEFERRED FOR PHYSICAL VALIDATION; MANUAL SYNC REMAINS PRIMARY
 
 - [ ] Pass one absolute deadline through reconciliation, sync, and task dispatch.
 - [ ] Reserve cleanup/commit time before deadline.
@@ -208,15 +229,15 @@ For reliable large transfers, evaluate native background `URLSession`. Workmanag
 
 ### Phase F — Correct onboarding and settings
 
-**Status:** NOT STARTED
+**Status:** PLATFORM ONBOARDING/SETTINGS IMPLEMENTED
 
-- [ ] Show broad storage permission only on Android.
-- [ ] Show Android foreground-notification permission only when Android quick sync is enabled.
-- [ ] Do not request a persistent-notification permission for iOS Workmanager.
-- [ ] Add an iOS background-sync setting separate from Android's “sync with notification” setting.
-- [ ] Explain that iOS scheduling is opportunistic and requires Background App Refresh.
-- [ ] Trigger safe foreground reconciliation on Explorer startup/resume through main's awaited coordinator.
-- [ ] Preserve lifecycle guards and same-ID Explorer snapshot refresh from main.
+- [x] Show broad storage permission only on Android.
+- [x] Show Android foreground-notification permission only when Android quick sync is enabled.
+- [x] Do not request a persistent-notification permission for iOS Workmanager.
+- [x] Add an iOS background-sync setting separate from Android's “sync with notification” setting.
+- [x] Explain that iOS scheduling is opportunistic and requires Background App Refresh.
+- [x] Trigger safe foreground reconciliation on Explorer startup/resume through main's awaited coordinator.
+- [x] Preserve lifecycle guards and same-ID Explorer snapshot refresh from main.
 
 ### Phase G — Optional silent push
 
@@ -233,17 +254,20 @@ Do this only if server-triggered sync materially improves product behavior.
 
 ### Phase H — Tests and physical validation
 
-**Status:** NOT STARTED
+**Status:** IN PROGRESS
 
 Automated:
 
-- [ ] Main's full analyzer remains clean.
-- [ ] All existing 57 tests pass.
-- [ ] Platform-selection tests prove Android never schedules Workmanager and iOS never starts foreground service.
+- [x] Main's full analyzer remains clean.
+- [x] All existing 57 tests pass; the expanded suite passes 67 tests with one expected Linux-only skip.
+- [x] Platform-selection tests prove Android never schedules Workmanager and iOS never starts foreground service.
+- [x] Failure-injection tests prove Workmanager initialization, scheduling, cancellation, execution, and cleanup errors are contained.
+- [x] Cross-language configuration test keeps the Dart, AppDelegate, and Info.plist task identifier aligned.
 - [ ] MethodChannel tests cover usable, malformed, stale, denied, and balanced bookmarks.
 - [ ] Background callback tests cover initialization failure, no account, no network, busy lease, partial progress, timeout, retryable failure, and success.
-- [ ] Reconciliation tests run unchanged on shared code.
-- [ ] Android debug/profile builds pass after iOS integration.
+- [x] Reconciliation tests run unchanged on shared code.
+- [x] Android debug build passes after iOS integration.
+- [x] Android profile build passes after iOS integration.
 
 Physical iPhone/iPad:
 
@@ -262,11 +286,11 @@ Physical iPhone/iPad:
 
 ## 7. Xcode Configuration Checklist
 
-- [ ] Deployment target consistent and supported by all pods.
-- [ ] Background Modes capability enabled.
-- [ ] Background fetch enabled if using periodic fetch.
-- [ ] Background processing enabled for BGProcessingTask.
-- [ ] `BGTaskSchedulerPermittedIdentifiers` contains exact registered identifiers.
+- [x] Deployment target consistent and supported by all pods.
+- [x] Background Modes capability enabled.
+- [x] Background fetch enabled for periodic refresh.
+- [x] Background processing mode enabled.
+- [x] `BGTaskSchedulerPermittedIdentifiers` contains exact registered identifiers.
 - [ ] App signing team and bundle identifier correct.
 - [ ] iCloud/document-provider behavior tested where supported.
 - [ ] Push Notifications capability and entitlement present only if Phase G is enabled.
@@ -316,10 +340,30 @@ Do not embed `NEON_AUTH`, test credentials, signing secrets, or Git credentials 
 
 ## 9. Definition of Done
 
-iOS support may be declared part of `main` only when:
+### Merge eligibility without a physical iOS device
+
+This migration slice is eligible for `main` because background sync is an
+optional enhancement rather than a correctness dependency:
+
+- iOS background sync defaults to disabled and requires explicit opt-in;
+- manual sync remains available through the foreground reconciliation path;
+- background initialization does not block foreground startup;
+- scheduler and worker failures are logged, contained, and reported as task
+  failure without escaping into the foreground application;
+- cleanup actions are independently guarded so one cleanup failure cannot skip
+  later cleanup or crash the foreground application;
+- analyzer, tests, simulator smoke test, iOS build, and Android builds pass.
+
+Physical iPhone/iPad checks remain required before claiming that opportunistic
+background execution and real document-provider behavior are production
+validated. They do not block merging this fail-safe, opt-in implementation.
+
+### Production validation
+
+iOS background support may be declared physically validated only when:
 
 1. Android foreground service behavior remains physically validated.
-2. iOS Workmanager behavior is physically validated on at least one supported iPhone.
+2. iOS Workmanager behavior is physically validated on at least one supported iPhone or iPad.
 3. Bookmark restoration, revocation, staleness, and release are validated.
 4. Main's reconciliation and transfer safety invariants remain unchanged.
 5. Analyzer and full test suite pass.
