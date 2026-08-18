@@ -19,6 +19,8 @@ class BackendApi {
   final Future<String?> Function()? _signedEmailIdProvider;
   final Future<String> Function()? _deviceUuidProvider;
   final Future<void> Function() _refreshAuth;
+  final bool Function()? _localTestingProvider;
+  final String? _localTestTokenOverride;
   final logger = AppLogger(prefixes: ["BackendAPI"]);
 
   BackendApi({
@@ -29,6 +31,8 @@ class BackendApi {
     Future<String?> Function()? signedEmailIdProvider,
     Future<String> Function()? deviceUuidProvider,
     Future<void> Function()? refreshAuth,
+    bool Function()? localTestingProvider,
+    String? localTestTokenOverride,
     this.timeout = const Duration(seconds: 30),
   })  : _storage = storage ?? SecureStorage(),
         _http = httpClient ?? AppHttpClients.backend,
@@ -37,15 +41,19 @@ class BackendApi {
         _signedEmailIdProvider = signedEmailIdProvider,
         _deviceUuidProvider = deviceUuidProvider,
         _refreshAuth = refreshAuth ?? refreshNeonAuth,
-        _base = Uri.parse(
-            _normalizeBaseUrl(baseUrlOverride ?? '${AppEnv.apiBaseUrl}/api')) {
-    final raw = (baseUrlOverride ?? '${AppEnv.apiBaseUrl}/api').trim();
+        _localTestingProvider = localTestingProvider,
+        _localTestTokenOverride = localTestTokenOverride,
+        _base = Uri.parse(_normalizeBaseUrl(
+            baseUrlOverride ?? '${AppEnv.effectiveApiBaseUrl}/api')) {
+    final raw = (baseUrlOverride ?? '${AppEnv.effectiveApiBaseUrl}/api').trim();
     if (raw.isEmpty) {
       throw StateError(
         'API_BASE_URL is empty. Set --dart-define=API_BASE_URL=https://your.domain',
       );
     }
   }
+
+  bool get _isLocalTesting => _localTestingProvider?.call() ?? localTesting();
 
   static String _normalizeBaseUrl(String url) {
     final trimmed = url.trim();
@@ -55,6 +63,15 @@ class BackendApi {
 
   Future<String?> _getAccessToken() async {
     if (_accessTokenProvider != null) return _accessTokenProvider();
+    if (_isLocalTesting) {
+      final token = _localTestTokenOverride ?? AppEnv.localTestAuthToken;
+      if (token.isEmpty) {
+        throw StateError(
+          'LOCAL_TEST_AUTH_TOKEN is required for local integration testing.',
+        );
+      }
+      return token;
+    }
     String? jwtToken = await _storage.read(key: AppString.jwtToken.string);
     /* if (jwtToken != null) {
       logger.info(jwtToken);
@@ -84,7 +101,7 @@ class BackendApi {
       'Content-Type': 'application/json',
       if (withAuth && accessToken != null)
         'Authorization': 'Bearer $accessToken',
-      'Service': 'neon'
+      'Service': _isLocalTesting ? 'local-test' : 'neon'
     };
     if (extra != null) h.addAll(extra);
     final deviceUuid = await (_deviceUuidProvider?.call() ?? getDeviceUuid());
@@ -200,6 +217,7 @@ class BackendApi {
   }
 
   Future<bool> _shouldAuthenticate() async {
+    if (_isLocalTesting) return true;
     final signedEmailId =
         await (_signedEmailIdProvider?.call() ?? getSignedInEmailId());
     return signedEmailId != null && signedEmailId != testEmailId;
@@ -214,7 +232,10 @@ class BackendApi {
     final initialHeaders =
         await _headers(withAuth: withAuth, extra: extraHeaders);
     var response = await send(initialHeaders).timeout(timeout);
-    if (withAuth && retryUnauthorized && _isUnauthorized(response)) {
+    if (withAuth &&
+        retryUnauthorized &&
+        !_isLocalTesting &&
+        _isUnauthorized(response)) {
       final previousAuthorization = initialHeaders['Authorization'];
       await _refreshAuth();
       final refreshedHeaders =

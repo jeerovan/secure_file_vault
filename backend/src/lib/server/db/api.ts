@@ -42,6 +42,11 @@ import {
 import { deleteFileFromStorage } from '../deleteWorker';
 import type { Db, Tx } from '.';
 
+export type InitialUserStorage = {
+	providerId: number;
+	credentials: Record<string, unknown>;
+};
+
 export async function getUserByRemoteId(
 	db: Db | Tx,
 	remoteId: string,
@@ -78,9 +83,10 @@ export async function addUser(
 	supabaseId: string,
 	email: string,
 	cipher: string,
-	nonce: string
+	nonce: string,
+	initialStorage?: InitialUserStorage
 ) {
-	await db.transaction(async (tx) => {
+	return await db.transaction(async (tx) => {
 		const [newUser] = await tx
 			.insert(user)
 			.values({
@@ -96,11 +102,35 @@ export async function addUser(
 			[UserDataKeys.DEVICE_UUID]: 'Server'
 		});
 
+		if (initialStorage) {
+			const [providerEntry] = await tx
+				.select()
+				.from(provider)
+				.where(eq(provider[ProviderKeys.ID], initialStorage.providerId))
+				.limit(1);
+			if (!providerEntry) throw new Error('Initial storage provider is not registered');
+			const [newCredential] = await tx
+				.insert(credential)
+				.values({
+					[CredentialKeys.USER_ID]: newUser[UserKeys.ID],
+					[CredentialKeys.PROVIDER_ID]: initialStorage.providerId,
+					[CredentialKeys.CREDENTIALS]: initialStorage.credentials
+				})
+				.returning();
+			await addStorage(
+				tx,
+				newUser[UserKeys.ID],
+				newCredential[CredentialKeys.ID],
+				providerEntry[ProviderKeys.FREE_BYTES],
+				providerEntry[ProviderKeys.FREE_BYTES],
+				providerEntry[ProviderKeys.PRIORITY],
+				{}
+			);
+		}
+
 		// add default fife storage for this user
 		const fifeUser = await getUserByRemoteId(tx, 'fife');
-		if (!fifeUser) {
-			return;
-		}
+		if (!fifeUser) return newUser;
 
 		const fifeCredentials = await getUserCredential(
 			tx,
@@ -126,7 +156,12 @@ export async function addUser(
 				);
 			}
 		}
+		return newUser;
 	});
+}
+
+export async function deleteUser(db: Db | Tx, userId: number) {
+	await db.delete(user).where(eq(user[UserKeys.ID], userId));
 }
 
 export async function getUserData(db: Db | Tx, userId: number) {

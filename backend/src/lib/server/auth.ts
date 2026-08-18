@@ -5,6 +5,9 @@ import { ErrorCode, UserKeys } from './db/keys';
 import type { Db, Tx } from './db/index';
 import * as jose from 'jose';
 import type { KVNamespace } from '@cloudflare/workers-types';
+import { env } from '$env/dynamic/private';
+import { dev } from '$app/environment';
+import { getLocalTestIdentity, tokensMatch } from './localTest';
 
 export interface AuthUser {
 	authorized: boolean;
@@ -13,6 +16,7 @@ export interface AuthUser {
 	email?: string;
 	deviceUuid?: string;
 	message?: number;
+	localTesting?: boolean;
 }
 
 /**
@@ -32,16 +36,51 @@ async function hashToken(token: string): Promise<string> {
 export async function requireAuth(
 	db: Db | Tx,
 	request: Request,
-	kv: KVNamespace // Pass the bound KV from event.platform?.env
+	kv?: KVNamespace // Pass the bound KV from event.platform?.env
 ): Promise<AuthUser> {
 	const authHeader = request.headers.get('authorization');
 	const device_uuid = request.headers.get('device_uuid') || undefined;
+	const serviceHeader = request.headers.get('service');
 
 	if (!authHeader?.startsWith('Bearer ')) {
 		return { authorized: false, message: ErrorCode.UNAUTHORIZED };
 	}
 
 	const token = authHeader.split(' ')[1];
+	if (serviceHeader === 'local-test') {
+		let identity;
+		try {
+			identity = dev ? getLocalTestIdentity(env) : null;
+		} catch (error) {
+			console.error('Local test authentication is not configured correctly', error);
+			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+		}
+		if (!identity || !(await tokensMatch(token, identity.token))) {
+			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+		}
+		const userEntry = await getUserByRemoteAuthId(db, identity.remoteAuthId);
+		if (!userEntry) {
+			return {
+				authorized: false,
+				remoteAuthId: identity.remoteAuthId,
+				email: identity.email,
+				deviceUuid: device_uuid,
+				message: ErrorCode.NO_USER,
+				localTesting: true
+			};
+		}
+		if (userEntry[UserKeys.EMAIL] !== identity.email) {
+			return { authorized: false, message: ErrorCode.UNAUTHORIZED };
+		}
+		return {
+			authorized: true,
+			remoteAuthId: identity.remoteAuthId,
+			email: identity.email,
+			deviceUuid: device_uuid,
+			userId: userEntry[UserKeys.ID],
+			localTesting: true
+		};
+	}
 	const cacheKey = `auth:${await hashToken(token)}`;
 
 	// 1. Check KV Cache First
@@ -53,7 +92,6 @@ export async function requireAuth(
 		}
 	}
 
-	const serviceHeader = request.headers.get('service');
 	let authResult: AuthUser;
 	let expirationSeconds: number | undefined;
 

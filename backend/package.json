@@ -5,6 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
+		"dev:local": "vite dev --host 0.0.0.0",
 		"build": "vite build",
 		"preview:dev": "vite preview",
 		"preview:prod": "npm run build && wrangler pages dev .svelte-kit/cloudflare",

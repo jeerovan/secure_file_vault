@@ -31,7 +31,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   @override
   void initState() {
     super.initState();
-    if (revenueCatSupported) {
+    if (subscriptionsSupported) {
       _initializeData();
     } else {
       loadFromLocal();
@@ -244,12 +244,12 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                                     .proBenefitSyncTenDevices,
                               ],
                               buttonAction:
-                                  revenueCatSupported ? _purchasePlan : null,
+                                  subscriptionsSupported ? _purchasePlan : null,
                             ),
                             const SizedBox(height: 24),
-                            if (revenueCatSupported) PrivacyTermsWidget(),
+                            if (subscriptionsSupported) PrivacyTermsWidget(),
                             const SizedBox(height: 24),
-                            if (revenueCatSupported)
+                            if (subscriptionsSupported)
                               TextButton(
                                 onPressed: _restorePurchases,
                                 child: Text(
@@ -370,7 +370,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          if (revenueCatSupported)
+          if (subscriptionsSupported)
             TextButton.icon(
               onPressed: _manageSubscription,
               icon: Icon(
@@ -454,7 +454,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
             ],
           ),
           const SizedBox(height: 8),
-          if (revenueCatSupported)
+          if (subscriptionsSupported)
             Text(
               price,
               style: theme.textTheme.titleMedium?.copyWith(
@@ -505,7 +505,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   elevation: 0,
                 ),
                 child: Text(
-                  revenueCatSupported
+                  subscriptionsSupported
                       ? AppLocalizations.of(context)!.subscribeNow
                       : AppLocalizations.of(context)!.subscribeOnMobileApp,
                   style: const TextStyle(

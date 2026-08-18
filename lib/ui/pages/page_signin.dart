@@ -82,12 +82,13 @@ class _PageSigninState extends State<PageSignin> {
     });
 
     try {
-      if (email == testEmailId) {
+      if (isLocalTestingEmail(email)) {
+        await ModelSetting.set(AppString.localTesting.string, "yes");
+        await _completeSignin(AppEnv.localTestUserId, email);
+        return;
+      } else if (email == testEmailId) {
         await Future.delayed(const Duration(seconds: 1));
         await ModelSetting.set(AppString.simulateTesting.string, "yes");
-      } else if (email == localTestEmailId) {
-        await Future.delayed(const Duration(seconds: 1));
-        await ModelSetting.set(AppString.localTesting.string, "yes");
       } else {
         final response = await NeonAuth().sendOTP(email);
         if (response.statusCode != 200) {
@@ -154,25 +155,7 @@ class _PageSigninState extends State<PageSignin> {
 
       logger.info("Login Successful");
 
-      ModelProfile profile =
-          await ModelProfile.fromMap({"id": userId, "email": email});
-      await profile.insert();
-
-      ModelItem deviceItem = await ModelItem.fromMap({
-        "id": "fife",
-        "name": "FiFe",
-        "is_folder": 1,
-      });
-      await deviceItem.insert();
-      await ModelSetting.set(AppString.signedIn.string, "yes");
-
-      if (revenueCatSupported && !simulateTesting()) {
-        await Purchases.logIn(userId);
-      }
-
-      if (!mounted) return;
-      final appSetup = context.read<AppSetupState>();
-      await appSetup.completeSignin();
+      await _completeSignin(userId, email);
     } catch (e, s) {
       logger.error("verifyOtp", error: e, stackTrace: s);
       _showOtpVerifyError();
@@ -183,6 +166,27 @@ class _PageSigninState extends State<PageSignin> {
         });
       }
     }
+  }
+
+  Future<void> _completeSignin(String userId, String profileEmail) async {
+    final profile =
+        await ModelProfile.fromMap({"id": userId, "email": profileEmail});
+    await profile.insert();
+
+    final deviceItem = await ModelItem.fromMap({
+      "id": "fife",
+      "name": "FiFe",
+      "is_folder": 1,
+    });
+    await deviceItem.insert();
+    await ModelSetting.set(AppString.signedIn.string, "yes");
+
+    if (subscriptionsSupported && !simulateTesting()) {
+      await Purchases.logIn(userId);
+    }
+
+    if (!mounted) return;
+    await context.read<AppSetupState>().completeSignin();
   }
 
   void _showOtpVerifyError() {

@@ -37,6 +37,34 @@ class AppEnv {
       String.fromEnvironment('RC_KEY_ANDROID', defaultValue: '');
   static const String rcIosKey =
       String.fromEnvironment('RC_KEY_IOS', defaultValue: '');
+  static const bool localTestingBuild =
+      bool.fromEnvironment('LOCAL_TESTING', defaultValue: false);
+  static const String localApiBaseUrl =
+      String.fromEnvironment('LOCAL_API_BASE_URL', defaultValue: '');
+  static const String localTestAuthToken =
+      String.fromEnvironment('LOCAL_TEST_AUTH_TOKEN', defaultValue: '');
+  static const String localTestUserId = String.fromEnvironment(
+    'LOCAL_TEST_USER_ID',
+    defaultValue: 'local-integration-user',
+  );
+
+  static String resolveApiBaseUrl({
+    required bool localBuild,
+    required bool android,
+    required String productionUrl,
+    String localOverride = '',
+  }) {
+    if (!localBuild) return productionUrl;
+    if (localOverride.trim().isNotEmpty) return localOverride.trim();
+    return android ? 'http://10.0.2.2:5173' : 'http://localhost:5173';
+  }
+
+  static String get effectiveApiBaseUrl => resolveApiBaseUrl(
+        localBuild: localTestingBuild,
+        android: Platform.isAndroid,
+        productionUrl: apiBaseUrl,
+        localOverride: localApiBaseUrl,
+      );
 }
 
 bool canUseVideoPlayer =
@@ -51,12 +79,19 @@ bool simulateTesting() {
 }
 
 bool localTesting() {
-  return ModelSetting.get(AppString.localTesting.string, defaultValue: "no") ==
-      "yes";
+  return AppEnv.localTestingBuild &&
+      ModelSetting.get(AppString.localTesting.string, defaultValue: "no") ==
+          "yes";
 }
+
+bool isLocalTestingEmail(String email) =>
+    AppEnv.localTestingBuild && email.trim().toLowerCase() == localTestEmailId;
 
 bool revenueCatSupported =
     Platform.isIOS || Platform.isAndroid || Platform.isMacOS;
+
+bool get subscriptionsSupported =>
+    revenueCatSupported && !AppEnv.localTestingBuild;
 
 bool runningOnMobile = Platform.isAndroid || Platform.isIOS;
 
@@ -731,7 +766,7 @@ Future<void> refreshNeonAuth() async {
   // Test-account sessions intentionally have no Neon session cookie and may be
   // built without NEON_AUTH. Skip before constructing NeonAuth so app startup
   // remains valid after a test-account login.
-  if (simulateTesting()) return;
+  if (simulateTesting() || localTesting()) return;
   if (await ModelSetting.getRaw(AppString.signedIn.string,
           defaultValue: "no") ==
       "yes") {

@@ -33,7 +33,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
   void initState() {
     super.initState();
     fetchStorage();
-    if (revenueCatSupported) {
+    if (subscriptionsSupported) {
       _initializeData();
     } else {
       loadFromLocal();

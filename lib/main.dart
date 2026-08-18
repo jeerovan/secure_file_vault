@@ -121,7 +121,7 @@ Future<void> initializeBackgroundExecution() async {
 }
 
 Future<void> initializePurchases() async {
-  if (revenueCatSupported) {
+  if (subscriptionsSupported) {
     String rcKey = "";
     if (Platform.isAndroid) {
       rcKey = AppEnv.rcAndroidKey;

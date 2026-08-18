@@ -25,6 +25,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   final api = BackendApi();
   bool processing = false;
   String appName = AppString.appName.string;
+  Map<String, dynamic>? _pendingKeys;
 
   @override
   void initState() {
@@ -41,8 +42,11 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
     SodiumSumo sodium = await SodiumSumoInit.init();
     CryptoUtils cryptoUtils = CryptoUtils(sodium);
 
-    ExecutionResult generationResult = cryptoUtils.generateKeys();
-    Map<String, dynamic> keys = generationResult.getResult()!;
+    if (_pendingKeys == null) {
+      ExecutionResult generationResult = cryptoUtils.generateKeys();
+      _pendingKeys = generationResult.getResult()!;
+    }
+    Map<String, dynamic> keys = _pendingKeys!;
     Map<String, dynamic> privateKeys = keys[AppString.privateKeys.string];
     Map<String, dynamic> serverKeys = keys[AppString.serverKeys.string];
     try {
@@ -87,6 +91,7 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
           key: AppString.fileHashKey.string,
           value: fileHashKeyBase64,
         );
+        _pendingKeys = null;
         if (mounted) {
           await context.read<AppSetupState>().showAccessKeys();
         }
@@ -94,9 +99,11 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
     } catch (e, s) {
       logger.error("generateKeys", error: e, stackTrace: s);
     }
-    setState(() {
-      processing = false;
-    });
+    if (mounted) {
+      setState(() {
+        processing = false;
+      });
+    }
   }
 
   @override

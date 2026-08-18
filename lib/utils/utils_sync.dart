@@ -197,7 +197,12 @@ class SyncUtils {
     if (userId != null) {
       String deviceUuid = await getDeviceUuid();
       try {
-        if (!simulateTesting()) {
+        if (localTesting()) {
+          final api = BackendApi();
+          final response =
+              await api.post(endpoint: '/local-test/reset', jsonBody: {});
+          if (response["success"] != 1) return false;
+        } else if (!simulateTesting()) {
           if (deviceUuid.isNotEmpty) {
             final api = BackendApi();
             final response = await api.post(
@@ -223,7 +228,7 @@ class SyncUtils {
   static Future<bool> resetDevice() async {
     SecureStorage storage = SecureStorage();
     try {
-      if (!simulateTesting() && revenueCatSupported) {
+      if (!simulateTesting() && subscriptionsSupported) {
         final isAnonymous = await Purchases.isAnonymous;
         if (!isAnonymous) {
           await Purchases.logOut();
