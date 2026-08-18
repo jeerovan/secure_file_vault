@@ -146,16 +146,10 @@ class _PageLogsState extends State<PageLogs> {
                           // To show newest at bottom, we need the list to be [oldest, ..., newest]
                           // and access them as logs[logs.length - 1 - index]
                           final log = logs[logs.length - 1 - index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            child: ListTile(
-                              title: Text(
-                                log,
-                                style: const TextStyle(fontSize: 10),
-                              ),
+                          return ListTile(
+                            title: Text(
+                              log,
+                              style: const TextStyle(fontSize: 12),
                             ),
                           );
                         },
