@@ -451,6 +451,13 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
           size: 24,
         );
         break;
+      case 6:
+        iconData = Icon(
+          LucideIcons.cloud,
+          color: theme.colorScheme.onSecondaryContainer,
+          size: 24,
+        );
+        break;
       default:
         iconData = Icon(
           LucideIcons.hardDrive,

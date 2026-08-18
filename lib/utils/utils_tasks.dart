@@ -328,8 +328,10 @@ class TaskManager {
     }
 
     Map<String, dynamic> uploadInfo = {};
-    if (modelFile.providerId == StorageProvider.fife.value ||
-        modelFile.providerId == StorageProvider.backblaze.value) {
+    final storageProvider =
+        StorageProviderExtension.fromValue(modelFile.providerId ?? 0);
+    if (storageProvider == StorageProvider.fife ||
+        storageProvider == StorageProvider.backblaze) {
       final urlResult = await api.post(
         endpoint: '/b2/get-upload-url',
         jsonBody: {"storage_id": modelFile.storageId},
@@ -345,16 +347,9 @@ class TaskManager {
         uploadInfo["url"] = urlData["uploadUrl"];
         uploadInfo["token"] = urlData["authorizationToken"];
       }
-    } else if (modelFile.providerId == StorageProvider.cloudflare.value ||
-        modelFile.providerId == StorageProvider.oracle.value ||
-        modelFile.providerId == StorageProvider.idrive.value) {
+    } else if (storageProvider.usesPresignedS3Url) {
       String fileId = '${modelFile.id}_$partToUpload';
-      String providerPath = "r2";
-      if (modelFile.providerId == StorageProvider.oracle.value) {
-        providerPath = "oci";
-      } else if (modelFile.providerId == StorageProvider.idrive.value) {
-        providerPath = "e2";
-      }
+      final providerPath = storageProvider.apiPath!;
       final urlResult = await api.post(
         endpoint: '/$providerPath/get-upload-url',
         jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId},
@@ -722,14 +717,9 @@ class TaskManager {
 
   static Future<String> getDownloadUrl(ModelFile modelFile, int part) async {
     final api = BackendApi();
-    String providerPath = "b2";
-    if (modelFile.providerId == StorageProvider.cloudflare.value) {
-      providerPath = "r2";
-    } else if (modelFile.providerId == StorageProvider.oracle.value) {
-      providerPath = "oci";
-    } else if (modelFile.providerId == StorageProvider.idrive.value) {
-      providerPath = "e2";
-    }
+    final storageProvider =
+        StorageProviderExtension.fromValue(modelFile.providerId ?? 0);
+    final providerPath = storageProvider.apiPath ?? 'b2';
     final downloadResult = await api.post(
       endpoint: '/$providerPath/get-download-url',
       jsonBody: {

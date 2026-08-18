@@ -20,7 +20,7 @@ class AddProviderScreen extends StatefulWidget {
 
 class _AddProviderScreenState extends State<AddProviderScreen> {
   final _formKey = GlobalKey<FormState>();
-  final Map<String, String> _formData = {};
+  final Map<String, dynamic> _formData = {};
   bool _isLoading = false;
   String? _errorMessage;
   final api = BackendApi();
@@ -31,6 +31,11 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
   void initState() {
     super.initState();
     config = providerConfigurations[widget.storageProvider]!;
+    for (final field in config.fields) {
+      if (field.type == StorageProviderFieldType.toggle) {
+        _formData[field.key] = field.defaultBool;
+      }
+    }
   }
 
   Future<void> _handleConnect() async {
@@ -84,6 +89,7 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
           region: 'auto',
           endpoint: 'https://$accountId.r2.cloudflarestorage.com',
           bucket: _formData['bucket']!,
+          forcePathStyle: false,
         );
       } else if (widget.storageProvider == StorageProvider.idrive) {
         endpoint = "/e2/add-account";
@@ -94,6 +100,19 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
           region: region,
           endpoint: 'https://s3.$region.idrivee2.com',
           bucket: _formData['bucket']!,
+        );
+      } else if (widget.storageProvider == StorageProvider.s3) {
+        endpoint = "/s3/add-account";
+        final normalizedEndpoint =
+            normalizePublicS3Endpoint(_formData['endpoint']!);
+        _formData['endpoint'] = normalizedEndpoint;
+        result = await StorageValidationService.validateS3(
+          accessKey: _formData['app_id']!,
+          secretKey: _formData['app_key']!,
+          region: _formData['region']!,
+          endpoint: normalizedEndpoint,
+          bucket: _formData['bucket']!,
+          forcePathStyle: _formData['force_path_style'] as bool,
         );
       }
 
@@ -110,6 +129,10 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
         }
       } else {
         if (mounted) setState(() => _errorMessage = result);
+      }
+    } on FormatException catch (e) {
+      if (mounted) {
+        setState(() => _errorMessage = e.message);
       }
     } catch (e) {
       if (mounted) {
@@ -175,25 +198,40 @@ class _AddProviderScreenState extends State<AddProviderScreen> {
                       ...config.fields.reversed.map(
                         (field) => Padding(
                           padding: const EdgeInsets.only(bottom: 20.0),
-                          child: TextFormField(
-                            decoration: InputDecoration(
-                              labelText: field.label,
-                              helperText: field.helperText,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              filled: true,
-                              fillColor: theme
-                                  .colorScheme.surfaceContainerHighest
-                                  .withAlpha(30),
-                            ),
-                            obscureText: field.isObscured,
-                            validator: (value) => value == null || value.isEmpty
-                                ? AppLocalizations.of(context)!.requiredField
-                                : null,
-                            onSaved: (value) =>
-                                _formData[field.key] = value!.trim(),
-                          ),
+                          child: field.type == StorageProviderFieldType.toggle
+                              ? SwitchListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: Text(field.label),
+                                  subtitle: field.helperText == null
+                                      ? null
+                                      : Text(field.helperText!),
+                                  value: _formData[field.key] as bool,
+                                  onChanged: (value) {
+                                    setState(
+                                        () => _formData[field.key] = value);
+                                  },
+                                )
+                              : TextFormField(
+                                  decoration: InputDecoration(
+                                    labelText: field.label,
+                                    helperText: field.helperText,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    filled: true,
+                                    fillColor: theme
+                                        .colorScheme.surfaceContainerHighest
+                                        .withAlpha(30),
+                                  ),
+                                  obscureText: field.isObscured,
+                                  validator: (value) =>
+                                      value == null || value.isEmpty
+                                          ? AppLocalizations.of(context)!
+                                              .requiredField
+                                          : null,
+                                  onSaved: (value) =>
+                                      _formData[field.key] = value!.trim(),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 8),

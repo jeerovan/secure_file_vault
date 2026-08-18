@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
-	import { ArrowDown, CloudLightning, Database, HardDrive, Package } from 'lucide-svelte';
+	import { ArrowDown, Cloud, CloudLightning, Database, HardDrive, Package } from 'lucide-svelte';
 	type ProviderStep = {
 		id: number;
 		title: string;
-		image: string;
+		description?: string;
+		image?: string;
 	};
 	// Storage providers data with step-by-step images and descriptions
-	const providerIcons: Record<number, any> = {
+	const providerIcons: Record<number, typeof Package> = {
 		2: Package,
 		3: CloudLightning,
 		4: Database,
-		5: HardDrive
+		5: HardDrive,
+		6: Cloud
 	};
 	const providerSteps: Record<number, ProviderStep[]> = {
 		2: [
@@ -236,20 +238,43 @@
 				title: '',
 				image: 'https://images.fife.jeero.one/storage/idrive/guide-9.webp'
 			}
+		],
+		6: [
+			{
+				id: 1,
+				title: 'Collect your S3 connection details',
+				description:
+					'Create static access keys with read, write, and delete permission for one bucket. Note the public HTTPS endpoint, signing region, and bucket name.'
+			},
+			{
+				id: 2,
+				title: 'Choose the addressing mode',
+				description:
+					'Keep path-style addressing enabled for providers that use endpoint/bucket URLs. Disable it when your provider requires bucket.endpoint URLs.'
+			},
+			{
+				id: 3,
+				title: 'Verify and connect',
+				description:
+					'Enter the endpoint, region, bucket, access-key ID, and secret key in FiFe. FiFe verifies bucket access before saving the connection.'
+			}
 		]
 	};
 	const storageProviders = [
 		{ id: 2, title: 'Backblaze B2', bytes: 10737418240 },
 		{ id: 3, title: 'Cloudflare R2', bytes: 10737418240 },
 		{ id: 4, title: 'Oracle', bytes: 21474836480 },
-		{ id: 5, title: 'Idrive E2', bytes: 10737418240 }
+		{ id: 5, title: 'Idrive E2', bytes: 10737418240 },
+		{ id: 6, title: 'S3 Compatible', bytes: 10737418240 }
 	];
 
 	// Set the first provider as active by default
 	let activeProviderId = $derived<number | null>(storageProviders[0].id);
 
 	// Svelte 5 derived state
-	let activeProvider = $derived(storageProviders.find((p: any) => p.id === activeProviderId));
+	let activeProvider = $derived(
+		storageProviders.find((provider) => provider.id === activeProviderId)
+	);
 
 	function formatBytes(bytes: number, decimals = 2) {
 		if (!+bytes) return '0 Bytes';
@@ -290,7 +315,7 @@
 	<!-- Tabbed Navigation -->
 	<div class="mt-12 w-full">
 		<div class="grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-4">
-			{#each storageProviders as provider}
+			{#each storageProviders as provider (provider.id)}
 				<!-- Look up the icon, fallback to Package if not found -->
 				{@const TabIcon = providerIcons[provider.id] || Package}
 
@@ -349,7 +374,7 @@
 				<div class="relative space-y-12 pb-20">
 					{#if activeProvider}
 						{@const Steps = providerSteps[activeProvider.id]}
-						{#each Steps as step, index}
+						{#each Steps as step (step.id)}
 							<div class="relative grid gap-6 md:grid-cols-[auto_1fr] md:gap-8">
 								<!-- Step Number & Connector Line -->
 								<div class="flex flex-col items-center">
@@ -373,17 +398,22 @@
 								<!-- Step Content & Image -->
 								<div class="pt-1 pb-8">
 									<h3 class="text-xl font-medium text-white">{step.title}</h3>
+									{#if step.description}
+										<p class="mt-3 max-w-2xl leading-7 text-white/65">{step.description}</p>
+									{/if}
 
-									<div
-										class="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2 shadow-2xl backdrop-blur-sm"
-									>
-										<img
-											src={step.image}
-											alt="Visual guide for {activeProvider.title} step {step.id}"
-											class="h-auto w-full rounded-xl border border-white/5 object-cover opacity-90 transition-opacity hover:opacity-100"
-											loading="lazy"
-										/>
-									</div>
+									{#if step.image}
+										<div
+											class="mt-6 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-2 shadow-2xl backdrop-blur-sm"
+										>
+											<img
+												src={step.image}
+												alt="Visual guide for {activeProvider.title} step {step.id}"
+												class="h-auto w-full rounded-xl border border-white/5 object-cover opacity-90 transition-opacity hover:opacity-100"
+												loading="lazy"
+											/>
+										</div>
+									{/if}
 								</div>
 							</div>
 						{/each}

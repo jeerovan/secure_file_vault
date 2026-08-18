@@ -1,16 +1,22 @@
 import '../utils/enums.dart';
 
+enum StorageProviderFieldType { text, toggle }
+
 class StorageProviderField {
   final String key;
   final String label;
   final bool isObscured;
   final String? helperText;
+  final StorageProviderFieldType type;
+  final bool defaultBool;
 
   StorageProviderField({
     required this.key,
     required this.label,
     this.isObscured = false,
     this.helperText,
+    this.type = StorageProviderFieldType.text,
+    this.defaultBool = false,
   });
 }
 
@@ -81,6 +87,37 @@ final Map<StorageProvider, StorageProviderConfig> providerConfigurations = {
       StorageProviderField(key: 'app_id', label: 'Access Key ID'),
       StorageProviderField(
           key: 'app_key', label: 'Secret Access Key', isObscured: true),
+    ],
+  ),
+  StorageProvider.s3: StorageProviderConfig(
+    type: StorageProvider.s3,
+    title: 'S3 Compatible',
+    fields: [
+      StorageProviderField(
+        key: 'endpoint',
+        label: 'Endpoint URL',
+        helperText: 'e.g., https://s3.us-east-1.amazonaws.com',
+      ),
+      StorageProviderField(
+        key: 'region',
+        label: 'Region',
+        helperText: 'e.g., us-east-1',
+      ),
+      StorageProviderField(key: 'bucket', label: 'Bucket Name'),
+      StorageProviderField(key: 'app_id', label: 'Access Key ID'),
+      StorageProviderField(
+        key: 'app_key',
+        label: 'Secret Access Key',
+        isObscured: true,
+      ),
+      StorageProviderField(
+        key: 'force_path_style',
+        label: 'Use path-style bucket addressing',
+        helperText:
+            'Disable if the provider requires bucket.endpoint addressing.',
+        type: StorageProviderFieldType.toggle,
+        defaultBool: true,
+      ),
     ],
   ),
 };

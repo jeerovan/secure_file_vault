@@ -10,6 +10,7 @@
 		"preview:prod": "npm run build && wrangler pages dev .svelte-kit/cloudflare",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"test": "tsx --test tests/*.test.ts",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
@@ -18,8 +19,9 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx scripts/seed.ts",
+		"db:add-s3": "tsx scripts/add_s3_provider.ts",
 		"db:add-fife": "tsx scripts/add_fife.ts",
-		"db:add-fife-neon": "tsx scripts/add_fife_neon.ts"
+		"db:add-fife-neon": "tsx scripts/add_fife.ts neon"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20260422.1",

@@ -95,6 +95,7 @@ Current provider scope:
 - Cloudflare R2
 - Oracle Cloud Infrastructure Object Storage
 - IDrive E2
+- Generic S3-compatible storage with public HTTPS endpoints and static access keys
 
 Provider integrations must preserve common FiFe behavior while isolating provider-specific authentication, signing, URL-generation, and API details.
 

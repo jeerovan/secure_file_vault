@@ -3,6 +3,92 @@ import 'package:http/http.dart' as http_lib;
 import 'package:aws_common/aws_common.dart';
 import 'package:aws_signature_v4/aws_signature_v4.dart';
 
+bool _isNonPublicIpv4(String hostname) {
+  final parts = hostname.split('.');
+  if (parts.length != 4) return false;
+  final octets = parts.map(int.tryParse).toList();
+  if (octets.any((part) => part == null || part < 0 || part > 255)) {
+    return true;
+  }
+  final first = octets[0]!;
+  final second = octets[1]!;
+  return first == 0 ||
+      first == 10 ||
+      first == 127 ||
+      (first == 100 && second >= 64 && second <= 127) ||
+      (first == 169 && second == 254) ||
+      (first == 172 && second >= 16 && second <= 31) ||
+      (first == 192 && second == 168) ||
+      (first == 198 && (second == 18 || second == 19)) ||
+      first >= 224;
+}
+
+bool _isNonPublicIpv6(String hostname) {
+  final normalized = hostname.toLowerCase();
+  if (!normalized.contains(':')) return false;
+  if (normalized.startsWith('::ffff:')) return true;
+  final mappedIpv4 = RegExp(
+    r'(?:^|:)ffff:(\d+\.\d+\.\d+\.\d+)$',
+  ).firstMatch(normalized)?.group(1);
+  if (mappedIpv4 != null && _isNonPublicIpv4(mappedIpv4)) return true;
+  return normalized == '::' ||
+      normalized == '::1' ||
+      normalized.startsWith('fc') ||
+      normalized.startsWith('fd') ||
+      normalized.startsWith('fe8') ||
+      normalized.startsWith('fe9') ||
+      normalized.startsWith('fea') ||
+      normalized.startsWith('feb');
+}
+
+String normalizePublicS3Endpoint(String value) {
+  final endpoint = Uri.tryParse(value.trim());
+  if (endpoint == null ||
+      endpoint.scheme != 'https' ||
+      !endpoint.hasAuthority ||
+      endpoint.host.isEmpty) {
+    throw const FormatException('S3 endpoint must be a public HTTPS URL.');
+  }
+  if (endpoint.userInfo.isNotEmpty ||
+      endpoint.hasQuery ||
+      endpoint.hasFragment) {
+    throw const FormatException(
+      'S3 endpoint cannot contain credentials, a query, or a fragment.',
+    );
+  }
+  final hostname = endpoint.host.toLowerCase();
+  if (hostname == 'localhost' ||
+      hostname.endsWith('.localhost') ||
+      hostname.endsWith('.local') ||
+      _isNonPublicIpv4(hostname) ||
+      _isNonPublicIpv6(hostname)) {
+    throw const FormatException('S3 endpoint must use a public host.');
+  }
+
+  final normalizedPath = endpoint.path.replaceFirst(RegExp(r'/+$'), '');
+  return endpoint
+      .replace(path: normalizedPath)
+      .toString()
+      .replaceFirst(RegExp(r'/+$'), '');
+}
+
+Uri buildS3BucketUri({
+  required String endpoint,
+  required String bucket,
+  required bool forcePathStyle,
+}) {
+  final endpointUri = Uri.parse(normalizePublicS3Endpoint(endpoint));
+  if (!forcePathStyle) {
+    return endpointUri.replace(host: '$bucket.${endpointUri.host}');
+  }
+  return endpointUri.replace(
+    pathSegments: [
+      ...endpointUri.pathSegments.where((segment) => segment.isNotEmpty),
+      bucket,
+    ],
+  );
+}
+
 class StorageValidationService {
   /// Validates Backblaze credentials replicating your backend logic
   static Future<String> validateBackblaze(String appId, String appKey) async {
@@ -94,6 +180,7 @@ class StorageValidationService {
     required String region,
     required String endpoint,
     required String bucket,
+    bool forcePathStyle = true,
   }) async {
     try {
       final signer = AWSSigV4Signer(
@@ -103,7 +190,11 @@ class StorageValidationService {
       );
 
       // Construct HeadBucket request
-      final uri = Uri.parse('$endpoint/$bucket');
+      final uri = buildS3BucketUri(
+        endpoint: endpoint,
+        bucket: bucket,
+        forcePathStyle: forcePathStyle,
+      );
       final request = AWSHttpRequest(
         method: AWSHttpMethod.head,
         uri: uri,

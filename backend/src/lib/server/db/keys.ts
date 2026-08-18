@@ -147,5 +147,6 @@ export const StorageProvider = {
 	BACKBLAZE: 2,
 	CLOUDFLARE: 3,
 	OCI: 4,
-	IDRIVE: 5
+	IDRIVE: 5,
+	S3: 6
 };

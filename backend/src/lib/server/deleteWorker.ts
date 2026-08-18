@@ -3,7 +3,6 @@ import { authenticate, deleteFileVersion } from './backblaze';
 import {
 	getCredentialByStorageId,
 	getUser,
-	getUserFile,
 	getUserFilePart,
 	resetUserFileByHash,
 	resetUserFilePart,
@@ -11,15 +10,16 @@ import {
 } from './db/api';
 import { CredentialKeys, FileKeys, PartKeys, StorageProvider, UserKeys } from './db/keys';
 import type { Db, Tx } from './db';
+import { createGenericS3Client, type GenericS3Credentials } from './s3';
 
-export async function deleteFileFromStorage(db: Db | Tx, fileRow: any) {
-	const parts = fileRow[FileKeys.PARTS];
+export async function deleteFileFromStorage(db: Db | Tx, fileRow: Record<string, unknown>) {
+	const parts = fileRow[FileKeys.PARTS] as number;
 	const partNumbers = Array.from({ length: parts }, (_, i) => i + 1);
-	const userId = fileRow[FileKeys.USER_ID];
-	const fileId = fileRow[FileKeys.ID];
-	const providerId = fileRow[FileKeys.PROVIDER_ID];
-	const storageId = fileRow[FileKeys.STORAGE_ID];
-	const fileHash = fileRow[FileKeys.FILE_HASH];
+	const userId = fileRow[FileKeys.USER_ID] as number;
+	const fileId = fileRow[FileKeys.ID] as number;
+	const providerId = fileRow[FileKeys.PROVIDER_ID] as number;
+	const storageId = fileRow[FileKeys.STORAGE_ID] as number | null;
+	const fileHash = fileRow[FileKeys.FILE_HASH] as string;
 	const userRow = await getUser(db, userId);
 	if (storageId == null || userRow == undefined) return;
 	const credential = await getCredentialByStorageId(db, userId, storageId);
@@ -28,7 +28,7 @@ export async function deleteFileFromStorage(db: Db | Tx, fileRow: any) {
 	for (const index in partNumbers) {
 		const partNumber = partNumbers[index];
 		const file_name = `${supabaseId}/${fileHash}_${partNumber}`;
-		const filePart = await getUserFilePart(db, userId, fileRow[FileKeys.ID], partNumber);
+		const filePart = await getUserFilePart(db, userId, fileId, partNumber);
 		if (filePart && filePart[PartKeys.PART_SIZE] > 0) {
 			if (providerId == StorageProvider.FIFE || providerId == StorageProvider.BACKBLAZE) {
 				const partData = filePart[PartKeys.JSON];
@@ -136,6 +136,20 @@ export async function deleteFileFromStorage(db: Db | Tx, fileRow: any) {
 				});
 				try {
 					await s3Client.send(command);
+					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
+					await resetUserFilePart(db, userId, fileId, partNumber);
+				} catch (e) {
+					allRemoved = false;
+					console.error(e);
+				}
+			} else if (providerId == StorageProvider.S3 && credential) {
+				const credentials = credential[CredentialKeys.CREDENTIALS] as GenericS3Credentials;
+				const command = new DeleteObjectCommand({
+					Bucket: credentials.bucketName,
+					Key: file_name
+				});
+				try {
+					await createGenericS3Client(credentials).send(command);
 					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
 					await resetUserFilePart(db, userId, fileId, partNumber);
 				} catch (e) {

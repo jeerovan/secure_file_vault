@@ -274,6 +274,7 @@ enum StorageProvider {
   cloudflare,
   oracle,
   idrive,
+  s3,
   local
 }
 
@@ -292,6 +293,8 @@ extension StorageProviderExtension on StorageProvider {
         return 4;
       case StorageProvider.idrive:
         return 5;
+      case StorageProvider.s3:
+        return 6;
       case StorageProvider.local:
         return 99;
     }
@@ -311,6 +314,8 @@ extension StorageProviderExtension on StorageProvider {
         return "Oracle Object Storage";
       case 5:
         return "IDrive E2";
+      case 6:
+        return "S3 Compatible";
       case 99:
         return "Local";
       default:
@@ -330,10 +335,37 @@ extension StorageProviderExtension on StorageProvider {
         return StorageProvider.oracle;
       case 5:
         return StorageProvider.idrive;
+      case 6:
+        return StorageProvider.s3;
       default:
         return StorageProvider.none;
     }
   }
+
+  String? get apiPath {
+    switch (this) {
+      case StorageProvider.fife:
+      case StorageProvider.backblaze:
+        return 'b2';
+      case StorageProvider.cloudflare:
+        return 'r2';
+      case StorageProvider.oracle:
+        return 'oci';
+      case StorageProvider.idrive:
+        return 'e2';
+      case StorageProvider.s3:
+        return 's3';
+      case StorageProvider.none:
+      case StorageProvider.local:
+        return null;
+    }
+  }
+
+  bool get usesPresignedS3Url =>
+      this == StorageProvider.cloudflare ||
+      this == StorageProvider.oracle ||
+      this == StorageProvider.idrive ||
+      this == StorageProvider.s3;
 }
 
 enum ItemTask { none, upload, download }

@@ -23,7 +23,7 @@ Traditional cloud storage providers hold the keys to your data. FiFe shifts the 
 ## ✨ Key Features
 
 - **🔒 Zero-Knowledge Client-Side Encryption:** Files are encrypted entirely on your device using `libsodium` before uploading. The server only stores encrypted key ciphers and nonces.
-- **☁️ Bring Your Own Storage:** Connect your own object storage buckets. Currently supports **Backblaze B2**, **Cloudflare R2**, **ORACLE** and **IDrive E2**.
+- **☁️ Bring Your Own Storage:** Connect your own object storage buckets. Currently supports **Backblaze B2**, **Cloudflare R2**, **Oracle Object Storage**, **IDrive E2**, and generic **S3-compatible** providers.
 - **📂 Preserves Folder Structure:** Back up entire directories without losing your organizational hierarchy.
 - **⚡ Smart Duplicate Detection:** Computes hashes locally on-demand to detect duplicate files, saving your bandwidth and storage space.
 - **🚀 Direct-to-Cloud Uploads:** Uploads bypass the backend completely, utilizing secure, pre-signed URLs directly to the storage provider.
@@ -67,11 +67,16 @@ FiFe is split into a robust cross-platform client and an edge-optimized server:
    ```
 
 3. **Backend Setup (SvelteKit):**
-   Navigate to the server directory, install dependencies, and configure your `.env` with your Neon `DATABASE_URL`.
+   Navigate to the server directory, install dependencies, and configure `DATABASE_URL` in `.env`. If it is omitted, database scripts use `postgres://jeerovan@localhost:5432/fife`.
    ```bash
+   cd backend
    npm install
+   npm run db:seed postgres # local PostgreSQL
+   npm run db:seed neon     # production Neon
    npm run dev
    ```
+
+   The driver argument is optional. Scripts infer Neon for `*.neon.tech` URLs and standard PostgreSQL for other URLs.
 
 ## 🤝 Contributing
 
