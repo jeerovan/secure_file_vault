@@ -52,6 +52,13 @@ void main() {
     );
   });
 
+  test('accepts public S3 hostnames containing exactly four labels', () {
+    expect(
+      normalizePublicS3Endpoint('https://s3.eu-central-2.idrivee2.com'),
+      'https://s3.eu-central-2.idrivee2.com',
+    );
+  });
+
   test('rejects non-public S3 endpoints', () {
     for (final endpoint in <String>[
       'http://objects.example.com',

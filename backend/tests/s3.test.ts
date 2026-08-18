@@ -9,6 +9,13 @@ test('normalizes a public HTTPS S3 endpoint', () => {
 	);
 });
 
+test('accepts public S3 hostnames containing exactly four labels', () => {
+	assert.equal(
+		normalizePublicS3Endpoint('https://s3.eu-central-2.idrivee2.com'),
+		'https://s3.eu-central-2.idrivee2.com'
+	);
+});
+
 test('rejects unsafe or malformed S3 endpoints', () => {
 	const rejected = [
 		'http://objects.example.com',

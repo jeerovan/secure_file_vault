@@ -12,6 +12,7 @@ export type GenericS3Credentials = {
 function isNonPublicIpv4(hostname: string): boolean {
 	const parts = hostname.split('.');
 	if (parts.length !== 4) return false;
+	if (parts.some((part) => !/^\d+$/.test(part))) return false;
 	const octets = parts.map(Number);
 	if (octets.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) return true;
 

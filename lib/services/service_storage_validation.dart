@@ -6,12 +6,11 @@ import 'package:aws_signature_v4/aws_signature_v4.dart';
 bool _isNonPublicIpv4(String hostname) {
   final parts = hostname.split('.');
   if (parts.length != 4) return false;
-  final octets = parts.map(int.tryParse).toList();
-  if (octets.any((part) => part == null || part < 0 || part > 255)) {
-    return true;
-  }
-  final first = octets[0]!;
-  final second = octets[1]!;
+  if (parts.any((part) => !RegExp(r'^\d+$').hasMatch(part))) return false;
+  final octets = parts.map(int.parse).toList();
+  if (octets.any((part) => part < 0 || part > 255)) return true;
+  final first = octets[0];
+  final second = octets[1];
   return first == 0 ||
       first == 10 ||
       first == 127 ||
