@@ -47,10 +47,7 @@ function isNonPublicIpv6(hostname: string): boolean {
 	);
 }
 
-function normalizeS3Endpoint(
-	value: string,
-	{ allowHttp, allowPrivateHost }: { allowHttp: boolean; allowPrivateHost: boolean }
-): string {
+export function normalizePublicS3Endpoint(value: string): string {
 	let endpoint: URL;
 	try {
 		endpoint = new URL(value.trim());
@@ -58,10 +55,7 @@ function normalizeS3Endpoint(
 		throw new Error('Invalid S3 endpoint URL');
 	}
 
-	if (endpoint.protocol !== 'https:' && !(allowHttp && endpoint.protocol === 'http:'))
-		throw new Error(
-			allowHttp ? 'S3 endpoint must use HTTP or HTTPS' : 'S3 endpoint must use HTTPS'
-		);
+	if (endpoint.protocol !== 'https:') throw new Error('S3 endpoint must use HTTPS');
 	if (endpoint.username || endpoint.password)
 		throw new Error('S3 endpoint cannot contain credentials');
 	if (endpoint.search || endpoint.hash)
@@ -69,26 +63,17 @@ function normalizeS3Endpoint(
 
 	const hostname = endpoint.hostname.toLowerCase();
 	if (
-		!allowPrivateHost &&
-		(hostname === 'localhost' ||
-			hostname.endsWith('.localhost') ||
-			hostname.endsWith('.local') ||
-			isNonPublicIpv4(hostname) ||
-			isNonPublicIpv6(hostname))
+		hostname === 'localhost' ||
+		hostname.endsWith('.localhost') ||
+		hostname.endsWith('.local') ||
+		isNonPublicIpv4(hostname) ||
+		isNonPublicIpv6(hostname)
 	) {
 		throw new Error('S3 endpoint must use a public host');
 	}
 
 	endpoint.pathname = endpoint.pathname.replace(/\/+$/, '') || '/';
 	return endpoint.toString().replace(/\/$/, '');
-}
-
-export function normalizePublicS3Endpoint(value: string): string {
-	return normalizeS3Endpoint(value, { allowHttp: false, allowPrivateHost: false });
-}
-
-export function normalizeLocalS3Endpoint(value: string): string {
-	return normalizeS3Endpoint(value, { allowHttp: true, allowPrivateHost: true });
 }
 
 export function createGenericS3Client(credentials: GenericS3Credentials): S3Client {

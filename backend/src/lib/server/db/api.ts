@@ -42,11 +42,6 @@ import {
 import { deleteFileFromStorage } from '../deleteWorker';
 import type { Db, Tx } from '.';
 
-export type InitialUserStorage = {
-	providerId: number;
-	credentials: Record<string, unknown>;
-};
-
 export async function getUserByRemoteId(
 	db: Db | Tx,
 	remoteId: string,
@@ -83,8 +78,7 @@ export async function addUser(
 	supabaseId: string,
 	email: string,
 	cipher: string,
-	nonce: string,
-	initialStorage?: InitialUserStorage
+	nonce: string
 ) {
 	return await db.transaction(async (tx) => {
 		const [newUser] = await tx
@@ -101,32 +95,6 @@ export async function addUser(
 			[UserDataKeys.USER_ID]: newUser[UserKeys.ID],
 			[UserDataKeys.DEVICE_UUID]: 'Server'
 		});
-
-		if (initialStorage) {
-			const [providerEntry] = await tx
-				.select()
-				.from(provider)
-				.where(eq(provider[ProviderKeys.ID], initialStorage.providerId))
-				.limit(1);
-			if (!providerEntry) throw new Error('Initial storage provider is not registered');
-			const [newCredential] = await tx
-				.insert(credential)
-				.values({
-					[CredentialKeys.USER_ID]: newUser[UserKeys.ID],
-					[CredentialKeys.PROVIDER_ID]: initialStorage.providerId,
-					[CredentialKeys.CREDENTIALS]: initialStorage.credentials
-				})
-				.returning();
-			await addStorage(
-				tx,
-				newUser[UserKeys.ID],
-				newCredential[CredentialKeys.ID],
-				providerEntry[ProviderKeys.FREE_BYTES],
-				providerEntry[ProviderKeys.FREE_BYTES],
-				providerEntry[ProviderKeys.PRIORITY],
-				{}
-			);
-		}
 
 		// add default fife storage for this user
 		const fifeUser = await getUserByRemoteId(tx, 'fife');

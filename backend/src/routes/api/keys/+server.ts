@@ -1,12 +1,9 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { ErrorCode, StorageProvider, UserKeys } from '$lib/server/db/keys';
+import { ErrorCode, UserKeys } from '$lib/server/db/keys';
 import { addUser, getUser } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
-import { env } from '$env/dynamic/private';
-import { getLocalTestS3Credentials } from '$lib/server/localTest';
-import { verifyGenericS3Credentials } from '$lib/server/s3';
 
 export const GET: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
@@ -53,31 +50,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		return json({ success: 0, message: ErrorCode.INVALID_DATA });
 	}
 
-	let initialStorage;
-	if (authUser.localTesting) {
-		try {
-			const credentials = getLocalTestS3Credentials(env);
-			if (!(await verifyGenericS3Credentials(credentials))) {
-				return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });
-			}
-			initialStorage = {
-				providerId: StorageProvider.S3,
-				credentials
-			};
-		} catch (error) {
-			console.error('Local S3 configuration failed', error);
-			return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });
-		}
-	}
-
-	const result = await addUser(
-		db,
-		authUser.remoteAuthId!,
-		authUser.email!,
-		cipher,
-		nonce,
-		initialStorage
-	);
+	const result = await addUser(db, authUser.remoteAuthId!, authUser.email!, cipher, nonce);
 
 	return json({ success: 1, data: result });
 };

@@ -3,7 +3,7 @@ import {
 	ListObjectsV2Command,
 	type ObjectIdentifier
 } from '@aws-sdk/client-s3';
-import { createGenericS3Client, normalizeLocalS3Endpoint, type GenericS3Credentials } from './s3';
+import { createGenericS3Client, type GenericS3Credentials } from './s3';
 
 export type LocalTestIdentity = {
 	token: string;
@@ -25,17 +25,6 @@ export function getLocalTestIdentity(environment: PrivateEnvironment): LocalTest
 		token: required(environment, 'LOCAL_TEST_AUTH_TOKEN'),
 		remoteAuthId: required(environment, 'LOCAL_TEST_USER_ID'),
 		email: required(environment, 'LOCAL_TEST_EMAIL')
-	};
-}
-
-export function getLocalTestS3Credentials(environment: PrivateEnvironment): GenericS3Credentials {
-	return {
-		endpoint: normalizeLocalS3Endpoint(required(environment, 'LOCAL_S3_ENDPOINT')),
-		region: required(environment, 'LOCAL_S3_REGION'),
-		bucketName: required(environment, 'LOCAL_S3_BUCKET'),
-		appId: required(environment, 'LOCAL_S3_ACCESS_KEY_ID'),
-		appKey: required(environment, 'LOCAL_S3_SECRET_ACCESS_KEY'),
-		forcePathStyle: environment.LOCAL_S3_FORCE_PATH_STYLE !== 'false'
 	};
 }
 

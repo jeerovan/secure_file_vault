@@ -82,7 +82,7 @@ FiFe is split into a robust cross-platform client and an edge-optimized server:
 
 Local integration mode bypasses only Neon authentication and exercises the real local backend, PostgreSQL database, encryption, synchronization, and S3-compatible storage transfer paths.
 
-1. Copy `backend/.env.example` to `backend/.env` and configure the `LOCAL_TEST_*` and `LOCAL_S3_*` values. Use the same random token for the backend and Flutter build.
+1. Copy `backend/.env.example` to `backend/.env` and configure the `LOCAL_TEST_*` values. Use the same random token for the backend and Flutter build.
 2. Ensure the database is initialized and provider ID 6 is registered:
 
    ```bash
@@ -99,7 +99,10 @@ Local integration mode bypasses only Neon authentication and exercises the real 
      --dart-define=LOCAL_TEST_AUTH_TOKEN=<RANDOM_LOCAL_TOKEN>
    ```
 
-4. Sign in with `jeevan@jeero.one`. iOS Simulator connects through `localhost`; Android Emulator uses `10.0.2.2`. Local logout deletes the test profile and its S3 object prefix before clearing the client.
+4. Sign in with `jeevan@jeero.one`. iOS Simulator connects through `localhost`; Android Emulator uses `10.0.2.2`.
+5. Create the profile and register the device, then open **Storage**, select **S3 Compatible**, and enter the test storage credentials in the client. This exercises client-side validation and the normal `/api/s3/add-account` API. The S3 endpoint must be a public HTTPS URL in every mode, including local testing.
+
+Local logout deletes the test profile and its S3 object prefix before clearing the client.
 
 ## 🤝 Contributing
 
