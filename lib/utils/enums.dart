@@ -82,6 +82,7 @@ enum AppString {
   deviceRegistered,
   loggingEnabled,
   simulateTesting,
+  localTesting,
   theme,
   locale,
 
@@ -171,6 +172,8 @@ extension AppStringExtension on AppString {
         return "hide_sync_button";
       case AppString.simulateTesting:
         return "simulate_testing";
+      case AppString.localTesting:
+        return "local_testing";
       case AppString.signedIn:
         return "signed_in";
       case AppString.loggingEnabled:

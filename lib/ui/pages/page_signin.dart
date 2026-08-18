@@ -85,6 +85,9 @@ class _PageSigninState extends State<PageSignin> {
       if (email == testEmailId) {
         await Future.delayed(const Duration(seconds: 1));
         await ModelSetting.set(AppString.simulateTesting.string, "yes");
+      } else if (email == localTestEmailId) {
+        await Future.delayed(const Duration(seconds: 1));
+        await ModelSetting.set(AppString.localTesting.string, "yes");
       } else {
         final response = await NeonAuth().sendOTP(email);
         if (response.statusCode != 200) {

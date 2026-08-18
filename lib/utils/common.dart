@@ -24,6 +24,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 final String testEmailId = "fife@jeero.one";
+final String localTestEmailId = "jeevan@jeero.one";
 
 class AppEnv {
   static const String apiBaseUrl = String.fromEnvironment(
@@ -46,6 +47,11 @@ bool isDebugEnabled = kDebugMode;
 bool simulateTesting() {
   return ModelSetting.get(AppString.simulateTesting.string,
           defaultValue: "no") ==
+      "yes";
+}
+
+bool localTesting() {
+  return ModelSetting.get(AppString.localTesting.string, defaultValue: "no") ==
       "yes";
 }
 

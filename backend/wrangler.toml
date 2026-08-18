@@ -12,6 +12,8 @@ binding = "ASSETS"
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "0452f8feb0c441a8a4e8babe57c28811"
+# Miniflare requires a password field even though local PostgreSQL uses trust authentication.
+localConnectionString = "postgres://jeerovan:local-dev@localhost:5432/fife"
 
 [observability]
 enabled = false

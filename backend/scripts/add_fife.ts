@@ -51,7 +51,7 @@ const main = async (appId: string, appKey: string) => {
 		const [fifeUser] = await db
 			.select()
 			.from(schema.user)
-			.where(eq(schema.user[UserKeys.SUPABASE_ID], 'fife'))
+			.where(eq(schema.user[UserKeys.REMOTE_AUTH_ID], 'fife'))
 			.limit(1);
 		await db.insert(schema.credential).values({
 			[CredentialKeys.USER_ID]: fifeUser[UserKeys.ID],

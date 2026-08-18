@@ -2,19 +2,20 @@ import { drizzle as drizzlePg } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
 
+const localConnectionString = 'postgres://jeerovan@localhost:5432/fife';
+
 export function getDb(platform: Readonly<App.Platform> | undefined) {
-	// 1. Fallback for local development if running outside Wrangler
-	if (!platform?.env?.HYPERDRIVE) {
-		console.log('HYPERDRIVE not found');
+	const hyperdrive = platform?.env?.HYPERDRIVE;
+	const connectionString = hyperdrive?.connectionString ?? localConnectionString;
+
+	if (!hyperdrive) {
+		console.info('HYPERDRIVE not found; using local PostgreSQL database');
 	}
 
-	// 2. Hyperdrive provides a localized connection string to the Cloudflare proxy
-	const connectionString = platform?.env.HYPERDRIVE.connectionString;
-
-	// 3. Connect using standard Postgres-js over TCP
+	// Connect using standard Postgres-js over TCP
 	const client = postgres(connectionString);
 
-	// 4. Wrap with Drizzle
+	// Wrap with Drizzle
 	return drizzlePg(client, { schema });
 }
 

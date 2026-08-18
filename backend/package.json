@@ -58,7 +58,6 @@
 		"jose": "^6.2.2",
 		"lucide-svelte": "^1.0.1",
 		"postgres": "^3.4.9",
-		"undici": "^8.0.2",
-		"wrangler": "^4.84.1"
+		"wrangler": "4.84.1"
 	}
 }
