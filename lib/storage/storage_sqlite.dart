@@ -104,6 +104,7 @@ class StorageSqlite {
   Future<Database> _initDB(String dbFileName) async {
     try {
       String dbDir = await getDbStoragePath();
+      logger.info("Db path: $dbDir");
       final dbPath = join(dbDir, dbFileName);
       return await openDatabase(
         dbPath,

@@ -373,6 +373,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
       if (item.isFolder) continue;
       String path = await ModelItem.getPathForItem(item.id);
       if (!File(path).existsSync()) {
+        logger.info("Will download: $path");
         await ModelItemTask.addTask(item.id, ItemTask.download.value);
         hasTasks = true;
       }
