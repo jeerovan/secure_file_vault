@@ -409,7 +409,6 @@ class TaskManager {
     }
     if (!artifactReady) {
       if (await encryptedFile.exists()) await encryptedFile.delete();
-      await itemTask.markPending();
       final partialFile = File('$encryptedFilePath.partial');
       if (await partialFile.exists()) await partialFile.delete();
       final sourceFile = File(inFilePath);
@@ -534,6 +533,10 @@ class TaskManager {
         await itemTask.update(["progress"]);
       }
       if (await encryptedFile.exists()) await encryptedFile.delete();
+      // A retry reuses the ready artifact and therefore does not pass through
+      // artifact creation. Transition only after the part is durably recorded
+      // so both fresh uploads and retries immediately continue/finalize.
+      await itemTask.markPending();
     } else {
       logger.error("Upload file part failed");
       if (!uploadResult.isRetryable) {
