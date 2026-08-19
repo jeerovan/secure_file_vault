@@ -158,4 +158,15 @@ class RepositoryTask<T> extends RepositoryEntity<T> {
     final rows = await db.rawQuery(query, args);
     return rows.isEmpty ? null : rows.first['id'] as String;
   }
+
+  Future<int?> fetchNextWakeAt() async {
+    final db = await executor;
+    final rows = await db.rawQuery(
+      'SELECT MIN(next_attempt_at) AS next_attempt_at FROM item_tasks '
+      'WHERE state IN (?, ?)',
+      ['running', 'retryWaiting'],
+    );
+    if (rows.isEmpty) return null;
+    return rows.first['next_attempt_at'] as int?;
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
 import 'package:file_vault_bb/utils/enums.dart';
+import 'package:file_vault_bb/utils/utils_tasks.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -28,6 +29,28 @@ void main() {
 
   test('retry attempts are bounded', () {
     expect(ModelItemTask.maxRetryAttempts, 10);
+  });
+
+  test('retry wake delay waits until due and is capped', () {
+    final now = DateTime.utc(2026, 1, 1);
+    expect(
+      TaskManager.retryWakeDelay(
+          now.add(const Duration(seconds: 12)).millisecondsSinceEpoch,
+          now: now),
+      const Duration(seconds: 12),
+    );
+    expect(
+      TaskManager.retryWakeDelay(
+          now.add(const Duration(hours: 1)).millisecondsSinceEpoch,
+          now: now),
+      const Duration(minutes: 15),
+    );
+    expect(
+      TaskManager.retryWakeDelay(
+          now.subtract(const Duration(seconds: 1)).millisecondsSinceEpoch,
+          now: now),
+      const Duration(milliseconds: 1),
+    );
   });
 
   test('successful part continuation is immediately eligible', () async {

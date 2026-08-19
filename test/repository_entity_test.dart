@@ -119,8 +119,15 @@ void main() {
       'next_attempt_at': 5,
       'updated_at': 3,
     });
+    await repository.insert({
+      'id': 'later-retry',
+      'state': 'retryWaiting',
+      'next_attempt_at': 20,
+      'updated_at': 4,
+    });
 
     expect(await repository.fetchPendingId({'active'}, now: 10), 'next');
+    expect(await repository.fetchNextWakeAt(), 5);
     expect(await repository.recoverInterrupted(now: 10), 1);
     final interrupted = await repository.get('interrupted');
     expect(interrupted?['state'], 'retryWaiting');

@@ -219,6 +219,20 @@ export async function getUploadUrl(params: GetUploadUrlParams) {
 	});
 }
 
+export interface ListFileNamesParams extends B2BaseParams {
+	bucketId: string;
+	fileName: string;
+}
+
+export async function listFileNames(params: ListFileNamesParams) {
+	return b2Fetch('b2_list_file_names', params, {
+		bucketId: params.bucketId,
+		startFileName: params.fileName,
+		prefix: params.fileName,
+		maxFileCount: 100
+	});
+}
+
 // --- 2. b2_get_download_authorization ---
 export interface GetDownloadAuthParams extends B2BaseParams {
 	bucketId: string;

@@ -10,6 +10,14 @@ import {
 } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
 import { getDb } from '$lib/server/db';
+import { assertSyncTable } from '$lib/server/syncValidation';
+
+function optionalCursorId(url: URL, name: string): number | null {
+	const value = url.searchParams.get(name);
+	if (value === null) return null;
+	const parsed = parseInt(value, 10);
+	return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+}
 
 export const GET: RequestHandler = async ({ request, url, platform }) => {
 	const db = getDb(platform);
@@ -24,18 +32,26 @@ export const GET: RequestHandler = async ({ request, url, platform }) => {
 	const deviceUuid = authUser.deviceUuid;
 	// Fetch query parameters using url.searchParams
 	const lastProfilesTS = parseInt(url.searchParams.get('last_profile_ts') || '0', 10);
+	const lastProfileId = optionalCursorId(url, 'last_profile_id');
 	const lastFilesTS = parseInt(url.searchParams.get('last_file_ts') || '0', 10);
+	const lastFileId = optionalCursorId(url, 'last_file_id');
 	const lastItemsTS = parseInt(url.searchParams.get('last_item_ts') || '0', 10);
+	const lastItemId = optionalCursorId(url, 'last_item_id');
 	const lastPartsTS = parseInt(url.searchParams.get('last_part_ts') || '0', 10);
+	const lastPartId = optionalCursorId(url, 'last_part_id');
 
 	const { profileRows, fileRows, partRows, itemRows } = await fetchChanges(
 		db,
 		authUser.userId!,
 		deviceUuid,
 		lastProfilesTS,
+		lastProfileId,
 		lastFilesTS,
+		lastFileId,
 		lastItemsTS,
-		lastPartsTS
+		lastItemId,
+		lastPartsTS,
+		lastPartId
 	);
 
 	return json({
@@ -60,6 +76,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	try {
 		const { table_maps } = await request.json();
 		for (const { table, changes } of table_maps) {
+			assertSyncTable(table);
 			switch (table) {
 				case 'files':
 					await saveFileChanges(db, userId, deviceUuid, changes);
@@ -69,8 +86,6 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 					break;
 				case 'parts':
 					await savePartChanges(db, userId, deviceUuid, changes);
-					break;
-				default:
 					break;
 			}
 		}

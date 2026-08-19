@@ -24,6 +24,7 @@ import '../models/model_state.dart';
 import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import '../utils/utils_crypto.dart';
+import '../utils/utils_sync_cursor.dart';
 import 'package:sodium/sodium_sumo.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
@@ -141,7 +142,9 @@ class SyncUtils {
       if (!allFetched) return false;
       final allPushed = await pushMapChanges();
       if (!allPushed) return false;
-      await TaskManager.init();
+      await TaskManager.init(
+        retryWakeHandler: () => triggerSync(caller: 'TransferRetry'),
+      );
       return await pushMapChanges();
     } catch (e, s) {
       logger.error("Sync failed", error: e, stackTrace: s);
@@ -380,22 +383,42 @@ class SyncUtils {
     bool changesAvailable = true;
     while (changesAvailable) {
       changesAvailable = false;
-      int lastProfileTS = int.parse(await ModelState.get(
-          AppString.lastProfileTS.string,
-          defaultValue: '0'));
-      int lastItemTS = int.parse(
-          await ModelState.get(AppString.lastItemTS.string, defaultValue: '0'));
-      int lastFileTS = int.parse(
-          await ModelState.get(AppString.lastFileTS.string, defaultValue: '0'));
-      int lastPartTS = int.parse(
-          await ModelState.get(AppString.lastPartTS.string, defaultValue: '0'));
+      final profileCursor = SyncCursor(
+        timestamp: int.parse(await ModelState.get(
+            AppString.lastProfileTS.string,
+            defaultValue: '0')),
+        rowId: int.parse(await ModelState.get(AppString.lastProfileId.string,
+            defaultValue: '0')),
+      );
+      final itemCursor = SyncCursor(
+        timestamp: int.parse(await ModelState.get(AppString.lastItemTS.string,
+            defaultValue: '0')),
+        rowId: int.parse(await ModelState.get(AppString.lastItemId.string,
+            defaultValue: '0')),
+      );
+      final fileCursor = SyncCursor(
+        timestamp: int.parse(await ModelState.get(AppString.lastFileTS.string,
+            defaultValue: '0')),
+        rowId: int.parse(await ModelState.get(AppString.lastFileId.string,
+            defaultValue: '0')),
+      );
+      final partCursor = SyncCursor(
+        timestamp: int.parse(await ModelState.get(AppString.lastPartTS.string,
+            defaultValue: '0')),
+        rowId: int.parse(await ModelState.get(AppString.lastPartId.string,
+            defaultValue: '0')),
+      );
       try {
         // fetch clubbed changes
         Map<String, dynamic> requestData = {
-          AppString.lastProfileTS.string: lastProfileTS,
-          AppString.lastFileTS.string: lastFileTS,
-          AppString.lastItemTS.string: lastItemTS,
-          AppString.lastPartTS.string: lastPartTS
+          AppString.lastProfileTS.string: profileCursor.timestamp,
+          AppString.lastProfileId.string: profileCursor.rowId,
+          AppString.lastFileTS.string: fileCursor.timestamp,
+          AppString.lastFileId.string: fileCursor.rowId,
+          AppString.lastItemTS.string: itemCursor.timestamp,
+          AppString.lastItemId.string: itemCursor.rowId,
+          AppString.lastPartTS.string: partCursor.timestamp,
+          AppString.lastPartId.string: partCursor.rowId,
         };
         final responseData =
             await api.get(endpoint: '/sync', queryParameters: requestData);
@@ -457,9 +480,7 @@ class SyncUtils {
                   remoteUpdatedAt: newModelItem.updatedAt,
                 ));
               }
-              if (itemTS > lastItemTS) {
-                lastItemTS = itemTS;
-              }
+              itemCursor.advance(itemTS, int.parse(changeMap["1"].toString()));
             } else if (table == Tables.files.string) {
               ModelFile newModelFile = await ModelFile.fromServerMap(changeMap);
               String fileHash = newModelFile.id;
@@ -480,9 +501,8 @@ class SyncUtils {
                   remoteUpdatedAt: clientTS,
                 ));
               }
-              if (fileServerTS > lastFileTS) {
-                lastFileTS = fileServerTS;
-              }
+              fileCursor.advance(
+                  fileServerTS, int.parse(changeMap["1"].toString()));
             } else if (table == Tables.parts.string) {
               int partServerTS = int.parse(changeMap["3"].toString());
               ModelPart newModelPart = await ModelPart.fromServerMap(changeMap);
@@ -503,9 +523,8 @@ class SyncUtils {
                   remoteUpdatedAt: clientTS,
                 ));
               }
-              if (partServerTS > lastPartTS) {
-                lastPartTS = partServerTS;
-              }
+              partCursor.advance(
+                  partServerTS, int.parse(changeMap["1"].toString()));
             } else if (table == Tables.profiles.string) {
               int profileTS = int.parse(changeMap["3"].toString());
               String profileId = changeMap["4"];
@@ -518,17 +537,20 @@ class SyncUtils {
                 id: profileId,
                 row: map,
               ));
-              if (profileTS > lastProfileTS) {
-                lastProfileTS = profileTS;
-              }
+              profileCursor.advance(
+                  profileTS, int.parse(changeMap["1"].toString()));
             }
           }
         }
         await StorageSqlite.instance.applySyncPage(mutations, {
-          AppString.lastFileTS.string: lastFileTS,
-          AppString.lastPartTS.string: lastPartTS,
-          AppString.lastItemTS.string: lastItemTS,
-          AppString.lastProfileTS.string: lastProfileTS,
+          AppString.lastFileTS.string: fileCursor.timestamp,
+          AppString.lastFileId.string: fileCursor.rowId,
+          AppString.lastPartTS.string: partCursor.timestamp,
+          AppString.lastPartId.string: partCursor.rowId,
+          AppString.lastItemTS.string: itemCursor.timestamp,
+          AppString.lastItemId.string: itemCursor.rowId,
+          AppString.lastProfileTS.string: profileCursor.timestamp,
+          AppString.lastProfileId.string: profileCursor.rowId,
         });
         logger.info("Fetched Map Changes");
       } catch (e, s) {

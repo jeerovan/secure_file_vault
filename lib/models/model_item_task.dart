@@ -118,6 +118,8 @@ class ModelItemTask {
     return _repository.fetchPendingId(activeTasks, now: now);
   }
 
+  static Future<int?> fetchNextWakeAt() => _repository.fetchNextWakeAt();
+
   Future<int> insert() async {
     Map<String, dynamic> map = toMap();
     int inserted = await _repository.insert(map);

@@ -7,7 +7,8 @@ import {
 	getCredentials,
 	getOptimalStorage,
 	getTempStorage,
-	getUserFile
+	getUserFile,
+	lockStorageAllocation
 } from '$lib/server/db/api';
 import {
 	CredentialKeys,
@@ -37,35 +38,34 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	if (!file_hash || !file_size) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const fileRow = await getUserFile(db, authUser.userId!, file_hash);
-	if (!fileRow) {
-		return json({ success: 0, message: ErrorCode.NO_DATA });
-	}
-	const fileId = fileRow[FileKeys.ID];
-	const tempStorage = await getTempStorage(db, authUser.userId!, fileId);
-	if (tempStorage) {
-		return json({
-			success: 1,
-			data: {
-				provider_id: tempStorage[TempStorageKeys.PROVIDER_ID],
-				storage_id: tempStorage[TempStorageKeys.STORAGE_ID]
-			}
-		});
-	} else {
-		const storage = await getOptimalStorage(db, authUser.userId!, file_size);
-		if (storage) {
-			const credentialId = storage[StorageKeys.CREDENTIAL_ID];
-			const credential = await getCredentials(db, credentialId);
-			if (credential) {
-				const providerId = credential[CredentialKeys.PROVIDER_ID];
-				const storageId = storage[StorageKeys.ID];
-				await addTempStorage(db, authUser.userId!, fileId, storageId, file_size, providerId);
-				return json({ success: 1, data: { provider_id: providerId, storage_id: storageId } });
-			} else {
-				return json({ success: 0, message: ErrorCode.NO_STORAGE });
-			}
-		} else {
-			return json({ success: 0, message: ErrorCode.NO_STORAGE });
+	const result = await db.transaction(async (tx) => {
+		const userId = authUser.userId!;
+		await lockStorageAllocation(tx, userId);
+		const fileRow = await getUserFile(tx, userId, file_hash);
+		if (!fileRow) return { success: 0, message: ErrorCode.NO_DATA };
+
+		const fileId = fileRow[FileKeys.ID];
+		const existing = await getTempStorage(tx, userId, fileId);
+		if (existing) {
+			return {
+				success: 1,
+				data: {
+					provider_id: existing[TempStorageKeys.PROVIDER_ID],
+					storage_id: existing[TempStorageKeys.STORAGE_ID]
+				}
+			};
 		}
-	}
+
+		const storage = await getOptimalStorage(tx, userId, file_size);
+		if (!storage) return { success: 0, message: ErrorCode.NO_STORAGE };
+		const credential = await getCredentials(tx, storage[StorageKeys.CREDENTIAL_ID]);
+		if (!credential) return { success: 0, message: ErrorCode.NO_STORAGE };
+
+		const providerId = credential[CredentialKeys.PROVIDER_ID];
+		const storageId = storage[StorageKeys.ID];
+		await addTempStorage(tx, userId, fileId, storageId, file_size, providerId);
+		return { success: 1, data: { provider_id: providerId, storage_id: storageId } };
+	});
+
+	return json(result);
 };

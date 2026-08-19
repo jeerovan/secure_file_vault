@@ -47,12 +47,20 @@ class TaskManager {
   // Stores active uploads with an identifiable parameter (Task ID)
   final Set<String> _activeTaskIds = {};
 
+  Timer? _retryWakeTimer;
+  int? _retryWakeAt;
+  StreamSubscription<InternetStatus>? _connectivitySubscription;
+  Future<void> Function()? _retryWakeHandler;
+
   // Store the last 5 task durations to calculate a responsive rolling average
   final Queue<int> _recentTaskDurationsMs = Queue<int>();
   static const int _maxHistoryLength = 5;
 
   /// Static function "init" to start the process.
-  static Future<void> init() async {
+  static Future<void> init({Future<void> Function()? retryWakeHandler}) async {
+    if (retryWakeHandler != null) {
+      _instance._retryWakeHandler = retryWakeHandler;
+    }
     if (_instance._activeTaskIds.isNotEmpty || _instance._isDispatching) {
       logger.info("Already running.");
       // Return the existing future if it's already processing to prevent premature exit
@@ -62,6 +70,8 @@ class TaskManager {
       }
       return;
     }
+
+    _instance._cancelRetryWakeTimer();
 
     await ModelItemTask.recoverInterruptedTasks();
 
@@ -94,9 +104,11 @@ class TaskManager {
     try {
       bool hasInternet = await InternetConnection().hasInternetAccess;
       if (!hasInternet) {
+        _waitForConnectivity();
         _checkCompletion();
         return;
       }
+      await _cancelConnectivityWake();
 
       // Concurrency limits
       final maxConcurrentProcesses = TransferConcurrencyPolicy.maxConcurrent(
@@ -126,10 +138,12 @@ class TaskManager {
 
       // If loop finished and nothing was queued while nothing is active, complete the process
       if (!tasksDispatched && _activeTaskIds.isEmpty) {
+        await _scheduleNextRetryWake();
         _checkCompletion();
       }
     } catch (e, s) {
       logger.error('Error in dispatcher', error: e.toString(), stackTrace: s);
+      await _scheduleNextRetryWake();
       _checkCompletion();
     } finally {
       // Release dispatcher lock so finishing processes can re-trigger it
@@ -207,6 +221,74 @@ class TaskManager {
       if (_syncCompleter != null && !_syncCompleter!.isCompleted) {
         _syncCompleter!.complete();
       }
+    }
+  }
+
+  static Duration retryWakeDelay(int nextAttemptAt, {DateTime? now}) {
+    final current = (now ?? DateTime.now().toUtc()).millisecondsSinceEpoch;
+    return Duration(milliseconds: (nextAttemptAt - current).clamp(1, 900000));
+  }
+
+  Future<void> _scheduleNextRetryWake() async {
+    final nextAttemptAt = await ModelItemTask.fetchNextWakeAt();
+    if (nextAttemptAt == null) {
+      _cancelRetryWakeTimer();
+      return;
+    }
+    if (_retryWakeTimer?.isActive == true &&
+        _retryWakeAt != null &&
+        _retryWakeAt! <= nextAttemptAt) {
+      return;
+    }
+    _cancelRetryWakeTimer();
+    _retryWakeAt = nextAttemptAt;
+    _retryWakeTimer = Timer(retryWakeDelay(nextAttemptAt), () {
+      _retryWakeTimer = null;
+      _retryWakeAt = null;
+      unawaited(_restartFromWake());
+    });
+  }
+
+  void _cancelRetryWakeTimer() {
+    _retryWakeTimer?.cancel();
+    _retryWakeTimer = null;
+    _retryWakeAt = null;
+  }
+
+  void _waitForConnectivity() {
+    _connectivitySubscription ??=
+        InternetConnection().onStatusChange.listen((status) {
+      if (status == InternetStatus.connected) {
+        unawaited(_restartFromConnectivity());
+      }
+    });
+  }
+
+  Future<void> _cancelConnectivityWake() async {
+    final subscription = _connectivitySubscription;
+    _connectivitySubscription = null;
+    await subscription?.cancel();
+  }
+
+  Future<void> _restartFromConnectivity() async {
+    await _cancelConnectivityWake();
+    await _restartFromWake();
+  }
+
+  Future<void> _restartFromWake() async {
+    try {
+      if (!await InternetConnection().hasInternetAccess) {
+        _waitForConnectivity();
+        return;
+      }
+      final handler = _retryWakeHandler;
+      if (handler != null) {
+        await handler();
+      } else {
+        await TaskManager.init();
+      }
+    } catch (e, s) {
+      logger.error('Retry wake failed', error: e, stackTrace: s);
     }
   }
 
@@ -293,10 +375,12 @@ class TaskManager {
         int expectedSize = fileSize + 24 + (chunks * 17) + bufferSize;
         final providerResult = await api.post(
             endpoint: '/get-upload-storage-provider',
-            jsonBody: {"file_hash": modelFile.id, "file_size": expectedSize});
-        final status = providerResult["success"];
-        if (status <= 0) {
-          logger.error('Failed to select upload storage provider');
+            jsonBody: {"file_hash": modelFile.id, "file_size": expectedSize},
+            retryUnauthorized: true);
+        final selectionStatus =
+            UploadStorageSelectionPolicy.classify(providerResult);
+        if (selectionStatus == UploadStorageSelectionStatus.storageFull) {
+          logger.error('No upload storage has enough capacity');
           await ModelState.set(AppString.storageFull.string, "yes");
           EventStream().publish(AppEvent(
             type: EventType.system,
@@ -305,6 +389,11 @@ class TaskManager {
             value: true,
           ));
           await itemTask.markBlocked('storage_full');
+          return false;
+        } else if (selectionStatus ==
+            UploadStorageSelectionStatus.retryableFailure) {
+          logger
+              .warning('Upload storage selection failed; task will be retried');
           return false;
         } else {
           final providerData = providerResult["data"];
@@ -346,6 +435,7 @@ class TaskManager {
         uploadInfo["provider"] = "b2";
         uploadInfo["url"] = urlData["uploadUrl"];
         uploadInfo["token"] = urlData["authorizationToken"];
+        uploadInfo["storage_id"] = modelFile.storageId;
       }
     } else if (storageProvider.usesPresignedS3Url) {
       String fileId = '${modelFile.id}_$partToUpload';
@@ -486,21 +576,55 @@ class TaskManager {
     final modelFile = await ModelFile.get(fileHash);
     final partCount = modelFile?.parts ?? 1;
     var lastProgress = itemTask.progress;
-    final uploadResult = await uploadFileStream(
-      method: method,
-      file: encryptedFile,
-      url: uploadUrl,
-      headers: headers,
-      onProgress: (sent, total) async {
-        final currentPartPercent = total <= 0 ? 100 : sent * 100 ~/ total;
-        final overall =
-            (((part - 1) * 100 + currentPartPercent) ~/ partCount).clamp(0, 99);
-        if (overall <= lastProgress) return;
-        lastProgress = overall;
-        itemTask.progress = overall;
-        await itemTask.update(["progress"]);
-      },
-    );
+    UploadFileResult? uploadResult;
+    if (uploadInfo["provider"] == "b2") {
+      final storedPart = await ModelPart.get(fileHashPart);
+      if (storedPart == null) {
+        logger.error("PushFilePart", error: "file or part missing");
+        return true;
+      }
+      final uploadAttempted =
+          B2UploadRecoveryPolicy.wasAttempted(storedPart.data);
+      if (uploadAttempted) {
+        final recoveryResult = await BackendApi().post(
+          endpoint: '/b2/find-uploaded-file',
+          jsonBody: {
+            "storage_id": uploadInfo["storage_id"],
+            "file_id": fileHashPart,
+            "content_sha1": sha1Hash,
+            "content_length": contentLength,
+          },
+          retryUnauthorized: true,
+        );
+        if (recoveryResult["success"] != 1) {
+          logger.warning('Unable to reconcile an earlier B2 upload attempt');
+          return true;
+        }
+        final recoveredFileId =
+            B2UploadRecoveryPolicy.recoveredFileId(recoveryResult);
+        if (recoveredFileId != null) {
+          logger.info('Recovered an already uploaded B2 file part');
+          uploadResult = UploadFileResult.success({"fileId": recoveredFileId});
+        }
+      } else {
+        storedPart.data = B2UploadRecoveryPolicy.markAttempted(storedPart.data);
+        await storedPart.update(["data"]);
+      }
+    }
+    uploadResult ??= await uploadFileStream(
+        method: method,
+        file: encryptedFile,
+        url: uploadUrl,
+        headers: headers,
+        onProgress: (sent, total) async {
+          final currentPartPercent = total <= 0 ? 100 : sent * 100 ~/ total;
+          final overall = (((part - 1) * 100 + currentPartPercent) ~/ partCount)
+              .clamp(0, 99);
+          if (overall <= lastProgress) return;
+          lastProgress = overall;
+          itemTask.progress = overall;
+          await itemTask.update(["progress"]);
+        });
     // update uploaded
     if (uploadResult.succeeded) {
       logger.info("Encrypted file part uploaded");

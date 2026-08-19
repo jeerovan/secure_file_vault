@@ -103,9 +103,13 @@ enum AppString {
   pushedLocalContentForSync,
   lastChangeTS,
   lastProfileTS,
+  lastProfileId,
   lastFileTS,
+  lastFileId,
   lastItemTS,
+  lastItemId,
   lastPartTS,
+  lastPartId,
   hideSyncButton,
   storageFull,
 
@@ -204,12 +208,20 @@ extension AppStringExtension on AppString {
         return "last_changes_fetched_at";
       case AppString.lastProfileTS:
         return "last_profile_ts";
+      case AppString.lastProfileId:
+        return "last_profile_id";
       case AppString.lastFileTS:
         return "last_file_ts";
+      case AppString.lastFileId:
+        return "last_file_id";
       case AppString.lastItemTS:
         return "last_item_ts";
+      case AppString.lastItemId:
+        return "last_item_id";
       case AppString.lastPartTS:
         return "last_part_ts";
+      case AppString.lastPartId:
+        return "last_part_id";
       case AppString.otpSentTo:
         return "otp_sent_to";
       case AppString.otpSentAt:

@@ -17,6 +17,8 @@ import {
 	and,
 	ne,
 	gt,
+	or,
+	asc,
 	count,
 	desc,
 	sql,
@@ -41,6 +43,7 @@ import {
 } from '$lib/server/db/keys';
 import { deleteFileFromStorage } from '../deleteWorker';
 import type { Db, Tx } from '.';
+import { parseSyncChangeData } from '../syncValidation';
 
 export async function getUserByRemoteId(
 	db: Db | Tx,
@@ -399,9 +402,13 @@ export async function fetchChanges(
 	userId: number,
 	deviceUuid: string,
 	lastProfilesTS: number,
+	lastProfileId: number | null,
 	lastFilesTS: number,
+	lastFileId: number | null,
 	lastItemsTS: number,
-	lastPartsTS: number
+	lastItemId: number | null,
+	lastPartsTS: number,
+	lastPartId: number | null
 ) {
 	const rowLimit = 100;
 	const profileRows = await db
@@ -414,10 +421,20 @@ export async function fetchChanges(
 		.where(
 			and(
 				eq(userData[UserDataKeys.USER_ID], userId),
-				gt(userData[UserDataKeys.SERVER_UPDATED_AT], lastProfilesTS),
+				lastProfileId === null
+					? gt(userData[UserDataKeys.SERVER_UPDATED_AT], lastProfilesTS)
+					: or(
+							gt(userData[UserDataKeys.SERVER_UPDATED_AT], lastProfilesTS),
+							and(
+								eq(userData[UserDataKeys.SERVER_UPDATED_AT], lastProfilesTS),
+								gt(userData[UserDataKeys.ID], lastProfileId)
+							)
+						),
 				ne(userData[UserDataKeys.DEVICE_UUID], deviceUuid)
 			)
-		);
+		)
+		.orderBy(asc(userData[UserDataKeys.SERVER_UPDATED_AT]), asc(userData[UserDataKeys.ID]))
+		.limit(rowLimit);
 
 	const fileRows = await db
 		.select()
@@ -425,10 +442,19 @@ export async function fetchChanges(
 		.where(
 			and(
 				eq(file[FileKeys.USER_ID], userId),
-				gt(file[FileKeys.SERVER_UPDATED_AT], lastFilesTS),
+				lastFileId === null
+					? gt(file[FileKeys.SERVER_UPDATED_AT], lastFilesTS)
+					: or(
+							gt(file[FileKeys.SERVER_UPDATED_AT], lastFilesTS),
+							and(
+								eq(file[FileKeys.SERVER_UPDATED_AT], lastFilesTS),
+								gt(file[FileKeys.ID], lastFileId)
+							)
+						),
 				ne(file[FileKeys.DEVICE_UUID], deviceUuid)
 			)
 		)
+		.orderBy(asc(file[FileKeys.SERVER_UPDATED_AT]), asc(file[FileKeys.ID]))
 		.limit(rowLimit);
 
 	const partRows = await db
@@ -441,10 +467,19 @@ export async function fetchChanges(
 		.where(
 			and(
 				eq(part[PartKeys.USER_ID], userId),
-				gt(part[PartKeys.SERVER_UPDATED_AT], lastPartsTS),
+				lastPartId === null
+					? gt(part[PartKeys.SERVER_UPDATED_AT], lastPartsTS)
+					: or(
+							gt(part[PartKeys.SERVER_UPDATED_AT], lastPartsTS),
+							and(
+								eq(part[PartKeys.SERVER_UPDATED_AT], lastPartsTS),
+								gt(part[PartKeys.ID], lastPartId)
+							)
+						),
 				ne(part[PartKeys.DEVICE_UUID], deviceUuid)
 			)
 		)
+		.orderBy(asc(part[PartKeys.SERVER_UPDATED_AT]), asc(part[PartKeys.ID]))
 		.limit(rowLimit);
 
 	const itemRows = await db
@@ -453,10 +488,19 @@ export async function fetchChanges(
 		.where(
 			and(
 				eq(item[ItemKeys.USER_ID], userId),
-				gt(item[ItemKeys.SERVER_UPDATED_AT], lastItemsTS),
+				lastItemId === null
+					? gt(item[ItemKeys.SERVER_UPDATED_AT], lastItemsTS)
+					: or(
+							gt(item[ItemKeys.SERVER_UPDATED_AT], lastItemsTS),
+							and(
+								eq(item[ItemKeys.SERVER_UPDATED_AT], lastItemsTS),
+								gt(item[ItemKeys.ID], lastItemId)
+							)
+						),
 				ne(item[ItemKeys.DEVICE_UUID], deviceUuid)
 			)
 		)
+		.orderBy(asc(item[ItemKeys.SERVER_UPDATED_AT]), asc(item[ItemKeys.ID]))
 		.limit(rowLimit);
 
 	return { profileRows, fileRows, partRows, itemRows };
@@ -510,13 +554,7 @@ export async function saveFileChanges(
 			const incomingUpdatedAt = change['updated_at'] || 0;
 			const changeString = change['data'];
 
-			let changedData = {};
-			try {
-				changedData = typeof changeString === 'string' ? JSON.parse(changeString) : changeString;
-			} catch (error) {
-				console.error(`Invalid JSON in saveFileChanges for hash: ${fileHash}`);
-				continue;
-			}
+			const changedData = parseSyncChangeData(changeString);
 
 			const userFile = fileMap.get(fileHash);
 			const providerId = change['provider_id'] || null;
@@ -652,19 +690,15 @@ export async function savePartChanges(
 			const fileHash = partData.join('_');
 
 			const fileEntry = fileMap.get(fileHash);
-			if (!fileEntry) continue;
+			if (!fileEntry) {
+				throw new Error('Part change references an unknown file');
+			}
 
 			const fileId = fileEntry[FileKeys.ID];
 			const incomingUpdatedAt = change['updated_at'] || 0;
 			const changeString = change['data'];
 
-			let changedData = {};
-			try {
-				changedData = typeof changeString === 'string' ? JSON.parse(changeString) : changeString;
-			} catch (error) {
-				console.error(`Invalid JSON in savePartChanges: ${filePartId}`);
-				continue;
-			}
+			const changedData = parseSyncChangeData(changeString);
 
 			const existingRow = partMap.get(`${fileId}_${partNumber}`);
 			const deleted = change['deleted'];
@@ -955,6 +989,12 @@ export async function getOptimalStorage(db: Db | Tx, userId: number, fileSizeByt
 		.limit(1);
 
 	return availableStorage;
+}
+
+export async function lockStorageAllocation(db: Db | Tx, userId: number) {
+	// Serialize capacity checks for one user so concurrent files cannot reserve
+	// the same remaining bytes before either reservation becomes visible.
+	await db.execute(sql`SELECT pg_advisory_xact_lock(${userId}, ${0x46494645})`);
 }
 
 export async function updateStorageUsedSize(
