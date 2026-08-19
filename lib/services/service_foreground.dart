@@ -6,13 +6,20 @@ import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
+import 'service_events.dart';
 
 class ServiceForeground {
   ServiceForeground._();
   static final ServiceForeground instance = ServiceForeground._();
   AppLogger logger = AppLogger(prefixes: ["Foreground Service"]);
+  bool _taskDataCallbackRegistered = false;
+
   void init() {
     FlutterForegroundTask.initCommunicationPort();
+    if (!_taskDataCallbackRegistered) {
+      FlutterForegroundTask.addTaskDataCallback(_onTaskData);
+      _taskDataCallbackRegistered = true;
+    }
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'data_sync_channel',
@@ -32,6 +39,16 @@ class ServiceForeground {
         allowWifiLock: true,
       ),
     );
+  }
+
+  void _onTaskData(Object data) {
+    final isRunning = ForegroundSyncStateMessage.decode(data);
+    if (isRunning == null) return;
+    EventStream().publish(AppEvent(
+      type: EventType.system,
+      id: 'foregroundSync',
+      key: isRunning ? EventKey.running : EventKey.stopped,
+    ));
   }
 
   Future<void> start() async {

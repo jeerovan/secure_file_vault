@@ -75,7 +75,7 @@ class FilePane extends StatefulWidget {
   State<FilePane> createState() => _FilePaneState();
 }
 
-class _FilePaneState extends State<FilePane> {
+class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   final AppLogger logger = AppLogger(prefixes: ["Explorer"]);
   final ScrollController _breadcrumbController = ScrollController();
   final ValueNotifier<List<ModelItem>> _itemsNotifier = ValueNotifier([]);
@@ -99,13 +99,22 @@ class _FilePaneState extends State<FilePane> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     EventStream().notifier.addListener(_handleAppEvents);
     unawaited(_loadFiles());
     unawaited(_refreshState());
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_refreshState());
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     EventStream().notifier.removeListener(_handleAppEvents);
     _breadcrumbController.dispose();
     _itemsNotifier.dispose();
@@ -143,8 +152,11 @@ class _FilePaneState extends State<FilePane> {
           if (mounted) {
             await context.read<AppSetupState>().recheckStatus();
           }
-        } else if (event.key == EventKey.running ||
-            event.key == EventKey.stopped ||
+        } else if (event.key == EventKey.running) {
+          if (mounted && !_syncInProgress) {
+            setState(() => _syncInProgress = true);
+          }
+        } else if (event.key == EventKey.stopped ||
             event.key == EventKey.storageFull) {
           await _refreshState();
           if (event.key == EventKey.stopped) {

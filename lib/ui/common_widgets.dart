@@ -88,7 +88,7 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
-    if (Platform.isAndroid && !localTesting()) {
+    if (Platform.isAndroid) {
       PermissionStatus notificationPermission =
           await Permission.notification.status;
       bool quickSyncRequired = ModelSetting.get(

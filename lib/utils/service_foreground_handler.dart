@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../services/service_logger.dart';
+import '../services/service_events.dart';
 import '../storage/storage_sqlite.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
@@ -61,22 +62,32 @@ class ForegroundTaskHandler extends TaskHandler {
 
   Future<void> startSyncTask() async {
     logger.info("Starting Sync Task");
+    AppLocalizations? localizations;
     try {
       final String appLocale = await getAppLocale();
       final Locale locale = Locale(appLocale);
-      final AppLocalizations localizations = lookupAppLocalizations(locale);
-      FlutterForegroundTask.updateService(
+      localizations = lookupAppLocalizations(locale);
+      FlutterForegroundTask.sendDataToMain(
+        ForegroundSyncStateMessage.encode(isRunning: true),
+      );
+      await FlutterForegroundTask.updateService(
           notificationButtons: [],
           notificationText: localizations.quickSyncNotificationInProgress);
       await SyncUtils().reconFolders(caller: "ForegroundService");
-      FlutterForegroundTask.updateService(
-          notificationText: localizations.quickSyncNotificationText,
-          notificationButtons: [
-            NotificationButton(
-                id: 'sync', text: localizations.quickSyncNotificationButton)
-          ]);
     } catch (e, s) {
       logger.error("Sync failed", error: e, stackTrace: s);
+    } finally {
+      if (localizations != null) {
+        await FlutterForegroundTask.updateService(
+            notificationText: localizations.quickSyncNotificationText,
+            notificationButtons: [
+              NotificationButton(
+                  id: 'sync', text: localizations.quickSyncNotificationButton)
+            ]);
+      }
+      FlutterForegroundTask.sendDataToMain(
+        ForegroundSyncStateMessage.encode(isRunning: false),
+      );
     }
   }
 }

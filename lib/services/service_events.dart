@@ -20,6 +20,23 @@ enum EventKey {
   storageFull,
 }
 
+class ForegroundSyncStateMessage {
+  static const String _typeKey = 'type';
+  static const String _typeValue = 'foregroundSyncState';
+  static const String _isRunningKey = 'isRunning';
+
+  static Map<String, Object> encode({required bool isRunning}) => {
+        _typeKey: _typeValue,
+        _isRunningKey: isRunning,
+      };
+
+  static bool? decode(Object data) {
+    if (data is! Map || data[_typeKey] != _typeValue) return null;
+    final isRunning = data[_isRunningKey];
+    return isRunning is bool ? isRunning : null;
+  }
+}
+
 class AppEvent {
   final EventType type;
   final String id;
