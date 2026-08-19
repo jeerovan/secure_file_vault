@@ -212,8 +212,11 @@ class TaskManager {
         return 'transfer:upload:$opaqueHash';
       }
     }
-    return 'transfer:download:${task.id}';
+    return downloadOperationId(task.id);
   }
+
+  static String downloadOperationId(String itemId) =>
+      'transfer:download:$itemId';
 
   /// Evaluates if the task queue has fully emptied, allowing the isolate to shut down gracefully
   void _checkCompletion() {

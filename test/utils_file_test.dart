@@ -177,4 +177,80 @@ void main() {
       await directory.delete(recursive: true);
     }
   });
+
+  test('remote deletion removes a downloaded file inside the managed root',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('fife-delete-');
+    final managedRoot = Directory('${directory.path}/FiFe')..createSync();
+    final downloaded = File('${managedRoot.path}/folder/file.bin')
+      ..createSync(recursive: true)
+      ..writeAsStringSync('downloaded');
+    try {
+      expect(
+        await deleteManagedFileIfExists(
+          filePath: downloaded.path,
+          managedRootPath: managedRoot.path,
+        ),
+        isTrue,
+      );
+      expect(await downloaded.exists(), isFalse);
+    } finally {
+      await directory.delete(recursive: true);
+    }
+  });
+
+  test('remote deletion accepts an already missing managed file', () async {
+    final directory = await Directory.systemTemp.createTemp('fife-delete-');
+    final managedRoot = Directory('${directory.path}/FiFe')..createSync();
+    try {
+      expect(
+        await deleteManagedFileIfExists(
+          filePath: '${managedRoot.path}/missing.bin',
+          managedRootPath: managedRoot.path,
+        ),
+        isTrue,
+      );
+    } finally {
+      await directory.delete(recursive: true);
+    }
+  });
+
+  test('remote deletion preserves user-owned files outside managed storage',
+      () async {
+    final directory = await Directory.systemTemp.createTemp('fife-delete-');
+    final managedRoot = Directory('${directory.path}/FiFe')..createSync();
+    final external = File('${directory.path}/external.bin')
+      ..writeAsStringSync('user-owned');
+    try {
+      expect(
+        await deleteManagedFileIfExists(
+          filePath: external.path,
+          managedRootPath: managedRoot.path,
+        ),
+        isFalse,
+      );
+      expect(await external.readAsString(), 'user-owned');
+    } finally {
+      await directory.delete(recursive: true);
+    }
+  });
+
+  test('remote file deletion never recursively removes a directory', () async {
+    final directory = await Directory.systemTemp.createTemp('fife-delete-');
+    final managedRoot = Directory('${directory.path}/FiFe')..createSync();
+    final unexpectedDirectory = Directory('${managedRoot.path}/file.bin')
+      ..createSync();
+    try {
+      await expectLater(
+        deleteManagedFileIfExists(
+          filePath: unexpectedDirectory.path,
+          managedRootPath: managedRoot.path,
+        ),
+        throwsA(isA<FileSystemException>()),
+      );
+      expect(await unexpectedDirectory.exists(), isTrue);
+    } finally {
+      await directory.delete(recursive: true);
+    }
+  });
 }

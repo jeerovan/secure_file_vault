@@ -40,6 +40,13 @@ void main() {
     expect(TransferTaskState.cancelled.isActive, isFalse);
   });
 
+  test('download operations use one shared item lease', () {
+    expect(
+      TaskManager.downloadOperationId('item-id'),
+      'transfer:download:item-id',
+    );
+  });
+
   test('retry wake delay waits until due and is capped', () {
     final now = DateTime.utc(2026, 1, 1);
     expect(

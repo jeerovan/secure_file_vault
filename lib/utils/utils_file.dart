@@ -5,6 +5,67 @@ import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:http/http.dart' as http_lib;
+import 'package:path/path.dart' as path_lib;
+
+/// Deletes a downloaded file only when it is inside the app-managed cloud
+/// directory. Returns false for user-owned paths outside that directory.
+Future<bool> deleteManagedFileIfExists({
+  required String filePath,
+  required String managedRootPath,
+}) async {
+  if (filePath.trim().isEmpty || managedRootPath.trim().isEmpty) return false;
+
+  final root = path_lib.normalize(path_lib.absolute(managedRootPath));
+  final target = path_lib.normalize(path_lib.absolute(filePath));
+  if (target == root || !path_lib.isWithin(root, target)) return false;
+
+  final type = await FileSystemEntity.type(target, followLinks: false);
+  switch (type) {
+    case FileSystemEntityType.notFound:
+      return true;
+    case FileSystemEntityType.file:
+      final resolvedRoot = path_lib.normalize(
+        await Directory(root).resolveSymbolicLinks(),
+      );
+      final resolvedTarget = path_lib.normalize(
+        await File(target).resolveSymbolicLinks(),
+      );
+      if (!path_lib.isWithin(resolvedRoot, resolvedTarget)) {
+        throw FileSystemException(
+          'Refusing to delete a file reached through a link outside managed storage.',
+          target,
+        );
+      }
+      await File(target).delete();
+      return true;
+    case FileSystemEntityType.link:
+      final resolvedRoot = path_lib.normalize(
+        await Directory(root).resolveSymbolicLinks(),
+      );
+      final resolvedParent = path_lib.normalize(
+        await Directory(path_lib.dirname(target)).resolveSymbolicLinks(),
+      );
+      if (resolvedParent != resolvedRoot &&
+          !path_lib.isWithin(resolvedRoot, resolvedParent)) {
+        throw FileSystemException(
+          'Refusing to delete a link reached outside managed storage.',
+          target,
+        );
+      }
+      await Link(target).delete();
+      return true;
+    case FileSystemEntityType.directory:
+      throw FileSystemException(
+        'Refusing to delete a directory where a downloaded file was expected.',
+        target,
+      );
+    default:
+      throw FileSystemException(
+        'Unsupported filesystem entity at downloaded file path.',
+        target,
+      );
+  }
+}
 
 class FileSplitter {
   final File? file;

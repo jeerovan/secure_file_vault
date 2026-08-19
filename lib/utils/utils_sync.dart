@@ -19,12 +19,15 @@ import '../utils/common.dart';
 import '../utils/enums.dart';
 import '../models/model_file.dart';
 import '../models/model_item.dart';
+import '../models/model_item_task.dart';
 import '../models/model_part.dart';
 import '../models/model_state.dart';
 import '../services/service_logger.dart';
 import '../storage/storage_secure.dart';
 import '../utils/utils_crypto.dart';
+import '../utils/utils_file.dart';
 import '../utils/utils_sync_cursor.dart';
+import '../utils/utils_transfer_staging.dart';
 import 'package:sodium/sodium_sumo.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
@@ -383,6 +386,7 @@ class SyncUtils {
     bool changesAvailable = true;
     while (changesAvailable) {
       changesAvailable = false;
+      final deletionLeases = <OperationLease>[];
       final profileCursor = SyncCursor(
         timestamp: int.parse(await ModelState.get(
             AppString.lastProfileTS.string,
@@ -465,6 +469,11 @@ class SyncUtils {
                   shouldDelete = !File(itemPath).existsSync();
                 }
                 if (shouldDelete) {
+                  if (!existingItem!.isFolder) {
+                    final lease =
+                        await _prepareRemoteFileDeletion(existingItem);
+                    deletionLeases.add(lease);
+                  }
                   mutations.add(SyncPageMutation.deleteIfNotNewer(
                     table: Tables.items.string,
                     id: itemId,
@@ -542,6 +551,11 @@ class SyncUtils {
             }
           }
         }
+        for (final lease in deletionLeases) {
+          if (!await lease.prepareForCommit()) {
+            throw StateError('Lost remote file deletion lease');
+          }
+        }
         await StorageSqlite.instance.applySyncPage(mutations, {
           AppString.lastFileTS.string: fileCursor.timestamp,
           AppString.lastFileId.string: fileCursor.rowId,
@@ -558,8 +572,54 @@ class SyncUtils {
         allFetched = false;
         changesAvailable = false;
         break;
+      } finally {
+        for (final lease in deletionLeases.reversed) {
+          try {
+            await lease.release();
+          } catch (e, s) {
+            logger.error('Failed to release remote deletion lease',
+                error: e, stackTrace: s);
+          }
+        }
       }
     }
     return allFetched;
+  }
+
+  static Future<OperationLease> _prepareRemoteFileDeletion(
+      ModelItem item) async {
+    final lease = await ExclusiveOperationCoordinator.tryAcquire(
+      TaskManager.downloadOperationId(item.id),
+    );
+    if (lease == null) {
+      throw StateError('Download is active for remotely deleted item');
+    }
+
+    try {
+      final filePath = await ModelItem.getPathForItem(item.id);
+      final managedRootPath = await ModelItem.getPathForItem('fife');
+      await deleteManagedFileIfExists(
+        filePath: filePath,
+        managedRootPath: managedRootPath,
+      );
+
+      final fileHash = item.fileHash;
+      if (fileHash != null) {
+        final modelFile = await ModelFile.get(fileHash);
+        final staging = DownloadStaging(
+          baseDirectory: await getAppTempDirectory(),
+          itemId: item.id,
+          fileHash: fileHash,
+          partCount: modelFile?.parts ?? 1,
+          expectedPlaintextLength: item.size,
+        );
+        await staging.cleanup();
+      }
+      await ModelItemTask.completeTask(item.id);
+      return lease;
+    } catch (_) {
+      await lease.release();
+      rethrow;
+    }
   }
 }
