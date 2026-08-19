@@ -679,7 +679,7 @@ class TaskManager {
     }
     ModelFile? modelFile = await ModelFile.get(modelItem.fileHash!);
     if (modelFile == null) {
-      await itemTask.delete();
+      await itemTask.scheduleRetry('missing_file_metadata');
       return;
     }
     final parts = modelFile.parts;
@@ -712,7 +712,7 @@ class TaskManager {
     if (modelPart == null ||
         modelPart.cipher == null ||
         modelPart.nonce == null) {
-      await itemTask.markBlocked('missing_part_metadata');
+      await itemTask.scheduleRetry('missing_part_metadata');
       return;
     }
     String downloadUrl = await getDownloadUrl(modelFile, partToDownload);

@@ -12,6 +12,13 @@ enum TransferTaskState {
   cancelled,
 }
 
+extension TransferTaskStateStatus on TransferTaskState {
+  bool get isActive =>
+      this == TransferTaskState.pending ||
+      this == TransferTaskState.running ||
+      this == TransferTaskState.retryWaiting;
+}
+
 class TaskStatus {
   final int task;
   final int progress;
@@ -111,6 +118,7 @@ class ModelItemTask {
   static Future<void> recoverInterruptedTasks() async {
     final now = DateTime.now().toUtc().millisecondsSinceEpoch;
     await _repository.recoverInterrupted(now: now);
+    await _repository.recoverTransientBlocks(now: now);
   }
 
   static Future<String?> fetchPendingTask(Set<String> activeTasks) async {

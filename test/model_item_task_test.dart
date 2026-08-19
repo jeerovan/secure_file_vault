@@ -31,6 +31,15 @@ void main() {
     expect(ModelItemTask.maxRetryAttempts, 10);
   });
 
+  test('only runnable transfer states are displayed as active', () {
+    expect(TransferTaskState.pending.isActive, isTrue);
+    expect(TransferTaskState.running.isActive, isTrue);
+    expect(TransferTaskState.retryWaiting.isActive, isTrue);
+    expect(TransferTaskState.blocked.isActive, isFalse);
+    expect(TransferTaskState.failed.isActive, isFalse);
+    expect(TransferTaskState.cancelled.isActive, isFalse);
+  });
+
   test('retry wake delay waits until due and is capped', () {
     final now = DateTime.utc(2026, 1, 1);
     expect(

@@ -1017,10 +1017,12 @@ class _FileListItemState extends State<FileListItem> {
   }
 
   void _updateTaskState() {
-    _isUploading = widget.taskStatus?.task == ItemTask.upload.value;
-    _isDownloading = widget.taskStatus?.task == ItemTask.download.value;
+    final taskStatus = widget.taskStatus;
+    final isActive = taskStatus?.state.isActive ?? false;
+    _isUploading = isActive && taskStatus?.task == ItemTask.upload.value;
+    _isDownloading = isActive && taskStatus?.task == ItemTask.download.value;
     transferProgress = widget.taskStatus?.progress ?? 0;
-    if (widget.taskStatus == null) {
+    if (!isActive) {
       _checkFileStates();
     }
   }

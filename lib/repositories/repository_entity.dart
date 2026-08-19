@@ -141,6 +141,24 @@ class RepositoryTask<T> extends RepositoryEntity<T> {
     );
   }
 
+  Future<int> recoverTransientBlocks({required int now}) async {
+    final db = await executor;
+    return db.rawUpdate(
+      'UPDATE item_tasks SET state = ?, next_attempt_at = ?, '
+      'last_error = ?, updated_at = ? '
+      'WHERE state = ? AND last_error IN (?, ?)',
+      [
+        'pending',
+        0,
+        null,
+        now,
+        'blocked',
+        'missing_file_metadata',
+        'missing_part_metadata',
+      ],
+    );
+  }
+
   Future<String?> fetchPendingId(
     Set<String> activeTasks, {
     required int now,

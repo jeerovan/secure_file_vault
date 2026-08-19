@@ -125,6 +125,27 @@ void main() {
       'next_attempt_at': 20,
       'updated_at': 4,
     });
+    await repository.insert({
+      'id': 'metadata-blocked',
+      'state': 'blocked',
+      'next_attempt_at': 0,
+      'last_error': 'missing_part_metadata',
+      'updated_at': 5,
+    });
+    await repository.insert({
+      'id': 'file-metadata-blocked',
+      'state': 'blocked',
+      'next_attempt_at': 0,
+      'last_error': 'missing_file_metadata',
+      'updated_at': 6,
+    });
+    await repository.insert({
+      'id': 'storage-blocked',
+      'state': 'blocked',
+      'next_attempt_at': 0,
+      'last_error': 'storage_full',
+      'updated_at': 7,
+    });
 
     expect(await repository.fetchPendingId({'active'}, now: 10), 'next');
     expect(await repository.fetchNextWakeAt(), 5);
@@ -132,5 +153,13 @@ void main() {
     final interrupted = await repository.get('interrupted');
     expect(interrupted?['state'], 'retryWaiting');
     expect(interrupted?['last_error'], 'process_interrupted');
+    expect(await repository.recoverTransientBlocks(now: 11), 2);
+    final metadataBlocked = await repository.get('metadata-blocked');
+    expect(metadataBlocked?['state'], 'pending');
+    expect(metadataBlocked?['next_attempt_at'], 0);
+    expect(metadataBlocked?['last_error'], isNull);
+    expect(
+        (await repository.get('file-metadata-blocked'))?['state'], 'pending');
+    expect((await repository.get('storage-blocked'))?['state'], 'blocked');
   });
 }
