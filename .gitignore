@@ -53,6 +53,8 @@ migrate_working_dir/
 **/ios/Flutter/app.zip
 **/ios/Flutter/flutter_assets/
 **/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/permission_handler.resolved.json
+**/ios/Flutter/permission_handler.selected
 **/ios/Pods/
 **/ios/.symlinks/
 **/ios/Runner/GeneratedPluginRegistrant.*

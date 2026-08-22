@@ -104,6 +104,26 @@ Local integration mode bypasses only Neon authentication and exercises the real 
 
 Local logout deletes the test profile and its S3 object prefix before clearing the client.
 
+### Building for iOS
+
+`permission_handler` is used for Android storage permissions and iOS notifications. Camera and photo-library permission code must not be compiled into the iOS app unless the corresponding user-facing usage descriptions are intentionally added to `ios/Runner/Info.plist`.
+
+Before the first iOS build after cloning, changing branches, changing `permission_handler.yaml`, or editing an iOS usage description, run:
+
+```bash
+flutter clean
+flutter pub get
+dart run permission_handler_apple:select app-store
+```
+
+Then build normally, for example:
+
+```bash
+flutter build ipa --release
+```
+
+The selection command clears stale Swift Package Manager/Xcode permission caches. The **Verify iOS Permissions** Runner build phase stops Xcode archives when the selection is missing, stale, or does not match the active build configuration. Do not bypass that build-phase failure; rerun the selection command instead.
+
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/jeerovan/secure_file_vault/issues).

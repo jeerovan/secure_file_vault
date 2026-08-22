@@ -1,0 +1,8 @@
+strict: true
+flavors:
+  app-store:
+    info-plist: ios/Runner/Info.plist
+    configurations:
+      - Debug
+      - Profile
+      - Release
