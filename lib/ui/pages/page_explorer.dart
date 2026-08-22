@@ -881,8 +881,8 @@ class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
 Future<String?> getSelectFolderWithReadWritePermission(
     {String? initialDirectory}) async {
   try {
-    final String? selectedDirectory = await FilePicker.platform
-        .getDirectoryPath(initialDirectory: initialDirectory);
+    final String? selectedDirectory =
+        await FilePicker.getDirectoryPath(initialDirectory: initialDirectory);
 
     if (selectedDirectory != null) {
       // Test write access by attempting to create a temp file

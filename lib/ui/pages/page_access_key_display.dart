@@ -55,17 +55,16 @@ class _PageAccessKeyState extends State<PageAccessKey> {
           Platform.isWindows || Platform.isMacOS || Platform.isLinux;
 
       if (isDesktop) {
-        final String? outputFile = await FilePicker.platform.saveFile(
+        final Uri? outputFile = await FilePicker.saveFile(
           dialogTitle: AppLocalizations.of(context)!.saveAccessKey,
           fileName: 'fife_access_key.txt',
+          bytes: Uint8List.fromList(utf8.encode(text)),
+          mimeType: 'text/plain',
           type: FileType.custom,
           allowedExtensions: ['txt'],
         );
 
         if (outputFile != null) {
-          final file = File(outputFile);
-          await file.writeAsString(text);
-
           if (mounted) {
             displaySnackBar(
               context,

@@ -161,13 +161,13 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
 
   Future<void> _selectFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final selectedFile = await FilePicker.pickFile(
         type: FileType.custom,
         allowedExtensions: ['txt'],
       );
 
-      if (result != null && result.files.single.path != null) {
-        final file = File(result.files.single.path!);
+      if (selectedFile?.path != null) {
+        final file = File(selectedFile!.path!);
         final content = await file.readAsString();
 
         if (_validateWordCount(content)) {
