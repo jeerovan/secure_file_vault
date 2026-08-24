@@ -3,7 +3,10 @@
 import type { KVNamespace } from '@cloudflare/workers-types';
 declare global {
 	namespace App {
-		// interface Error {}
+		interface Error {
+			message: string;
+			errorId: string;
+		}
 		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
