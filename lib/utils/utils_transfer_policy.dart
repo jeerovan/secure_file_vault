@@ -6,6 +6,16 @@ class TransferConcurrencyPolicy {
 
   static int maxConcurrent({required bool isMobile}) =>
       isMobile ? mobileLimit : desktopLimit;
+
+  static Duration estimatePartDuration(int bytes,
+      {int? observedBytesPerSecond}) {
+    // Allow for preparation and use half the last measured rate. With no
+    // sample, conservatively defer large parts to foreground sync.
+    final rate = observedBytesPerSecond != null && observedBytesPerSecond > 1
+        ? (observedBytesPerSecond ~/ 2).clamp(1, 16 * 1024 * 1024)
+        : 1024 * 1024;
+    return Duration(seconds: 2 + (bytes.clamp(0, 1 << 40) / rate).ceil());
+  }
 }
 
 enum UploadStorageSelectionStatus {

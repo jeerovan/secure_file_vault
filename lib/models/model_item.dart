@@ -333,6 +333,24 @@ class ModelItem {
         where: "id = ?", whereArgs: [itemId]);
   }
 
+  static Future<bool> replaceFolderAccess(ModelItem expected,
+      {required String pickedPath, required String bookmark}) async {
+    final db = await StorageSqlite.instance.executor;
+    final changed = await db.update(
+      Tables.items.string,
+      {'path': pickedPath, 'bookmark': bookmark},
+      where: 'id = ? AND parent_id = ? AND is_folder = 1 '
+          'AND path IS ? AND bookmark IS ?',
+      whereArgs: [
+        expected.id,
+        expected.parentId,
+        expected.path,
+        expected.bookmark
+      ],
+    );
+    return changed == 1;
+  }
+
   static Future<List<ModelItem>> getAllSyncedFolders() async {
     final deviceRoot = await getDeviceHash();
     return _repository.getSyncedFolders(deviceRoot);

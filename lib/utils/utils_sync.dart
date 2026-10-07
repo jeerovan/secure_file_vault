@@ -14,7 +14,10 @@ import '../services/service_backend.dart';
 import '../services/service_events.dart';
 import '../services/service_recon.dart';
 import '../services/service_reconciliation_coordinator.dart';
+import '../services/service_sync_budget.dart';
+import '../storage/storage_channel.dart';
 import '../storage/storage_sqlite.dart';
+import '../storage/local_item_access.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
 import '../models/model_file.dart';
@@ -63,7 +66,7 @@ class SyncUtils {
     bool canAccessSecureStorage = await canSync();
     if (!canAccessSecureStorage) {
       logger.error("Can not access secure storage");
-      return true;
+      return SyncBudget.current == null;
     }
 
     logger.info("Start recon from $caller");
@@ -71,12 +74,40 @@ class SyncUtils {
     try {
       SodiumSumo sodium = await SodiumSumoInit.init();
       List<ModelItem> syncFolders = await ModelItem.getAllSyncedFolders();
+      final budget = SyncBudget.current;
+      if (budget != null) {
+        // Retired roots without an active bookmark are not local scan sources.
+        syncFolders = syncFolders
+            .where((root) =>
+                root.archivedAt == 0 &&
+                ChannelStorage.hasUsableBookmark(root.bookmark))
+            .toList()
+          ..sort((a, b) => a.id.compareTo(b.id));
+        final cursor = await ModelState.get('background_reconciliation_cursor');
+        final cursorIndex = syncFolders.indexWhere((root) => root.id == cursor);
+        if (cursorIndex >= 0) {
+          syncFolders = [
+            ...syncFolders.skip(cursorIndex + 1),
+            ...syncFolders.take(cursorIndex + 1)
+          ];
+        }
+        if (syncFolders.length > budget.maxRoots) {
+          reconciliationSucceeded = false;
+        }
+        syncFolders = syncFolders.take(budget.maxRoots).toList();
+      }
       for (ModelItem syncFolder in syncFolders) {
+        SyncBudget.check(reserve: const Duration(seconds: 5));
         final result =
             await ReconciliationService(sodium).reconcile(syncFolder);
         if (result.status == ReconciliationStatus.failed ||
-            result.status == ReconciliationStatus.partial) {
+            result.status == ReconciliationStatus.partial ||
+            (budget != null && !result.succeeded)) {
           reconciliationSucceeded = false;
+        }
+        if (budget != null && !budget.interrupted) {
+          await ModelState.set(
+              'background_reconciliation_cursor', syncFolder.id);
         }
       }
     } catch (e, stackTrace) {
@@ -93,10 +124,11 @@ class SyncUtils {
   }
 
   Future<bool> triggerSync({String caller = ""}) async {
+    SyncBudget.check();
     final lease = await ExclusiveOperationCoordinator.tryAcquire('metadata');
     if (lease == null) {
       logger.warning("Sync already in progress. from $caller.");
-      return true;
+      return SyncBudget.current == null;
     }
 
     EventStream().publish(AppEvent(
@@ -105,15 +137,16 @@ class SyncUtils {
       key: EventKey.running,
     ));
     try {
+      SyncBudget.check();
       logger.info("sync request from $caller");
 
       bool canSync = await SyncUtils.canSync();
       if (!canSync) {
         logger.warning("can not sync. from $caller");
-        return true;
+        return SyncBudget.current == null;
       }
 
-      // Note: Workmanager already ensures network connectivity via constraints on Android
+      // Check connectivity for both foreground and native background callbacks.
       bool hasInternet = await InternetConnection().hasInternetAccess;
       if (!hasInternet) {
         logger.info("No internet, from $caller");
@@ -148,6 +181,12 @@ class SyncUtils {
       await TaskManager.init(
         retryWakeHandler: () => triggerSync(caller: 'TransferRetry'),
       );
+      SyncBudget.check();
+      if (SyncBudget.current != null &&
+          (await StorageSqlite.instance.getAll(Tables.itemTasks.string))
+              .isNotEmpty) {
+        return false;
+      }
       return await pushMapChanges();
     } catch (e, s) {
       logger.error("Sync failed", error: e, stackTrace: s);
@@ -297,7 +336,12 @@ class SyncUtils {
     bool allpushed = true;
     bool changesAvailable = true;
     Uint8List masterKeyBytes = base64Decode(masterKeyBase64);
+    var pages = 0;
     while (changesAvailable) {
+      SyncBudget.check();
+      if (SyncBudget.current case final budget?) {
+        if (++pages > budget.maxMetadataPages) return false;
+      }
       changesAvailable = false;
       List<Map<String, dynamic>> tableMaps = [];
       List<ModelChange> tableChanges = [];
@@ -309,6 +353,7 @@ class SyncUtils {
         List<ModelChange> changes = await ModelChange.fetchForTable(table);
         List<Map<String, dynamic>> changeMaps = [];
         for (ModelChange change in changes) {
+          SyncBudget.check();
           Map<String, dynamic> changeData = change.data;
           if (table == Tables.items.string) {
             Map<String, dynamic> changeMap = {};
@@ -336,6 +381,7 @@ class SyncUtils {
         }
       }
       if (tableMaps.isNotEmpty) {
+        SyncBudget.check();
         changesAvailable = true;
 
         Map<String, dynamic> requestData = {
@@ -384,7 +430,12 @@ class SyncUtils {
     ];
     bool allFetched = true;
     bool changesAvailable = true;
+    var pages = 0;
     while (changesAvailable) {
+      SyncBudget.check();
+      if (SyncBudget.current case final budget?) {
+        if (++pages > budget.maxMetadataPages) return false;
+      }
       changesAvailable = false;
       final deletionLeases = <OperationLease>[];
       final profileCursor = SyncCursor(
@@ -440,6 +491,7 @@ class SyncUtils {
           }
           changesAvailable = true;
           for (Map<String, dynamic> changeMap in changesMap) {
+            SyncBudget.check();
             Map<String, dynamic> map = {};
             if (table == Tables.items.string) {
               int itemTS = int.parse(changeMap["3"].toString());
@@ -465,8 +517,8 @@ class SyncUtils {
                 if (existingItem != null &&
                     existingItem.updatedAt <= clientTS &&
                     existingItem.isFolder) {
-                  final itemPath = await ModelItem.getPathForItem(itemId);
-                  shouldDelete = !File(itemPath).existsSync();
+                  shouldDelete = await LocalItemAccess.withAccess(itemId,
+                      (itemPath) async => !await Directory(itemPath).exists());
                 }
                 if (shouldDelete) {
                   if (!existingItem!.isFolder) {
@@ -556,6 +608,7 @@ class SyncUtils {
             throw StateError('Lost remote file deletion lease');
           }
         }
+        SyncBudget.check();
         await StorageSqlite.instance.applySyncPage(mutations, {
           AppString.lastFileTS.string: fileCursor.timestamp,
           AppString.lastFileId.string: fileCursor.rowId,

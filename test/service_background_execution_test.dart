@@ -44,14 +44,14 @@ void main() {
     );
   });
 
-  test('iOS selects Workmanager execution only', () {
+  test('iOS selects native app refresh execution only', () {
     expect(
       selectBackgroundExecutionKind(
         isAndroid: false,
         isIOS: true,
         isDesktop: false,
       ),
-      BackgroundExecutionKind.iosWorkmanager,
+      BackgroundExecutionKind.iosRefresh,
     );
   });
 
@@ -66,11 +66,11 @@ void main() {
     );
   });
 
-  test('iOS Workmanager initialization failure is contained', () async {
+  test('iOS scheduler initialization failure is contained', () async {
     final scheduler = _FakeIosBackgroundScheduler()
       ..initializeError = StateError('unavailable');
     final service = BackgroundExecutionService.test(
-      kind: BackgroundExecutionKind.iosWorkmanager,
+      kind: BackgroundExecutionKind.iosRefresh,
       iosScheduler: scheduler,
       backgroundSyncEnabled: true,
       signedIn: true,
@@ -85,7 +85,7 @@ void main() {
     final scheduler = _FakeIosBackgroundScheduler()
       ..scheduleError = StateError('submission rejected');
     final service = BackgroundExecutionService.test(
-      kind: BackgroundExecutionKind.iosWorkmanager,
+      kind: BackgroundExecutionKind.iosRefresh,
       iosScheduler: scheduler,
       backgroundSyncEnabled: true,
       signedIn: true,
@@ -100,7 +100,7 @@ void main() {
     final scheduler = _FakeIosBackgroundScheduler()
       ..cancelError = StateError('cancellation unavailable');
     final service = BackgroundExecutionService.test(
-      kind: BackgroundExecutionKind.iosWorkmanager,
+      kind: BackgroundExecutionKind.iosRefresh,
       iosScheduler: scheduler,
     );
 
@@ -127,6 +127,19 @@ void main() {
     expect(failures, ['execution']);
   });
 
+  test('signed-out iOS account cannot schedule enabled background work', () async {
+    final scheduler = _FakeIosBackgroundScheduler();
+    final service = BackgroundExecutionService.test(
+      kind: BackgroundExecutionKind.iosRefresh,
+      iosScheduler: scheduler,
+      backgroundSyncEnabled: true,
+    );
+    expect(await service.initialize(iosCallbackDispatcher: () {}), isTrue);
+    expect(await service.setEnabled(true), isTrue);
+    expect(scheduler.scheduleCalls, 0);
+    expect(scheduler.cancelCalls, 2);
+  });
+
   test('cleanup failure is contained and later cleanup still runs', () async {
     final cleanupCalls = <String>[];
     final failures = <String>[];
@@ -143,7 +156,7 @@ void main() {
       onError: (operation, error, stackTrace) => failures.add(operation),
     );
 
-    expect(result, isTrue);
+    expect(result, isFalse);
     expect(cleanupCalls, ['first', 'second']);
     expect(failures, ['cleanup:first']);
   });

@@ -165,6 +165,14 @@ class ModelItemTask {
     return update(["state", "attempt_count", "next_attempt_at", "last_error"]);
   }
 
+  Future<int> markInterrupted(String reason) async {
+    state = TransferTaskState.pending;
+    nextAttemptAt = 0;
+    lastError = 'background_$reason';
+    // OS time limits neither consume nor erase network retry attempts.
+    return update(['state', 'next_attempt_at', 'last_error']);
+  }
+
   static Duration retryDelayForAttempt(int attempt) {
     final exponent = (attempt - 1).clamp(0, 8);
     final seconds = 5 * (1 << exponent);

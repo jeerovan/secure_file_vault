@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'service_sync_budget.dart';
 
 class AppHttpClients {
   AppHttpClients._();
@@ -7,9 +8,20 @@ class AppHttpClients {
   static http.Client? _auth;
   static http.Client? _transfer;
 
-  static http.Client get backend => _backend ??= http.Client();
-  static http.Client get auth => _auth ??= http.Client();
-  static http.Client get transfer => _transfer ??= http.Client();
+  static http.Client get backend {
+    SyncBudget.check();
+    return _backend ??= http.Client();
+  }
+
+  static http.Client get auth {
+    SyncBudget.check();
+    return _auth ??= http.Client();
+  }
+
+  static http.Client get transfer {
+    SyncBudget.check();
+    return _transfer ??= http.Client();
+  }
 
   static void closeAll() {
     _backend?.close();

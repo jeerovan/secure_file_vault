@@ -13,6 +13,7 @@ import '../services/service_logger.dart';
 import '../services/service_events.dart';
 import '../services/service_reconciliation_coordinator.dart';
 import '../services/service_reconciliation_planner.dart';
+import 'service_sync_budget.dart';
 import '../utils/common.dart';
 import '../utils/utils_file.dart';
 import 'package:path/path.dart' as path_lib;
@@ -94,6 +95,7 @@ class ReconciliationService {
 
   /// Main entry point: reconcile a root synced folder
   Future<ReconciliationResult> reconcile(ModelItem rootItem) async {
+    SyncBudget.check();
     final OperationLease lease;
     try {
       final acquired = await ReconciliationCoordinator.tryAcquire(rootItem.id);
@@ -168,6 +170,7 @@ class ReconciliationService {
       }
 
       await StorageSqlite.instance.runInTransaction(() async {
+        SyncBudget.check();
         await ModelItem.resetScanState(rootItem.id);
         await _reconcileNode(
           rootItemId: rootItem.id,
@@ -184,19 +187,25 @@ class ReconciliationService {
         final remainingDbItems =
             await ModelItem.getAllUnScannedItemsForRootItemId(rootItem.id);
         for (final dbChild in remainingDbItems) {
+          SyncBudget.check();
           if (!dbChild.isFolder) await _handleDeletion(dbChild);
         }
         for (final dbChild in remainingDbItems) {
+          SyncBudget.check();
           if (dbChild.isFolder) {
             final folderItems = await ModelItem.getAllInFolder(dbChild);
             if (folderItems.isEmpty) await _handleDeletion(dbChild);
           }
         }
+        // Throw inside the transaction so a late expiration rolls it back.
+        SyncBudget.check();
       });
       return ReconciliationResult(
         ReconciliationStatus.completed,
         scannedItems: snapshot.itemCount,
       );
+    } on BackgroundSyncInterrupted {
+      return const ReconciliationResult(ReconciliationStatus.partial);
     } catch (e, s) {
       logger.error('Reconciliation failed', error: e, stackTrace: s);
       return const ReconciliationResult(ReconciliationStatus.failed);
@@ -254,6 +263,7 @@ class ReconciliationService {
 
     //2. Find directly matched and modified items
     for (final fsChild in fsChildren) {
+      SyncBudget.check();
       final dbChildItems = dbChildrenByName[fsChild.name];
       ModelItem? dbChild;
       if (dbChildItems != null && dbChildItems.isNotEmpty) {
@@ -768,6 +778,35 @@ class ReconciliationService {
     final secureKey = _sodium.secureCopy(keyBytes);
 
     try {
+      if (SyncBudget.current != null) {
+        // The foreground isolated fast path cannot receive expiration messages.
+        // Stream bounded background hashing in this isolate, checking each chunk.
+        final hashes = <String, String>{};
+        var complete = true;
+        for (final filePath in filePaths) {
+          SyncBudget.check();
+          final entity = File(filePath);
+          final before = await entity.stat();
+          final consumer = _sodium.crypto.genericHash.createConsumer(
+            key: secureKey,
+            outLen: _sodium.crypto.genericHash.bytes,
+          );
+          await SyncBudget.guardStream(entity.openRead())
+              .map((chunk) =>
+                  chunk is Uint8List ? chunk : Uint8List.fromList(chunk))
+              .pipe(consumer);
+          final digest = await consumer.hash;
+          final after = await entity.stat();
+          if (before.size != after.size ||
+              before.modified != after.modified ||
+              before.changed != after.changed) {
+            complete = false;
+          } else {
+            hashes[filePath] = base64UrlEncode(digest).replaceAll('=', '');
+          }
+        }
+        return _HashScanResult(hashes, complete: complete);
+      }
       final result = await _sodium.runIsolated<Map<String, dynamic>>(
         (List<SecureKey> isolatedSecureKeys, List<KeyPair> _) async {
           final isolateSecureKey = isolatedSecureKeys.first;
@@ -852,11 +891,13 @@ class ReconciliationService {
     var complete = true;
 
     while (pendingDirectories.isNotEmpty) {
+      SyncBudget.check();
       final directoryPath = pendingDirectories.removeLast();
       final children = <FSItem>[];
       try {
         await for (final entity in Directory(directoryPath)
             .list(recursive: false, followLinks: false)) {
+          SyncBudget.check();
           try {
             final entityPath =
                 path_lib.normalize(path_lib.absolute(entity.path));
@@ -874,6 +915,17 @@ class ReconciliationService {
             if (!isFolder && type != FileSystemEntityType.file) continue;
             final stats = await entity.stat();
             paths.add(entityPath);
+            if (SyncBudget.current case final budget?) {
+              if (paths.length > budget.maxScanItems) {
+                return _FileSystemSnapshot(
+                  rootPath: normalizedRoot,
+                  childrenByDirectory: const {},
+                  paths: Set.unmodifiable(paths),
+                  filePaths: const [],
+                  status: _SnapshotStatus.partial,
+                );
+              }
+            }
             children.add(FSItem(
               name: name,
               isFolder: isFolder,
@@ -884,10 +936,14 @@ class ReconciliationService {
             } else {
               filePaths.add(entityPath);
             }
+          } on BackgroundSyncInterrupted {
+            rethrow;
           } catch (_) {
             complete = false;
           }
         }
+      } on BackgroundSyncInterrupted {
+        rethrow;
       } catch (_) {
         complete = false;
       }

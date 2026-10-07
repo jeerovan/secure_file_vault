@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import '../services/service_sync_budget.dart';
 
 import 'package:flutter/foundation.dart';
 import '../utils/common.dart';
@@ -103,15 +104,17 @@ class CryptoUtils {
         ? _sodium.crypto.secretStream.keygen()
         : SecureKey.fromList(_sodium, key);
     String secretKeyBase64 = base64Encode(secretKey.extractBytes());
+    final output = File(fileOut).openWrite();
     try {
       await _sodium.crypto.secretStream
           .pushChunked(
-            messageStream: File(fileIn).openRead(start, end),
+            messageStream:
+                SyncBudget.guardStream(File(fileIn).openRead(start, end)),
             key: secretKey,
             chunkSize: 4096,
           )
           .pipe(
-            File(fileOut).openWrite(),
+            output,
           );
       executionResult =
           ExecutionResult.success({AppString.key.string: secretKeyBase64});
@@ -119,7 +122,11 @@ class CryptoUtils {
       logger.error("encryptFile", error: e, stackTrace: s);
       executionResult = ExecutionResult.failure(reason: e.toString());
     } finally {
-      secretKey.dispose();
+      try {
+        await output.close();
+      } finally {
+        secretKey.dispose();
+      }
     }
 
     return executionResult;
@@ -130,22 +137,27 @@ class CryptoUtils {
       {FileMode writeMode = FileMode.append}) async {
     ExecutionResult executionResult;
     SecureKey secretKey = SecureKey.fromList(_sodium, keyBytes);
+    final output = File(fileOut).openWrite(mode: writeMode);
     try {
       await _sodium.crypto.secretStream
           .pullChunked(
-            cipherStream: File(fileIn).openRead(),
+            cipherStream: SyncBudget.guardStream(File(fileIn).openRead()),
             key: secretKey,
             chunkSize: 4096,
           )
           .pipe(
-            File(fileOut).openWrite(mode: writeMode),
+            output,
           );
       executionResult = ExecutionResult.success({});
     } catch (e, s) {
       logger.error("decryptFile", error: e, stackTrace: s);
       executionResult = ExecutionResult.failure(reason: e.toString());
     } finally {
-      secretKey.dispose();
+      try {
+        await output.close();
+      } finally {
+        secretKey.dispose();
+      }
     }
     return executionResult;
   }

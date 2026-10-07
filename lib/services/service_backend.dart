@@ -8,6 +8,7 @@ import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:http/http.dart' as http;
+import 'service_sync_budget.dart';
 
 class BackendApi {
   final SecureStorage _storage;
@@ -231,6 +232,7 @@ class BackendApi {
   }) async {
     final initialHeaders =
         await _headers(withAuth: withAuth, extra: extraHeaders);
+    SyncBudget.check();
     var response = await send(initialHeaders).timeout(timeout);
     if (withAuth &&
         retryUnauthorized &&
@@ -241,6 +243,7 @@ class BackendApi {
       final refreshedHeaders =
           await _headers(withAuth: true, extra: extraHeaders);
       if (refreshedHeaders['Authorization'] != previousAuthorization) {
+        SyncBudget.check();
         response = await send(refreshedHeaders).timeout(timeout);
       }
     }

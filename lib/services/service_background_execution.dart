@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:workmanager/workmanager.dart';
+import 'package:flutter/services.dart';
+import 'dart:ui';
 
 import '../models/model_setting.dart';
 import '../utils/enums.dart';
@@ -10,7 +11,6 @@ import 'service_foreground.dart';
 import 'service_logger.dart';
 
 const String iosBackgroundTaskIdentifier = 'com.jeerovan.fife.data_sync';
-const String iosBackgroundTaskName = 'dataSync';
 
 abstract interface class IosBackgroundScheduler {
   Future<void> initialize(Function callbackDispatcher);
@@ -18,26 +18,27 @@ abstract interface class IosBackgroundScheduler {
   Future<void> cancel();
 }
 
-class WorkmanagerIosBackgroundScheduler implements IosBackgroundScheduler {
+class NativeIosBackgroundScheduler implements IosBackgroundScheduler {
+  static const channel =
+      MethodChannel('com.jeerovan.fife/background_scheduler');
   @override
   Future<void> initialize(Function callbackDispatcher) async {
-    await Workmanager().initialize(callbackDispatcher);
+    final handle = PluginUtilities.getCallbackHandle(callbackDispatcher);
+    if (handle == null) {
+      throw StateError('Background entrypoint is not top-level');
+    }
+    await channel.invokeMethod<void>(
+        'initialize', {'callbackHandle': handle.toRawHandle()});
   }
 
   @override
   Future<void> schedule() async {
-    await Workmanager().registerPeriodicTask(
-      iosBackgroundTaskIdentifier,
-      iosBackgroundTaskName,
-      initialDelay: const Duration(minutes: 15),
-      constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingPeriodicWorkPolicy.update,
-    );
+    await channel.invokeMethod<void>('schedule');
   }
 
   @override
   Future<void> cancel() async {
-    await Workmanager().cancelByUniqueName(iosBackgroundTaskIdentifier);
+    await channel.invokeMethod<void>('cancel');
   }
 }
 
@@ -65,6 +66,7 @@ Future<bool> runBackgroundWorkerSafely({
     try {
       await cleanup.action();
     } catch (error, stackTrace) {
+      succeeded = false;
       onError('cleanup:${cleanup.name}', error, stackTrace);
     }
   }
@@ -73,7 +75,7 @@ Future<bool> runBackgroundWorkerSafely({
 
 enum BackgroundExecutionKind {
   androidForeground,
-  iosWorkmanager,
+  iosRefresh,
   desktopTimer,
   none,
 }
@@ -85,7 +87,7 @@ BackgroundExecutionKind selectBackgroundExecutionKind({
   required bool isDesktop,
 }) {
   if (isAndroid) return BackgroundExecutionKind.androidForeground;
-  if (isIOS) return BackgroundExecutionKind.iosWorkmanager;
+  if (isIOS) return BackgroundExecutionKind.iosRefresh;
   if (isDesktop) return BackgroundExecutionKind.desktopTimer;
   return BackgroundExecutionKind.none;
 }
@@ -93,7 +95,7 @@ BackgroundExecutionKind selectBackgroundExecutionKind({
 class BackgroundExecutionService {
   BackgroundExecutionService._()
       : _kindResolver = _platformKind,
-        _iosScheduler = WorkmanagerIosBackgroundScheduler(),
+        _iosScheduler = NativeIosBackgroundScheduler(),
         _backgroundSyncEnabled = _storedBackgroundSyncEnabled,
         _signedIn = _storedSignedIn;
 
@@ -116,7 +118,7 @@ class BackgroundExecutionService {
   final IosBackgroundScheduler _iosScheduler;
   final bool Function() _backgroundSyncEnabled;
   final bool Function() _signedIn;
-  bool _workmanagerInitialized = false;
+  bool _iosInitialized = false;
 
   BackgroundExecutionKind get kind => _kindResolver();
 
@@ -125,12 +127,12 @@ class BackgroundExecutionService {
       case BackgroundExecutionKind.androidForeground:
         ServiceForeground.instance.init();
         return true;
-      case BackgroundExecutionKind.iosWorkmanager:
-        _workmanagerInitialized = await _runIosAction(
+      case BackgroundExecutionKind.iosRefresh:
+        _iosInitialized = await _runIosAction(
           'initialize',
           () => _iosScheduler.initialize(iosCallbackDispatcher),
         );
-        if (!_workmanagerInitialized) return false;
+        if (!_iosInitialized) return false;
         if (_backgroundSyncEnabled() && _signedIn()) {
           return _scheduleIosWork();
         }
@@ -150,13 +152,13 @@ class BackgroundExecutionService {
           await ServiceForeground.instance.stop();
         }
         return true;
-      case BackgroundExecutionKind.iosWorkmanager:
-        if (!_workmanagerInitialized) {
+      case BackgroundExecutionKind.iosRefresh:
+        if (!_iosInitialized) {
           _logger.warning(
-              'Ignored iOS background sync change because Workmanager is unavailable');
+              'Ignored iOS background sync change because its scheduler is unavailable');
           return false;
         }
-        if (enabled) {
+        if (enabled && _signedIn()) {
           return _scheduleIosWork();
         }
         return _cancelIosWork();
@@ -167,8 +169,7 @@ class BackgroundExecutionService {
   }
 
   Future<bool> cancelIosWork() async {
-    if (kind == BackgroundExecutionKind.iosWorkmanager &&
-        _workmanagerInitialized) {
+    if (kind == BackgroundExecutionKind.iosRefresh && _iosInitialized) {
       return _cancelIosWork();
     }
     return true;

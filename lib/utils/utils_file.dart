@@ -6,6 +6,7 @@ import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:http/http.dart' as http_lib;
 import 'package:path/path.dart' as path_lib;
+import '../services/service_sync_budget.dart';
 
 /// Deletes a downloaded file only when it is inside the app-managed cloud
 /// directory. Returns false for user-owned paths outside that directory.
@@ -252,10 +253,13 @@ Future<DownloadStreamResult> downloadFileStream({
   Duration timeout = const Duration(seconds: 30),
 }) async {
   final client = HttpClient();
+  final unregister =
+      SyncBudget.current?.onCancel(() => client.close(force: true));
   client.connectionTimeout = timeout;
   AppLogger logger = AppLogger(prefixes: ["Downloader"]);
   DownloadStreamResult result = const DownloadStreamResult.transportFailure();
   try {
+    SyncBudget.check();
     // 1. Initialize the GET request
     final request = await client.getUrl(Uri.parse(url)).timeout(timeout);
 
@@ -277,6 +281,7 @@ Future<DownloadStreamResult> downloadFileStream({
 
       // 5. Stream the response directly into the IOSink chunk by chunk
       await for (final List<int> chunk in response.timeout(timeout)) {
+        SyncBudget.check();
         fileOut.add(chunk);
         received += chunk.length;
         // Trigger the callback for your UI's progress bar
@@ -291,6 +296,7 @@ Future<DownloadStreamResult> downloadFileStream({
   } catch (e, s) {
     logger.error("Failed", error: e.toString(), stackTrace: s);
   } finally {
+    unregister?.call();
     // 6. Guarantee cleanup of network and file resources
     client.close(force: true);
     await fileOut.flush();
@@ -312,6 +318,7 @@ Future<UploadFileResult> uploadFileStream({
   Map<String, dynamic> data = {};
   http_lib.StreamedRequest? request;
   try {
+    SyncBudget.check(reserve: const Duration(seconds: 5));
     final contentLength = await file.length();
     request = http_lib.StreamedRequest(method, Uri.parse(url));
 
@@ -321,10 +328,22 @@ Future<UploadFileResult> uploadFileStream({
     request.contentLength = contentLength;
 
     final client = httpClient ?? AppHttpClients.transfer;
-    final responseFuture = client.send(request);
+    // Attach the error handler immediately: cancellation can abort the socket
+    // while the request body is still being streamed into its sink.
+    final responseFuture = client.send(request).then<
+            ({
+              http_lib.StreamedResponse? response,
+              Object? error,
+              StackTrace? stack
+            })>(
+          (response) => (response: response, error: null, stack: null),
+          onError: (Object error, StackTrace stack) =>
+              (response: null, error: error, stack: stack),
+        );
     var sent = 0;
     var lastReportedPercent = -1;
     final uploadStream = file.openRead().asyncMap<List<int>>((chunk) async {
+      SyncBudget.check();
       sent += chunk.length;
       final percent = contentLength == 0 ? 100 : sent * 100 ~/ contentLength;
       if (onProgress != null && percent != lastReportedPercent) {
@@ -336,7 +355,11 @@ Future<UploadFileResult> uploadFileStream({
 
     await request.sink.addStream(uploadStream.timeout(timeout));
     await request.sink.close();
-    var streamedResponse = await responseFuture.timeout(timeout);
+    final outcome = await responseFuture.timeout(timeout);
+    if (outcome.error != null) {
+      Error.throwWithStackTrace(outcome.error!, outcome.stack!);
+    }
+    var streamedResponse = outcome.response!;
     var response =
         await http_lib.Response.fromStream(streamedResponse).timeout(timeout);
 

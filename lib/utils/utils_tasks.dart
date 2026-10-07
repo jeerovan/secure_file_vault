@@ -12,6 +12,7 @@ import 'package:file_vault_bb/models/model_state.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/services/service_reconciliation_coordinator.dart';
+import 'package:file_vault_bb/storage/local_item_access.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
@@ -23,6 +24,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sodium/sodium_sumo.dart';
 
 import '../services/service_logger.dart';
+import '../services/service_sync_budget.dart';
 import 'utils_crypto.dart';
 
 class TaskManager {
@@ -58,6 +60,7 @@ class TaskManager {
 
   /// Static function "init" to start the process.
   static Future<void> init({Future<void> Function()? retryWakeHandler}) async {
+    SyncBudget.check();
     if (retryWakeHandler != null) {
       _instance._retryWakeHandler = retryWakeHandler;
     }
@@ -98,11 +101,16 @@ class TaskManager {
   Future<void> start() async {
     // Maintains running state in a flag to ignore start request if already running
     if (_isDispatching) return;
+    if (SyncBudget.current?.interrupted == true) {
+      _checkCompletion();
+      return;
+    }
 
     _isDispatching = true;
 
     try {
       bool hasInternet = await InternetConnection().hasInternetAccess;
+      SyncBudget.check();
       if (!hasInternet) {
         _waitForConnectivity();
         _checkCompletion();
@@ -111,12 +119,15 @@ class TaskManager {
       await _cancelConnectivityWake();
 
       // Concurrency limits
-      final maxConcurrentProcesses = TransferConcurrencyPolicy.maxConcurrent(
-        isMobile: Platform.isAndroid || Platform.isIOS,
-      );
+      final maxConcurrentProcesses = SyncBudget.current != null
+          ? 1
+          : TransferConcurrencyPolicy.maxConcurrent(
+              isMobile: Platform.isAndroid || Platform.isIOS,
+            );
       bool tasksDispatched = false;
 
       while (_activeTaskIds.length < maxConcurrentProcesses) {
+        SyncBudget.check(reserve: const Duration(seconds: 5));
         // Fetches pending upload identifier from another function
         final String? pendingTaskId =
             await ModelItemTask.fetchPendingTask(_activeTaskIds);
@@ -158,6 +169,7 @@ class TaskManager {
     OperationLease? lease;
     var queueNext = true;
     try {
+      SyncBudget.check(reserve: const Duration(seconds: 5));
       final queuedTask = await ModelItemTask.get(taskId);
       if (queuedTask == null) return;
       final operationId = await _operationIdForTask(queuedTask);
@@ -181,11 +193,23 @@ class TaskManager {
       failure = e.runtimeType.toString();
       logger.error("Transfer task failed", error: e.toString(), stackTrace: s);
     } finally {
-      await lease?.release();
-      final remainingTask = await ModelItemTask.get(taskId);
-      if (remainingTask != null &&
-          remainingTask.state == TransferTaskState.running) {
-        await remainingTask.scheduleRetry(failure ?? 'transfer_incomplete');
+      try {
+        await lease?.release();
+        final remainingTask = await ModelItemTask.get(taskId);
+        if (remainingTask != null &&
+            remainingTask.state == TransferTaskState.running) {
+          if (SyncBudget.current?.interrupted == true) {
+            await remainingTask.markInterrupted(SyncBudget.current!.reason);
+          } else {
+            await remainingTask.scheduleRetry(failure ?? 'transfer_incomplete');
+          }
+        }
+      } catch (error, stackTrace) {
+        logger.error('Transfer cleanup failed',
+            error: error, stackTrace: stackTrace);
+        if (_syncCompleter?.isCompleted == false) {
+          _syncCompleter!.completeError(error, stackTrace);
+        }
       }
       // Remove from active processes using the identifiable parameter
       _activeTaskIds.remove(taskId);
@@ -195,7 +219,7 @@ class TaskManager {
       _recordTaskDuration(individualTaskMs);
 
       // Continue with other eligible tasks. Retry-waiting tasks remain persisted.
-      if (queueNext) {
+      if (queueNext && SyncBudget.current?.interrupted != true) {
         start();
       } else {
         _checkCompletion();
@@ -233,6 +257,7 @@ class TaskManager {
   }
 
   Future<void> _scheduleNextRetryWake() async {
+    if (SyncBudget.current != null) return;
     final nextAttemptAt = await ModelItemTask.fetchNextWakeAt();
     if (nextAttemptAt == null) {
       _cancelRetryWakeTimer();
@@ -259,6 +284,7 @@ class TaskManager {
   }
 
   void _waitForConnectivity() {
+    if (SyncBudget.current != null) return;
     _connectivitySubscription ??=
         InternetConnection().onStatusChange.listen((status) {
       if (status == InternetStatus.connected) {
@@ -271,6 +297,12 @@ class TaskManager {
     final subscription = _connectivitySubscription;
     _connectivitySubscription = null;
     await subscription?.cancel();
+  }
+
+  static Future<void> stopBackgroundWakes() async {
+    _instance._cancelRetryWakeTimer();
+    await _instance._cancelConnectivityWake();
+    _instance._retryWakeHandler = null;
   }
 
   Future<void> _restartFromConnectivity() async {
@@ -301,9 +333,23 @@ class TaskManager {
       await itemTask.delete();
       return true;
     }
-    final inFilePath = await ModelItem.getPathForLocalItem(modelItem.id);
+    return LocalItemAccess.withAccess(
+        modelItem.id,
+        (inFilePath) =>
+            _uploadFromAccessiblePath(itemTask, modelItem, inFilePath));
+  }
+
+  Future<bool> _uploadFromAccessiblePath(
+      ModelItemTask itemTask, ModelItem modelItem, String inFilePath) async {
     final inFile = File(inFilePath);
-    if (!inFile.existsSync()) {
+    try {
+      // exists() also returns false when access is denied. Only a genuine
+      // not-found error may remove source metadata; other failures must retry.
+      final source = await inFile.open(mode: FileMode.read);
+      await source.close();
+    } on FileSystemException catch (error) {
+      final code = error.osError?.errorCode;
+      if (code != 2 && !(Platform.isWindows && code == 3)) rethrow;
       await modelItem.remove(); //its remove not delete
       await itemTask.delete();
       return true;
@@ -488,6 +534,9 @@ class TaskManager {
 
   Future<bool> uploadFilePart(ModelItemTask itemTask, String fileHash,
       Map<String, dynamic> uploadInfo, String inFilePath, int part) async {
+    final range =
+        FileSplitter(file: File(inFilePath)).getStartEndIndexForPart(part);
+    await _checkPartBudget('upload', range.end - range.start);
     String fileHashPart = '${fileHash}_$part';
     Directory tempDir = await getTemporaryDirectory();
     String encryptedFilePath =
@@ -544,6 +593,7 @@ class TaskManager {
           AppString.nonce.string: encryptionKeyCipher[AppString.keyNonce.string]
         };
         ModelPart modelPart = await ModelPart.fromMap(partData);
+        SyncBudget.check();
         await modelPart.insert();
         await partialFile.rename(encryptedFile.path);
       } else {
@@ -614,6 +664,8 @@ class TaskManager {
         await storedPart.update(["data"]);
       }
     }
+    final transferWatch = Stopwatch()..start();
+    final needsUpload = uploadResult == null;
     uploadResult ??= await uploadFileStream(
         method: method,
         file: encryptedFile,
@@ -630,6 +682,11 @@ class TaskManager {
         });
     // update uploaded
     if (uploadResult.succeeded) {
+      SyncBudget.check();
+      if (needsUpload && transferWatch.elapsedMilliseconds > 0) {
+        await _recordTransferRate(
+            'upload', contentLength, transferWatch.elapsedMilliseconds);
+      }
       logger.info("Encrypted file part uploaded");
 
       //update
@@ -675,6 +732,7 @@ class TaskManager {
   }
 
   Future<void> checkInitDownload(ModelItemTask itemTask) async {
+    SyncBudget.check(reserve: const Duration(seconds: 5));
     ModelItem? modelItem = await ModelItem.get(itemTask.id);
     if (modelItem == null || modelItem.fileHash == null) {
       await itemTask.delete();
@@ -686,7 +744,9 @@ class TaskManager {
       return;
     }
     final parts = modelFile.parts;
-    if (parts <= 0) {
+    // Empty uploads legitimately contain no parts. They still go through
+    // assembly, length/hash verification and scoped publication below.
+    if (parts < 0 || (parts == 0 && modelItem.size != 0)) {
       await itemTask.markBlocked('invalid_part_count');
       return;
     }
@@ -718,22 +778,28 @@ class TaskManager {
       await itemTask.scheduleRetry('missing_part_metadata');
       return;
     }
+    await _checkPartBudget('download', modelPart.size);
     String downloadUrl = await getDownloadUrl(modelFile, partToDownload);
     if (downloadUrl.isNotEmpty) {
       logger.info("Fetched download authorization");
       final tempFile = staging.encryptedPart(partToDownload);
       final fileSink = tempFile.openWrite(mode: FileMode.write);
+      final transferWatch = Stopwatch()..start();
       final downloadResult = await downloadFileStream(
           url: downloadUrl, headers: null, fileOut: fileSink, onProgress: null);
       if (downloadResult.succeeded) {
+        SyncBudget.check();
         logger.info("Downloaded encrypted file part");
         final contentLength = await tempFile.length();
+        final transferMilliseconds = transferWatch.elapsedMilliseconds;
         final expectedSha1 = modelPart.data['sha1']?.toString();
         final actualSha1 = await _sha1ForFile(tempFile);
         final checksumMatches = expectedSha1 == null ||
             expectedSha1.isEmpty ||
             expectedSha1 == actualSha1;
         if (modelPart.size == contentLength && checksumMatches) {
+          await _recordTransferRate(
+              'download', contentLength, transferMilliseconds);
           String keyCipherBase64 = modelPart.cipher!;
           String keyNonceBase64 = modelPart.nonce!;
           SodiumSumo sodium = await SodiumSumoInit.init();
@@ -751,6 +817,7 @@ class TaskManager {
                 tempFile.path, plainPartial.path, fileEncryptionKeyBytes,
                 writeMode: FileMode.write);
             if (decryptionResult.isSuccess) {
+              SyncBudget.check();
               logger.info("Decrypted file part");
               final readyPart = staging.readyPart(partToDownload);
               if (await readyPart.exists()) await readyPart.delete();
@@ -786,6 +853,7 @@ class TaskManager {
 
   Future<void> _finalizeDownload(ModelItemTask itemTask, ModelItem modelItem,
       DownloadStaging staging) async {
+    SyncBudget.check();
     await staging.assemble();
     if (await staging.assembledFile.length() != modelItem.size ||
         !await _fileMatchesHash(staging.assembledFile, modelItem.fileHash!)) {
@@ -794,7 +862,15 @@ class TaskManager {
       return;
     }
 
-    final finalFilePath = await ModelItem.getPathForItem(modelItem.id);
+    await LocalItemAccess.withAccess(
+        modelItem.id,
+        (finalFilePath) =>
+            _publishDownload(itemTask, modelItem, staging, finalFilePath));
+  }
+
+  Future<void> _publishDownload(ModelItemTask itemTask, ModelItem modelItem,
+      DownloadStaging staging, String finalFilePath) async {
+    SyncBudget.check();
     await File(finalFilePath).parent.create(recursive: true);
     final finalFile = File(finalFilePath);
     if (await Directory(finalFilePath).exists()) {
@@ -820,7 +896,26 @@ class TaskManager {
   }
 
   static Future<String> _sha1ForFile(File file) async {
-    return (await sha1.bind(file.openRead()).first).toString();
+    return (await sha1.bind(SyncBudget.guardStream(file.openRead())).first)
+        .toString();
+  }
+
+  static Future<void> _checkPartBudget(String direction, int bytes) async {
+    if (SyncBudget.current == null) return;
+    final rate =
+        int.tryParse(await ModelState.get('background_${direction}_rate'));
+    SyncBudget.check(
+        reserve: const Duration(seconds: 5) +
+            TransferConcurrencyPolicy.estimatePartDuration(bytes,
+                observedBytesPerSecond: rate));
+  }
+
+  static Future<void> _recordTransferRate(
+      String direction, int bytes, int milliseconds) async {
+    if (bytes <= 0 || milliseconds <= 0) return;
+    SyncBudget.check();
+    await ModelState.set('background_${direction}_rate',
+        (bytes * 1000 ~/ milliseconds).toString());
   }
 
   static Future<bool> _fileMatchesHash(File file, String expectedHash) async {
@@ -833,8 +928,7 @@ class TaskManager {
         key: secureKey,
         outLen: sodium.crypto.genericHash.bytes,
       );
-      await file
-          .openRead()
+      await SyncBudget.guardStream(file.openRead())
           .map(
               (chunk) => chunk is Uint8List ? chunk : Uint8List.fromList(chunk))
           .pipe(consumer);

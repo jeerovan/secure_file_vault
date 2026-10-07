@@ -1,6 +1,10 @@
 # iOS Support on `main`: Migration and macOS Handoff
 
-**Status:** MERGE CANDIDATE WITH OPT-IN FAIL-SAFE BACKGROUND SYNC; PHYSICAL VALIDATION PENDING
+**Status:** BOOKMARK ACCESS, ROOT RECOVERY AND EDITOR RESUME REFRESH VERIFIED ON PHYSICAL iPHONE; BOUNDED BACKGROUND WORK IMPLEMENTED
+
+**Physical-device execution plan:** [IOS-PHYSICAL-TEST-PLAN.md](IOS-PHYSICAL-TEST-PLAN.md), updated 2026-10-07. The plan documents the bookmark fix's changed files/invariants and successful access after cold launch/reboot. Autonomous continuation exposed and fixed zero-part empty-file download rejection. All nine distinct uploads completed, including the interrupted 120 MiB file; all 10 restored files now match retained originals, with no remaining tasks. Earlier validation before the subsequent fixes: 10 native iPhone tests, 114 Flutter passes and one expected Linux-only skip; affected-file analysis/lints clean. Local rename/move, native in-place refresh, process-kill download recovery and valid root-rename recovery also passed. Unavailable-root fail-closed behavior, explicit existing-root renewal, picker cancellation and timestamp-level convergence now also passed. The renewal fix preserves root/child identity after an app-container location change. A bounded app-only memory recording is documented; full-lifecycle memory, raw remote-object inspection and remaining background/recovery acceptance cases are pending. The prior 2026-10-06 failures and all historical results remain recorded separately.
+Upload and download recovery after confirmed Wi-Fi loss both passed: incomplete work stayed unfinished, retries converged, and the restored 120 MiB files matched their expected bytes. The 2026-10-07 daytime continuation also passed actual screen-lock recovery, App Switcher swipe-away recovery with manual sync after relaunch, repeated foreground/background upload overlap, short Low Power Mode and disabled per-app Background App Refresh recovery, explicit fixture archive/deletion, and sign-out with a verified pending upload. Hosted OTP login and saved-key recovery restored the account afterward. The subsequent resume fix passes the Runestone atomic-replacement variant: return without manual sync changes metadata from 50 to 70 bytes, preserves item ID/parent/archive state and creates no duplicate. Earlier automatic-refresh failure is retained as historical evidence. Bounded background execution now has 125 passing Flutter tests (one expected Linux-only skip), 14 passing native tests on the iPhone, clean affected-file analysis/lints and a successful profile build. Actual expiration, a delivered late callback after sign-out, and natural background delivery still require separate evidence. Overnight tests are deferred at the user's request. See the current test record before interpreting historical results below.
+
 **Prepared:** 2026-08-16  
 **Remote state verified:** 2026-08-16  
 **Recommended base:** `origin/main` at `402466d`  
@@ -14,12 +18,12 @@ Support Android, iOS, macOS, Windows, and Linux from `main` without weakening th
 Platform execution must remain distinct:
 
 - Android uses its foreground service and persistent notification for dependable long-running work.
-- iOS uses Workmanager/BGTaskScheduler. It must never try to start the Android-style foreground service.
+- iOS uses an app-owned BGTaskScheduler callback and headless Flutter engine. It must never try to start the Android-style foreground service.
 - iOS and macOS use security-scoped bookmarks for user-selected folders.
 - Android alone requires broad storage-permission onboarding.
 - Desktop platforms retain their current foreground/timer behavior.
 
-This migration does not promise exact-period iOS execution. Apple controls scheduling. Large, dependable background uploads may ultimately require native background `URLSession`, not only a Dart Workmanager callback.
+This migration does not promise exact-period iOS execution. Apple controls scheduling. Large, dependable background uploads may ultimately require native background `URLSession`, rather than a short Dart callback.
 
 ## 2. Repository State Before Moving to macOS
 
@@ -128,7 +132,7 @@ Required invariants:
 - [x] Clone/fetch `feat/ios-main-support` on macOS and verify its main parent is `402466d`.
 - [x] Confirm analyzer is clean and the 57-test main suite passes before migration edits.
 - [x] Record Xcode, Flutter, Dart, and CocoaPods versions.
-- [ ] Record a physical-device version when a supported iPhone or iPad is connected.
+- [x] Record a physical-device version when a supported iPhone or iPad is connected — iPhone 13 Pro Max, iOS 27.0.1 (24A446), observed 2026-10-06.
 
 MacOS baseline recorded on 2026-08-16:
 
@@ -170,7 +174,7 @@ Acceptance:
 **Status:** IMPLEMENTED; PHYSICAL REVOCATION/RESTORATION VALIDATION PENDING
 
 - [x] Port directory picker and MethodChannel registration from `ios/Runner/AppDelegate.swift`.
-- [x] Register the storage channel for both foreground engine and Workmanager background engine.
+- [x] Register the storage channel for both foreground and headless background engines.
 - [x] Preserve main's `ChannelStorage.hasUsableBookmark` checks.
 - [x] Return the resolved path from `startAccessing`.
 - [x] Pass that resolved path—not bookmark data—to `stopAccessing`.
@@ -192,15 +196,15 @@ Acceptance:
 
 - [x] Replace direct platform checks scattered through startup/setup/settings with one execution service.
 - [x] Initialize `ServiceForeground` only on Android.
-- [x] Schedule Workmanager only on iOS.
+- [x] Schedule native BGAppRefreshTask work only on iOS. The former Workmanager dependency was removed after its periodic expiration handler was found to log without cancelling the worker.
 - [x] Keep desktop autosync behavior unchanged.
 - [x] Add a dedicated `ExecutionMode.backgroundWorker` or equivalent; do not pretend the iOS isolate is an Android foreground service.
-- [x] Add `@pragma('vm:entry-point')` to the top-level Workmanager dispatcher.
+- [x] Add `@pragma('vm:entry-point')` to the top-level native background dispatcher.
 - [x] Initialize bindings, SQLite, settings cache, crypto, auth, clients, and logger inside the background isolate.
 - [x] Close isolate-owned resources on completion without closing resources owned by another isolate.
 - [x] Make scheduling idempotent and cancellable when user signs out or disables background sync.
 - [x] Keep iOS background sync off by default until the user explicitly enables it.
-- [x] Keep Workmanager initialization off the foreground startup critical path.
+- [x] Keep optional background initialization off the foreground startup critical path.
 - [x] Contain initialization, scheduling, cancellation, execution, and cleanup failures without propagating them into the foreground app.
 
 Suggested task identifier:
@@ -213,19 +217,25 @@ Keep identifier identical in Dart, AppDelegate registration, and `BGTaskSchedule
 
 ### Phase E — Make background work bounded and resumable
 
-**Status:** DEFERRED FOR PHYSICAL VALIDATION; MANUAL SYNC REMAINS PRIMARY
+**Status:** IMPLEMENTED AND AUTOMATED REGRESSIONS PASS; PHYSICAL EXPIRATION REMAINS INCONCLUSIVE
 
-- [ ] Pass one absolute deadline through reconciliation, sync, and task dispatch.
-- [ ] Reserve cleanup/commit time before deadline.
-- [ ] Reconcile at most a bounded number of roots/items per invocation.
-- [ ] Dispatch at most one transfer at a time on iOS.
-- [ ] Do not start an encrypted part that cannot reasonably finish inside remaining budget.
-- [ ] Persist cursors, task state, attempts, manifest state, and errors after each durable unit.
-- [ ] Propagate retryable failures to Workmanager instead of swallowing them.
-- [ ] Treat OS expiration/cancellation as interruption, not task success.
-- [ ] Reuse main's operation leases so foreground and background sync cannot mutate the same state concurrently.
+- [x] Pass one absolute deadline through reconciliation, sync, and task dispatch.
+- [x] Reserve cleanup/commit time before deadline.
+- [x] Reconcile at most a bounded number of roots/items per invocation.
+- [x] Dispatch at most one transfer at a time in the iOS background isolate.
+- [x] Gate encrypted parts using a conservative estimate and remaining budget.
+- [x] Preserve cursors, task state, attempts, manifest state, and errors at durable boundaries.
+- [x] Return failure for deferred, retryable or unfinished work to the native task callback.
+- [x] Treat OS expiration/cancellation as interruption, not task success.
+- [x] Reuse main's operation leases across foreground and background work.
 
-For reliable large transfers, evaluate native background `URLSession`. Workmanager can schedule/control work, but should not be assumed to keep arbitrary Dart uploads alive indefinitely.
+The 2026-10-07 implementation uses an absolute 20-second work window starting at native task delivery. Before starting a part it reserves five seconds plus two seconds of preparation and the estimated transfer duration: half the last successful measured rate, capped at 16 MiB/s, with a conservative 1 MiB/s fallback. This is a heuristic; expiration still aborts actual HTTP requests and checks file streams. Scans rotate through at most two active bookmarked roots, cap each snapshot at 256 items, and process at most four metadata pages per direction. A partial scan never applies deletion inference; transaction checkpoints roll back interrupted reconciliation. Oversized roots are deferred to foreground reconciliation rather than partially committed.
+
+Native OS expiration reports failure once and asks Dart to stop. Dart awaits transfer/reconciliation unwind, releases scopes and leases, cancels retry wakes, closes its own HTTP clients and SQLite connection, then acknowledges completion before native engine destruction. Expiration before worker startup destroys the unused engine without running sync. Pending downloads retain attempts and become restartable; completed staging manifests and upload-recovery markers remain durable. Disabled/signed-out callbacks are gated before authentication or reconciliation. Cleanup failures also return failure. Platform calls that cannot be interrupted may still be preempted by iOS; existing durable recovery handles an abruptly terminated process.
+
+Validation: 125 Flutter tests pass with one expected Linux-only skip; 14 native tests pass on the physical iPhone, including completion-once, expiration-before-start, cancellation and cleanup sequencing. Tests cover real stalled HTTP upload/download abortion, incomplete-snapshot protection, lease/scope release and durable interrupted-download recovery. Affected-file analyzer/lint checks and the profile build pass. The short physical retry confirms native enablement, a saved callback handle and available refresh status, but OS pending-request queries remain zero despite successful submission, and development launch/expiration commands produce no worker/expiration receipt. This is inconclusive, not a physical expiration pass. Natural delivery and actual expiration/recovery remain acceptance gates.
+
+The timing policy follows Apple's [background-strategy guidance](https://developer.apple.com/documentation/BackgroundTasks/choosing-background-strategies-for-your-app). For reliable large transfers, evaluate native background `URLSession`; a short Dart callback cannot guarantee that a large part will finish on a slow connection. Natural scheduling, overnight interruption patterns and full lifecycle memory remain separate physical acceptance cases.
 
 ### Phase F — Correct onboarding and settings
 
@@ -233,7 +243,7 @@ For reliable large transfers, evaluate native background `URLSession`. Workmanag
 
 - [x] Show broad storage permission only on Android.
 - [x] Show Android foreground-notification permission only when Android quick sync is enabled.
-- [x] Do not request a persistent-notification permission for iOS Workmanager.
+- [x] Do not request a persistent-notification permission for iOS background refresh.
 - [x] Add an iOS background-sync setting separate from Android's “sync with notification” setting.
 - [x] Explain that iOS scheduling is opportunistic and requires Background App Refresh.
 - [x] Trigger safe foreground reconciliation on Explorer startup/resume through main's awaited coordinator.
@@ -260,8 +270,8 @@ Automated:
 
 - [x] Main's full analyzer remains clean.
 - [x] All existing 57 tests pass; the expanded suite passes 67 tests with one expected Linux-only skip.
-- [x] Platform-selection tests prove Android never schedules Workmanager and iOS never starts foreground service.
-- [x] Failure-injection tests prove Workmanager initialization, scheduling, cancellation, execution, and cleanup errors are contained.
+- [x] Platform-selection tests prove Android never schedules iOS refresh and iOS never starts foreground service.
+- [x] Failure-injection tests prove iOS scheduler initialization, scheduling, cancellation, execution, and cleanup errors are contained.
 - [x] Cross-language configuration test keeps the Dart, AppDelegate, and Info.plist task identifier aligned.
 - [ ] MethodChannel tests cover usable, malformed, stale, denied, and balanced bookmarks.
 - [ ] Background callback tests cover initialization failure, no account, no network, busy lease, partial progress, timeout, retryable failure, and success.
@@ -272,17 +282,17 @@ Automated:
 Physical iPhone/iPad:
 
 - [ ] Fresh install and onboarding with `--dart-define=API_BASE_URL=https://fife.jeero.one`.
-- [ ] Test-account cold restart works without `NEON_AUTH`; obtain test credentials out of band and never commit them.
-- [ ] Real-auth flow works with approved `NEON_AUTH` configuration.
-- [ ] Pick local/iCloud Drive folder and reconcile.
-- [ ] Force-stop/relaunch and verify bookmark restoration.
+- [x] Built-in simulation setup/cold restart works without `NEON_AUTH` — verified 2026-10-06; hosted authentication was tested separately with its approved configuration.
+- [x] Real-auth flow works with approved `NEON_AUTH` configuration — actual OTP, expiring-session refresh, logout/login and saved-phrase key recovery verified 2026-10-06.
+- [x] Pick local Files folders and reconcile — two On My iPhone roots verified; iCloud/provider testing is excluded from this run.
+- [x] Force-stop/relaunch and verify bookmark restoration — local roots verified after cold launch and phone reboot; passcode-protected first-unlock behavior remains unverified.
 - [ ] Revoke provider/folder access and verify fail-closed recovery UI.
-- [ ] Modify same-ID file and confirm current Explorer view refreshes immediately.
-- [ ] Trigger background task from Xcode using Workmanager's documented debug procedure.
-- [ ] Validate foreground/background transitions, screen lock, low-power mode, offline mode, process termination, and Background App Refresh disabled.
-- [ ] Verify no secret, token, path, hash, recovery phrase, or raw payload appears in logs.
+- [ ] Modify same-ID file and confirm current Explorer view refreshes immediately — Runestone saves/upload identity pass with manual sync; returning alone leaves metadata stale. Native-identity-preserving editor behavior remains unverified.
+- [x] Trigger background task from Xcode using Workmanager's documented debug procedure — a delivered forced worker accessed the roots and uploaded; actual expiration and natural delivery are separate unverified cases.
+- [x] Validate the tested short foreground/background, screen-lock, Low Power Mode, offline, process-termination and disabled Background App Refresh variants — see B03–B09 for durations and required manual recovery; overnight behavior is deferred.
+- [ ] Verify no secret, token, path, hash, recovery phrase, or raw payload appears in logs — bounded known-value review passes; complete console/crash coverage remains unverified.
 - [ ] Measure memory and time using small and large encrypted files.
-- [ ] Confirm interrupted transfers resume without corrupting metadata or plaintext.
+- [x] Confirm tested network, screen-lock and process-interrupted transfers recover without corrupting metadata or plaintext — restored bytes/hashes match; expiration/deadline handling remains deferred in phase E.
 
 ## 7. Xcode Configuration Checklist
 

@@ -10,6 +10,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/model_state.dart';
 import '../../repositories/repository_item_task.dart';
 import '../../storage/storage_channel.dart';
+import '../../storage/synced_folder_access.dart';
 import '../../ui/pages/page_devices.dart';
 import '../../ui/pages/page_file_info.dart';
 import '../../ui/pages/page_search.dart';
@@ -66,9 +67,12 @@ class _PageExplorerState extends State<PageExplorer> {
 
 class FilePane extends StatefulWidget {
   final Function(String?) onThemeChange;
+  @visibleForTesting
+  final Future<void> Function()? reconcileOnResume;
   const FilePane({
     super.key,
     required this.onThemeChange,
+    this.reconcileOnResume,
   });
 
   @override
@@ -88,6 +92,9 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   bool _isLocalPath = false;
   bool _isDeviceRoot = false;
   bool _syncInProgress = false;
+  bool _checkingFolderAccess = false;
+  bool _resumeRefreshInProgress = false;
+  bool _resumeRefreshPending = false;
   bool _loggingEnabled =
       ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
           "yes";
@@ -108,7 +115,35 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      unawaited(_refreshState());
+      unawaited(_refreshAfterResume());
+    }
+  }
+
+  Future<void> _refreshAfterResume() async {
+    _resumeRefreshPending = true;
+    if (_resumeRefreshInProgress) return;
+    _resumeRefreshInProgress = true;
+    try {
+      do {
+        _resumeRefreshPending = false;
+        try {
+          // Keep the current folder and selection while discovering external
+          // changes. A second resume during this scan gets one follow-up scan.
+          if (widget.reconcileOnResume case final reconcile?) {
+            await reconcile();
+          } else {
+            await SyncUtils().reconFolders(caller: 'AppResume');
+          }
+          if (mounted) await _loadFiles(isSilent: true);
+        } catch (error, stackTrace) {
+          logger.error('Resume refresh failed',
+              error: error, stackTrace: stackTrace);
+        } finally {
+          if (mounted) await _refreshState();
+        }
+      } while (mounted && _resumeRefreshPending);
+    } finally {
+      _resumeRefreshInProgress = false;
     }
   }
 
@@ -185,10 +220,13 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
       setState(() => _isLoading = true);
     }
 
-    final items = await ModelItem.getDisplayItems(currentItem);
-    _isLocalPath = await ModelItem.isLocalPath(currentItem!.id);
+    final directory = currentItem!;
+    final items = await ModelItem.getDisplayItems(directory);
+    final isLocalPath = await ModelItem.isLocalPath(directory.id);
     String deviceRootHash = await getDeviceHash();
-    _isDeviceRoot = currentItem?.id == deviceRootHash;
+    if (!mounted || currentItem?.id != directory.id) return;
+    _isLocalPath = isLocalPath;
+    _isDeviceRoot = directory.id == deviceRootHash;
 
     if (mounted) {
       // Same-ID rows can still change name, size, hash, archive state, or
@@ -219,22 +257,38 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   }
 
   Future<void> _onTap(ModelItem item) async {
-    if (Platform.isIOS || Platform.isMacOS) {
-      String deviceHash = await getDeviceHash();
-      if (item.parentId == deviceHash) {
-        if (!ChannelStorage.hasUsableBookmark(item.bookmark)) {
-          if (item.path != null) {
-            addSyncFolder(initialDirectory: item.path);
-            return;
-          }
-        }
-      }
-    }
-
     if (_isMultiSelectNotifier.value) {
       _toggleSelection(item);
       return;
     }
+
+    if (_checkingFolderAccess) return;
+    if ((Platform.isIOS || Platform.isMacOS) && item.isFolder) {
+      _checkingFolderAccess = true;
+      try {
+        if (item.parentId == await getDeviceHash() &&
+            !await SyncedFolderAccess.isAvailable(item)) {
+          if (!mounted) return;
+          final recovered = await SyncedFolderAccess.reselect(item);
+          if (recovered == null || !mounted) return;
+          await reconFolder(recovered);
+          if (!mounted) return;
+          item = recovered;
+        }
+      } catch (error, stackTrace) {
+        logger.error('Folder access recovery failed',
+            error: error, stackTrace: stackTrace);
+        if (mounted) {
+          displaySnackBar(context,
+              message: AppLocalizations.of(context)!.pleaseTryAgain,
+              seconds: 3);
+        }
+        return;
+      } finally {
+        _checkingFolderAccess = false;
+      }
+    }
+    if (!mounted) return;
 
     if (item.isFolder) {
       currentItem = item;

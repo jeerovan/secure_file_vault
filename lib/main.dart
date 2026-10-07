@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:file_vault_bb/services/service_background_execution.dart';
 import 'package:file_vault_bb/services/service_http_clients.dart';
+import 'package:file_vault_bb/services/service_sync_budget.dart';
 import 'package:file_vault_bb/ui/pages/page_notification_permission.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
@@ -31,9 +32,10 @@ import '../utils/common.dart';
 import '../utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:workmanager/workmanager.dart';
+import 'package:flutter/services.dart';
 import 'utils/service_foreground_handler.dart';
 import 'utils/utils_sync.dart';
+import 'utils/utils_tasks.dart';
 
 @pragma('vm:entry-point')
 void startForegroundTask() {
@@ -41,29 +43,69 @@ void startForegroundTask() {
 }
 
 @pragma('vm:entry-point')
-void backgroundTaskDispatcher() {
-  Workmanager().executeTask((taskName, inputData) async {
-    final workerLogger = AppLogger(prefixes: ['Workmanager']);
-    return runBackgroundWorkerSafely(
-      task: () async {
-        WidgetsFlutterBinding.ensureInitialized();
-        await StorageSqlite.initialize(ExecutionMode.backgroundWorker);
-        await initializeDependencies(ExecutionMode.backgroundWorker);
-        return SyncUtils().reconFolders(caller: 'Workmanager');
-      },
-      cleanupActions: [
-        BackgroundCleanupAction('HTTP clients', AppHttpClients.closeAll),
-        BackgroundCleanupAction('SQLite', StorageSqlite.instance.close),
-      ],
-      onError: (operation, error, stackTrace) {
-        workerLogger.error(
-          'Background sync $operation failed',
-          error: error,
-          stackTrace: stackTrace,
-        );
-      },
-    );
+void backgroundTaskDispatcher() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  const channel = MethodChannel('com.jeerovan.fife/background_worker');
+  SyncBudget? budget;
+  var expired = false;
+  channel.setMethodCallHandler((call) async {
+    if (call.method == 'expire') {
+      expired = true;
+      budget?.cancel('expiration');
+    }
   });
+  final workerLogger = AppLogger(prefixes: ['Background Sync']);
+  var succeeded = false;
+  try {
+    final ready = await channel.invokeMapMethod<String, dynamic>('ready');
+    if (ready == null) throw StateError('Missing background deadline');
+    final executionBudget = SyncBudget(
+        deadline:
+            DateTime.fromMillisecondsSinceEpoch(ready['deadline'] as int));
+    budget = executionBudget;
+    if (expired || ready['expired'] == true) {
+      executionBudget.cancel('expiration');
+    }
+    final unregister = executionBudget.onCancel(AppHttpClients.closeAll);
+    succeeded = await executionBudget.run(() => runBackgroundWorkerSafely(
+          task: () async {
+            SyncBudget.check();
+            await StorageSqlite.initialize(ExecutionMode.backgroundWorker);
+            if (await ModelSetting.getRaw(AppString.signedIn.string,
+                        defaultValue: 'no') !=
+                    'yes' ||
+                await ModelSetting.getRaw(AppString.backgroundSync.string,
+                        defaultValue: 'no') !=
+                    'yes') {
+              return true;
+            }
+            await initializeDependencies(ExecutionMode.backgroundWorker);
+            SyncBudget.check();
+            return SyncUtils().reconFolders(caller: 'BackgroundRefresh');
+          },
+          cleanupActions: [
+            BackgroundCleanupAction(
+                'Transfer wakes', TaskManager.stopBackgroundWakes),
+            BackgroundCleanupAction('HTTP clients', AppHttpClients.closeAll),
+            BackgroundCleanupAction('SQLite', StorageSqlite.instance.close),
+          ],
+          onError: (operation, error, stackTrace) {
+            workerLogger.error(
+              'Background sync $operation failed',
+              error: error,
+              stackTrace: stackTrace,
+            );
+          },
+        ));
+    unregister();
+    succeeded = succeeded && !executionBudget.interrupted;
+  } catch (error, stackTrace) {
+    workerLogger.error('Background worker initialization failed',
+        error: error, stackTrace: stackTrace);
+  } finally {
+    budget?.dispose();
+    await channel.invokeMethod<void>('finished', succeeded);
+  }
 }
 
 final logger = AppLogger(prefixes: ["Main"]);

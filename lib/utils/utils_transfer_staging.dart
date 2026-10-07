@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path_lib;
+import '../services/service_sync_budget.dart';
 
 class DownloadManifest {
   final String itemId;
@@ -131,6 +132,7 @@ class DownloadStaging {
 
     final invalidParts = <int>[];
     for (final part in manifest.completedParts) {
+      SyncBudget.check();
       final ready = readyPart(part);
       final expectedChecksum = manifest.partChecksums[part];
       if (part < 1 ||
@@ -168,6 +170,7 @@ class DownloadStaging {
   }
 
   Future<void> markComplete(DownloadManifest manifest, int part) async {
+    SyncBudget.check();
     if (part < 1 || part > partCount || !await readyPart(part).exists()) {
       throw StateError('Cannot complete missing download part $part');
     }
@@ -180,11 +183,12 @@ class DownloadStaging {
     final sink = assembledFile.openWrite(mode: FileMode.write);
     try {
       for (var part = 1; part <= partCount; part++) {
+        SyncBudget.check();
         final source = readyPart(part);
         if (!await source.exists()) {
           throw StateError('Missing download part $part');
         }
-        await sink.addStream(source.openRead());
+        await sink.addStream(SyncBudget.guardStream(source.openRead()));
       }
     } finally {
       await sink.flush();
@@ -202,6 +206,7 @@ class DownloadStaging {
   }
 
   static Future<String> _sha256ForFile(File file) async {
-    return (await sha256.bind(file.openRead()).first).toString();
+    return (await sha256.bind(SyncBudget.guardStream(file.openRead())).first)
+        .toString();
   }
 }

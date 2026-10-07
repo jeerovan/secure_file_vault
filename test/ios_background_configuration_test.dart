@@ -11,10 +11,11 @@ void main() {
     expect(
       appDelegate,
       contains(
-        'WorkmanagerPlugin.registerPeriodicTask(\n'
-        '            withIdentifier: "$iosBackgroundTaskIdentifier"',
+        'static let identifier = "$iosBackgroundTaskIdentifier"',
       ),
     );
+    expect(appDelegate,
+        contains('IosBackgroundSync.shared.registerLaunchHandler()'));
     expect(
       infoPlist,
       contains('<string>$iosBackgroundTaskIdentifier</string>'),
@@ -24,7 +25,8 @@ void main() {
   test('iOS path provider stays on the non-FFI implementation', () {
     final lockfile = File('pubspec.lock').readAsStringSync();
     final packageStart = lockfile.indexOf('  path_provider_foundation:');
-    final packageEnd = lockfile.indexOf('\n  path_provider_linux:', packageStart);
+    final packageEnd =
+        lockfile.indexOf('\n  path_provider_linux:', packageStart);
 
     expect(packageStart, isNonNegative);
     expect(packageEnd, greaterThan(packageStart));

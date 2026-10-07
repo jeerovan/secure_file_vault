@@ -21,6 +21,8 @@
 # Logs / temp
 .buildlog/
 migrate_working_dir/
+.local/gmail-monitor/
+.local/ios-testing/
 
 # Dart / Flutter / Pub
 .dart_tool/
@@ -88,6 +90,7 @@ migrate_working_dir/
 **/web/main.dart.js.map
 
 # Firebase / secrets
+/.secrets/
 **/google-services.json
 **/GoogleService-Info.plist
 **/firebase_app_id_file.json
@@ -120,3 +123,4 @@ node_modules
 !README.md
 !LICENSE.md
 !SPEC.md
+!IOS-PHYSICAL-TEST-PLAN.md
