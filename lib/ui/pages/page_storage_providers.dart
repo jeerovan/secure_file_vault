@@ -65,7 +65,7 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
         });
       }
     } catch (e) {
-      debugPrint("Error initializing purchases: $e");
+      logger.error("Error initializing purchases", error: e);
     }
   }
 

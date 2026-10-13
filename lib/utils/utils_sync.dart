@@ -34,6 +34,24 @@ import '../utils/utils_transfer_staging.dart';
 import 'package:sodium/sodium_sumo.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 
+/// A deadline-limited callback drains eligible durable work first. Discovery
+/// resumes once that queue is empty; foreground passes always discover edits.
+Future<bool> runSyncPass({
+  required Future<bool> Function() hasPendingTransfers,
+  required Future<bool> Function() reconcile,
+  required Future<bool> Function() sync,
+}) async {
+  SyncBudget.check();
+  if (SyncBudget.current != null) {
+    final pending = await hasPendingTransfers();
+    SyncBudget.check();
+    if (pending) return sync();
+  }
+  final reconciled = await reconcile();
+  final synced = await sync();
+  return reconciled && synced;
+}
+
 class SyncUtils {
   // Singleton setup
   static final SyncUtils _instance = SyncUtils._internal();
@@ -70,6 +88,15 @@ class SyncUtils {
     }
 
     logger.info("Start recon from $caller");
+    return runSyncPass(
+      hasPendingTransfers: () async =>
+          await ModelItemTask.fetchPendingTask({}) != null,
+      reconcile: _reconcileLocalFolders,
+      sync: () => triggerSync(caller: caller),
+    );
+  }
+
+  Future<bool> _reconcileLocalFolders() async {
     bool reconciliationSucceeded = true;
     try {
       SodiumSumo sodium = await SodiumSumoInit.init();
@@ -114,8 +141,7 @@ class SyncUtils {
       logger.error("Recon failed", error: e, stackTrace: stackTrace);
       reconciliationSucceeded = false;
     }
-    final syncSucceeded = await triggerSync(caller: caller);
-    return reconciliationSucceeded && syncSucceeded;
+    return reconciliationSucceeded;
   }
 
   static Future<void> waitAndSyncChanges(String caller) async {

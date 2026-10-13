@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
 import '../utils/utils_sync.dart';
+import '../services/service_logger.dart';
 import 'package:flutter/foundation.dart';
 
 import '../utils/common.dart';
@@ -395,7 +396,7 @@ class ModelItem {
 
       rows.addAll(filteredRows);
     } catch (e) {
-      debugPrint('Search error: ${e.toString()}');
+      debugPrint(AppLogger.sanitize('Search error: ${e.toString()}'));
     }
 
     return await Future.wait(rows.map((map) => fromMap(map)));

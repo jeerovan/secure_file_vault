@@ -27,8 +27,11 @@ class NativeIosBackgroundScheduler implements IosBackgroundScheduler {
     if (handle == null) {
       throw StateError('Background entrypoint is not top-level');
     }
-    await channel.invokeMethod<void>(
-        'initialize', {'callbackHandle': handle.toRawHandle()});
+    await channel.invokeMethod<void>('initialize', {
+      'callbackHandle': handle.toRawHandle(),
+      'testDiagnostics': !kReleaseMode &&
+          const bool.fromEnvironment('FIFE_BACKGROUND_TEST_DIAGNOSTICS'),
+    });
   }
 
   @override

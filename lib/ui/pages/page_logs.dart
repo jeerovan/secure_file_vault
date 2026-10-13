@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../services/service_logger.dart';
 import '../common_widgets.dart';
 import '../../utils/common.dart';
 
@@ -85,7 +86,7 @@ class _PageLogsState extends State<PageLogs> {
         await logFile.writeAsString('');
       }
     } catch (e) {
-      dev.log("Failed to clear logs", error: e);
+      dev.log("Failed to clear logs", error: AppLogger.sanitize(e.toString()));
     }
     _loadLogs();
   }

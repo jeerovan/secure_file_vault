@@ -109,6 +109,13 @@ class TaskManager {
     _isDispatching = true;
 
     try {
+      // An idle queue needs neither a network probe nor a transfer-sized
+      // reserve. Keep blocked/future-retry work intact and schedule its wake.
+      if (await ModelItemTask.fetchPendingTask(_activeTaskIds) == null) {
+        await _scheduleNextRetryWake();
+        _checkCompletion();
+        return;
+      }
       bool hasInternet = await InternetConnection().hasInternetAccess;
       SyncBudget.check();
       if (!hasInternet) {
@@ -127,7 +134,6 @@ class TaskManager {
       bool tasksDispatched = false;
 
       while (_activeTaskIds.length < maxConcurrentProcesses) {
-        SyncBudget.check(reserve: const Duration(seconds: 5));
         // Fetches pending upload identifier from another function
         final String? pendingTaskId =
             await ModelItemTask.fetchPendingTask(_activeTaskIds);
@@ -136,6 +142,7 @@ class TaskManager {
         if (pendingTaskId == null) {
           break;
         }
+        SyncBudget.check(reserve: const Duration(seconds: 5));
 
         // Ensure we don't start the same task twice concurrently
         if (!_activeTaskIds.contains(pendingTaskId)) {

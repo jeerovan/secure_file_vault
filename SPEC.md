@@ -62,11 +62,12 @@ The backend is a control plane. File payloads should travel directly between the
 The `main` branch is the source branch for:
 
 - Android
+- iOS
 - macOS
 - Windows
 - Linux
 
-Changes on `main` must preserve these four targets unless a change is explicitly platform-specific and safely isolated.
+Changes on `main` must preserve these targets unless a change is explicitly platform-specific and safely isolated.
 
 Platform filesystem access rules:
 
@@ -76,16 +77,16 @@ Platform filesystem access rules:
 - filesystem identity must preserve exact names, including whitespace, case, and Unicode normalization differences where the host filesystem supports them;
 - symlinks are ignored during reconciliation and hidden directories are pruned according to the shared hidden-content policy.
 
-### 3.2 iOS branch
+### 3.2 iOS support
 
-iOS is maintained and developed separately on the `ios` branch.
+iOS support is maintained on unified `main`. The older `ios` branch is a historical reference and remains retained until a unified release is proven.
 
-Rules:
-
-- Do not treat iOS support on `main` as authoritative, even if iOS files exist there.
-- Do not make iOS-specific changes on `main` unless explicitly requested.
-- Do not assume a change made on `main` is already compatible with the `ios` branch.
-- Shared changes intended for iOS require deliberate porting and validation on the `ios` branch.
+- iOS folder access persists real bookmarks, acquires access through the resolved bookmark URL, and balances successful acquisition with release. Denied or stale external access must fail closed.
+- Foreground reconciliation and manual sync remain available independently of background scheduling.
+- Optional background sync defaults to disabled. Native `BGAppRefreshTask` callbacks run a headless Flutter worker within a protective deadline; delivery time and available execution time are controlled by iOS.
+- Deadline-scoped passes prioritize eligible durable transfers before another root scan. Foreground passes still discover edits first. Source integrity, metadata, authentication and device checks remain required.
+- Cancellation and expiration preserve resumable work. Cooperative completion releases resources before reporting completion; OS expiration of an already running worker reports failure promptly and asks Dart to unwind.
+- Physical test claims must distinguish request submission, actual delivery, metadata progress, verified file completion and foreground recovery. Successful background upload remains assigned to production verification; it must not be inferred from a submitted request or a failed callback.
 
 ## 4. Supported Storage Providers
 

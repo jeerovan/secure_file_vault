@@ -23,6 +23,7 @@
 migrate_working_dir/
 .local/gmail-monitor/
 .local/ios-testing/
+.local/ios-release/
 
 # Dart / Flutter / Pub
 .dart_tool/
@@ -117,6 +118,7 @@ node_modules
 
 # AI
 .codex/
+.serena/
 
 # Markdowns
 *.md

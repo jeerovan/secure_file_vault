@@ -185,7 +185,8 @@ class AppLogger {
             mode: FileMode.append);
       }
     } catch (e) {
-      dev.log("Failed to write to log file queue", error: e);
+      dev.log("Failed to write to log file queue",
+          error: sanitize(e.toString()));
     } finally {
       _isWriting = false;
     }

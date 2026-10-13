@@ -451,7 +451,10 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   }
 
   Future<void> showArchives() async {
-    Navigator.of(context).push(AnimatedPageRoute(child: const PageTrash()));
+    await Navigator.of(context)
+        .push(AnimatedPageRoute(child: const PageTrash()));
+    if (!mounted) return;
+    await _loadFiles(isSilent: true);
   }
 
   Future<void> showDevices() async {

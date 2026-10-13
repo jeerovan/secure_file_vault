@@ -35,7 +35,7 @@ FiFe is split into a robust cross-platform client and an edge-optimized server:
 
 **Frontend / Client App**
 - Built with **Flutter** for Android, iOS, OSX, and Linux (AppImages).
-- Background task synchronization using Workmanager.
+- Android synchronization uses a foreground service; iOS uses native `BGAppRefreshTask` callbacks with a bounded headless Flutter worker. Desktop synchronization uses a timer.
 - Local metadata management via SQLite.
 
 **Backend / API**
@@ -119,10 +119,23 @@ dart run permission_handler_apple:select app-store
 Then build normally, for example:
 
 ```bash
-flutter build ipa --release
+flutter build ipa --release \
+  --dart-define-from-file=.secrets/ios-hosted-defines.json \
+  --dart-define=LOCAL_TESTING=false \
+  --dart-define=FIFE_BACKGROUND_TEST_DIAGNOSTICS=false
 ```
 
 The selection command clears stale Swift Package Manager/Xcode permission caches. The **Verify iOS Permissions** Runner build phase stops Xcode archives when the selection is missing, stale, or does not match the active build configuration. Do not bypass that build-phase failure; rerun the selection command instead.
+
+The ignored defines file must contain the intended hosted `API_BASE_URL`, matching `NEON_AUTH`, and `RC_KEY_IOS`. Flutter does not automatically read `.env`; a hosted URL alone does not disable local authentication. Keep OAuth tokens, recovery phrases and signing credentials outside tracked files. The app's privacy manifest declares app-private `UserDefaults` and file metadata access within its container and explicitly selected folders; dependency manifests remain bundled with their SDKs.
+
+For direct `xcodebuild test` runs, first prepare the generated iOS package with `flutter build ios --profile` using the same hosted defines. Flutter test/package tooling can regenerate its platform defaults; the Flutter iOS build reapplies the project's supported deployment target before Xcode resolves packages.
+
+### iOS release candidate: 1.0.12 (23)
+
+This candidate includes restored bookmark access, existing-root permission renewal, verified empty-file downloads, Explorer refresh after external edits, background engine cleanup before task completion, priority for queued background transfers, and sanitized error logging. Background sync remains an optional opt-in feature with a protective deadline and foreground recovery.
+
+The full Flutter suite passes (134 tests, one expected platform skip), analysis is clean at all severities, and 21 native tests pass on the physical iPhone. Successful background upload is assigned to the user's production verification and is not claimed as passed. See [the physical test record and release checks](IOS-PHYSICAL-TEST-PLAN.md#production-release-preparation--2026-10-13) for artifact status, test scope and remaining limits.
 
 ## 🤝 Contributing
 

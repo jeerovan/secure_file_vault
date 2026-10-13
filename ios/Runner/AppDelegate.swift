@@ -39,21 +39,77 @@ final class BackgroundSyncSession {
             expired = true
             cancelWork()
         }
-        if reportImmediately { report(false) }
-        if !started { finish(success: false) }
+        if !started {
+            finish(success: false)
+        } else if reportImmediately {
+            report(false)
+        }
     }
 
     func finish(success: Bool) {
         guard !finished else { return }
         finished = true
-        report(success && !expired)
+        // Completing BGTask can let iOS suspend us. Release the engine first.
         cleanup()
+        report(success && !expired)
     }
 
     private func report(_ success: Bool) {
         guard !reported else { return }
         reported = true
         completion(success)
+    }
+}
+
+/// Opt-in test-build receipts contain only lifecycle events and integer counts.
+/// The normal build disables and removes this bounded diagnostic file.
+final class BackgroundTestTrace {
+    enum Event: String, Codable {
+        case registered, initialized, submitted, cancelled, queue
+        case delivered, rejected, disabled, missingEntrypoint, engineFailed
+        case ready, deadline, expired, completed, released
+    }
+    struct Receipt: Codable {
+        let time: Int64
+        let event: Event
+        let value: Int?
+    }
+    private let url: URL
+    private let limit: Int
+    private let lock = NSLock()
+    private var enabled: Bool
+
+    init(url: URL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("fife-background-test-trace.json"),
+         enabled: Bool = false, limit: Int = 256) {
+        self.url = url
+        self.enabled = enabled
+        self.limit = max(1, limit)
+    }
+
+    func setEnabled(_ value: Bool) {
+        lock.lock()
+        defer { lock.unlock() }
+        enabled = value
+        if !value { try? FileManager.default.removeItem(at: url) }
+    }
+
+    func record(_ event: Event, value: Int? = nil) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard enabled else { return }
+        var receipts: [Receipt] = []
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+           let size = attributes[.size] as? NSNumber, size.intValue <= 65536,
+           let data = try? Data(contentsOf: url),
+           let previous = try? JSONDecoder().decode([Receipt].self, from: data) {
+            receipts = Array(previous.suffix(limit - 1))
+        }
+        receipts.append(Receipt(time: Int64(Date().timeIntervalSince1970 * 1000),
+                                event: event, value: value))
+        if let data = try? JSONEncoder().encode(receipts) {
+            try? data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        }
     }
 }
 
@@ -67,6 +123,15 @@ final class IosBackgroundSync {
     private var engine: FlutterEngine?
     private var workerChannel: FlutterMethodChannel?
     private var deadlineTimer: Timer?
+    private let trace = BackgroundTestTrace(enabled:
+        UserDefaults.standard.bool(forKey: "fife.backgroundSync.testDiagnostics"))
+
+    private func recordPendingRequests() {
+        BGTaskScheduler.shared.getPendingTaskRequests { requests in
+            let matching = requests.filter { $0.identifier == Self.identifier }.count
+            self.trace.record(.queue, value: requests.count * 100 + matching)
+        }
+    }
 
     func registerLaunchHandler() {
         guard !registered else { return }
@@ -75,6 +140,7 @@ final class IosBackgroundSync {
         ) { task in
             DispatchQueue.main.async { self.run(task) }
         }
+        trace.record(.registered, value: registered ? 1 : 0)
     }
 
     func registerScheduler(with messenger: FlutterBinaryMessenger) {
@@ -82,14 +148,19 @@ final class IosBackgroundSync {
         channel.setMethodCallHandler { call, result in
             switch call.method {
             case "initialize":
+                let args = call.arguments as? [String: Any]
+                let diagnostics = args?["testDiagnostics"] as? Bool == true
+                UserDefaults.standard.set(diagnostics, forKey: "fife.backgroundSync.testDiagnostics")
+                self.trace.setEnabled(diagnostics)
                 guard self.registered,
-                      let args = call.arguments as? [String: Any],
-                      let handle = args["callbackHandle"] as? NSNumber,
+                      let handle = args?["callbackHandle"] as? NSNumber,
                       FlutterCallbackCache.lookupCallbackInformation(handle.int64Value) != nil else {
                     result(FlutterError(code: "BACKGROUND_UNAVAILABLE", message: "Background entrypoint unavailable", details: nil))
                     return
                 }
                 UserDefaults.standard.set(handle, forKey: self.handleKey)
+                self.trace.record(.initialized)
+                self.recordPendingRequests()
                 result(nil)
             case "schedule":
                 do {
@@ -103,6 +174,8 @@ final class IosBackgroundSync {
                 UserDefaults.standard.set(false, forKey: self.enabledKey)
                 BGTaskScheduler.shared.cancel(taskRequestWithIdentifier: Self.identifier)
                 self.active?.expire(reportImmediately: false)
+                self.trace.record(.cancelled)
+                self.recordPendingRequests()
                 result(nil)
             default: result(FlutterMethodNotImplemented)
             }
@@ -113,20 +186,26 @@ final class IosBackgroundSync {
         let request = BGAppRefreshTaskRequest(identifier: Self.identifier)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
         try BGTaskScheduler.shared.submit(request)
+        trace.record(.submitted)
+        recordPendingRequests()
     }
 
     private func run(_ task: BGTask) {
+        trace.record(.delivered, value: UIApplication.shared.applicationState.rawValue)
         guard task is BGAppRefreshTask, active == nil else {
+            trace.record(.rejected)
             task.setTaskCompleted(success: false)
             return
         }
         // A callback delivered after disabling/sign-out must not start Dart.
         guard UserDefaults.standard.bool(forKey: enabledKey) else {
+            trace.record(.disabled)
             task.setTaskCompleted(success: true)
             return
         }
         guard let handle = UserDefaults.standard.object(forKey: handleKey) as? NSNumber,
               let callback = FlutterCallbackCache.lookupCallbackInformation(handle.int64Value) else {
+            trace.record(.missingEntrypoint)
             task.setTaskCompleted(success: false)
             return
         }
@@ -134,6 +213,7 @@ final class IosBackgroundSync {
         let deadline = Date(timeIntervalSinceNow: 20)
         let session = BackgroundSyncSession { success in
             task.setTaskCompleted(success: success)
+            self.trace.record(.completed, value: success ? 1 : 0)
             NSLog("FiFe background sync completed success=%d", success ? 1 : 0)
         }
         active = session
@@ -149,20 +229,24 @@ final class IosBackgroundSync {
             self?.engine?.destroyContext()
             self?.engine = nil
             self?.active = nil
+            self?.trace.record(.released)
             NSLog("FiFe background sync resources released")
         }
         task.expirationHandler = {
             DispatchQueue.main.async {
+                self.trace.record(.expired)
                 NSLog("FiFe background sync expired")
                 session.expire()
             }
         }
         deadlineTimer = Timer.scheduledTimer(withTimeInterval: 20, repeats: false) { _ in
+            self.trace.record(.deadline)
             session.expire(reportImmediately: false)
         }
         let engine = FlutterEngine(name: "FiFe.backgroundSync", project: nil, allowHeadlessExecution: true)
         self.engine = engine
         guard engine.run(withEntrypoint: callback.callbackName, libraryURI: callback.callbackLibraryPath) else {
+            trace.record(.engineFailed)
             session.finish(success: false)
             return
         }
@@ -174,6 +258,7 @@ final class IosBackgroundSync {
             switch call.method {
             case "ready":
                 session.started = true
+                self.trace.record(.ready)
                 result(["deadline": Int64(deadline.timeIntervalSince1970 * 1000), "expired": session.expired])
                 NSLog("FiFe background sync started")
             case "finished":

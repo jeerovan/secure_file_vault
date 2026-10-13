@@ -81,7 +81,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         }
       }
     } catch (e) {
-      debugPrint("Error initializing purchases: $e");
+      logger.error("Error initializing purchases", error: e);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -117,7 +117,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         }
       }
     } catch (e) {
-      debugPrint("Purchase error: $e");
+      logger.error("Purchase error", error: e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -155,7 +155,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         );
       }
     } catch (e) {
-      debugPrint("Restore error: $e");
+      logger.error("Restore error", error: e);
     } finally {
       setState(() => _isLoading = false);
     }
@@ -165,7 +165,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     if (_managementUrl != null) {
       final uri = Uri.parse(_managementUrl!);
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-        debugPrint("Could not launch $_managementUrl");
+        logger.error("Could not launch subscription management URL");
       }
     } else {
       if (mounted) {

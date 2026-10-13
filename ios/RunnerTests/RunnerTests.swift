@@ -5,6 +5,64 @@ import XCTest
 
 class RunnerTests: XCTestCase {
 
+  func testAppBundleDeclaresItsRequiredPrivacyReasons() throws {
+    let url = try XCTUnwrap(Bundle(for: AppDelegate.self)
+      .url(forResource: "PrivacyInfo", withExtension: "xcprivacy"))
+    let manifest = try XCTUnwrap(try PropertyListSerialization.propertyList(
+      from: Data(contentsOf: url), options: [], format: nil) as? [String: Any])
+    let entries = try XCTUnwrap(manifest["NSPrivacyAccessedAPITypes"] as? [[String: Any]])
+    let defaults = try XCTUnwrap(entries.first {
+      $0["NSPrivacyAccessedAPIType"] as? String == "NSPrivacyAccessedAPICategoryUserDefaults"
+    })
+    let reasons = try XCTUnwrap(defaults["NSPrivacyAccessedAPITypeReasons"] as? [String])
+    XCTAssertTrue(reasons.contains("CA92.1"))
+    let files = try XCTUnwrap(entries.first {
+      $0["NSPrivacyAccessedAPIType"] as? String == "NSPrivacyAccessedAPICategoryFileTimestamp"
+    })
+    let fileReasons = try XCTUnwrap(files["NSPrivacyAccessedAPITypeReasons"] as? [String])
+    XCTAssertTrue(fileReasons.contains("C617.1"))
+    XCTAssertTrue(fileReasons.contains("3B52.1"))
+  }
+
+  func testBackgroundTraceIsOptInAndRemovesPreviousReceiptsWhenDisabled() throws {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: url) }
+    let trace = BackgroundTestTrace(url: url)
+    trace.record(.submitted)
+    XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+    trace.setEnabled(true)
+    trace.record(.queue, value: 101)
+    XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+    trace.setEnabled(false)
+    trace.record(.delivered)
+    XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+  }
+
+  func testBackgroundTraceRetainsBoundedReceiptsAcrossProcessRecreation() throws {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: url) }
+    let trace = BackgroundTestTrace(url: url, enabled: true, limit: 3)
+    trace.record(.submitted)
+    trace.record(.ready)
+    trace.record(.expired)
+    BackgroundTestTrace(url: url, enabled: true, limit: 3).record(.completed, value: 0)
+    let receipts = try JSONDecoder().decode([BackgroundTestTrace.Receipt].self,
+                                            from: Data(contentsOf: url))
+    XCTAssertEqual(receipts.map { $0.event }, [.ready, .expired, .completed])
+    XCTAssertEqual(receipts.last?.value, 0)
+    XCTAssertTrue(receipts.allSatisfy { $0.time > 0 })
+  }
+
+  func testBackgroundTraceRecoversFromCorruptDataWithoutStoppingWork() throws {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    defer { try? FileManager.default.removeItem(at: url) }
+    try Data("invalid".utf8).write(to: url)
+    BackgroundTestTrace(url: url, enabled: true).record(.released)
+    let receipts = try JSONDecoder().decode([BackgroundTestTrace.Receipt].self,
+                                            from: Data(contentsOf: url))
+    XCTAssertEqual(receipts.map { $0.event }, [.released])
+  }
+
   func testExpirationReportsFailureAndCleansOnlyAfterDartAcknowledges() {
     var results: [Bool] = []
     var cancels = 0
@@ -44,6 +102,49 @@ class RunnerTests: XCTestCase {
     session.expire(reportImmediately: false)
     XCTAssertEqual(results, [])
     session.finish(success: true)
+    XCTAssertEqual(results, [false])
+  }
+
+  func testSuccessfulTaskReleasesResourcesBeforeReportingCompletion() {
+    var released = false
+    var results: [Bool] = []
+    let session = BackgroundSyncSession { success in
+      XCTAssertTrue(released, "Resources must be released before the task is completed")
+      results.append(success)
+    }
+    session.cleanup = { released = true }
+    session.finish(success: true)
+    session.finish(success: false)
+    XCTAssertEqual(results, [true])
+  }
+
+  func testDeadlineFailureReleasesResourcesBeforeReportingCompletion() {
+    var released = false
+    var results: [Bool] = []
+    let session = BackgroundSyncSession { success in
+      XCTAssertTrue(released, "Cancellation cleanup must precede task completion")
+      results.append(success)
+    }
+    session.started = true
+    session.cleanup = { released = true }
+    session.expire(reportImmediately: false)
+    XCTAssertFalse(released)
+    XCTAssertTrue(results.isEmpty)
+    session.finish(success: true)
+    session.finish(success: true)
+    XCTAssertEqual(results, [false])
+  }
+
+  func testExpirationBeforeStartReleasesResourcesBeforeReportingCompletion() {
+    var released = false
+    var results: [Bool] = []
+    let session = BackgroundSyncSession { success in
+      XCTAssertTrue(released, "An unstarted engine must be released before task completion")
+      results.append(success)
+    }
+    session.cleanup = { released = true }
+    session.expire()
+    session.expire()
     XCTAssertEqual(results, [false])
   }
 
