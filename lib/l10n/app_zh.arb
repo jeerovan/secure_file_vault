@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "自动同步间隔",
+  "autoSyncIntervalDescription": "启用快速同步通知时自动同步。",
+  "syncIntervalMinutes": "{minutes}分钟",
+  "autoSyncIntervalSaveError": "无法保存间隔，请重试。",
+  "autoSyncIntervalApplyError": "间隔已保存。请关闭后重新开启快速同步通知以应用。",
   "quickSyncNotificationTitle": "文件同步服务",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "点击下方按钮进行同步",
+  "quickSyncNotificationText": "每{minutes}分钟运行一次",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "立即同步",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "同步中...",
   "@quickSyncNotificationInProgress": {

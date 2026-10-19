@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Interval voor automatisch synchroniseren",
+  "autoSyncIntervalDescription": "Synchroniseer automatisch zolang de melding voor snel synchroniseren is ingeschakeld.",
+  "syncIntervalMinutes": "{minutes, plural, =1{1 minuut} other{{minutes} minuten}}",
+  "autoSyncIntervalSaveError": "Het interval kon niet worden opgeslagen. Probeer het opnieuw.",
+  "autoSyncIntervalApplyError": "Interval opgeslagen. Schakel de melding voor snel synchroniseren uit en weer in om het toe te passen.",
   "quickSyncNotificationTitle": "Bestandsynchronisatiedienst",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Tik op de knop hieronder om te synchroniseren",
+  "quickSyncNotificationText": "{minutes, plural, =1{Elke 1 minuut uitvoeren} other{Elke {minutes} minuten uitvoeren}}",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Nu synchroniseren",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "Bezig...",
   "@quickSyncNotificationInProgress": {

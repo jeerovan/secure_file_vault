@@ -13,6 +13,7 @@ import '../../l10n/app_localizations.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_locale.dart';
 import '../../services/service_logger.dart';
+import '../../services/service_foreground.dart';
 import '../../utils/common.dart';
 import '../../utils/enums.dart';
 import '../common_widgets.dart';
@@ -43,6 +44,8 @@ class SettingsPageState extends State<SettingsPage> {
   bool backgroundSyncEnabled =
       ModelSetting.get(AppString.backgroundSync.string, defaultValue: "no") ==
           "yes";
+  int _autoSyncIntervalMinutes = ModelSetting.foregroundSyncIntervalMinutes;
+  bool _savingAutoSyncInterval = false;
   late bool isDarkMode;
   String? emailId = "";
 
@@ -57,6 +60,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Future<void> _initializeData() async {
     String? signedEmailId = await getSignedInEmailId();
+    if (!mounted) return;
     setState(() {
       if (signedEmailId != null) {
         emailId = signedEmailId;
@@ -120,6 +124,42 @@ class SettingsPageState extends State<SettingsPage> {
       setState(() {
         backgroundSyncEnabled = enable;
       });
+    }
+  }
+
+  Future<void> _saveAutoSyncInterval(double value) async {
+    final minutes = value.round();
+    final previousMinutes = ModelSetting.foregroundSyncIntervalMinutes;
+    var saved = false;
+    setState(() => _savingAutoSyncInterval = true);
+    try {
+      await ModelSetting.set(
+          AppString.foregroundSyncIntervalMinutes.string, '$minutes');
+      saved = true;
+      if (!await ServiceForeground.instance.updateSyncInterval()) {
+        throw StateError('Foreground interval update failed');
+      }
+    } catch (error, stackTrace) {
+      logger.error('Failed to update auto sync interval',
+          error: error, stackTrace: stackTrace);
+      if (!saved) {
+        ModelSetting
+                .settingJson[AppString.foregroundSyncIntervalMinutes.string] =
+            '$previousMinutes';
+      }
+      if (mounted) {
+        final loc = AppLocalizations.of(context)!;
+        if (!saved) {
+          setState(() => _autoSyncIntervalMinutes = previousMinutes);
+        }
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(saved
+              ? loc.autoSyncIntervalApplyError
+              : loc.autoSyncIntervalSaveError),
+        ));
+      }
+    } finally {
+      if (mounted) setState(() => _savingAutoSyncInterval = false);
     }
   }
 
@@ -407,18 +447,39 @@ class SettingsPageState extends State<SettingsPage> {
                   ),
                 ),
                 if (Platform.isAndroid)
-                  ListTile(
-                    leading:
-                        const Icon(LucideIcons.refreshCcw, color: Colors.grey),
-                    title: Text(loc.quickSyncNotificationSettingTitle),
-                    horizontalTitleGap: 24.0,
-                    trailing: Transform.scale(
-                      scale: 0.7,
-                      child: Switch(
-                        value: quickSyncEnabled,
-                        onChanged: setQuickSyncWithNotification,
+                  Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(LucideIcons.refreshCcw,
+                            color: Colors.grey),
+                        title: Text(loc.quickSyncNotificationSettingTitle),
+                        horizontalTitleGap: 24.0,
+                        trailing: Transform.scale(
+                          scale: 0.7,
+                          child: Switch(
+                            value: quickSyncEnabled,
+                            onChanged: setQuickSyncWithNotification,
+                          ),
+                        ),
                       ),
-                    ),
+                      AnimatedSize(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 180),
+                        alignment: Alignment.topCenter,
+                        child: quickSyncEnabled
+                            ? AutoSyncIntervalSetting(
+                                minutes: _autoSyncIntervalMinutes,
+                                onChanged: _savingAutoSyncInterval
+                                    ? null
+                                    : (value) => setState(() =>
+                                        _autoSyncIntervalMinutes =
+                                            value.round()),
+                                onChangeEnd: _saveAutoSyncInterval,
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
                   ),
                 if (Platform.isIOS)
                   ListTile(
@@ -594,6 +655,69 @@ class SettingsPageState extends State<SettingsPage> {
     const String appLink =
         'https://play.google.com/store/apps/details?id=com.jeerovan.fife';
     SharePlus.instance.share(ShareParams(uri: Uri.parse(appLink)));
+  }
+}
+
+class AutoSyncIntervalSetting extends StatelessWidget {
+  const AutoSyncIntervalSetting({
+    super.key,
+    required this.minutes,
+    required this.onChanged,
+    required this.onChangeEnd,
+  });
+
+  final int minutes;
+  final ValueChanged<double>? onChanged;
+  final ValueChanged<double> onChangeEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return ListTile(
+      leading: const Icon(LucideIcons.clock, color: Colors.grey),
+      horizontalTitleGap: 24,
+      title: Text(loc.autoSyncInterval),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(loc.syncIntervalMinutes(minutes)),
+          Text(loc.autoSyncIntervalDescription),
+          Slider(
+            value: minutes.toDouble(),
+            min: ModelSetting.minForegroundSyncIntervalMinutes.toDouble(),
+            max: ModelSetting.maxForegroundSyncIntervalMinutes.toDouble(),
+            divisions: ModelSetting.maxForegroundSyncIntervalMinutes -
+                ModelSetting.minForegroundSyncIntervalMinutes,
+            label:
+                '${loc.autoSyncInterval}: ${loc.syncIntervalMinutes(minutes)}',
+            semanticFormatterCallback: (value) =>
+                loc.syncIntervalMinutes(value.round()),
+            onChanged: onChanged,
+            onChangeEnd: onChangeEnd,
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  loc.syncIntervalMinutes(
+                      ModelSetting.minForegroundSyncIntervalMinutes),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  loc.syncIntervalMinutes(
+                      ModelSetting.maxForegroundSyncIntervalMinutes),
+                  textAlign: TextAlign.end,
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

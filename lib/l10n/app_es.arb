@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Intervalo de sincronización automática",
+  "autoSyncIntervalDescription": "Sincroniza automáticamente mientras esté activada la notificación de sincronización rápida.",
+  "syncIntervalMinutes": "{minutes, plural, =1{1 minuto} other{{minutes} minutos}}",
+  "autoSyncIntervalSaveError": "No se pudo guardar el intervalo. Inténtalo de nuevo.",
+  "autoSyncIntervalApplyError": "Intervalo guardado. Desactiva y vuelve a activar la notificación de sincronización rápida para aplicarlo.",
   "quickSyncNotificationTitle": "Servicio de sincronización de archivos",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Toca el botón de abajo para sincronizar",
+  "quickSyncNotificationText": "{minutes, plural, =1{Ejecutar cada 1 minuto} other{Ejecutar cada {minutes} minutos}}",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Sincronizar ahora",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "En curso...",
   "@quickSyncNotificationInProgress": {

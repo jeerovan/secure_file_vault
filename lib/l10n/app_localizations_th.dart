@@ -38,13 +38,32 @@ class AppLocalizationsTh extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'การแจ้งเตือนการซิงก์ด่วน';
 
   @override
+  String get autoSyncInterval => 'ช่วงเวลาซิงค์อัตโนมัติ';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'ซิงค์อัตโนมัติขณะเปิดใช้การแจ้งเตือนซิงค์ด่วน';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes นาที';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'บันทึกช่วงเวลาไม่ได้ โปรดลองอีกครั้ง';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'บันทึกช่วงเวลาแล้ว ปิดแล้วเปิดการแจ้งเตือนซิงค์ด่วนอีกครั้งเพื่อใช้ค่าใหม่';
+
+  @override
   String get quickSyncNotificationTitle => 'บริการซิงก์ไฟล์';
 
   @override
-  String get quickSyncNotificationText => 'แตะปุ่มด้านล่างเพื่อซิงก์';
-
-  @override
-  String get quickSyncNotificationButton => 'ซิงก์ตอนนี้';
+  String quickSyncNotificationText(int minutes) {
+    return 'ทำงานทุก $minutes นาที';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'กำลังดำเนินการ...';

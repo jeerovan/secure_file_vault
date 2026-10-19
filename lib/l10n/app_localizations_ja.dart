@@ -38,13 +38,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'クイック同期通知';
 
   @override
+  String get autoSyncInterval => '自動同期の間隔';
+
+  @override
+  String get autoSyncIntervalDescription => 'クイック同期通知が有効な間、自動的に同期します。';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes分';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError => '間隔を保存できませんでした。もう一度お試しください。';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      '間隔を保存しました。適用するには、クイック同期通知をオフにしてから再びオンにしてください。';
+
+  @override
   String get quickSyncNotificationTitle => 'ファイル同期サービス';
 
   @override
-  String get quickSyncNotificationText => '下のボタンをタップして同期';
-
-  @override
-  String get quickSyncNotificationButton => '今すぐ同期';
+  String quickSyncNotificationText(int minutes) {
+    return '$minutes分ごとに実行';
+  }
 
   @override
   String get quickSyncNotificationInProgress => '処理中...';

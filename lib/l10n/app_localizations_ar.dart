@@ -38,13 +38,50 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'إشعارات المزامنة السريعة';
 
   @override
+  String get autoSyncInterval => 'الفاصل الزمني للمزامنة التلقائية';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'تتم المزامنة تلقائيًا عند تفعيل إشعار المزامنة السريعة.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes دقيقة',
+      many: '$minutes دقيقة',
+      few: '$minutes دقائق',
+      two: 'دقيقتان',
+      one: 'دقيقة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'تعذّر حفظ الفاصل الزمني. حاول مرة أخرى.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'تم حفظ الفاصل الزمني. أوقف إشعار المزامنة السريعة ثم فعّله لتطبيقه.';
+
+  @override
   String get quickSyncNotificationTitle => 'خدمة مزامنة الملفات';
 
   @override
-  String get quickSyncNotificationText => 'اضغط على الزر أدناه للمزامنة';
-
-  @override
-  String get quickSyncNotificationButton => 'مزامنة الآن';
+  String quickSyncNotificationText(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'يعمل كل $minutes دقيقة',
+      many: 'يعمل كل $minutes دقيقة',
+      few: 'يعمل كل $minutes دقائق',
+      two: 'يعمل كل دقيقتين',
+      one: 'يعمل كل دقيقة',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'جارٍ المزامنة...';

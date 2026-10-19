@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "ช่วงเวลาซิงค์อัตโนมัติ",
+  "autoSyncIntervalDescription": "ซิงค์อัตโนมัติขณะเปิดใช้การแจ้งเตือนซิงค์ด่วน",
+  "syncIntervalMinutes": "{minutes} นาที",
+  "autoSyncIntervalSaveError": "บันทึกช่วงเวลาไม่ได้ โปรดลองอีกครั้ง",
+  "autoSyncIntervalApplyError": "บันทึกช่วงเวลาแล้ว ปิดแล้วเปิดการแจ้งเตือนซิงค์ด่วนอีกครั้งเพื่อใช้ค่าใหม่",
   "quickSyncNotificationTitle": "บริการซิงก์ไฟล์",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "แตะปุ่มด้านล่างเพื่อซิงก์",
+  "quickSyncNotificationText": "ทำงานทุก {minutes} นาที",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "ซิงก์ตอนนี้",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "กำลังดำเนินการ...",
   "@quickSyncNotificationInProgress": {

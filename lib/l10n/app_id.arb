@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Interval sinkronisasi otomatis",
+  "autoSyncIntervalDescription": "Sinkronkan otomatis saat notifikasi sinkronisasi cepat diaktifkan.",
+  "syncIntervalMinutes": "{minutes} menit",
+  "autoSyncIntervalSaveError": "Tidak dapat menyimpan interval. Coba lagi.",
+  "autoSyncIntervalApplyError": "Interval disimpan. Nonaktifkan lalu aktifkan kembali notifikasi sinkronisasi cepat untuk menerapkannya.",
   "quickSyncNotificationTitle": "Layanan sinkronisasi file",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Ketuk tombol di bawah untuk sinkronisasi",
+  "quickSyncNotificationText": "Jalankan setiap {minutes} menit",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Sinkronkan sekarang",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "Sedang diproses...",
   "@quickSyncNotificationInProgress": {

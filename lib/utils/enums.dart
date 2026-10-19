@@ -96,6 +96,7 @@ enum AppString {
   // Sync
   lastReconRunningAt,
   syncWithNotification,
+  foregroundSyncIntervalMinutes,
   backgroundSync,
   encryptionKeyType,
   hasEncryptionKeys,
@@ -154,6 +155,8 @@ extension AppStringExtension on AppString {
         return "last_recon_running_at";
       case AppString.syncWithNotification:
         return "sync_with_notification";
+      case AppString.foregroundSyncIntervalMinutes:
+        return "foreground_sync_interval_minutes";
       case AppString.backgroundSync:
         return "background_sync";
       case AppString.theme:

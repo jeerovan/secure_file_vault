@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Інтервал автосинхронізації",
+  "autoSyncIntervalDescription": "Автоматична синхронізація, доки ввімкнено сповіщення швидкої синхронізації.",
+  "syncIntervalMinutes": "{minutes, plural, one{{minutes} хвилина} few{{minutes} хвилини} many{{minutes} хвилин} other{{minutes} хвилини}}",
+  "autoSyncIntervalSaveError": "Не вдалося зберегти інтервал. Спробуйте ще раз.",
+  "autoSyncIntervalApplyError": "Інтервал збережено. Вимкніть і знову ввімкніть сповіщення швидкої синхронізації, щоб застосувати його.",
   "quickSyncNotificationTitle": "Сервіс синхронізації файлів",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Натисніть кнопку нижче, щоб синхронізувати",
+  "quickSyncNotificationText": "{minutes, plural, one{Запускати кожну {minutes} хвилину} few{Запускати кожні {minutes} хвилини} many{Запускати кожні {minutes} хвилин} other{Запускати кожні {minutes} хвилини}}",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Синхронізувати зараз",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "Триває...",
   "@quickSyncNotificationInProgress": {

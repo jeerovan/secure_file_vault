@@ -190,23 +190,47 @@ abstract class AppLocalizations {
   /// **'Quick sync notification'**
   String get quickSyncNotificationSettingTitle;
 
+  /// Android foreground service sync interval setting
+  ///
+  /// In en, this message translates to:
+  /// **'Auto sync interval'**
+  String get autoSyncInterval;
+
+  /// Explains when the selected auto sync interval applies
+  ///
+  /// In en, this message translates to:
+  /// **'Sync automatically while the quick sync notification is enabled.'**
+  String get autoSyncIntervalDescription;
+
+  /// Sync interval duration, including the slider's accessible value
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes, plural, =1{1 minute} other{{minutes} minutes}}'**
+  String syncIntervalMinutes(int minutes);
+
+  /// Shown if saving the auto sync interval fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the interval. Try again.'**
+  String get autoSyncIntervalSaveError;
+
+  /// Recovery when an interval is saved but the running service could not be updated
+  ///
+  /// In en, this message translates to:
+  /// **'Interval saved. Turn the quick sync notification off and on to apply it.'**
+  String get autoSyncIntervalApplyError;
+
   /// Quick sync notification title
   ///
   /// In en, this message translates to:
   /// **'File sync service'**
   String get quickSyncNotificationTitle;
 
-  /// Quick sync notification text
+  /// Idle foreground service notification showing its configured sync interval
   ///
   /// In en, this message translates to:
-  /// **'Tap the button below to sync'**
-  String get quickSyncNotificationText;
-
-  /// Quick sync notification button text
-  ///
-  /// In en, this message translates to:
-  /// **'Sync now'**
-  String get quickSyncNotificationButton;
+  /// **'{minutes, plural, =1{Run every 1 minute} other{Run every {minutes} minutes}}'**
+  String quickSyncNotificationText(int minutes);
 
   /// Quick sync notification text when in progress
   ///

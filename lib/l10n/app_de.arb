@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Intervall für automatische Synchronisierung",
+  "autoSyncIntervalDescription": "Automatisch synchronisieren, solange die Schnellsynchronisierungsbenachrichtigung aktiviert ist.",
+  "syncIntervalMinutes": "{minutes, plural, =1{1 Minute} other{{minutes} Minuten}}",
+  "autoSyncIntervalSaveError": "Das Intervall konnte nicht gespeichert werden. Versuche es erneut.",
+  "autoSyncIntervalApplyError": "Intervall gespeichert. Schalte die Schnellsynchronisierungsbenachrichtigung aus und wieder ein, um es anzuwenden.",
   "quickSyncNotificationTitle": "Datei-Sync-Dienst",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Tippe unten auf die Schaltfläche, um zu synchronisieren",
+  "quickSyncNotificationText": "{minutes, plural, =1{Alle 1 Minute ausführen} other{Alle {minutes} Minuten ausführen}}",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Jetzt synchronisieren",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "Wird synchronisiert...",
   "@quickSyncNotificationInProgress": {

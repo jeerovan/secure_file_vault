@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Otomatik eşitleme aralığı",
+  "autoSyncIntervalDescription": "Hızlı eşitleme bildirimi açıkken otomatik olarak eşitle.",
+  "syncIntervalMinutes": "{minutes} dakika",
+  "autoSyncIntervalSaveError": "Aralık kaydedilemedi. Tekrar deneyin.",
+  "autoSyncIntervalApplyError": "Aralık kaydedildi. Uygulamak için hızlı eşitleme bildirimini kapatıp tekrar açın.",
   "quickSyncNotificationTitle": "Dosya eşitleme servisi",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Eşitlemek için aşağıdaki düğmeye dokunun",
+  "quickSyncNotificationText": "Her {minutes} dakikada bir çalıştır",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Şimdi eşitle",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "İşlem devam ediyor...",
   "@quickSyncNotificationInProgress": {

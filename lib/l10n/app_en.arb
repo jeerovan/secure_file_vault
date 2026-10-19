@@ -45,17 +45,39 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Auto sync interval",
+  "@autoSyncInterval": {
+    "description": "Android foreground service sync interval setting"
+  },
+  "autoSyncIntervalDescription": "Sync automatically while the quick sync notification is enabled.",
+  "@autoSyncIntervalDescription": {
+    "description": "Explains when the selected auto sync interval applies"
+  },
+  "syncIntervalMinutes": "{minutes, plural, =1{1 minute} other{{minutes} minutes}}",
+  "@syncIntervalMinutes": {
+    "description": "Sync interval duration, including the slider's accessible value",
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "autoSyncIntervalSaveError": "Could not save the interval. Try again.",
+  "@autoSyncIntervalSaveError": {
+    "description": "Shown if saving the auto sync interval fails"
+  },
+  "autoSyncIntervalApplyError": "Interval saved. Turn the quick sync notification off and on to apply it.",
+  "@autoSyncIntervalApplyError": {
+    "description": "Recovery when an interval is saved but the running service could not be updated"
+  },
   "quickSyncNotificationTitle": "File sync service",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Tap the button below to sync",
+  "quickSyncNotificationText": "{minutes, plural, =1{Run every 1 minute} other{Run every {minutes} minutes}}",
   "@quickSyncNotificationText": {
-    "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Sync now",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
+    "description": "Idle foreground service notification showing its configured sync interval",
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
   },
   "quickSyncNotificationInProgress": "In progress...",
   "@quickSyncNotificationInProgress": {

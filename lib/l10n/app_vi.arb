@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Khoảng thời gian tự động đồng bộ",
+  "autoSyncIntervalDescription": "Tự động đồng bộ khi bật thông báo đồng bộ nhanh.",
+  "syncIntervalMinutes": "{minutes} phút",
+  "autoSyncIntervalSaveError": "Không thể lưu khoảng thời gian. Vui lòng thử lại.",
+  "autoSyncIntervalApplyError": "Đã lưu khoảng thời gian. Tắt rồi bật lại thông báo đồng bộ nhanh để áp dụng.",
   "quickSyncNotificationTitle": "Dịch vụ đồng bộ tập tin",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Chạm vào nút bên dưới để đồng bộ",
+  "quickSyncNotificationText": "Chạy mỗi {minutes} phút",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Đồng bộ ngay",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "Đang thực hiện...",
   "@quickSyncNotificationInProgress": {

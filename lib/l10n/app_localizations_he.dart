@@ -38,13 +38,45 @@ class AppLocalizationsHe extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'התראת סנכרון מהיר';
 
   @override
+  String get autoSyncInterval => 'מרווח סנכרון אוטומטי';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'סנכרון אוטומטי כל עוד התראת הסנכרון המהיר מופעלת.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes דקות',
+      two: 'שתי דקות',
+      one: 'דקה אחת',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError => 'לא ניתן לשמור את המרווח. נסו שוב.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'המרווח נשמר. כבו והפעילו מחדש את התראת הסנכרון המהיר כדי להחיל אותו.';
+
+  @override
   String get quickSyncNotificationTitle => 'שירות סנכרון קבצים';
 
   @override
-  String get quickSyncNotificationText => 'הקש על הכפתור למטה כדי לסנכרן';
-
-  @override
-  String get quickSyncNotificationButton => 'סנכרן עכשיו';
+  String quickSyncNotificationText(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'הפעלה כל $minutes דקות',
+      two: 'הפעלה כל שתי דקות',
+      one: 'הפעלה כל דקה',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'בביצוע...';

@@ -39,14 +39,44 @@ class AppLocalizationsEl extends AppLocalizations {
       'Ειδοποίηση γρήγορου συγχρονισμού';
 
   @override
+  String get autoSyncInterval => 'Διάστημα αυτόματου συγχρονισμού';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'Αυτόματος συγχρονισμός όσο είναι ενεργή η ειδοποίηση γρήγορου συγχρονισμού.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes λεπτά',
+      one: '1 λεπτό',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'Δεν ήταν δυνατή η αποθήκευση του διαστήματος. Δοκιμάστε ξανά.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'Το διάστημα αποθηκεύτηκε. Απενεργοποιήστε και ενεργοποιήστε ξανά την ειδοποίηση γρήγορου συγχρονισμού για να εφαρμοστεί.';
+
+  @override
   String get quickSyncNotificationTitle => 'Υπηρεσία συγχρονισμού αρχείων';
 
   @override
-  String get quickSyncNotificationText =>
-      'Πατήστε το παρακάτω κουμπί για συγχρονισμό';
-
-  @override
-  String get quickSyncNotificationButton => 'Συγχρονισμός τώρα';
+  String quickSyncNotificationText(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'Εκτέλεση κάθε $minutes λεπτά',
+      one: 'Εκτέλεση κάθε 1 λεπτό',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'Σε εξέλιξη...';

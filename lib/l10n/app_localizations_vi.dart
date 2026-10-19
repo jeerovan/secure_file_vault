@@ -38,13 +38,32 @@ class AppLocalizationsVi extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'Thông báo đồng bộ nhanh';
 
   @override
+  String get autoSyncInterval => 'Khoảng thời gian tự động đồng bộ';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'Tự động đồng bộ khi bật thông báo đồng bộ nhanh.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes phút';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'Không thể lưu khoảng thời gian. Vui lòng thử lại.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'Đã lưu khoảng thời gian. Tắt rồi bật lại thông báo đồng bộ nhanh để áp dụng.';
+
+  @override
   String get quickSyncNotificationTitle => 'Dịch vụ đồng bộ tập tin';
 
   @override
-  String get quickSyncNotificationText => 'Chạm vào nút bên dưới để đồng bộ';
-
-  @override
-  String get quickSyncNotificationButton => 'Đồng bộ ngay';
+  String quickSyncNotificationText(int minutes) {
+    return 'Chạy mỗi $minutes phút';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'Đang thực hiện...';

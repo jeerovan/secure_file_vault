@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "자동 동기화 간격",
+  "autoSyncIntervalDescription": "빠른 동기화 알림이 켜져 있는 동안 자동으로 동기화합니다.",
+  "syncIntervalMinutes": "{minutes}분",
+  "autoSyncIntervalSaveError": "간격을 저장하지 못했습니다. 다시 시도하세요.",
+  "autoSyncIntervalApplyError": "간격이 저장되었습니다. 적용하려면 빠른 동기화 알림을 껐다가 다시 켜세요.",
   "quickSyncNotificationTitle": "파일 동기화 서비스",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "아래 버튼을 탭하여 동기화하세요",
+  "quickSyncNotificationText": "{minutes}분마다 실행",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "지금 동기화",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "진행 중...",
   "@quickSyncNotificationInProgress": {

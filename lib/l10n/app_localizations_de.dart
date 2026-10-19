@@ -38,14 +38,44 @@ class AppLocalizationsDe extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'Quick-Sync-Benachrichtigung';
 
   @override
+  String get autoSyncInterval => 'Intervall für automatische Synchronisierung';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'Automatisch synchronisieren, solange die Schnellsynchronisierungsbenachrichtigung aktiviert ist.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes Minuten',
+      one: '1 Minute',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'Das Intervall konnte nicht gespeichert werden. Versuche es erneut.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'Intervall gespeichert. Schalte die Schnellsynchronisierungsbenachrichtigung aus und wieder ein, um es anzuwenden.';
+
+  @override
   String get quickSyncNotificationTitle => 'Datei-Sync-Dienst';
 
   @override
-  String get quickSyncNotificationText =>
-      'Tippe unten auf die Schaltfläche, um zu synchronisieren';
-
-  @override
-  String get quickSyncNotificationButton => 'Jetzt synchronisieren';
+  String quickSyncNotificationText(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'Alle $minutes Minuten ausführen',
+      one: 'Alle 1 Minute ausführen',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'Wird synchronisiert...';

@@ -38,13 +38,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => '快速同步通知';
 
   @override
+  String get autoSyncInterval => '自动同步间隔';
+
+  @override
+  String get autoSyncIntervalDescription => '启用快速同步通知时自动同步。';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes分钟';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError => '无法保存间隔，请重试。';
+
+  @override
+  String get autoSyncIntervalApplyError => '间隔已保存。请关闭后重新开启快速同步通知以应用。';
+
+  @override
   String get quickSyncNotificationTitle => '文件同步服务';
 
   @override
-  String get quickSyncNotificationText => '点击下方按钮进行同步';
-
-  @override
-  String get quickSyncNotificationButton => '立即同步';
+  String quickSyncNotificationText(int minutes) {
+    return '每$minutes分钟运行一次';
+  }
 
   @override
   String get quickSyncNotificationInProgress => '同步中...';

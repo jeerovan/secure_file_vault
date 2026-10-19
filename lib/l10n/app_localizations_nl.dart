@@ -39,14 +39,44 @@ class AppLocalizationsNl extends AppLocalizations {
       'Snelle synchronisatie-melding';
 
   @override
+  String get autoSyncInterval => 'Interval voor automatisch synchroniseren';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'Synchroniseer automatisch zolang de melding voor snel synchroniseren is ingeschakeld.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes minuten',
+      one: '1 minuut',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'Het interval kon niet worden opgeslagen. Probeer het opnieuw.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'Interval opgeslagen. Schakel de melding voor snel synchroniseren uit en weer in om het toe te passen.';
+
+  @override
   String get quickSyncNotificationTitle => 'Bestandsynchronisatiedienst';
 
   @override
-  String get quickSyncNotificationText =>
-      'Tik op de knop hieronder om te synchroniseren';
-
-  @override
-  String get quickSyncNotificationButton => 'Nu synchroniseren';
+  String quickSyncNotificationText(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: 'Elke $minutes minuten uitvoeren',
+      one: 'Elke 1 minuut uitvoeren',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'Bezig...';

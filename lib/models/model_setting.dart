@@ -5,6 +5,24 @@ import '../storage/storage_sqlite.dart';
 class ModelSetting {
   static Map<String, String> settingJson = {};
 
+  static const minForegroundSyncIntervalMinutes = 1;
+  static const maxForegroundSyncIntervalMinutes = 30;
+  static const defaultForegroundSyncIntervalMinutes = 15;
+
+  static int parseForegroundSyncIntervalMinutes(String value) =>
+      (int.tryParse(value) ?? defaultForegroundSyncIntervalMinutes).clamp(
+        minForegroundSyncIntervalMinutes,
+        maxForegroundSyncIntervalMinutes,
+      );
+
+  static int get foregroundSyncIntervalMinutes =>
+      parseForegroundSyncIntervalMinutes(
+          get(AppString.foregroundSyncIntervalMinutes.string));
+
+  static Future<int> getForegroundSyncIntervalMinutes() async =>
+      parseForegroundSyncIntervalMinutes(
+          await getRaw(AppString.foregroundSyncIntervalMinutes.string));
+
   static Future<void> set(String key, String value) async {
     settingJson[key] = value;
     final dbHelper = StorageSqlite.instance;

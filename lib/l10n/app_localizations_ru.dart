@@ -39,14 +39,40 @@ class AppLocalizationsRu extends AppLocalizations {
       'Уведомление о быстрой синхронизации';
 
   @override
+  String get autoSyncInterval => 'Интервал автосинхронизации';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'Автоматическая синхронизация, пока включено уведомление быстрой синхронизации.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    String _temp0 = intl.Intl.pluralLogic(
+      minutes,
+      locale: localeName,
+      other: '$minutes минуты',
+      many: '$minutes минут',
+      few: '$minutes минуты',
+      one: '$minutes минута',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'Не удалось сохранить интервал. Попробуйте ещё раз.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'Интервал сохранён. Отключите и снова включите уведомление быстрой синхронизации, чтобы применить его.';
+
+  @override
   String get quickSyncNotificationTitle => 'Служба синхронизации файлов';
 
   @override
-  String get quickSyncNotificationText =>
-      'Нажмите кнопку ниже, чтобы синхронизировать';
-
-  @override
-  String get quickSyncNotificationButton => 'Синхронизировать сейчас';
+  String quickSyncNotificationText(int minutes) {
+    return 'Запускать с интервалом $minutes мин.';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'В процессе...';

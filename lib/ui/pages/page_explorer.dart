@@ -68,11 +68,11 @@ class _PageExplorerState extends State<PageExplorer> {
 class FilePane extends StatefulWidget {
   final Function(String?) onThemeChange;
   @visibleForTesting
-  final Future<void> Function()? reconcileOnResume;
+  final Future<void> Function()? reconcileOnStart;
   const FilePane({
     super.key,
     required this.onThemeChange,
-    this.reconcileOnResume,
+    this.reconcileOnStart,
   });
 
   @override
@@ -110,6 +110,22 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
     EventStream().notifier.addListener(_handleAppEvents);
     unawaited(_loadFiles());
     unawaited(_refreshState());
+    unawaited(_syncOnStart());
+  }
+
+  Future<void> _syncOnStart() async {
+    try {
+      if (widget.reconcileOnStart case final reconcile?) {
+        await reconcile();
+      } else {
+        await SyncUtils().reconFolders(caller: 'AppStart');
+      }
+      if (mounted) await _loadFiles(isSilent: true);
+    } catch (error, stackTrace) {
+      logger.error('Startup sync failed', error: error, stackTrace: stackTrace);
+    } finally {
+      if (mounted) await _refreshState();
+    }
   }
 
   @override
@@ -127,13 +143,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
       do {
         _resumeRefreshPending = false;
         try {
-          // Keep the current folder and selection while discovering external
-          // changes. A second resume during this scan gets one follow-up scan.
-          if (widget.reconcileOnResume case final reconcile?) {
-            await reconcile();
-          } else {
-            await SyncUtils().reconFolders(caller: 'AppResume');
-          }
+          // Reflect background updates without starting another sync.
           if (mounted) await _loadFiles(isSilent: true);
         } catch (error, stackTrace) {
           logger.error('Resume refresh failed',

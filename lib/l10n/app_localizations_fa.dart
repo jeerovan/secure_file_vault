@@ -38,14 +38,32 @@ class AppLocalizationsFa extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'اعلان همگام‌سازی سریع';
 
   @override
+  String get autoSyncInterval => 'فاصلهٔ همگام‌سازی خودکار';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'تا زمانی که اعلان همگام‌سازی سریع فعال است، همگام‌سازی به‌صورت خودکار انجام می‌شود.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes دقیقه';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'ذخیرهٔ فاصلهٔ زمانی ممکن نشد. دوباره تلاش کنید.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'فاصلهٔ زمانی ذخیره شد. برای اعمال آن، اعلان همگام‌سازی سریع را خاموش و دوباره روشن کنید.';
+
+  @override
   String get quickSyncNotificationTitle => 'سرویس همگام‌سازی فایل‌ها';
 
   @override
-  String get quickSyncNotificationText =>
-      'برای همگام‌سازی، روی دکمه زیر ضربه بزنید';
-
-  @override
-  String get quickSyncNotificationButton => 'همگام‌سازی اکنون';
+  String quickSyncNotificationText(int minutes) {
+    return 'اجرا هر $minutes دقیقه';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'در حال انجام...';

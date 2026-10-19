@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "الفاصل الزمني للمزامنة التلقائية",
+  "autoSyncIntervalDescription": "تتم المزامنة تلقائيًا عند تفعيل إشعار المزامنة السريعة.",
+  "syncIntervalMinutes": "{minutes, plural, =1{دقيقة واحدة} =2{دقيقتان} few{{minutes} دقائق} many{{minutes} دقيقة} other{{minutes} دقيقة}}",
+  "autoSyncIntervalSaveError": "تعذّر حفظ الفاصل الزمني. حاول مرة أخرى.",
+  "autoSyncIntervalApplyError": "تم حفظ الفاصل الزمني. أوقف إشعار المزامنة السريعة ثم فعّله لتطبيقه.",
   "quickSyncNotificationTitle": "خدمة مزامنة الملفات",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "اضغط على الزر أدناه للمزامنة",
+  "quickSyncNotificationText": "{minutes, plural, =1{يعمل كل دقيقة} =2{يعمل كل دقيقتين} few{يعمل كل {minutes} دقائق} many{يعمل كل {minutes} دقيقة} other{يعمل كل {minutes} دقيقة}}",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "مزامنة الآن",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "جارٍ المزامنة...",
   "@quickSyncNotificationInProgress": {

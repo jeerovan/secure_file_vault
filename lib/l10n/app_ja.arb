@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "自動同期の間隔",
+  "autoSyncIntervalDescription": "クイック同期通知が有効な間、自動的に同期します。",
+  "syncIntervalMinutes": "{minutes}分",
+  "autoSyncIntervalSaveError": "間隔を保存できませんでした。もう一度お試しください。",
+  "autoSyncIntervalApplyError": "間隔を保存しました。適用するには、クイック同期通知をオフにしてから再びオンにしてください。",
   "quickSyncNotificationTitle": "ファイル同期サービス",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "下のボタンをタップして同期",
+  "quickSyncNotificationText": "{minutes}分ごとに実行",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "今すぐ同期",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "処理中...",
   "@quickSyncNotificationInProgress": {

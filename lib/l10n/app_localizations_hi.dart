@@ -38,14 +38,32 @@ class AppLocalizationsHi extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'क्विक सिंक नोटिफिकेशन';
 
   @override
+  String get autoSyncInterval => 'अपने आप सिंक करने का अंतराल';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'त्वरित सिंक सूचना चालू रहने पर अपने आप सिंक करें।';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes मिनट';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'अंतराल सेव नहीं हो सका। फिर से कोशिश करें।';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'अंतराल सेव हो गया। इसे लागू करने के लिए त्वरित सिंक सूचना बंद करके फिर चालू करें।';
+
+  @override
   String get quickSyncNotificationTitle => 'फ़ाइल सिंक सेवा';
 
   @override
-  String get quickSyncNotificationText =>
-      'सिंक करने के लिए नीचे दिए गए बटन पर टैप करें';
-
-  @override
-  String get quickSyncNotificationButton => 'अभी सिंक करें';
+  String quickSyncNotificationText(int minutes) {
+    return 'हर $minutes मिनट पर चलाएँ';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'प्रक्रिया जारी है...';

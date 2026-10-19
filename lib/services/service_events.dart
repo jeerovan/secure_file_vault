@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 
 enum EventType { settings, system }
 
+const foregroundSyncIntervalChangedMessage = 'foregroundSyncIntervalChanged';
+const foregroundSyncActivityChangedMessage = 'foregroundSyncActivityChanged';
+
 enum EventKey {
   object,
   uploadProgress,
@@ -53,6 +56,11 @@ class AppEvent {
   @override
   String toString() => 'AppEvent(type: $type,id: $id, key: $key,value: $value)';
 }
+
+bool isSyncActivityEvent(AppEvent event) =>
+    event.type == EventType.system &&
+    event.id != 'foregroundSync' &&
+    (event.key == EventKey.running || event.key == EventKey.stopped);
 
 /// A singleton class that provides an event stream using ValueNotifier
 class EventStream {

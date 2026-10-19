@@ -38,14 +38,32 @@ class AppLocalizationsTr extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => 'Hızlı eşitleme bildirimi';
 
   @override
+  String get autoSyncInterval => 'Otomatik eşitleme aralığı';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'Hızlı eşitleme bildirimi açıkken otomatik olarak eşitle.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes dakika';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'Aralık kaydedilemedi. Tekrar deneyin.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'Aralık kaydedildi. Uygulamak için hızlı eşitleme bildirimini kapatıp tekrar açın.';
+
+  @override
   String get quickSyncNotificationTitle => 'Dosya eşitleme servisi';
 
   @override
-  String get quickSyncNotificationText =>
-      'Eşitlemek için aşağıdaki düğmeye dokunun';
-
-  @override
-  String get quickSyncNotificationButton => 'Şimdi eşitle';
+  String quickSyncNotificationText(int minutes) {
+    return 'Her $minutes dakikada bir çalıştır';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'İşlem devam ediyor...';

@@ -38,13 +38,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get quickSyncNotificationSettingTitle => '빠른 동기화 알림';
 
   @override
+  String get autoSyncInterval => '자동 동기화 간격';
+
+  @override
+  String get autoSyncIntervalDescription => '빠른 동기화 알림이 켜져 있는 동안 자동으로 동기화합니다.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes분';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError => '간격을 저장하지 못했습니다. 다시 시도하세요.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      '간격이 저장되었습니다. 적용하려면 빠른 동기화 알림을 껐다가 다시 켜세요.';
+
+  @override
   String get quickSyncNotificationTitle => '파일 동기화 서비스';
 
   @override
-  String get quickSyncNotificationText => '아래 버튼을 탭하여 동기화하세요';
-
-  @override
-  String get quickSyncNotificationButton => '지금 동기화';
+  String quickSyncNotificationText(int minutes) {
+    return '$minutes분마다 실행';
+  }
 
   @override
   String get quickSyncNotificationInProgress => '진행 중...';

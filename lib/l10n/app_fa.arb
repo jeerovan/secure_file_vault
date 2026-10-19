@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "فاصلهٔ همگام‌سازی خودکار",
+  "autoSyncIntervalDescription": "تا زمانی که اعلان همگام‌سازی سریع فعال است، همگام‌سازی به‌صورت خودکار انجام می‌شود.",
+  "syncIntervalMinutes": "{minutes} دقیقه",
+  "autoSyncIntervalSaveError": "ذخیرهٔ فاصلهٔ زمانی ممکن نشد. دوباره تلاش کنید.",
+  "autoSyncIntervalApplyError": "فاصلهٔ زمانی ذخیره شد. برای اعمال آن، اعلان همگام‌سازی سریع را خاموش و دوباره روشن کنید.",
   "quickSyncNotificationTitle": "سرویس همگام‌سازی فایل‌ها",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "برای همگام‌سازی، روی دکمه زیر ضربه بزنید",
+  "quickSyncNotificationText": "اجرا هر {minutes} دقیقه",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "همگام‌سازی اکنون",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "در حال انجام...",
   "@quickSyncNotificationInProgress": {

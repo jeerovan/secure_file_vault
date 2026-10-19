@@ -39,14 +39,32 @@ class AppLocalizationsId extends AppLocalizations {
       'Notifikasi sinkronisasi cepat';
 
   @override
+  String get autoSyncInterval => 'Interval sinkronisasi otomatis';
+
+  @override
+  String get autoSyncIntervalDescription =>
+      'Sinkronkan otomatis saat notifikasi sinkronisasi cepat diaktifkan.';
+
+  @override
+  String syncIntervalMinutes(int minutes) {
+    return '$minutes menit';
+  }
+
+  @override
+  String get autoSyncIntervalSaveError =>
+      'Tidak dapat menyimpan interval. Coba lagi.';
+
+  @override
+  String get autoSyncIntervalApplyError =>
+      'Interval disimpan. Nonaktifkan lalu aktifkan kembali notifikasi sinkronisasi cepat untuk menerapkannya.';
+
+  @override
   String get quickSyncNotificationTitle => 'Layanan sinkronisasi file';
 
   @override
-  String get quickSyncNotificationText =>
-      'Ketuk tombol di bawah untuk sinkronisasi';
-
-  @override
-  String get quickSyncNotificationButton => 'Sinkronkan sekarang';
+  String quickSyncNotificationText(int minutes) {
+    return 'Jalankan setiap $minutes menit';
+  }
 
   @override
   String get quickSyncNotificationInProgress => 'Sedang diproses...';

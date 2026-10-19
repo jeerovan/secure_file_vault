@@ -25,4 +25,45 @@ void main() {
     expect(ForegroundSyncStateMessage.decode({'type': 'unrelated'}), isNull);
     expect(ForegroundSyncStateMessage.decode('invalid'), isNull);
   });
+
+  test('sync activity excludes settings, progress values, and service echoes',
+      () {
+    for (final key in [EventKey.running, EventKey.stopped]) {
+      expect(
+          isSyncActivityEvent(AppEvent(
+            type: EventType.system,
+            id: 'metadata',
+            key: key,
+          )),
+          isTrue);
+      expect(
+          isSyncActivityEvent(AppEvent(
+            type: EventType.system,
+            id: 'root',
+            key: key,
+          )),
+          isTrue);
+      expect(
+          isSyncActivityEvent(AppEvent(
+            type: EventType.system,
+            id: 'foregroundSync',
+            key: key,
+          )),
+          isFalse);
+      expect(
+          isSyncActivityEvent(AppEvent(
+            type: EventType.settings,
+            id: 'metadata',
+            key: key,
+          )),
+          isFalse);
+    }
+    expect(
+        isSyncActivityEvent(AppEvent(
+          type: EventType.system,
+          id: 'metadata',
+          key: EventKey.uploadProgress,
+        )),
+        isFalse);
+  });
 }

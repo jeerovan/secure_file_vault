@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "अपने आप सिंक करने का अंतराल",
+  "autoSyncIntervalDescription": "त्वरित सिंक सूचना चालू रहने पर अपने आप सिंक करें।",
+  "syncIntervalMinutes": "{minutes} मिनट",
+  "autoSyncIntervalSaveError": "अंतराल सेव नहीं हो सका। फिर से कोशिश करें।",
+  "autoSyncIntervalApplyError": "अंतराल सेव हो गया। इसे लागू करने के लिए त्वरित सिंक सूचना बंद करके फिर चालू करें।",
   "quickSyncNotificationTitle": "फ़ाइल सिंक सेवा",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "सिंक करने के लिए नीचे दिए गए बटन पर टैप करें",
+  "quickSyncNotificationText": "हर {minutes} मिनट पर चलाएँ",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "अभी सिंक करें",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "प्रक्रिया जारी है...",
   "@quickSyncNotificationInProgress": {

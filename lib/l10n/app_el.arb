@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "Διάστημα αυτόματου συγχρονισμού",
+  "autoSyncIntervalDescription": "Αυτόματος συγχρονισμός όσο είναι ενεργή η ειδοποίηση γρήγορου συγχρονισμού.",
+  "syncIntervalMinutes": "{minutes, plural, =1{1 λεπτό} other{{minutes} λεπτά}}",
+  "autoSyncIntervalSaveError": "Δεν ήταν δυνατή η αποθήκευση του διαστήματος. Δοκιμάστε ξανά.",
+  "autoSyncIntervalApplyError": "Το διάστημα αποθηκεύτηκε. Απενεργοποιήστε και ενεργοποιήστε ξανά την ειδοποίηση γρήγορου συγχρονισμού για να εφαρμοστεί.",
   "quickSyncNotificationTitle": "Υπηρεσία συγχρονισμού αρχείων",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "Πατήστε το παρακάτω κουμπί για συγχρονισμό",
+  "quickSyncNotificationText": "{minutes, plural, =1{Εκτέλεση κάθε 1 λεπτό} other{Εκτέλεση κάθε {minutes} λεπτά}}",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "Συγχρονισμός τώρα",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "Σε εξέλιξη...",
   "@quickSyncNotificationInProgress": {

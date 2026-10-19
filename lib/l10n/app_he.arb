@@ -45,17 +45,18 @@
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show quick sync notification"
   },
+  "autoSyncInterval": "מרווח סנכרון אוטומטי",
+  "autoSyncIntervalDescription": "סנכרון אוטומטי כל עוד התראת הסנכרון המהיר מופעלת.",
+  "syncIntervalMinutes": "{minutes, plural, =1{דקה אחת} =2{שתי דקות} other{{minutes} דקות}}",
+  "autoSyncIntervalSaveError": "לא ניתן לשמור את המרווח. נסו שוב.",
+  "autoSyncIntervalApplyError": "המרווח נשמר. כבו והפעילו מחדש את התראת הסנכרון המהיר כדי להחיל אותו.",
   "quickSyncNotificationTitle": "שירות סנכרון קבצים",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
   },
-  "quickSyncNotificationText": "הקש על הכפתור למטה כדי לסנכרן",
+  "quickSyncNotificationText": "{minutes, plural, =1{הפעלה כל דקה} =2{הפעלה כל שתי דקות} other{הפעלה כל {minutes} דקות}}",
   "@quickSyncNotificationText": {
     "description": "Quick sync notification text"
-  },
-  "quickSyncNotificationButton": "סנכרן עכשיו",
-  "@quickSyncNotificationButton": {
-    "description": "Quick sync notification button text"
   },
   "quickSyncNotificationInProgress": "בביצוע...",
   "@quickSyncNotificationInProgress": {
