@@ -379,6 +379,9 @@ Future<UploadFileResult> uploadFileStream({
   } on TimeoutException catch (e, s) {
     logger.error("Upload Failed: Timeout", error: e, stackTrace: s);
     return UploadFileResult.failure(UploadFailureKind.transport);
+  } on http_lib.ClientException catch (e, s) {
+    logger.error("Upload Failed: Connection", error: e, stackTrace: s);
+    return UploadFileResult.failure(UploadFailureKind.transport);
   } on FormatException catch (e, s) {
     // Handle malformed URLs or JSON
     logger.error("Upload Failed: Format Exception", error: e, stackTrace: s);

@@ -5,17 +5,31 @@ import * as schema from './schema';
 const localConnectionString = 'postgres://jeerovan@localhost:5432/fife';
 
 function createDb(connectionString: string, maxConnections?: number) {
-	const client = postgres(connectionString, { max: maxConnections });
+	const client = postgres(connectionString, { max: maxConnections, idle_timeout: 20 });
 	return drizzlePg(client, { schema });
 }
 
 export type Db = ReturnType<typeof createDb>;
 
 let localDb: Db | undefined;
+const developmentHyperdriveDbs = new Map<string, Db>();
 
-export function getDb(platform: Readonly<App.Platform> | undefined) {
+export function getDb(
+	platform: Readonly<App.Platform> | undefined,
+	development = import.meta.env?.DEV ?? false
+) {
 	const hyperdrive = platform?.env?.HYPERDRIVE;
 	if (hyperdrive) {
+		// Vite keeps serving requests in one process; a fresh pool per request
+		// exhausts local PostgreSQL even though those connections are idle.
+		if (development) {
+			let db = developmentHyperdriveDbs.get(hyperdrive.connectionString);
+			if (!db) {
+				db = createDb(hyperdrive.connectionString, 5);
+				developmentHyperdriveDbs.set(hyperdrive.connectionString, db);
+			}
+			return db;
+		}
 		// Workers cannot safely reuse driver I/O objects across request contexts.
 		// Hyperdrive owns the underlying connection pool, so a request-scoped client is cheap.
 		return createDb(hyperdrive.connectionString, 5);

@@ -34,3 +34,27 @@ test('rejects unsafe or malformed S3 endpoints', () => {
 		assert.throws(() => normalizePublicS3Endpoint(endpoint), endpoint);
 	}
 });
+
+test('reserved IPv4 and IPv6 endpoints cannot receive signed bucket requests', () => {
+	for (const host of [
+		'0.0.0.0',
+		'100.64.0.1',
+		'100.127.255.254',
+		'169.254.1.1',
+		'172.16.0.1',
+		'172.31.255.254',
+		'198.18.0.1',
+		'198.19.255.254',
+		'224.0.0.1',
+		'255.255.255.255',
+		'[::]',
+		'[::1]',
+		'[fc00::1]',
+		'[fd00::1]',
+		'[fe80::1]',
+		'[febf::1]',
+		'vault.localhost'
+	])
+		assert.throws(() => normalizePublicS3Endpoint(`https://${host}`), host);
+	assert.equal(normalizePublicS3Endpoint('https://8.8.8.8'), 'https://8.8.8.8');
+});

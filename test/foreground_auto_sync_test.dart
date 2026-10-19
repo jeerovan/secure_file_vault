@@ -12,6 +12,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/temporary_directory.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   const paths = MethodChannel('plugins.flutter.io/path_provider');
@@ -63,7 +65,7 @@ void main() {
     ModelSetting.clear();
     messenger.setMockMethodCallHandler(paths, null);
     messenger.setMockMethodCallHandler(foreground, null);
-    await directory.delete(recursive: true);
+    await deleteTestDirectory(directory);
   });
 
   test('a missing or invalid interval defaults to 15 and bounds are enforced',

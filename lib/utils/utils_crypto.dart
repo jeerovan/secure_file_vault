@@ -99,7 +99,8 @@ class CryptoUtils {
 
   Future<ExecutionResult> encryptFile(String fileIn, String fileOut,
       {Uint8List? key, int? start, int? end}) async {
-    ExecutionResult executionResult;
+    var executionResult =
+        ExecutionResult.failure(reason: 'Encryption incomplete');
     SecureKey secretKey = key == null
         ? _sodium.crypto.secretStream.keygen()
         : SecureKey.fromList(_sodium, key);
@@ -124,6 +125,11 @@ class CryptoUtils {
     } finally {
       try {
         await output.close();
+      } catch (error) {
+        // A failed pipe may already have closed its sink. Preserve that failure.
+        if (executionResult.isSuccess) {
+          executionResult = ExecutionResult.failure(reason: error.toString());
+        }
       } finally {
         secretKey.dispose();
       }
@@ -135,7 +141,8 @@ class CryptoUtils {
   Future<ExecutionResult> decryptFile(
       String fileIn, String fileOut, Uint8List keyBytes,
       {FileMode writeMode = FileMode.append}) async {
-    ExecutionResult executionResult;
+    var executionResult =
+        ExecutionResult.failure(reason: 'Decryption incomplete');
     SecureKey secretKey = SecureKey.fromList(_sodium, keyBytes);
     final output = File(fileOut).openWrite(mode: writeMode);
     try {
@@ -155,6 +162,11 @@ class CryptoUtils {
     } finally {
       try {
         await output.close();
+      } catch (error) {
+        // A failed pipe may already have closed its sink. Preserve that failure.
+        if (executionResult.isSuccess) {
+          executionResult = ExecutionResult.failure(reason: error.toString());
+        }
       } finally {
         secretKey.dispose();
       }

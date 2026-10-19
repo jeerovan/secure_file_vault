@@ -70,4 +70,39 @@ void main() {
       expect(() => normalizePublicS3Endpoint(endpoint), throwsFormatException);
     }
   });
+
+  test('reserved address ranges, URL credentials and parameters are rejected',
+      () {
+    for (final host in [
+      '0.0.0.0',
+      '100.64.0.1',
+      '100.127.255.254',
+      '169.254.1.1',
+      '172.16.0.1',
+      '172.31.255.254',
+      '198.18.0.1',
+      '198.19.255.254',
+      '224.0.0.1',
+      '255.255.255.255',
+      '[::]',
+      '[::1]',
+      '[fc00::1]',
+      '[fd00::1]',
+      '[fe80::1]',
+      '[febf::1]',
+      'vault.localhost',
+    ]) {
+      expect(() => normalizePublicS3Endpoint('https://$host'),
+          throwsFormatException,
+          reason: host);
+    }
+    for (final endpoint in [
+      'https://objects.example.com?token=x',
+      'https://objects.example.com/#fragment',
+      'https://id:key@objects.example.com'
+    ]) {
+      expect(() => normalizePublicS3Endpoint(endpoint), throwsFormatException);
+    }
+    expect(normalizePublicS3Endpoint('https://8.8.8.8'), 'https://8.8.8.8');
+  });
 }

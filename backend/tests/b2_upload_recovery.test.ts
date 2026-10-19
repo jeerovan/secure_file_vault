@@ -48,3 +48,45 @@ test('does not recover a mismatched or hidden B2 object', () => {
 		undefined
 	);
 });
+
+for (const [field, value] of [
+	['fileName', 'other-user/file_1'],
+	['fileName', 'user/file_10'],
+	['contentSha1', 'different-content'],
+	['contentLength', 9],
+	['action', 'start'],
+	['action', 'hide'],
+	['fileId', ''],
+	['fileId', undefined]
+] as const) {
+	test(`recovery rejects a candidate with mismatched ${field}=${String(value)}`, () => {
+		const entry = {
+			fileId: 'version-id',
+			fileName: 'user/file_1',
+			contentSha1: 'sha1',
+			contentLength: 10,
+			action: 'upload',
+			[field]: value
+		};
+		assert.equal(findMatchingB2Upload([entry], 'user/file_1', 'sha1', 10), undefined);
+	});
+}
+
+test('recovery scans past unrelated prefixes and chooses the exact completed version', () => {
+	const matching = {
+		fileId: 'correct-version',
+		fileName: 'user/file_1',
+		contentSha1: 'sha1',
+		contentLength: 10,
+		action: 'upload'
+	};
+	assert.equal(
+		findMatchingB2Upload(
+			[{ ...matching, fileName: 'user/file_10' }, { ...matching, action: 'start' }, matching],
+			'user/file_1',
+			'sha1',
+			10
+		),
+		matching
+	);
+});

@@ -17,15 +17,14 @@ class LocalItemAccess {
 
   static Future<LocalItemAccess> acquire(String itemId) async {
     final itemPath = await ModelItem.getPathForItem(itemId);
-    if (!Platform.isIOS && !Platform.isMacOS) {
-      return LocalItemAccess._(itemPath, null);
-    }
-
     final rows = await ModelItem.getPathRowsForItem(itemId);
     final deviceHash = await getDeviceHash();
     final deviceIndex = rows.indexWhere((row) => row['id'] == deviceHash);
     // Copies of another device's files live in this app's own Documents folder.
-    if (deviceIndex < 0) return LocalItemAccess._(itemPath, null);
+    if (deviceIndex < 0) {
+      await _validatePath(await ModelItem.getPathForItem('fife'), itemPath);
+      return LocalItemAccess._(itemPath, null);
+    }
 
     final roots = rows.skip(deviceIndex + 1).where((row) {
       final rootPath = row['path'] as String?;
@@ -33,7 +32,7 @@ class LocalItemAccess {
     });
     if (roots.isEmpty) throw PlatformException(code: 'FOLDER_UNAVAILABLE');
     final root = await ModelItem.get(roots.first['id'] as String);
-    if (root == null || !ChannelStorage.hasUsableBookmark(root.bookmark)) {
+    if (root == null) {
       throw PlatformException(code: 'FOLDER_UNAVAILABLE');
     }
 
@@ -44,6 +43,13 @@ class LocalItemAccess {
             !path.isWithin(storedRootPath, storedItemPath))) {
       throw PlatformException(code: 'FOLDER_UNAVAILABLE');
     }
+    if (!Platform.isIOS && !Platform.isMacOS) {
+      await _validatePath(storedRootPath, storedItemPath);
+      return LocalItemAccess._(storedItemPath, null);
+    }
+    if (!ChannelStorage.hasUsableBookmark(root.bookmark)) {
+      throw PlatformException(code: 'FOLDER_UNAVAILABLE');
+    }
     final accessPath = await ChannelStorage.startAccessing(root.bookmark!);
     if (accessPath == null || accessPath.isEmpty) {
       throw PlatformException(code: 'ACCESS_DENIED');
@@ -51,7 +57,37 @@ class LocalItemAccess {
     // The bookmark may restore a moved folder. Derive the child from the
     // resolved root instead of relying on the old persisted absolute path.
     final relativePath = path.relative(storedItemPath, from: storedRootPath);
-    return LocalItemAccess._(path.join(accessPath, relativePath), accessPath);
+    final resolvedItemPath = path.join(accessPath, relativePath);
+    try {
+      await _validatePath(accessPath, resolvedItemPath);
+      return LocalItemAccess._(resolvedItemPath, accessPath);
+    } catch (_) {
+      // No access object is returned on failure, so release the bookmark here.
+      try {
+        await ChannelStorage.stopAccessing(accessPath);
+      } catch (_) {}
+      rethrow;
+    }
+  }
+
+  static Future<void> _validatePath(String rootPath, String itemPath) async {
+    final root = path.normalize(rootPath);
+    final item = path.normalize(itemPath);
+    if (!path.isAbsolute(root) ||
+        (root != item && !path.isWithin(root, item))) {
+      throw PlatformException(code: 'FOLDER_UNAVAILABLE');
+    }
+    // A directory may have been replaced since the scan. Never follow a link
+    // when reading or publishing content under a selected or managed root.
+    var current = root;
+    final relative = path.relative(item, from: root);
+    for (final segment in ['.', ...path.split(relative)]) {
+      current = path.normalize(path.join(current, segment));
+      if (await FileSystemEntity.type(current, followLinks: false) ==
+          FileSystemEntityType.link) {
+        throw PlatformException(code: 'FOLDER_UNAVAILABLE');
+      }
+    }
   }
 
   Future<void> release() async {

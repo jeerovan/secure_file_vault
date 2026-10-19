@@ -192,7 +192,8 @@ class NeonAuth {
         } else {
           logger.error(
               "Server returned 200 but 'set-auth-jwt' header was missing.");
-          await SyncUtils.resetDevice();
+          // An incomplete response does not establish that the session is
+          // invalid. Preserve local keys/data so the next refresh can retry.
         }
       }
       // Legit situations to sign out: Session is definitively invalid or expired
