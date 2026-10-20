@@ -9,6 +9,17 @@ class AppLocalizationsNl extends AppLocalizations {
   AppLocalizationsNl([String locale = 'nl']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Lokale gegevens wissen';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Je sessie is beëindigd. FiFe moet de lokale accountgegevens volledig wissen voordat je opnieuw kunt inloggen. Je oorspronkelijke bestanden blijven behouden. Probeer het opnieuw om dit af te ronden.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'FiFe-gegevens worden van dit apparaat gewist…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -771,4 +782,104 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get noItems => 'Geen items.';
+
+  @override
+  String get lostRecoveryPhrase => 'Herstelzin kwijt';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Als een ander apparaat nog is aangemeld, exporteer daar dan je herstelzin voordat je opnieuw begint.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Je bestaande FiFe-kluis, back-upbestanden en instellingen van gekoppelde opslag worden permanent verwijderd.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Alle bestaande apparaatregistraties worden verwijderd.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Andere apparaten melden zich af en wissen hun lokale FiFe-gegevens zodra ze online ontdekken dat ze zijn verwijderd.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Je e-mailaccount, abonnement, oorspronkelijke bestanden en kopieën die buiten FiFe zijn geëxporteerd blijven behouden.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Je nieuwe kluis blijft vergrendeld totdat de verwijdering in de cloud is geverifieerd. Dit kan 24 uur of langer duren. Je kunt FiFe sluiten en later verdergaan.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Sla na de verwijdering een nieuwe herstelzin van 24 woorden op om je nieuwe kluis te gebruiken.';
+
+  @override
+  String get recoveryResetContinue => 'Doorgaan met opnieuw instellen';
+
+  @override
+  String get recoveryResetConfirmTitle =>
+      'Je FiFe-kluis permanent verwijderen?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Dit kan niet ongedaan worden gemaakt. Je bestaande herstelzin werkt daarna niet meer en al je apparaten worden verwijderd.';
+
+  @override
+  String get recoveryResetDelete => 'Kluis verwijderen en opnieuw beginnen';
+
+  @override
+  String get recoveryResetPendingTitle => 'Je vorige kluis wordt verwijderd';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe verifieert de verwijdering in de cloud. Je kunt de app sluiten en later terugkomen.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'De verificatie kan niet eerder dan $when worden voltooid.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'De verwijdering in de cloud vereist aandacht. Herstel de toegang en verwijderrechten voor je gekoppelde opslag en probeer het opnieuw.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Meld je opnieuw aan om verder te gaan met deze herinstelling.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Meld je aan als $email om verder te gaan met deze herinstelling.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Bevestig de herinstelling om door te gaan. FiFe controleert of deze al is gestart.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Een eerdere bevestiging is nog geldig. Controleer opnieuw nadat deze is verlopen voordat je een nieuwe bevestiging start.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Controleer opnieuw na $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'De nieuwe herstelsleutels zijn niet beschikbaar op dit apparaat. Ga verder op het apparaat dat de herinstelling heeft gestart. Als die sleutels kwijt zijn, wacht dan tot het verwijderen klaar is, meld je aan en kies opnieuw ‘Herstelzin kwijt’.';
+
+  @override
+  String get recoveryResetDiscard => 'Terug naar aanmelden';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Hiermee wis je de onvoltooide herstelconfiguratie op dit apparaat. Na het aanmelden heb je de nieuwe herstelzin nodig of moet je de kluis opnieuw instellen.';
+
+  @override
+  String get recoveryPhraseSaved => 'Ik heb mijn nieuwe herstelzin opgeslagen.';
+
+  @override
+  String get recoveryResetStarting => 'Opnieuw instellen wordt gestart…';
 }

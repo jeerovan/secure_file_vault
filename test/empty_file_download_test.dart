@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
+import 'package:file_vault_bb/services/service_session_cleanup.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +13,10 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  setUpAll(sqfliteFfiInit);
+  setUpAll(() {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  });
   const storage = MethodChannel('com.jeerovan.fife/channel_storage');
   const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
   const paths = MethodChannel('plugins.flutter.io/path_provider');
@@ -25,6 +29,7 @@ void main() {
   late List<String> accessCalls;
 
   setUp(() async {
+    SessionCleanup.instance.resetForTesting();
     directory = await Directory.systemTemp.createTemp('fife-empty-download-');
     db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
     await StorageSqlite.instance.initTables(db);
@@ -66,6 +71,7 @@ void main() {
   });
 
   tearDown(() async {
+    SessionCleanup.instance.resetForTesting();
     for (final channel in [storage, secure, paths]) {
       messenger.setMockMethodCallHandler(channel, null);
     }

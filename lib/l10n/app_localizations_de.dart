@@ -9,6 +9,17 @@ class AppLocalizationsDe extends AppLocalizations {
   AppLocalizationsDe([String locale = 'de']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Lokale Daten werden gelöscht';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Deine Sitzung wurde beendet. FiFe muss die lokalen Kontodaten vollständig löschen, bevor du dich erneut anmelden kannst. Deine Originaldateien bleiben erhalten. Versuche es erneut, um den Vorgang abzuschließen.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'FiFe-Daten werden von diesem Gerät gelöscht…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -775,4 +786,106 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get noItems => 'Keine Elemente.';
+
+  @override
+  String get lostRecoveryPhrase => 'Wiederherstellungsphrase verloren';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Falls ein anderes Gerät noch angemeldet ist, exportiere dort deine Wiederherstellungsphrase, bevor du neu beginnst.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Dein bisheriger FiFe-Tresor, gesicherte Dateien und Einstellungen verknüpfter Speicher werden dauerhaft gelöscht.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Alle bisherigen Geräteregistrierungen werden entfernt.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Andere Geräte melden sich ab und löschen ihre lokalen FiFe-Daten, sobald sie online bemerken, dass sie entfernt wurden.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Dein E-Mail-Konto, Abonnement, Originaldateien und außerhalb von FiFe exportierte Kopien bleiben erhalten.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Dein neuer Tresor bleibt gesperrt, bis die Löschung in der Cloud bestätigt ist. Das kann 24 Stunden oder länger dauern. Du kannst FiFe schließen und später fortfahren.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Speichere nach Abschluss der Löschung eine neue Wiederherstellungsphrase aus 24 Wörtern, um deinen neuen Tresor zu verwenden.';
+
+  @override
+  String get recoveryResetContinue => 'Mit Zurücksetzen fortfahren';
+
+  @override
+  String get recoveryResetConfirmTitle =>
+      'Deinen FiFe-Tresor dauerhaft löschen?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Dies lässt sich nicht rückgängig machen. Deine bisherige Wiederherstellungsphrase wird ungültig und alle deine Geräte werden entfernt.';
+
+  @override
+  String get recoveryResetDelete => 'Tresor löschen und neu beginnen';
+
+  @override
+  String get recoveryResetPendingTitle =>
+      'Dein bisheriger Tresor wird gelöscht';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe überprüft die Löschung in der Cloud. Du kannst die App schließen und später zurückkehren.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'Die Überprüfung kann frühestens am $when abgeschlossen werden.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'Die Löschung in der Cloud erfordert deine Mithilfe. Stelle Zugriffs- und Löschberechtigungen für deine verknüpften Speicher wieder her und versuche es erneut.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Melde dich erneut an, um das Zurücksetzen fortzusetzen.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Melde dich als $email an, um das Zurücksetzen fortzusetzen.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Bestätige das Zurücksetzen, um fortzufahren. FiFe prüft, ob es bereits begonnen hat.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Eine frühere Bestätigung ist noch gültig. Prüfe nach ihrem Ablauf erneut, bevor du eine neue Bestätigung beginnst.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Prüfe nach $when erneut.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Die neuen Wiederherstellungsschlüssel sind auf diesem Gerät nicht verfügbar. Fahre auf dem Gerät fort, das das Zurücksetzen gestartet hat. Falls diese Schlüssel verloren sind, warte auf den Abschluss der Löschung, melde dich an und wähle erneut „Wiederherstellungsphrase verloren“.';
+
+  @override
+  String get recoveryResetDiscard => 'Zurück zur Anmeldung';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Dadurch wird die unvollständige Wiederherstellung auf diesem Gerät gelöscht. Nach der Anmeldung brauchst du die neue Wiederherstellungsphrase oder musst den Tresor erneut zurücksetzen.';
+
+  @override
+  String get recoveryPhraseSaved =>
+      'Ich habe meine neue Wiederherstellungsphrase gespeichert.';
+
+  @override
+  String get recoveryResetStarting => 'Zurücksetzen wird gestartet…';
 }

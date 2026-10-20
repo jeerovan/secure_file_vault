@@ -7,6 +7,7 @@ import 'package:file_vault_bb/utils/common.dart';
 import 'package:http/http.dart' as http_lib;
 import 'package:path/path.dart' as path_lib;
 import '../services/service_sync_budget.dart';
+import '../services/service_session_work.dart';
 
 /// Deletes a downloaded file only when it is inside the app-managed cloud
 /// directory. Returns false for user-owned paths outside that directory.
@@ -255,6 +256,8 @@ Future<DownloadStreamResult> downloadFileStream({
   final client = HttpClient();
   final unregister =
       SyncBudget.current?.onCancel(() => client.close(force: true));
+  final unregisterSession =
+      SessionWork.onInvalidated(() => client.close(force: true));
   client.connectionTimeout = timeout;
   AppLogger logger = AppLogger(prefixes: ["Downloader"]);
   DownloadStreamResult result = const DownloadStreamResult.transportFailure();
@@ -281,6 +284,7 @@ Future<DownloadStreamResult> downloadFileStream({
 
       // 5. Stream the response directly into the IOSink chunk by chunk
       await for (final List<int> chunk in response.timeout(timeout)) {
+        await SessionWork.checkpoint();
         SyncBudget.check();
         fileOut.add(chunk);
         received += chunk.length;
@@ -297,6 +301,7 @@ Future<DownloadStreamResult> downloadFileStream({
     logger.error("Failed", error: e.toString(), stackTrace: s);
   } finally {
     unregister?.call();
+    unregisterSession();
     // 6. Guarantee cleanup of network and file resources
     client.close(force: true);
     await fileOut.flush();
@@ -317,10 +322,36 @@ Future<UploadFileResult> uploadFileStream({
   AppLogger logger = AppLogger(prefixes: ["Uploader"]);
   Map<String, dynamic> data = {};
   http_lib.StreamedRequest? request;
+  final abort = Completer<void>();
+  final stalled = Completer<void>();
+  Timer? inactivityTimer;
+  void noteProgress() {
+    inactivityTimer?.cancel();
+    inactivityTimer = Timer(timeout, () {
+      if (!stalled.isCompleted) {
+        stalled.completeError(
+            TimeoutException('Upload made no progress', timeout));
+      }
+      if (!abort.isCompleted) abort.complete();
+    });
+  }
+
+  void closeRequestSink() {
+    try {
+      final closing = request?.sink.close();
+      if (closing != null) {
+        // A client may reject before listening to the body. Closing still
+        // signals EOF, but awaiting that unconsumed stream can hang forever.
+        unawaited(closing.catchError((Object _) {}));
+      }
+    } catch (_) {}
+  }
+
   try {
     SyncBudget.check(reserve: const Duration(seconds: 5));
     final contentLength = await file.length();
-    request = http_lib.StreamedRequest(method, Uri.parse(url));
+    request = http_lib.AbortableStreamedRequest(method, Uri.parse(url),
+        abortTrigger: abort.future);
 
     if (headers != null) {
       request.headers.addAll(headers);
@@ -328,6 +359,7 @@ Future<UploadFileResult> uploadFileStream({
     request.contentLength = contentLength;
 
     final client = httpClient ?? AppHttpClients.transfer;
+    noteProgress();
     // Attach the error handler immediately: cancellation can abort the socket
     // while the request body is still being streamed into its sink.
     final responseFuture = client.send(request).then<
@@ -343,6 +375,7 @@ Future<UploadFileResult> uploadFileStream({
     var sent = 0;
     var lastReportedPercent = -1;
     final uploadStream = file.openRead().asyncMap<List<int>>((chunk) async {
+      noteProgress();
       SyncBudget.check();
       sent += chunk.length;
       final percent = contentLength == 0 ? 100 : sent * 100 ~/ contentLength;
@@ -353,8 +386,19 @@ Future<UploadFileResult> uploadFileStream({
       return chunk;
     });
 
-    await request.sink.addStream(uploadStream.timeout(timeout));
-    await request.sink.close();
+    final writing = request.sink
+        .addStream(uploadStream.timeout(timeout))
+        .then((_) => closeRequestSink());
+    // Observe early socket failures/rejections even when no one consumes the
+    // body. Future.any also handles a later error from the losing future.
+    await Future.any<void>([
+      writing,
+      responseFuture.then<void>((_) {}),
+      // Stream.timeout stops its clock while the HTTP consumer pauses the
+      // body. Keep an independent inactivity clock for a stalled transport.
+      stalled.future,
+    ]);
+    inactivityTimer?.cancel();
     final outcome = await responseFuture.timeout(timeout);
     if (outcome.error != null) {
       Error.throwWithStackTrace(outcome.error!, outcome.stack!);
@@ -365,7 +409,15 @@ Future<UploadFileResult> uploadFileStream({
 
     // Check response
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      safeParseJson(response.body, data, logger);
+      if (response.body.isNotEmpty) safeParseJson(response.body, data, logger);
+      // S3 PUT returns an empty body; Backblaze's version ID is the same
+      // identity used for existing native-file reconciliation and deletion.
+      for (final header in response.headers.entries) {
+        if (header.key.toLowerCase() == 'x-amz-version-id' &&
+            header.value.isNotEmpty) {
+          data['fileId'] = header.value;
+        }
+      }
       return UploadFileResult.success(data);
     } else {
       safeParseJson(response.body, data, logger);
@@ -391,8 +443,8 @@ Future<UploadFileResult> uploadFileStream({
     logger.error("Upload Failed: Unexpected Error", error: e, stackTrace: s);
     return UploadFileResult.failure(UploadFailureKind.unexpected);
   } finally {
-    try {
-      await request?.sink.close();
-    } catch (_) {}
+    inactivityTimer?.cancel();
+    if (!abort.isCompleted) abort.complete();
+    closeRequestSink();
   }
 }

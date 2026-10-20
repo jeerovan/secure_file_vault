@@ -1,5 +1,8 @@
 {
   "@@locale": "id",
+  "localSessionCleanupTitle": "Menghapus data lokal",
+  "localSessionCleanupDescription": "Sesi Anda telah berakhir. FiFe perlu menyelesaikan penghapusan data akun lokal sebelum Anda dapat masuk lagi. File asli Anda tetap disimpan. Coba lagi untuk menyelesaikannya.",
+  "localSessionCleanupInProgress": "Menghapus data FiFe dari perangkat ini…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "Tidak ada item.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Frasa pemulihan hilang",
+  "lostRecoveryIntro": "Jika perangkat lain masih masuk, ekspor frasa pemulihan dari perangkat tersebut sebelum memulai ulang.",
+  "lostRecoveryDeleteConsequence": "Brankas FiFe saat ini, file cadangan, dan pengaturan penyimpanan tertaut akan dihapus permanen.",
+  "lostRecoveryDevicesConsequence": "Semua pendaftaran perangkat yang ada akan dihapus.",
+  "lostRecoveryLogoutConsequence": "Perangkat lain akan keluar dan menghapus data FiFe lokal saat mendeteksi penghapusannya ketika terhubung ke internet.",
+  "lostRecoveryKeepConsequence": "Akun email, langganan, file sumber asli, dan salinan yang diekspor ke luar FiFe akan dipertahankan.",
+  "lostRecoveryWaitConsequence": "Brankas baru akan tetap terkunci sampai penghapusan cloud terverifikasi. Ini bisa memakan waktu 24 jam atau lebih. Anda dapat menutup FiFe dan melanjutkan nanti.",
+  "lostRecoveryNewPhraseConsequence": "Setelah penghapusan selesai, simpan frasa pemulihan baru berisi 24 kata untuk menggunakan brankas baru.",
+  "recoveryResetContinue": "Lanjutkan pengaturan ulang",
+  "recoveryResetConfirmTitle": "Hapus brankas FiFe secara permanen?",
+  "recoveryResetConfirmBody": "Tindakan ini tidak dapat dibatalkan. Frasa pemulihan saat ini tidak akan berfungsi lagi dan semua perangkat Anda akan dihapus.",
+  "recoveryResetDelete": "Hapus brankas dan mulai baru",
+  "recoveryResetPendingTitle": "Menghapus brankas sebelumnya",
+  "recoveryResetPendingBody": "FiFe sedang memverifikasi penghapusan cloud. Anda dapat menutup aplikasi dan kembali nanti.",
+  "recoveryResetWaitUntil": "Verifikasi tidak dapat selesai sebelum {when}.",
+  "recoveryResetStorageBlocked": "Penghapusan cloud memerlukan perhatian. Pulihkan akses dan izin penghapusan untuk penyimpanan tertaut, lalu coba lagi.",
+  "recoveryResetSignin": "Masuk lagi untuk melanjutkan pengaturan ulang ini.",
+  "recoveryResetSigninAs": "Masuk sebagai {email} untuk melanjutkan pengaturan ulang ini.",
+  "recoveryResetNeedsConfirmation": "Konfirmasikan pengaturan ulang untuk melanjutkan. FiFe akan memeriksa apakah prosesnya sudah dimulai.",
+  "recoveryResetConfirmationWait": "Konfirmasi sebelumnya masih berlaku. Periksa lagi setelah kedaluwarsa sebelum memulai konfirmasi baru.",
+  "recoveryResetConfirmationUntil": "Periksa lagi setelah {when}.",
+  "recoveryResetMissingKeys": "Kunci pemulihan baru tidak tersedia di perangkat ini. Lanjutkan di perangkat yang memulai pengaturan ulang. Jika kunci tersebut hilang, tunggu hingga penghapusan selesai, lalu masuk dan pilih “Frasa pemulihan hilang” lagi.",
+  "recoveryResetDiscard": "Kembali ke halaman masuk",
+  "recoveryResetDiscardBody": "Ini menghapus pengaturan pemulihan yang belum selesai di perangkat ini. Setelah masuk, Anda memerlukan frasa pemulihan baru atau harus mengatur ulang brankas lagi.",
+  "recoveryPhraseSaved": "Saya telah menyimpan frasa pemulihan baru.",
+  "recoveryResetStarting": "Memulai pengaturan ulang…"
 }

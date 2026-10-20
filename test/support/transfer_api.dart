@@ -16,11 +16,15 @@ class TransferApi {
   final List<List<int>> uploadBodies = [];
   final List<String> downloadedIds = [];
   Map<String, dynamic>? selectionFailure;
+  Map<String, dynamic>? authorizationFailure;
+  Future<void> Function(Map<String, dynamic>)? beforeUploadAuthorization;
   List<int> Function(List<int>)? alterDownload;
   bool loseNextUploadResponse = false;
+  bool b2S3;
+  bool omitUploadVersionId = false;
   HttpServer? _downloads;
 
-  TransferApi({this.providerId = 6});
+  TransferApi({this.providerId = 6, this.b2S3 = false});
 
   Future<T> run<T>(Future<T> Function() action) async {
     AppHttpClients.closeAll();
@@ -76,12 +80,25 @@ class TransferApi {
       uploadBodies.add(List.of(request.bodyBytes));
       final status = uploadStatuses.isEmpty ? 200 : uploadStatuses.removeAt(0);
       if (status != 200) return http.Response('upload unavailable', status);
+      if (b2S3) {
+        if (request.method != 'PUT' ||
+            request.headers['content-md5'] !=
+                base64Encode(md5.convert(request.bodyBytes).bytes) ||
+            request.headers['x-amz-meta-sha1'] !=
+                sha1.convert(request.bodyBytes).toString()) {
+          return http.Response('checksum or method mismatch', 400);
+        }
+      }
       objects[id] = List.of(request.bodyBytes);
       if (loseNextUploadResponse) {
         loseNextUploadResponse = false;
         throw http.ClientException('response lost after bucket commit');
       }
-      return json({'fileId': 'bucket-object-$id'});
+      return b2S3
+          ? http.Response('', 200, headers: {
+              if (!omitUploadVersionId) 'x-amz-version-id': 'bucket-object-$id',
+            })
+          : json({'fileId': 'bucket-object-$id'});
     }
     if (path.endsWith('/get-file-parts')) {
       return json({'success': 0, 'message': '13'});
@@ -95,7 +112,27 @@ class TransferApi {
     }
     if (path.endsWith('/get-upload-url')) {
       final body = jsonDecode(request.body) as Map<String, dynamic>;
+      await beforeUploadAuthorization?.call(body);
+      if (authorizationFailure != null) return json(authorizationFailure!);
       if (path.contains('/b2/')) {
+        if (b2S3) {
+          return json({
+            'success': 1,
+            'data': {
+              'protocol': 's3',
+              'method': 'PUT',
+              'uploadUrl':
+                  'https://bucket.example.test/${body['file_id']}?signature=${requests.length}',
+              'headers': {
+                'Content-MD5': body['content_md5'],
+                'x-amz-meta-sha1': body['content_sha1'],
+                'Content-Type': 'application/octet-stream',
+                'Content-Length': '${body['content_length']}',
+              },
+              'expiresIn': 900,
+            },
+          });
+        }
         return json({
           'success': 1,
           'data': {
@@ -106,7 +143,8 @@ class TransferApi {
       }
       return json({
         'success': 1,
-        'data': 'https://bucket.example.test/${body['file_id']}',
+        'data':
+            'https://bucket.example.test/${body['file_id']}?signature=${requests.length}',
       });
     }
     if (path.endsWith('/find-uploaded-file')) {

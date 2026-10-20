@@ -14,6 +14,7 @@ import '../services/service_events.dart';
 import '../services/service_reconciliation_coordinator.dart';
 import '../services/service_reconciliation_planner.dart';
 import 'service_sync_budget.dart';
+import 'service_session_work.dart';
 import '../utils/common.dart';
 import '../utils/utils_file.dart';
 import 'package:path/path.dart' as path_lib;
@@ -95,6 +96,10 @@ class ReconciliationService {
 
   /// Main entry point: reconcile a root synced folder
   Future<ReconciliationResult> reconcile(ModelItem rootItem) async {
+    return SessionWork.run(() => _reconcile(rootItem));
+  }
+
+  Future<ReconciliationResult> _reconcile(ModelItem rootItem) async {
     SyncBudget.check();
     final OperationLease lease;
     try {

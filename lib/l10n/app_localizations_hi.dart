@@ -9,6 +9,17 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'स्थानीय डेटा साफ़ किया जा रहा है';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'आपका सत्र समाप्त हो गया है। दोबारा साइन इन करने से पहले FiFe को स्थानीय खाता डेटा साफ़ करना पूरा करना होगा। आपकी मूल फ़ाइलें सुरक्षित रहेंगी। पूरा करने के लिए फिर से कोशिश करें।';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'इस डिवाइस से FiFe का डेटा साफ़ किया जा रहा है…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -757,4 +768,104 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get noItems => 'कोई आइटम नहीं।';
+
+  @override
+  String get lostRecoveryPhrase => 'रिकवरी वाक्यांश खो गया';
+
+  @override
+  String get lostRecoveryIntro =>
+      'यदि किसी दूसरे डिवाइस पर अभी भी साइन इन है, तो दोबारा शुरू करने से पहले उससे अपना रिकवरी वाक्यांश निर्यात करें।';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'आपकी मौजूदा FiFe वॉल्ट, बैकअप की गई फ़ाइलें और जुड़े स्टोरेज की सेटिंग हमेशा के लिए मिटा दी जाएँगी।';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'सभी मौजूदा डिवाइस पंजीकरण हटा दिए जाएँगे।';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'अन्य डिवाइस ऑनलाइन होने पर अपना पंजीकरण हटना पहचानते ही साइन आउट करेंगे और अपना स्थानीय FiFe डेटा मिटा देंगे।';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'आपका ईमेल खाता, सदस्यता, मूल फ़ाइलें और FiFe के बाहर निर्यात की गई प्रतियाँ सुरक्षित रहेंगी।';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'क्लाउड से डेटा मिटने की पुष्टि होने तक आपकी नई वॉल्ट बंद रहेगी। इसमें 24 घंटे या अधिक लग सकते हैं। आप FiFe बंद करके बाद में जारी रख सकते हैं।';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'डेटा मिट जाने पर नई वॉल्ट इस्तेमाल करने के लिए 24 शब्दों का नया रिकवरी वाक्यांश सहेजें।';
+
+  @override
+  String get recoveryResetContinue => 'रीसेट के लिए आगे बढ़ें';
+
+  @override
+  String get recoveryResetConfirmTitle => 'FiFe वॉल्ट हमेशा के लिए मिटाएँ?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'इसे वापस नहीं किया जा सकता। आपका मौजूदा रिकवरी वाक्यांश काम करना बंद कर देगा और आपके सभी डिवाइस हटा दिए जाएँगे।';
+
+  @override
+  String get recoveryResetDelete => 'वॉल्ट मिटाकर नई शुरुआत करें';
+
+  @override
+  String get recoveryResetPendingTitle => 'आपकी पुरानी वॉल्ट मिटाई जा रही है';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe क्लाउड से डेटा मिटने की पुष्टि कर रहा है। आप ऐप बंद करके बाद में लौट सकते हैं।';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'पुष्टि $when से पहले पूरी नहीं हो सकती।';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'क्लाउड से डेटा मिटाने के लिए ध्यान देना ज़रूरी है। जुड़े स्टोरेज की पहुँच और मिटाने की अनुमतियाँ बहाल करें, फिर दोबारा कोशिश करें।';
+
+  @override
+  String get recoveryResetSignin =>
+      'यह रीसेट जारी रखने के लिए फिर से साइन इन करें।';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'यह रीसेट जारी रखने के लिए $email के रूप में साइन इन करें।';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'आगे बढ़ने के लिए रीसेट की पुष्टि करें। FiFe जाँचेगा कि यह पहले ही शुरू हुआ है या नहीं।';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'पिछली पुष्टि अभी भी मान्य है। नई पुष्टि शुरू करने से पहले उसकी समय-सीमा खत्म होने पर फिर जाँचें।';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return '$when के बाद फिर जाँचें।';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'नई रिकवरी कुंजियाँ इस डिवाइस पर उपलब्ध नहीं हैं। उस डिवाइस पर जारी रखें जिसने रीसेट शुरू किया था। यदि वे कुंजियाँ खो गई हैं, तो डेटा मिटने का इंतज़ार करें, फिर साइन इन करके फिर से “रिकवरी वाक्यांश खो गया” चुनें।';
+
+  @override
+  String get recoveryResetDiscard => 'साइन इन पर वापस जाएँ';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'इससे इस डिवाइस का अधूरा रिकवरी सेटअप मिट जाएगा। साइन इन के बाद आपको नया रिकवरी वाक्यांश या वॉल्ट को फिर से रीसेट करना होगा।';
+
+  @override
+  String get recoveryPhraseSaved =>
+      'मैंने अपना नया रिकवरी वाक्यांश सहेज लिया है।';
+
+  @override
+  String get recoveryResetStarting => 'रीसेट शुरू हो रहा है…';
 }

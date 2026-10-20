@@ -1,5 +1,8 @@
 {
   "@@locale": "pt",
+  "localSessionCleanupTitle": "A eliminar dados locais",
+  "localSessionCleanupDescription": "A sua sessão terminou. O FiFe tem de concluir a eliminação dos dados locais da conta antes de poder iniciar sessão novamente. Os seus ficheiros originais são mantidos. Tente novamente para concluir.",
+  "localSessionCleanupInProgress": "A eliminar os dados do FiFe deste dispositivo…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "Sem itens.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Perdi a frase de recuperação",
+  "lostRecoveryIntro": "Se outro dispositivo ainda estiver conectado, exporte sua frase de recuperação por ele antes de recomeçar.",
+  "lostRecoveryDeleteConsequence": "Seu cofre FiFe atual, os arquivos de backup e as configurações de armazenamento vinculado serão excluídos permanentemente.",
+  "lostRecoveryDevicesConsequence": "Todos os registros de dispositivos existentes serão removidos.",
+  "lostRecoveryLogoutConsequence": "Os outros dispositivos sairão da conta e apagarão seus dados locais do FiFe quando detectarem a remoção ao se conectarem à internet.",
+  "lostRecoveryKeepConsequence": "Sua conta de e-mail, assinatura, arquivos originais e cópias exportadas para fora do FiFe serão mantidos.",
+  "lostRecoveryWaitConsequence": "Seu novo cofre ficará bloqueado até que a exclusão na nuvem seja verificada. Isso pode levar 24 horas ou mais. Você pode fechar o FiFe e continuar depois.",
+  "lostRecoveryNewPhraseConsequence": "Quando a exclusão terminar, salve uma nova frase de recuperação de 24 palavras para usar seu novo cofre.",
+  "recoveryResetContinue": "Continuar redefinição",
+  "recoveryResetConfirmTitle": "Excluir permanentemente seu cofre FiFe?",
+  "recoveryResetConfirmBody": "Esta ação não pode ser desfeita. Sua frase de recuperação atual deixará de funcionar e todos os seus dispositivos serão removidos.",
+  "recoveryResetDelete": "Excluir cofre e recomeçar",
+  "recoveryResetPendingTitle": "Excluindo seu cofre anterior",
+  "recoveryResetPendingBody": "O FiFe está verificando a exclusão na nuvem. Você pode fechar o app e voltar depois.",
+  "recoveryResetWaitUntil": "A verificação não poderá terminar antes de {when}.",
+  "recoveryResetStorageBlocked": "A exclusão na nuvem precisa de atenção. Restaure o acesso e as permissões de exclusão do armazenamento vinculado e tente novamente.",
+  "recoveryResetSignin": "Entre novamente para retomar esta redefinição.",
+  "recoveryResetSigninAs": "Entre como {email} para retomar esta redefinição.",
+  "recoveryResetNeedsConfirmation": "Confirme a redefinição para continuar. O FiFe verificará se ela já foi iniciada.",
+  "recoveryResetConfirmationWait": "Uma confirmação anterior ainda é válida. Verifique novamente após ela expirar antes de iniciar uma nova confirmação.",
+  "recoveryResetConfirmationUntil": "Verifique novamente após {when}.",
+  "recoveryResetMissingKeys": "As novas chaves de recuperação não estão disponíveis neste dispositivo. Continue no dispositivo que iniciou a redefinição. Se essas chaves foram perdidas, aguarde a exclusão terminar, entre e escolha novamente “Perdi a frase de recuperação”.",
+  "recoveryResetDiscard": "Voltar para entrar",
+  "recoveryResetDiscardBody": "Isso apaga a configuração de recuperação incompleta neste dispositivo. Após entrar, você precisará da nova frase de recuperação ou de outra redefinição do cofre.",
+  "recoveryPhraseSaved": "Salvei minha nova frase de recuperação.",
+  "recoveryResetStarting": "Iniciando redefinição…"
 }

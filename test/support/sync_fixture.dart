@@ -5,6 +5,7 @@ import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/services/service_recon.dart';
+import 'package:file_vault_bb/services/service_session_cleanup.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
@@ -37,6 +38,7 @@ class SyncFixture {
   final List<String> accessCalls = [];
   bool accessAllowed = true;
   Future<void> Function(String key)? beforeRead;
+  Future<void> Function(String key, String value)? beforeWrite;
 
   SyncFixture._(this.directory, this.source, this.sodium);
 
@@ -44,6 +46,7 @@ class SyncFixture {
   Future<ModelItem> get root async => (await ModelItem.get(rootId))!;
 
   static Future<SyncFixture> create() async {
+    SessionCleanup.instance.resetForTesting();
     final directory = await Directory.systemTemp.createTemp('fife-sync-');
     final source = await Directory('${directory.path}/source').create();
     final fixture =
@@ -57,7 +60,12 @@ class SyncFixture {
         await fixture.beforeRead?.call(key!);
         return fixture.secrets[key];
       }
+      if (call.method == 'readAll') {
+        return Map<String, String>.of(fixture.secrets);
+      }
       if (call.method == 'write') {
+        await fixture.beforeWrite
+            ?.call(key!, call.arguments['value'] as String);
         fixture.secrets[key!] = call.arguments['value'] as String;
       } else if (call.method == 'delete') {
         fixture.secrets.remove(key);
@@ -145,6 +153,7 @@ class SyncFixture {
     await TaskManager.stopBackgroundWakes();
     AppHttpClients.closeAll();
     await StorageSqlite.instance.close();
+    SessionCleanup.instance.resetForTesting();
     ModelSetting.clear();
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;

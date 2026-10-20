@@ -1,5 +1,8 @@
 {
   "@@locale": "vi",
+  "localSessionCleanupTitle": "Đang xóa dữ liệu cục bộ",
+  "localSessionCleanupDescription": "Phiên của bạn đã kết thúc. FiFe cần hoàn tất việc xóa dữ liệu tài khoản cục bộ trước khi bạn có thể đăng nhập lại. Các tệp gốc của bạn được giữ nguyên. Hãy thử lại để hoàn tất.",
+  "localSessionCleanupInProgress": "Đang xóa dữ liệu FiFe khỏi thiết bị này…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "Không có mục nào.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Mất cụm từ khôi phục",
+  "lostRecoveryIntro": "Nếu thiết bị khác vẫn đăng nhập, hãy xuất cụm từ khôi phục từ thiết bị đó trước khi bắt đầu lại.",
+  "lostRecoveryDeleteConsequence": "Kho FiFe hiện tại, các tệp đã sao lưu và cài đặt bộ nhớ liên kết sẽ bị xóa vĩnh viễn.",
+  "lostRecoveryDevicesConsequence": "Tất cả đăng ký thiết bị hiện có sẽ bị xóa.",
+  "lostRecoveryLogoutConsequence": "Các thiết bị khác sẽ đăng xuất và xóa dữ liệu FiFe cục bộ khi phát hiện mình đã bị xóa lúc kết nối mạng.",
+  "lostRecoveryKeepConsequence": "Tài khoản email, gói đăng ký, tệp gốc và bản sao đã xuất ra ngoài FiFe sẽ được giữ lại.",
+  "lostRecoveryWaitConsequence": "Kho mới sẽ bị khóa cho đến khi việc xóa trên đám mây được xác minh. Quá trình này có thể mất 24 giờ hoặc lâu hơn. Bạn có thể đóng FiFe và tiếp tục sau.",
+  "lostRecoveryNewPhraseConsequence": "Sau khi xóa xong, hãy lưu cụm từ khôi phục mới gồm 24 từ để sử dụng kho mới.",
+  "recoveryResetContinue": "Tiếp tục đặt lại",
+  "recoveryResetConfirmTitle": "Xóa vĩnh viễn kho FiFe?",
+  "recoveryResetConfirmBody": "Không thể hoàn tác thao tác này. Cụm từ khôi phục hiện tại sẽ ngừng hoạt động và tất cả thiết bị của bạn sẽ bị xóa.",
+  "recoveryResetDelete": "Xóa kho và bắt đầu lại",
+  "recoveryResetPendingTitle": "Đang xóa kho trước đây",
+  "recoveryResetPendingBody": "FiFe đang xác minh việc xóa trên đám mây. Bạn có thể đóng ứng dụng và quay lại sau.",
+  "recoveryResetWaitUntil": "Không thể hoàn tất xác minh trước {when}.",
+  "recoveryResetStorageBlocked": "Việc xóa trên đám mây cần được xử lý. Hãy khôi phục quyền truy cập và quyền xóa cho bộ nhớ liên kết rồi thử lại.",
+  "recoveryResetSignin": "Đăng nhập lại để tiếp tục đặt lại.",
+  "recoveryResetSigninAs": "Đăng nhập bằng {email} để tiếp tục đặt lại.",
+  "recoveryResetNeedsConfirmation": "Xác nhận đặt lại để tiếp tục. FiFe sẽ kiểm tra xem quá trình đã bắt đầu chưa.",
+  "recoveryResetConfirmationWait": "Xác nhận trước đó vẫn còn hiệu lực. Hãy kiểm tra lại sau khi hết hạn trước khi bắt đầu xác nhận mới.",
+  "recoveryResetConfirmationUntil": "Kiểm tra lại sau {when}.",
+  "recoveryResetMissingKeys": "Khóa khôi phục mới không có trên thiết bị này. Hãy tiếp tục trên thiết bị đã bắt đầu đặt lại. Nếu các khóa đó bị mất, hãy đợi xóa xong, sau đó đăng nhập và chọn lại “Mất cụm từ khôi phục”.",
+  "recoveryResetDiscard": "Quay lại đăng nhập",
+  "recoveryResetDiscardBody": "Thao tác này xóa thiết lập khôi phục chưa hoàn tất trên thiết bị này. Sau khi đăng nhập, bạn sẽ cần cụm từ khôi phục mới hoặc phải đặt lại kho lần nữa.",
+  "recoveryPhraseSaved": "Tôi đã lưu cụm từ khôi phục mới.",
+  "recoveryResetStarting": "Đang bắt đầu đặt lại…"
 }

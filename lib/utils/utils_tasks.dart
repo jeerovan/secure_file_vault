@@ -5,11 +5,13 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:file_vault_bb/models/model_file.dart';
+import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_part.dart';
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/models/model_state.dart';
 import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/services/service_reconciliation_coordinator.dart';
 import 'package:file_vault_bb/storage/local_item_access.dart';
@@ -25,6 +27,8 @@ import 'package:sodium/sodium_sumo.dart';
 
 import '../services/service_logger.dart';
 import '../services/service_sync_budget.dart';
+import '../services/service_session_work.dart';
+import '../services/service_session_cleanup.dart';
 import 'utils_crypto.dart';
 
 class TaskManager {
@@ -60,7 +64,15 @@ class TaskManager {
 
   /// Static function "init" to start the process.
   static Future<void> init({Future<void> Function()? retryWakeHandler}) async {
+    return SessionWork.run(() => _init(retryWakeHandler: retryWakeHandler));
+  }
+
+  static Future<void> _init({Future<void> Function()? retryWakeHandler}) async {
     SyncBudget.check();
+    if (await SecureStorage()
+        .containsKey(key: AppString.recoveryResetStage.string)) {
+      return;
+    }
     if (retryWakeHandler != null) {
       _instance._retryWakeHandler = retryWakeHandler;
     }
@@ -171,6 +183,15 @@ class TaskManager {
 
   /// Internal processor handling individual tasks
   Future<void> dispatchTask(String taskId) async {
+    try {
+      await SessionWork.run(() => _dispatchTask(taskId));
+    } on SessionInvalidated {
+      _activeTaskIds.remove(taskId);
+      _checkCompletion();
+    }
+  }
+
+  Future<void> _dispatchTask(String taskId) async {
     final DateTime taskStartTime = DateTime.now();
     String? failure;
     OperationLease? lease;
@@ -226,7 +247,9 @@ class TaskManager {
       _recordTaskDuration(individualTaskMs);
 
       // Continue with other eligible tasks. Retry-waiting tasks remain persisted.
-      if (queueNext && SyncBudget.current?.interrupted != true) {
+      if (queueNext &&
+          SessionWork.active &&
+          SyncBudget.current?.interrupted != true) {
         start();
       } else {
         _checkCompletion();
@@ -477,38 +500,14 @@ class TaskManager {
         StorageProviderExtension.fromValue(modelFile.providerId ?? 0);
     if (storageProvider == StorageProvider.fife ||
         storageProvider == StorageProvider.backblaze) {
-      final urlResult = await api.post(
-        endpoint: '/b2/get-upload-url',
-        jsonBody: {"storage_id": modelFile.storageId},
-        retryUnauthorized: true,
-      );
-      final status = urlResult["success"];
-      if (status <= 0) {
-        logger.error('Failed to get B2 upload authorization');
-        return true;
-      } else {
-        final urlData = urlResult["data"];
-        uploadInfo["provider"] = "b2";
-        uploadInfo["url"] = urlData["uploadUrl"];
-        uploadInfo["token"] = urlData["authorizationToken"];
-        uploadInfo["storage_id"] = modelFile.storageId;
-      }
+      // S3 authorization is object-scoped and needs the prepared ciphertext's
+      // integrity values. Request it immediately before transfer below.
+      uploadInfo["provider"] = "b2";
+      uploadInfo["storage_id"] = modelFile.storageId;
     } else if (storageProvider.usesPresignedS3Url) {
-      String fileId = '${modelFile.id}_$partToUpload';
-      final providerPath = storageProvider.apiPath!;
-      final urlResult = await api.post(
-        endpoint: '/$providerPath/get-upload-url',
-        jsonBody: {"storage_id": modelFile.storageId, "file_id": fileId},
-        retryUnauthorized: true,
-      );
-      final status = urlResult["success"];
-      if (status <= 0) {
-        logger.error('Failed to get upload authorization');
-        return true;
-      } else {
-        uploadInfo["provider"] = "s3";
-        uploadInfo["url"] = urlResult["data"];
-      }
+      uploadInfo["provider"] = "s3";
+      uploadInfo["provider_path"] = storageProvider.apiPath!;
+      uploadInfo["storage_id"] = modelFile.storageId;
     } else {
       // simulation
       String fileHashPart = '${modelFile.id}_$partToUpload';
@@ -614,13 +613,77 @@ class TaskManager {
 
     String sha1Hash = await _sha1ForFile(encryptedFile);
     int contentLength = await encryptedFile.length();
+    if (uploadInfo["provider"] == "b2" && uploadInfo["url"] == null) {
+      final contentMd5 =
+          base64Encode((await md5.bind(encryptedFile.openRead()).first).bytes);
+      final result = await BackendApi().post(
+        endpoint: '/b2/get-upload-url',
+        jsonBody: {
+          "storage_id": uploadInfo["storage_id"],
+          "upload_protocol": "s3",
+          "file_id": fileHashPart,
+          "content_sha1": sha1Hash,
+          "content_md5": contentMd5,
+          "content_length": contentLength,
+        },
+        retryUnauthorized: true,
+      );
+      final descriptor = result["data"];
+      if (result["success"] != 1 ||
+          descriptor is! Map ||
+          descriptor["uploadUrl"] is! String) {
+        logger.warning('Unable to obtain B2 upload authorization');
+        return true;
+      }
+      uploadInfo["url"] = descriptor["uploadUrl"];
+      if (descriptor["protocol"] == "s3") {
+        final signedHeaders = descriptor["headers"];
+        if (descriptor["method"] != "PUT" ||
+            signedHeaders is! Map ||
+            signedHeaders.entries.any(
+                (entry) => entry.key is! String || entry.value is! String)) {
+          logger.warning('Invalid B2 S3 upload authorization');
+          return true;
+        }
+        uploadInfo["protocol"] = "s3";
+        uploadInfo["headers"] = Map<String, String>.from(signedHeaders);
+      } else {
+        // A backend predating S3 negotiation ignores the additional request
+        // fields and returns the original native POST authorization.
+        if (descriptor["authorizationToken"] is! String) return true;
+        uploadInfo["token"] = descriptor["authorizationToken"];
+      }
+    }
+    if (uploadInfo["provider"] == "s3" && uploadInfo["url"] == null) {
+      final providerPath = uploadInfo["provider_path"];
+      final result = await BackendApi().post(
+        endpoint: '/$providerPath/get-upload-url',
+        jsonBody: {
+          "storage_id": uploadInfo["storage_id"],
+          "file_id": fileHashPart,
+        },
+        retryUnauthorized: true,
+      );
+      if (result["success"] != 1 || result["data"] is! String) {
+        logger.warning('Unable to obtain S3 upload authorization');
+        return true;
+      }
+      uploadInfo["url"] = result["data"];
+    }
     String method = 'POST';
-    if (uploadInfo["provider"] == "b2") {
+    if (uploadInfo["provider"] == "b2" && uploadInfo["protocol"] == "s3") {
+      method = 'PUT';
+      headers = Map<String, String>.from(uploadInfo["headers"]);
+    } else if (uploadInfo["provider"] == "b2") {
       String? userId = await getSignedInUserId();
+      final generation = ModelSetting.get(AppString.vaultGeneration.string);
+      final prefix = generation.isEmpty || generation == 'legacy'
+          ? '$userId/'
+          : '$userId/vaults/$generation/';
       headers = {
         "authorization": uploadInfo["token"],
         "X-Bz-Content-Sha1": sha1Hash,
-        "X-Bz-File-Name": '$userId%2F$fileHashPart',
+        "X-Bz-File-Name": Uri.encodeComponent('$prefix$fileHashPart'),
         "Content-Length": contentLength.toString(),
         "Content-Type": "application/octet-stream",
       };
@@ -690,6 +753,15 @@ class TaskManager {
     // update uploaded
     if (uploadResult.succeeded) {
       SyncBudget.check();
+      final uploadedVersion = uploadResult.data["fileId"];
+      if (uploadInfo["provider"] == "b2" &&
+          (uploadedVersion is! String || uploadedVersion.isEmpty)) {
+        // A committed upload whose version header was lost is reconciled on
+        // the next attempt. Keep its ciphertext/key instead of losing identity.
+        logger
+            .warning('B2 upload version is missing; retaining retry artifact');
+        return true;
+      }
       if (needsUpload && transferWatch.elapsedMilliseconds > 0) {
         await _recordTransferRate(
             'upload', contentLength, transferWatch.elapsedMilliseconds);
@@ -877,26 +949,27 @@ class TaskManager {
 
   Future<void> _publishDownload(ModelItemTask itemTask, ModelItem modelItem,
       DownloadStaging staging, String finalFilePath) async {
-    SyncBudget.check();
-    await File(finalFilePath).parent.create(recursive: true);
-    final finalFile = File(finalFilePath);
-    if (await Directory(finalFilePath).exists()) {
+    final published = await SessionCleanup.instance.withPublication(() async {
+      SyncBudget.check();
+      await File(finalFilePath).parent.create(recursive: true);
+      final finalFile = File(finalFilePath);
+      if (await Directory(finalFilePath).exists()) return false;
+      if (await finalFile.exists()) {
+        return _fileMatchesHash(finalFile, modelItem.fileHash!);
+      }
+      await moveFileSafely(staging.assembledFile.path, finalFilePath);
+      if (!await finalFile.exists() ||
+          !await _fileMatchesHash(finalFile, modelItem.fileHash!)) {
+        throw const FileSystemException(
+            'Finalized download verification failed');
+      }
+      return true;
+    });
+    // Account writes happen only after releasing the publication gate. Cleanup
+    // can now invalidate them without leaving an uncompleted filesystem move.
+    if (!published) {
       await itemTask.markBlocked('destination_conflict');
       return;
-    }
-    if (await finalFile.exists()) {
-      if (await _fileMatchesHash(finalFile, modelItem.fileHash!)) {
-        await ModelItemTask.completeTask(itemTask.id);
-        await staging.cleanup();
-      } else {
-        await itemTask.markBlocked('destination_conflict');
-      }
-      return;
-    }
-    await moveFileSafely(staging.assembledFile.path, finalFilePath);
-    if (!await finalFile.exists() ||
-        !await _fileMatchesHash(finalFile, modelItem.fileHash!)) {
-      throw const FileSystemException('Finalized download verification failed');
     }
     await ModelItemTask.completeTask(itemTask.id);
     await staging.cleanup();

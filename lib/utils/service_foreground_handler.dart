@@ -11,6 +11,9 @@ import '../storage/storage_sqlite.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
 import '../utils/utils_sync.dart';
+import '../services/service_session_cleanup.dart';
+import '../services/service_session_work.dart';
+import '../services/service_recovery_reset.dart';
 
 class ForegroundTaskHandler extends TaskHandler {
   ForegroundTaskHandler()
@@ -36,6 +39,10 @@ class ForegroundTaskHandler extends TaskHandler {
   static Future<void> _initializeService() async {
     WidgetsFlutterBinding.ensureInitialized();
     await StorageSqlite.initialize(ExecutionMode.foregroundService);
+    if (!await SessionCleanup.instance.resume() ||
+        await RecoveryResetService.instance.hasPending()) {
+      throw const SessionInvalidated();
+    }
     await initializeDependencies(ExecutionMode.foregroundService);
   }
 

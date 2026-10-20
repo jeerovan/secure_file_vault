@@ -7,7 +7,8 @@ import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/utils/utils_sync.dart';
+import 'service_session_cleanup.dart';
+import 'service_session_work.dart';
 import 'package:http/http.dart' as http;
 
 class AuthRefreshSingleFlight {
@@ -76,6 +77,10 @@ class NeonAuth {
   }
 
   Future<String?> verifyOTP(String email, String otp) async {
+    return SessionWork.run(() => _verifyOTP(email, otp));
+  }
+
+  Future<String?> _verifyOTP(String email, String otp) async {
     final url = Uri.parse('$_neonAuthUrl/sign-in/email-otp');
     final response = await _http
         .post(
@@ -138,7 +143,8 @@ class NeonAuth {
   }
 
   Future<void> refreshSessionAndGetJWT() async {
-    await _refreshSingleFlight.run(_refreshSessionAndGetJWT);
+    await SessionWork.run(
+        () => _refreshSingleFlight.run(_refreshSessionAndGetJWT));
   }
 
   Future<void> _refreshSessionAndGetJWT() async {
@@ -171,7 +177,7 @@ class NeonAuth {
           await _storage.read(key: AppString.sessionCookie.string);
       if (sessionCookie == null) {
         logger.error("Session cookie not found while refreshing JWT.");
-        await SyncUtils.signout();
+        await SessionCleanup.instance.expiredAuthentication();
         return;
       }
 
@@ -200,7 +206,7 @@ class NeonAuth {
       else if (response.statusCode == 401 || response.statusCode == 403) {
         logger.warning(
             "Session invalid or expired (Status: ${response.statusCode}). Forcing sign-out.");
-        await SyncUtils.signout();
+        await SessionCleanup.instance.expiredAuthentication();
       }
       // 5xx (Server Errors), 429 (Rate Limit), etc. Do NOT sign out.
       else {

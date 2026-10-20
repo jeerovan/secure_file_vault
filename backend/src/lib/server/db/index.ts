@@ -18,6 +18,19 @@ export function getDb(
 	platform: Readonly<App.Platform> | undefined,
 	development = import.meta.env?.DEV ?? false
 ) {
+	// An explicit local harness must also override Cloudflare's emulated binding.
+	const developmentUrl = development
+		? (globalThis as { process?: { env?: { FIFE_LOCAL_DATABASE_URL?: string } } }).process?.env
+				?.FIFE_LOCAL_DATABASE_URL
+		: undefined;
+	if (developmentUrl) {
+		let db = developmentHyperdriveDbs.get(developmentUrl);
+		if (!db) {
+			db = createDb(developmentUrl, 5);
+			developmentHyperdriveDbs.set(developmentUrl, db);
+		}
+		return db;
+	}
 	const hyperdrive = platform?.env?.HYPERDRIVE;
 	if (hyperdrive) {
 		// Vite keeps serving requests in one process; a fresh pool per request

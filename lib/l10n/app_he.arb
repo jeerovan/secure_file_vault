@@ -1,5 +1,8 @@
 {
   "@@locale": "he",
+  "localSessionCleanupTitle": "מחיקת נתונים מקומיים",
+  "localSessionCleanupDescription": "ההפעלה שלך הסתיימה. FiFe צריך לסיים את מחיקת נתוני החשבון המקומיים לפני שתוכל להתחבר שוב. הקבצים המקוריים שלך נשמרים. נסה שוב כדי לסיים.",
+  "localSessionCleanupInProgress": "נתוני FiFe נמחקים ממכשיר זה…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "אין פריטים.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "איבדתי את ביטוי השחזור",
+  "lostRecoveryIntro": "אם מכשיר אחר עדיין מחובר, יש לייצא ממנו את ביטוי השחזור לפני שמתחילים מחדש.",
+  "lostRecoveryDeleteConsequence": "הכספת הקיימת ב-FiFe, הקבצים המגובים והגדרות האחסון המקושר יימחקו לצמיתות.",
+  "lostRecoveryDevicesConsequence": "כל רישומי המכשירים הקיימים יוסרו.",
+  "lostRecoveryLogoutConsequence": "המכשירים האחרים יתנתקו וימחקו את נתוני FiFe המקומיים כאשר יגלו שהוסרו בזמן שהם מחוברים לאינטרנט.",
+  "lostRecoveryKeepConsequence": "חשבון הדוא״ל, המינוי, קובצי המקור והעותקים שיוצאו מחוץ ל-FiFe יישמרו.",
+  "lostRecoveryWaitConsequence": "הכספת החדשה תישאר נעולה עד לאימות המחיקה בענן. התהליך עשוי להימשך 24 שעות או יותר. אפשר לסגור את FiFe ולהמשיך מאוחר יותר.",
+  "lostRecoveryNewPhraseConsequence": "לאחר סיום המחיקה, יש לשמור ביטוי שחזור חדש בן 24 מילים כדי להשתמש בכספת החדשה.",
+  "recoveryResetContinue": "המשך לאיפוס",
+  "recoveryResetConfirmTitle": "למחוק לצמיתות את כספת FiFe?",
+  "recoveryResetConfirmBody": "לא ניתן לבטל פעולה זו. ביטוי השחזור הקיים יפסיק לפעול וכל המכשירים שלך יוסרו.",
+  "recoveryResetDelete": "מחיקת הכספת והתחלה מחדש",
+  "recoveryResetPendingTitle": "מחיקת הכספת הקודמת",
+  "recoveryResetPendingBody": "FiFe מאמת את המחיקה בענן. אפשר לסגור את האפליקציה ולחזור מאוחר יותר.",
+  "recoveryResetWaitUntil": "האימות לא יכול להסתיים לפני {when}.",
+  "recoveryResetStorageBlocked": "המחיקה בענן דורשת טיפול. יש לשחזר גישה והרשאות מחיקה לאחסון המקושר ולנסות שוב.",
+  "recoveryResetSignin": "יש להתחבר מחדש כדי להמשיך באיפוס.",
+  "recoveryResetSigninAs": "יש להתחבר בתור {email} כדי להמשיך באיפוס.",
+  "recoveryResetNeedsConfirmation": "יש לאשר את האיפוס כדי להמשיך. FiFe יבדוק אם הוא כבר התחיל.",
+  "recoveryResetConfirmationWait": "אישור קודם עדיין תקף. יש לבדוק שוב לאחר שיפוג לפני התחלת אישור חדש.",
+  "recoveryResetConfirmationUntil": "יש לבדוק שוב לאחר {when}.",
+  "recoveryResetMissingKeys": "מפתחות השחזור החדשים אינם זמינים במכשיר הזה. יש להמשיך במכשיר שהתחיל את האיפוס. אם המפתחות אבדו, יש להמתין לסיום המחיקה, להתחבר ולבחור שוב באפשרות ״איבדתי את ביטוי השחזור״.",
+  "recoveryResetDiscard": "חזרה להתחברות",
+  "recoveryResetDiscardBody": "הפעולה מנקה את הגדרת השחזור שלא הושלמה במכשיר הזה. לאחר ההתחברות יידרש ביטוי השחזור החדש או איפוס נוסף של הכספת.",
+  "recoveryPhraseSaved": "שמרתי את ביטוי השחזור החדש שלי.",
+  "recoveryResetStarting": "מתחילים באיפוס…"
 }

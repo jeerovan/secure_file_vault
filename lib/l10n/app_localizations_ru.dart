@@ -9,6 +9,17 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Удаление локальных данных';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Ваш сеанс завершён. FiFe должен закончить удаление локальных данных аккаунта, прежде чем вы сможете войти снова. Исходные файлы сохранятся. Повторите попытку, чтобы завершить очистку.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Удаление данных FiFe с этого устройства…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -770,4 +781,102 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noItems => 'Нет элементов.';
+
+  @override
+  String get lostRecoveryPhrase => 'Фраза восстановления утеряна';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Если на другом устройстве ещё выполнен вход, экспортируйте с него фразу восстановления, прежде чем начинать заново.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Ваше текущее хранилище FiFe, резервные копии файлов и настройки подключённых хранилищ будут удалены навсегда.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Регистрации всех существующих устройств будут удалены.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Другие устройства выйдут из аккаунта и очистят локальные данные FiFe, когда обнаружат своё удаление при подключении к интернету.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Аккаунт электронной почты, подписка, исходные файлы и копии, экспортированные за пределы FiFe, сохранятся.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Новое хранилище останется заблокированным до подтверждения удаления из облака. Это может занять 24 часа или больше. Можно закрыть FiFe и продолжить позже.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'После завершения удаления сохраните новую фразу восстановления из 24 слов, чтобы пользоваться новым хранилищем.';
+
+  @override
+  String get recoveryResetContinue => 'Продолжить сброс';
+
+  @override
+  String get recoveryResetConfirmTitle => 'Удалить хранилище FiFe навсегда?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Это действие нельзя отменить. Текущая фраза восстановления перестанет работать, а все ваши устройства будут удалены.';
+
+  @override
+  String get recoveryResetDelete => 'Удалить хранилище и начать заново';
+
+  @override
+  String get recoveryResetPendingTitle => 'Удаление предыдущего хранилища';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe проверяет удаление из облака. Можно закрыть приложение и вернуться позже.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'Проверка не может завершиться раньше $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'Для удаления из облака требуется ваше участие. Восстановите доступ и разрешения на удаление в подключённых хранилищах и повторите попытку.';
+
+  @override
+  String get recoveryResetSignin => 'Войдите снова, чтобы продолжить сброс.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Войдите как $email, чтобы продолжить сброс.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Подтвердите сброс, чтобы продолжить. FiFe проверит, не начался ли он уже.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Предыдущее подтверждение ещё действительно. Проверьте снова после истечения его срока, прежде чем начинать новое подтверждение.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Проверьте снова после $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Новые ключи восстановления недоступны на этом устройстве. Продолжите на устройстве, где был начат сброс. Если ключи утеряны, дождитесь завершения удаления, войдите и снова выберите «Фраза восстановления утеряна».';
+
+  @override
+  String get recoveryResetDiscard => 'Вернуться ко входу';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Это удалит незавершённую настройку восстановления на этом устройстве. После входа потребуется новая фраза восстановления или повторный сброс хранилища.';
+
+  @override
+  String get recoveryPhraseSaved => 'Я сохранил новую фразу восстановления.';
+
+  @override
+  String get recoveryResetStarting => 'Запуск сброса…';
 }

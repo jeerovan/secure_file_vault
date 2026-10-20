@@ -9,6 +9,17 @@ class AppLocalizationsEl extends AppLocalizations {
   AppLocalizationsEl([String locale = 'el']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Εκκαθάριση τοπικών δεδομένων';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Η συνεδρία σας έληξε. Το FiFe πρέπει να ολοκληρώσει τη διαγραφή των τοπικών δεδομένων λογαριασμού πριν συνδεθείτε ξανά. Τα αρχικά αρχεία σας διατηρούνται. Δοκιμάστε ξανά για ολοκλήρωση.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Γίνεται εκκαθάριση των δεδομένων FiFe από αυτή τη συσκευή…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -776,4 +787,105 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get noItems => 'Δεν υπάρχουν στοιχεία.';
+
+  @override
+  String get lostRecoveryPhrase => 'Έχασα τη φράση ανάκτησης';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Αν κάποια άλλη συσκευή παραμένει συνδεδεμένη, εξάγετε από εκεί τη φράση ανάκτησης πριν ξεκινήσετε από την αρχή.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Το υπάρχον θησαυροφυλάκιο FiFe, τα αντίγραφα ασφαλείας και οι ρυθμίσεις συνδεδεμένου χώρου αποθήκευσης θα διαγραφούν οριστικά.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Όλες οι υπάρχουσες εγγραφές συσκευών θα αφαιρεθούν.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Οι άλλες συσκευές θα αποσυνδεθούν και θα διαγράψουν τα τοπικά δεδομένα FiFe μόλις εντοπίσουν την αφαίρεσή τους ενώ είναι συνδεδεμένες στο διαδίκτυο.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Ο λογαριασμός email, η συνδρομή, τα αρχικά αρχεία και τα αντίγραφα που εξήχθησαν εκτός FiFe θα διατηρηθούν.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Το νέο θησαυροφυλάκιο θα παραμείνει κλειδωμένο μέχρι να επαληθευτεί η διαγραφή στο cloud. Αυτό μπορεί να διαρκέσει 24 ώρες ή περισσότερο. Μπορείτε να κλείσετε το FiFe και να συνεχίσετε αργότερα.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Μόλις ολοκληρωθεί η διαγραφή, αποθηκεύστε μια νέα φράση ανάκτησης 24 λέξεων για να χρησιμοποιήσετε το νέο θησαυροφυλάκιο.';
+
+  @override
+  String get recoveryResetContinue => 'Συνέχεια στην επαναφορά';
+
+  @override
+  String get recoveryResetConfirmTitle =>
+      'Οριστική διαγραφή του θησαυροφυλακίου FiFe;';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Αυτή η ενέργεια δεν αναιρείται. Η υπάρχουσα φράση ανάκτησης θα πάψει να λειτουργεί και όλες οι συσκευές σας θα αφαιρεθούν.';
+
+  @override
+  String get recoveryResetDelete => 'Διαγραφή και νέα αρχή';
+
+  @override
+  String get recoveryResetPendingTitle =>
+      'Διαγραφή του προηγούμενου θησαυροφυλακίου';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'Το FiFe επαληθεύει τη διαγραφή στο cloud. Μπορείτε να κλείσετε την εφαρμογή και να επιστρέψετε αργότερα.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'Η επαλήθευση δεν μπορεί να ολοκληρωθεί πριν από $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'Η διαγραφή στο cloud χρειάζεται παρέμβαση. Επαναφέρετε την πρόσβαση και τα δικαιώματα διαγραφής στον συνδεδεμένο χώρο αποθήκευσης και δοκιμάστε ξανά.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Συνδεθείτε ξανά για να συνεχίσετε την επαναφορά.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Συνδεθείτε ως $email για να συνεχίσετε την επαναφορά.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Επιβεβαιώστε την επαναφορά για να συνεχίσετε. Το FiFe θα ελέγξει αν έχει ήδη ξεκινήσει.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Μια προηγούμενη επιβεβαίωση ισχύει ακόμη. Ελέγξτε ξανά μετά τη λήξη της πριν ξεκινήσετε νέα επιβεβαίωση.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Ελέγξτε ξανά μετά από $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Τα νέα κλειδιά ανάκτησης δεν είναι διαθέσιμα σε αυτή τη συσκευή. Συνεχίστε στη συσκευή που ξεκίνησε την επαναφορά. Αν χάθηκαν τα κλειδιά, περιμένετε να ολοκληρωθεί η διαγραφή, συνδεθείτε και επιλέξτε ξανά «Έχασα τη φράση ανάκτησης».';
+
+  @override
+  String get recoveryResetDiscard => 'Επιστροφή στη σύνδεση';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Αυτό διαγράφει την ημιτελή ρύθμιση ανάκτησης σε αυτή τη συσκευή. Μετά τη σύνδεση θα χρειαστείτε τη νέα φράση ανάκτησης ή νέα επαναφορά θησαυροφυλακίου.';
+
+  @override
+  String get recoveryPhraseSaved => 'Αποθήκευσα τη νέα φράση ανάκτησης.';
+
+  @override
+  String get recoveryResetStarting => 'Έναρξη επαναφοράς…';
 }

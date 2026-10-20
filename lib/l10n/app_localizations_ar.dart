@@ -9,6 +9,17 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'مسح البيانات المحلية';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'انتهت جلستك. يحتاج FiFe إلى إكمال مسح بيانات الحساب المحلية قبل تسجيل الدخول مرة أخرى. ستبقى ملفاتك الأصلية محفوظة. حاول مرة أخرى للإكمال.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'جارٍ مسح بيانات FiFe من هذا الجهاز…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -766,4 +777,102 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noItems => 'لا توجد عناصر.';
+
+  @override
+  String get lostRecoveryPhrase => 'فقدت عبارة الاسترداد';
+
+  @override
+  String get lostRecoveryIntro =>
+      'إذا كان جهاز آخر لا يزال مسجّلاً للدخول، فصدّر عبارة الاسترداد منه قبل البدء من جديد.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'ستُحذف خزنة FiFe الحالية والملفات المنسوخة احتياطياً وإعدادات التخزين المرتبط نهائياً.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'ستُزال جميع تسجيلات الأجهزة الحالية.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'ستسجّل الأجهزة الأخرى الخروج وتمسح بيانات FiFe المحلية عندما تكتشف إزالتها أثناء اتصالها بالإنترنت.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'سيُحتفظ بحساب بريدك الإلكتروني واشتراكك والملفات الأصلية والنسخ المصدّرة خارج FiFe.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'ستبقى خزنتك الجديدة مقفلة حتى يتم التحقق من الحذف السحابي. قد يستغرق ذلك 24 ساعة أو أكثر. يمكنك إغلاق FiFe والمتابعة لاحقاً.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'بعد اكتمال الحذف، احفظ عبارة استرداد جديدة من 24 كلمة لاستخدام خزنتك الجديدة.';
+
+  @override
+  String get recoveryResetContinue => 'متابعة إعادة التعيين';
+
+  @override
+  String get recoveryResetConfirmTitle => 'هل تريد حذف خزنة FiFe نهائياً؟';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'لا يمكن التراجع عن ذلك. ستتوقف عبارة الاسترداد الحالية عن العمل وستُزال جميع أجهزتك.';
+
+  @override
+  String get recoveryResetDelete => 'حذف الخزنة والبدء من جديد';
+
+  @override
+  String get recoveryResetPendingTitle => 'جارٍ حذف خزنتك السابقة';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'يتحقق FiFe من الحذف السحابي. يمكنك إغلاق التطبيق والعودة لاحقاً.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'لا يمكن إكمال التحقق قبل $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'يتطلب الحذف السحابي تدخلاً. أعد صلاحيات الوصول والحذف للتخزين المرتبط ثم حاول مجدداً.';
+
+  @override
+  String get recoveryResetSignin => 'سجّل الدخول مجدداً لمتابعة إعادة التعيين.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'سجّل الدخول باسم $email لمتابعة إعادة التعيين.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'أكّد إعادة التعيين للمتابعة. سيتحقق FiFe مما إذا كانت قد بدأت بالفعل.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'لا يزال التأكيد السابق صالحاً. تحقّق مجدداً بعد انتهاء صلاحيته قبل بدء تأكيد جديد.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'تحقّق مجدداً بعد $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'مفاتيح الاسترداد الجديدة غير متوفرة على هذا الجهاز. تابع على الجهاز الذي بدأ إعادة التعيين. إذا فُقدت تلك المفاتيح، فانتظر اكتمال الحذف ثم سجّل الدخول واختر «فقدت عبارة الاسترداد» مجدداً.';
+
+  @override
+  String get recoveryResetDiscard => 'العودة إلى تسجيل الدخول';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'سيؤدي ذلك إلى مسح إعداد الاسترداد غير المكتمل على هذا الجهاز. ستحتاج إلى عبارة الاسترداد الجديدة أو إعادة تعيين الخزنة مجدداً بعد تسجيل الدخول.';
+
+  @override
+  String get recoveryPhraseSaved => 'لقد حفظت عبارة الاسترداد الجديدة.';
+
+  @override
+  String get recoveryResetStarting => 'جارٍ بدء إعادة التعيين…';
 }

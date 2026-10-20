@@ -9,6 +9,17 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Đang xóa dữ liệu cục bộ';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Phiên của bạn đã kết thúc. FiFe cần hoàn tất việc xóa dữ liệu tài khoản cục bộ trước khi bạn có thể đăng nhập lại. Các tệp gốc của bạn được giữ nguyên. Hãy thử lại để hoàn tất.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Đang xóa dữ liệu FiFe khỏi thiết bị này…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -756,4 +767,102 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get noItems => 'Không có mục nào.';
+
+  @override
+  String get lostRecoveryPhrase => 'Mất cụm từ khôi phục';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Nếu thiết bị khác vẫn đăng nhập, hãy xuất cụm từ khôi phục từ thiết bị đó trước khi bắt đầu lại.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Kho FiFe hiện tại, các tệp đã sao lưu và cài đặt bộ nhớ liên kết sẽ bị xóa vĩnh viễn.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Tất cả đăng ký thiết bị hiện có sẽ bị xóa.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Các thiết bị khác sẽ đăng xuất và xóa dữ liệu FiFe cục bộ khi phát hiện mình đã bị xóa lúc kết nối mạng.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Tài khoản email, gói đăng ký, tệp gốc và bản sao đã xuất ra ngoài FiFe sẽ được giữ lại.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Kho mới sẽ bị khóa cho đến khi việc xóa trên đám mây được xác minh. Quá trình này có thể mất 24 giờ hoặc lâu hơn. Bạn có thể đóng FiFe và tiếp tục sau.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Sau khi xóa xong, hãy lưu cụm từ khôi phục mới gồm 24 từ để sử dụng kho mới.';
+
+  @override
+  String get recoveryResetContinue => 'Tiếp tục đặt lại';
+
+  @override
+  String get recoveryResetConfirmTitle => 'Xóa vĩnh viễn kho FiFe?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Không thể hoàn tác thao tác này. Cụm từ khôi phục hiện tại sẽ ngừng hoạt động và tất cả thiết bị của bạn sẽ bị xóa.';
+
+  @override
+  String get recoveryResetDelete => 'Xóa kho và bắt đầu lại';
+
+  @override
+  String get recoveryResetPendingTitle => 'Đang xóa kho trước đây';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe đang xác minh việc xóa trên đám mây. Bạn có thể đóng ứng dụng và quay lại sau.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'Không thể hoàn tất xác minh trước $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'Việc xóa trên đám mây cần được xử lý. Hãy khôi phục quyền truy cập và quyền xóa cho bộ nhớ liên kết rồi thử lại.';
+
+  @override
+  String get recoveryResetSignin => 'Đăng nhập lại để tiếp tục đặt lại.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Đăng nhập bằng $email để tiếp tục đặt lại.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Xác nhận đặt lại để tiếp tục. FiFe sẽ kiểm tra xem quá trình đã bắt đầu chưa.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Xác nhận trước đó vẫn còn hiệu lực. Hãy kiểm tra lại sau khi hết hạn trước khi bắt đầu xác nhận mới.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Kiểm tra lại sau $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Khóa khôi phục mới không có trên thiết bị này. Hãy tiếp tục trên thiết bị đã bắt đầu đặt lại. Nếu các khóa đó bị mất, hãy đợi xóa xong, sau đó đăng nhập và chọn lại “Mất cụm từ khôi phục”.';
+
+  @override
+  String get recoveryResetDiscard => 'Quay lại đăng nhập';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Thao tác này xóa thiết lập khôi phục chưa hoàn tất trên thiết bị này. Sau khi đăng nhập, bạn sẽ cần cụm từ khôi phục mới hoặc phải đặt lại kho lần nữa.';
+
+  @override
+  String get recoveryPhraseSaved => 'Tôi đã lưu cụm từ khôi phục mới.';
+
+  @override
+  String get recoveryResetStarting => 'Đang bắt đầu đặt lại…';
 }

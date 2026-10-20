@@ -9,6 +9,17 @@ class AppLocalizationsId extends AppLocalizations {
   AppLocalizationsId([String locale = 'id']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Menghapus data lokal';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Sesi Anda telah berakhir. FiFe perlu menyelesaikan penghapusan data akun lokal sebelum Anda dapat masuk lagi. File asli Anda tetap disimpan. Coba lagi untuk menyelesaikannya.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Menghapus data FiFe dari perangkat ini…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -759,4 +770,104 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get noItems => 'Tidak ada item.';
+
+  @override
+  String get lostRecoveryPhrase => 'Frasa pemulihan hilang';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Jika perangkat lain masih masuk, ekspor frasa pemulihan dari perangkat tersebut sebelum memulai ulang.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Brankas FiFe saat ini, file cadangan, dan pengaturan penyimpanan tertaut akan dihapus permanen.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Semua pendaftaran perangkat yang ada akan dihapus.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Perangkat lain akan keluar dan menghapus data FiFe lokal saat mendeteksi penghapusannya ketika terhubung ke internet.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Akun email, langganan, file sumber asli, dan salinan yang diekspor ke luar FiFe akan dipertahankan.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Brankas baru akan tetap terkunci sampai penghapusan cloud terverifikasi. Ini bisa memakan waktu 24 jam atau lebih. Anda dapat menutup FiFe dan melanjutkan nanti.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Setelah penghapusan selesai, simpan frasa pemulihan baru berisi 24 kata untuk menggunakan brankas baru.';
+
+  @override
+  String get recoveryResetContinue => 'Lanjutkan pengaturan ulang';
+
+  @override
+  String get recoveryResetConfirmTitle => 'Hapus brankas FiFe secara permanen?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Tindakan ini tidak dapat dibatalkan. Frasa pemulihan saat ini tidak akan berfungsi lagi dan semua perangkat Anda akan dihapus.';
+
+  @override
+  String get recoveryResetDelete => 'Hapus brankas dan mulai baru';
+
+  @override
+  String get recoveryResetPendingTitle => 'Menghapus brankas sebelumnya';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe sedang memverifikasi penghapusan cloud. Anda dapat menutup aplikasi dan kembali nanti.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'Verifikasi tidak dapat selesai sebelum $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'Penghapusan cloud memerlukan perhatian. Pulihkan akses dan izin penghapusan untuk penyimpanan tertaut, lalu coba lagi.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Masuk lagi untuk melanjutkan pengaturan ulang ini.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Masuk sebagai $email untuk melanjutkan pengaturan ulang ini.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Konfirmasikan pengaturan ulang untuk melanjutkan. FiFe akan memeriksa apakah prosesnya sudah dimulai.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Konfirmasi sebelumnya masih berlaku. Periksa lagi setelah kedaluwarsa sebelum memulai konfirmasi baru.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Periksa lagi setelah $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Kunci pemulihan baru tidak tersedia di perangkat ini. Lanjutkan di perangkat yang memulai pengaturan ulang. Jika kunci tersebut hilang, tunggu hingga penghapusan selesai, lalu masuk dan pilih “Frasa pemulihan hilang” lagi.';
+
+  @override
+  String get recoveryResetDiscard => 'Kembali ke halaman masuk';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Ini menghapus pengaturan pemulihan yang belum selesai di perangkat ini. Setelah masuk, Anda memerlukan frasa pemulihan baru atau harus mengatur ulang brankas lagi.';
+
+  @override
+  String get recoveryPhraseSaved =>
+      'Saya telah menyimpan frasa pemulihan baru.';
+
+  @override
+  String get recoveryResetStarting => 'Memulai pengaturan ulang…';
 }

@@ -1,5 +1,8 @@
 {
   "@@locale": "de",
+  "localSessionCleanupTitle": "Lokale Daten werden gelöscht",
+  "localSessionCleanupDescription": "Deine Sitzung wurde beendet. FiFe muss die lokalen Kontodaten vollständig löschen, bevor du dich erneut anmelden kannst. Deine Originaldateien bleiben erhalten. Versuche es erneut, um den Vorgang abzuschließen.",
+  "localSessionCleanupInProgress": "FiFe-Daten werden von diesem Gerät gelöscht…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "Keine Elemente.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Wiederherstellungsphrase verloren",
+  "lostRecoveryIntro": "Falls ein anderes Gerät noch angemeldet ist, exportiere dort deine Wiederherstellungsphrase, bevor du neu beginnst.",
+  "lostRecoveryDeleteConsequence": "Dein bisheriger FiFe-Tresor, gesicherte Dateien und Einstellungen verknüpfter Speicher werden dauerhaft gelöscht.",
+  "lostRecoveryDevicesConsequence": "Alle bisherigen Geräteregistrierungen werden entfernt.",
+  "lostRecoveryLogoutConsequence": "Andere Geräte melden sich ab und löschen ihre lokalen FiFe-Daten, sobald sie online bemerken, dass sie entfernt wurden.",
+  "lostRecoveryKeepConsequence": "Dein E-Mail-Konto, Abonnement, Originaldateien und außerhalb von FiFe exportierte Kopien bleiben erhalten.",
+  "lostRecoveryWaitConsequence": "Dein neuer Tresor bleibt gesperrt, bis die Löschung in der Cloud bestätigt ist. Das kann 24 Stunden oder länger dauern. Du kannst FiFe schließen und später fortfahren.",
+  "lostRecoveryNewPhraseConsequence": "Speichere nach Abschluss der Löschung eine neue Wiederherstellungsphrase aus 24 Wörtern, um deinen neuen Tresor zu verwenden.",
+  "recoveryResetContinue": "Mit Zurücksetzen fortfahren",
+  "recoveryResetConfirmTitle": "Deinen FiFe-Tresor dauerhaft löschen?",
+  "recoveryResetConfirmBody": "Dies lässt sich nicht rückgängig machen. Deine bisherige Wiederherstellungsphrase wird ungültig und alle deine Geräte werden entfernt.",
+  "recoveryResetDelete": "Tresor löschen und neu beginnen",
+  "recoveryResetPendingTitle": "Dein bisheriger Tresor wird gelöscht",
+  "recoveryResetPendingBody": "FiFe überprüft die Löschung in der Cloud. Du kannst die App schließen und später zurückkehren.",
+  "recoveryResetWaitUntil": "Die Überprüfung kann frühestens am {when} abgeschlossen werden.",
+  "recoveryResetStorageBlocked": "Die Löschung in der Cloud erfordert deine Mithilfe. Stelle Zugriffs- und Löschberechtigungen für deine verknüpften Speicher wieder her und versuche es erneut.",
+  "recoveryResetSignin": "Melde dich erneut an, um das Zurücksetzen fortzusetzen.",
+  "recoveryResetSigninAs": "Melde dich als {email} an, um das Zurücksetzen fortzusetzen.",
+  "recoveryResetNeedsConfirmation": "Bestätige das Zurücksetzen, um fortzufahren. FiFe prüft, ob es bereits begonnen hat.",
+  "recoveryResetConfirmationWait": "Eine frühere Bestätigung ist noch gültig. Prüfe nach ihrem Ablauf erneut, bevor du eine neue Bestätigung beginnst.",
+  "recoveryResetConfirmationUntil": "Prüfe nach {when} erneut.",
+  "recoveryResetMissingKeys": "Die neuen Wiederherstellungsschlüssel sind auf diesem Gerät nicht verfügbar. Fahre auf dem Gerät fort, das das Zurücksetzen gestartet hat. Falls diese Schlüssel verloren sind, warte auf den Abschluss der Löschung, melde dich an und wähle erneut „Wiederherstellungsphrase verloren“.",
+  "recoveryResetDiscard": "Zurück zur Anmeldung",
+  "recoveryResetDiscardBody": "Dadurch wird die unvollständige Wiederherstellung auf diesem Gerät gelöscht. Nach der Anmeldung brauchst du die neue Wiederherstellungsphrase oder musst den Tresor erneut zurücksetzen.",
+  "recoveryPhraseSaved": "Ich habe meine neue Wiederherstellungsphrase gespeichert.",
+  "recoveryResetStarting": "Zurücksetzen wird gestartet…"
 }

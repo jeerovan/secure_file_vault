@@ -1,5 +1,8 @@
 {
   "@@locale": "tr",
+  "localSessionCleanupTitle": "Yerel veriler temizleniyor",
+  "localSessionCleanupDescription": "Oturumunuz sona erdi. Tekrar giriş yapabilmeniz için FiFe'nin yerel hesap verilerini temizlemeyi tamamlaması gerekiyor. Orijinal dosyalarınız korunur. Tamamlamak için tekrar deneyin.",
+  "localSessionCleanupInProgress": "Bu cihazdaki FiFe verileri temizleniyor…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "Öğe yok.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Kurtarma ifademi kaybettim",
+  "lostRecoveryIntro": "Başka bir cihazda hâlâ oturum açıksa yeniden başlamadan önce kurtarma ifadenizi o cihazdan dışa aktarın.",
+  "lostRecoveryDeleteConsequence": "Mevcut FiFe kasanız, yedeklenen dosyalarınız ve bağlı depolama ayarlarınız kalıcı olarak silinecek.",
+  "lostRecoveryDevicesConsequence": "Mevcut tüm cihaz kayıtları kaldırılacak.",
+  "lostRecoveryLogoutConsequence": "Diğer cihazlar çevrimiçiyken kaldırıldıklarını fark ettiklerinde oturumu kapatacak ve yerel FiFe verilerini temizleyecek.",
+  "lostRecoveryKeepConsequence": "E-posta hesabınız, aboneliğiniz, özgün kaynak dosyalarınız ve FiFe dışına aktarılan kopyalar korunacak.",
+  "lostRecoveryWaitConsequence": "Buluttan silme doğrulanana kadar yeni kasanız kilitli kalacak. Bu işlem 24 saat veya daha uzun sürebilir. FiFe'ı kapatıp daha sonra devam edebilirsiniz.",
+  "lostRecoveryNewPhraseConsequence": "Silme tamamlandığında yeni kasanızı kullanmak için 24 kelimelik yeni bir kurtarma ifadesi kaydedin.",
+  "recoveryResetContinue": "Sıfırlamaya devam et",
+  "recoveryResetConfirmTitle": "FiFe kasanız kalıcı olarak silinsin mi?",
+  "recoveryResetConfirmBody": "Bu işlem geri alınamaz. Mevcut kurtarma ifadeniz çalışmayı durduracak ve tüm cihazlarınız kaldırılacak.",
+  "recoveryResetDelete": "Kasayı sil ve yeniden başla",
+  "recoveryResetPendingTitle": "Önceki kasanız siliniyor",
+  "recoveryResetPendingBody": "FiFe buluttan silmeyi doğruluyor. Uygulamayı kapatıp daha sonra dönebilirsiniz.",
+  "recoveryResetWaitUntil": "Doğrulama {when} öncesinde tamamlanamaz.",
+  "recoveryResetStorageBlocked": "Buluttan silme için müdahale gerekiyor. Bağlı depolamanızın erişim ve silme izinlerini geri yükleyip yeniden deneyin.",
+  "recoveryResetSignin": "Bu sıfırlamaya devam etmek için yeniden oturum açın.",
+  "recoveryResetSigninAs": "Bu sıfırlamaya devam etmek için {email} olarak oturum açın.",
+  "recoveryResetNeedsConfirmation": "Devam etmek için sıfırlamayı onaylayın. FiFe işlemin zaten başlayıp başlamadığını kontrol edecek.",
+  "recoveryResetConfirmationWait": "Önceki onay hâlâ geçerli. Yeni bir onay başlatmadan önce süresi dolduktan sonra tekrar kontrol edin.",
+  "recoveryResetConfirmationUntil": "{when} sonrasında tekrar kontrol edin.",
+  "recoveryResetMissingKeys": "Yeni kurtarma anahtarları bu cihazda kullanılamıyor. Sıfırlamayı başlatan cihazda devam edin. Bu anahtarlar kaybolduysa silmenin tamamlanmasını bekleyin, ardından oturum açıp tekrar “Kurtarma ifademi kaybettim” seçeneğini seçin.",
+  "recoveryResetDiscard": "Oturum açmaya dön",
+  "recoveryResetDiscardBody": "Bu işlem, bu cihazdaki tamamlanmamış kurtarma kurulumunu temizler. Oturum açtıktan sonra yeni kurtarma ifadesine veya kasayı yeniden sıfırlamaya ihtiyacınız olacak.",
+  "recoveryPhraseSaved": "Yeni kurtarma ifademi kaydettim.",
+  "recoveryResetStarting": "Sıfırlama başlatılıyor…"
 }

@@ -1,5 +1,8 @@
 {
   "@@locale": "fa",
+  "localSessionCleanupTitle": "پاک کردن داده‌های محلی",
+  "localSessionCleanupDescription": "نشست شما پایان یافته است. FiFe باید پیش از ورود دوباره، پاک کردن داده‌های محلی حساب را کامل کند. فایل‌های اصلی شما حفظ می‌شوند. برای تکمیل دوباره تلاش کنید.",
+  "localSessionCleanupInProgress": "در حال پاک کردن داده‌های FiFe از این دستگاه…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "موردی وجود ندارد.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "عبارت بازیابی را گم کرده‌ام",
+  "lostRecoveryIntro": "اگر دستگاه دیگری هنوز وارد حساب است، پیش از شروع دوباره عبارت بازیابی را از آن صادر کنید.",
+  "lostRecoveryDeleteConsequence": "خزانهٔ فعلی FiFe، فایل‌های پشتیبان‌گیری‌شده و تنظیمات فضای ذخیره‌سازی متصل برای همیشه حذف می‌شوند.",
+  "lostRecoveryDevicesConsequence": "ثبت همهٔ دستگاه‌های فعلی حذف خواهد شد.",
+  "lostRecoveryLogoutConsequence": "دستگاه‌های دیگر وقتی آنلاین شوند و حذف شدن خود را تشخیص دهند، از حساب خارج شده و داده‌های محلی FiFe را پاک می‌کنند.",
+  "lostRecoveryKeepConsequence": "حساب ایمیل، اشتراک، فایل‌های اصلی و نسخه‌های صادرشده خارج از FiFe حفظ می‌شوند.",
+  "lostRecoveryWaitConsequence": "خزانهٔ جدید تا تأیید حذف ابری قفل می‌ماند. این کار ممکن است ۲۴ ساعت یا بیشتر طول بکشد. می‌توانید FiFe را ببندید و بعداً ادامه دهید.",
+  "lostRecoveryNewPhraseConsequence": "پس از پایان حذف، برای استفاده از خزانهٔ جدید یک عبارت بازیابی تازهٔ ۲۴ کلمه‌ای ذخیره کنید.",
+  "recoveryResetContinue": "ادامهٔ بازنشانی",
+  "recoveryResetConfirmTitle": "خزانهٔ FiFe برای همیشه حذف شود؟",
+  "recoveryResetConfirmBody": "این کار برگشت‌پذیر نیست. عبارت بازیابی فعلی دیگر کار نمی‌کند و همهٔ دستگاه‌هایتان حذف می‌شوند.",
+  "recoveryResetDelete": "حذف خزانه و شروع دوباره",
+  "recoveryResetPendingTitle": "در حال حذف خزانهٔ قبلی",
+  "recoveryResetPendingBody": "FiFe در حال تأیید حذف ابری است. می‌توانید برنامه را ببندید و بعداً برگردید.",
+  "recoveryResetWaitUntil": "تأیید نمی‌تواند پیش از {when} پایان یابد.",
+  "recoveryResetStorageBlocked": "حذف ابری به رسیدگی نیاز دارد. دسترسی و مجوز حذف فضای ذخیره‌سازی متصل را بازگردانید و دوباره تلاش کنید.",
+  "recoveryResetSignin": "برای ادامهٔ بازنشانی دوباره وارد شوید.",
+  "recoveryResetSigninAs": "برای ادامهٔ بازنشانی با {email} وارد شوید.",
+  "recoveryResetNeedsConfirmation": "برای ادامه، بازنشانی را تأیید کنید. FiFe بررسی می‌کند که آیا از قبل شروع شده است.",
+  "recoveryResetConfirmationWait": "تأیید قبلی هنوز معتبر است. پیش از شروع تأیید جدید، پس از پایان اعتبار آن دوباره بررسی کنید.",
+  "recoveryResetConfirmationUntil": "پس از {when} دوباره بررسی کنید.",
+  "recoveryResetMissingKeys": "کلیدهای بازیابی جدید روی این دستگاه موجود نیستند. در دستگاهی که بازنشانی را آغاز کرده ادامه دهید. اگر کلیدها گم شده‌اند، منتظر پایان حذف بمانید، سپس وارد شوید و دوباره «عبارت بازیابی را گم کرده‌ام» را انتخاب کنید.",
+  "recoveryResetDiscard": "بازگشت به ورود",
+  "recoveryResetDiscardBody": "این کار تنظیمات ناتمام بازیابی را روی این دستگاه پاک می‌کند. پس از ورود به عبارت بازیابی جدید یا بازنشانی دوبارهٔ خزانه نیاز دارید.",
+  "recoveryPhraseSaved": "عبارت بازیابی جدیدم را ذخیره کرده‌ام.",
+  "recoveryResetStarting": "در حال شروع بازنشانی…"
 }

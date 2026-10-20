@@ -1,11 +1,15 @@
 import 'dart:convert';
 
 import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'support/sync_fixture.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   test('unauthorized request refreshes once and retries with new token',
       () async {
     var token = 'expired';
@@ -82,5 +86,56 @@ void main() {
     expect(response['success'], 0);
     expect(requests, 1);
     expect(refreshes, 1);
+  });
+
+  test(
+      'session proof stays scoped to authenticated HTTPS vault bootstrap requests',
+      () async {
+    final fixture = await SyncFixture.create();
+    addTearDown(fixture.dispose);
+    fixture.secrets[AppString.sessionCookie.string] = 'fixture-cookie';
+    await ModelSetting.set(
+        AppString.vaultGeneration.string, 'fixture-generation');
+    final seen = <http.Request>[];
+    BackendApi api(String base, {String? email = 'fixture@example.test'}) =>
+        BackendApi(
+          httpClient: MockClient((request) async {
+            seen.add(request);
+            return http.Response(jsonEncode({'success': 1}), 200);
+          }),
+          baseUrlOverride: base,
+          accessTokenProvider: () async => 'fixture-token',
+          signedEmailIdProvider: () async => email,
+          deviceUuidProvider: () async => 'fixture-device',
+        );
+    final https = api('https://api.example.test/api');
+    for (final endpoint in [
+      '/keys',
+      '/devices',
+      '/recovery-reset/status',
+      '/recovery-reset/prepare',
+      '/recovery-reset/confirm'
+    ]) {
+      await https.get(endpoint: endpoint);
+      expect(seen.last.headers['x-fife-session'], 'fixture-cookie');
+      expect(seen.last.headers['x-fife-vault-protocol'], '1');
+      expect(
+          seen.last.headers['x-fife-vault-generation'], 'fixture-generation');
+    }
+    for (final endpoint in [
+      '/sync',
+      '/storages',
+      '/b2/get-upload-url',
+      '/recovery-reset-unrelated'
+    ]) {
+      await https.get(endpoint: endpoint);
+      expect(seen.last.headers.containsKey('x-fife-session'), isFalse);
+    }
+    await api('https://api.example.test/api', email: null)
+        .get(endpoint: '/keys');
+    expect(seen.last.headers.containsKey('x-fife-session'), isFalse);
+    expect(seen.last.headers.containsKey('authorization'), isFalse);
+    await api('http://api.example.test/api').get(endpoint: '/keys');
+    expect(seen.last.headers.containsKey('x-fife-session'), isFalse);
   });
 }

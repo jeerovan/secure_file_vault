@@ -1,16 +1,22 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import { authorize, addAccount } from '$lib/server/backblaze';
 import { ErrorCode } from '$lib/server/db/keys';
 import { getDb } from '$lib/server/db';
+import { withDeviceWrite } from '$lib/server/deviceAccess';
+import {
+	BackblazeCredentialError,
+	backblazeCredentialsFromAuthorization
+} from '$lib/server/backblazeCredentials';
+import { verifyGenericS3Credentials } from '$lib/server/s3';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	let body;
 
@@ -20,55 +26,26 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
-	const { app_id, app_key } = body;
+	const { app_id, app_key } = body ?? {};
 
-	if (!app_id || !app_key) {
+	if (typeof app_id !== 'string' || !app_id.trim() || typeof app_key !== 'string' || !app_key) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	const { message, data } = await authorize(app_id, app_key); // TODO Should be checked on user device also
-	if (message) {
-		// TODO flag user with attempt count
-		return json({ success: 0, message });
-	}
-	if (data) {
-		const {
-			apiInfo: {
-				storageApi: {
-					allowed: { buckets, capabilities, namePrefix }
-				}
-			}
-		} = data;
-		if (buckets == null || buckets.length == 0) {
-			return json({ success: 0, message: ErrorCode.NO_BUCKETS });
-		} else if (buckets.length > 1) {
-			return json({ success: 0, message: ErrorCode.MULTIPLE_BUCKETS });
-		} else {
-			const { id, name } = buckets[0];
-			if (id == null || name == null) {
-				return json({ success: 0, message: ErrorCode.BUCKET_INFO });
-			}
+	const { data } = await authorize(app_id, app_key);
+	if (!data) return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });
+	try {
+		const credentials = backblazeCredentialsFromAuthorization(app_id, app_key, data);
+		if (!(await verifyGenericS3Credentials(credentials))) {
+			return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });
 		}
-		if (namePrefix != null) {
-			return json({ success: 0, message: ErrorCode.NAMEPREFIX_EXIST });
+		return await withDeviceWrite(db, authUser, (tx) =>
+			addAccount(tx, authUser.userId!, app_id, app_key, data)
+		);
+	} catch (error) {
+		if (error instanceof BackblazeCredentialError) {
+			return json({ success: 0, message: error.code });
 		}
-		const required = [
-			'deleteFiles',
-			'writeBuckets',
-			'readBuckets',
-			'readFiles',
-			'shareFiles',
-			'writeFiles',
-			'listFiles'
-		];
-		const allExists = required.every((item) => capabilities.includes(item));
-		if (allExists) {
-			const result = await addAccount(db, authUser.userId!, app_id, app_key, data);
-			return result;
-		} else {
-			return json({ success: 0, message: ErrorCode.CREDENTIALS_INCAPABLE });
-		}
-	} else {
-		return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });
+		throw error;
 	}
 };

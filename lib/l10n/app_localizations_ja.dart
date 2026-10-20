@@ -9,6 +9,16 @@ class AppLocalizationsJa extends AppLocalizations {
   AppLocalizationsJa([String locale = 'ja']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'ローカルデータを消去';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'セッションが終了しました。再度ログインする前に、FiFeがローカルのアカウントデータの消去を完了する必要があります。元のファイルは保持されます。もう一度お試しください。';
+
+  @override
+  String get localSessionCleanupInProgress => 'このデバイスからFiFeデータを消去しています…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -738,4 +748,101 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get noItems => '項目がありません。';
+
+  @override
+  String get lostRecoveryPhrase => '復元フレーズを紛失した場合';
+
+  @override
+  String get lostRecoveryIntro =>
+      '別の端末でまだログインしている場合は、最初からやり直す前に、その端末から復元フレーズをエクスポートしてください。';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      '現在のFiFe保管庫、バックアップ済みファイル、連携ストレージの設定は完全に削除されます。';
+
+  @override
+  String get lostRecoveryDevicesConsequence => '既存の端末登録はすべて削除されます。';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      '他の端末は、オンライン時に登録が削除されたことを検出すると、ログアウトしてFiFeのローカルデータを消去します。';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'メールアカウント、サブスクリプション、元のファイル、FiFe外にエクスポートしたコピーは保持されます。';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'クラウド上の削除が確認されるまで、新しい保管庫はロックされます。24時間以上かかる場合があります。FiFeを閉じて後で再開できます。';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      '削除が完了したら、新しい保管庫を使うために24語の新しい復元フレーズを保存してください。';
+
+  @override
+  String get recoveryResetContinue => 'リセットに進む';
+
+  @override
+  String get recoveryResetConfirmTitle => 'FiFe保管庫を完全に削除しますか？';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'この操作は取り消せません。現在の復元フレーズは使えなくなり、すべての端末が削除されます。';
+
+  @override
+  String get recoveryResetDelete => '保管庫を削除して最初から始める';
+
+  @override
+  String get recoveryResetPendingTitle => '以前の保管庫を削除しています';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFeがクラウド上の削除を確認しています。アプリを閉じて後で戻ることができます。';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return '確認は$whenより前には完了しません。';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'クラウド上の削除に対応が必要です。連携ストレージへのアクセスと削除権限を復元してから、もう一度お試しください。';
+
+  @override
+  String get recoveryResetSignin => 'このリセットを再開するには、もう一度ログインしてください。';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'このリセットを再開するには、$emailでログインしてください。';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'リセットを確定して続行してください。FiFeはすでに開始されているか確認します。';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      '以前の確認がまだ有効です。有効期限が切れてから再度確認し、新しい確認を始めてください。';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return '$when以降にもう一度確認してください。';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      '新しい復元キーはこの端末で利用できません。リセットを開始した端末で続行してください。キーを紛失した場合は、削除の完了を待ってログインし、再び「復元フレーズを紛失した場合」を選択してください。';
+
+  @override
+  String get recoveryResetDiscard => 'ログインに戻る';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'この端末の未完了の復元設定を消去します。ログイン後、新しい復元フレーズを入力するか、保管庫を再度リセットする必要があります。';
+
+  @override
+  String get recoveryPhraseSaved => '新しい復元フレーズを保存しました。';
+
+  @override
+  String get recoveryResetStarting => 'リセットを開始しています…';
 }

@@ -11,6 +11,7 @@ import '../common_widgets.dart';
 import '../../utils/enums.dart';
 import '../../storage/storage_secure.dart';
 import '../../utils/utils_crypto.dart';
+import '../../services/service_session_work.dart';
 
 class PageAccessKeyNotice extends StatefulWidget {
   const PageAccessKeyNotice({super.key});
@@ -33,6 +34,10 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   }
 
   Future<void> generateKeys() async {
+    return SessionWork.run(_generateKeys);
+  }
+
+  Future<void> _generateKeys() async {
     String? userId = await getSignedInUserId();
     if (userId == null) return;
     setState(() {

@@ -2,8 +2,19 @@ name = "fife"
 compatibility_date = "2024-04-22"
 compatibility_flags = [ "nodejs_compat" ]
 
-main = ".svelte-kit/cloudflare/_worker.js"
+main = "worker.ts"
 preview_urls = false
+
+[alias]
+"@aws-sdk/xml-builder" = "@aws-sdk/xml-builder/dist-cjs/index.js"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
+[vars]
+RECOVERY_RESET_ENABLED = "false"
+RECOVERY_WORKER_READY = "false"
+RECOVERY_RESET_EMAILS = ""
 
 [assets]
 directory = ".svelte-kit/cloudflare"

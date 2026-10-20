@@ -1,5 +1,8 @@
 {
   "@@locale": "ar",
+  "localSessionCleanupTitle": "مسح البيانات المحلية",
+  "localSessionCleanupDescription": "انتهت جلستك. يحتاج FiFe إلى إكمال مسح بيانات الحساب المحلية قبل تسجيل الدخول مرة أخرى. ستبقى ملفاتك الأصلية محفوظة. حاول مرة أخرى للإكمال.",
+  "localSessionCleanupInProgress": "جارٍ مسح بيانات FiFe من هذا الجهاز…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "لا توجد عناصر.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "فقدت عبارة الاسترداد",
+  "lostRecoveryIntro": "إذا كان جهاز آخر لا يزال مسجّلاً للدخول، فصدّر عبارة الاسترداد منه قبل البدء من جديد.",
+  "lostRecoveryDeleteConsequence": "ستُحذف خزنة FiFe الحالية والملفات المنسوخة احتياطياً وإعدادات التخزين المرتبط نهائياً.",
+  "lostRecoveryDevicesConsequence": "ستُزال جميع تسجيلات الأجهزة الحالية.",
+  "lostRecoveryLogoutConsequence": "ستسجّل الأجهزة الأخرى الخروج وتمسح بيانات FiFe المحلية عندما تكتشف إزالتها أثناء اتصالها بالإنترنت.",
+  "lostRecoveryKeepConsequence": "سيُحتفظ بحساب بريدك الإلكتروني واشتراكك والملفات الأصلية والنسخ المصدّرة خارج FiFe.",
+  "lostRecoveryWaitConsequence": "ستبقى خزنتك الجديدة مقفلة حتى يتم التحقق من الحذف السحابي. قد يستغرق ذلك 24 ساعة أو أكثر. يمكنك إغلاق FiFe والمتابعة لاحقاً.",
+  "lostRecoveryNewPhraseConsequence": "بعد اكتمال الحذف، احفظ عبارة استرداد جديدة من 24 كلمة لاستخدام خزنتك الجديدة.",
+  "recoveryResetContinue": "متابعة إعادة التعيين",
+  "recoveryResetConfirmTitle": "هل تريد حذف خزنة FiFe نهائياً؟",
+  "recoveryResetConfirmBody": "لا يمكن التراجع عن ذلك. ستتوقف عبارة الاسترداد الحالية عن العمل وستُزال جميع أجهزتك.",
+  "recoveryResetDelete": "حذف الخزنة والبدء من جديد",
+  "recoveryResetPendingTitle": "جارٍ حذف خزنتك السابقة",
+  "recoveryResetPendingBody": "يتحقق FiFe من الحذف السحابي. يمكنك إغلاق التطبيق والعودة لاحقاً.",
+  "recoveryResetWaitUntil": "لا يمكن إكمال التحقق قبل {when}.",
+  "recoveryResetStorageBlocked": "يتطلب الحذف السحابي تدخلاً. أعد صلاحيات الوصول والحذف للتخزين المرتبط ثم حاول مجدداً.",
+  "recoveryResetSignin": "سجّل الدخول مجدداً لمتابعة إعادة التعيين.",
+  "recoveryResetSigninAs": "سجّل الدخول باسم {email} لمتابعة إعادة التعيين.",
+  "recoveryResetNeedsConfirmation": "أكّد إعادة التعيين للمتابعة. سيتحقق FiFe مما إذا كانت قد بدأت بالفعل.",
+  "recoveryResetConfirmationWait": "لا يزال التأكيد السابق صالحاً. تحقّق مجدداً بعد انتهاء صلاحيته قبل بدء تأكيد جديد.",
+  "recoveryResetConfirmationUntil": "تحقّق مجدداً بعد {when}.",
+  "recoveryResetMissingKeys": "مفاتيح الاسترداد الجديدة غير متوفرة على هذا الجهاز. تابع على الجهاز الذي بدأ إعادة التعيين. إذا فُقدت تلك المفاتيح، فانتظر اكتمال الحذف ثم سجّل الدخول واختر «فقدت عبارة الاسترداد» مجدداً.",
+  "recoveryResetDiscard": "العودة إلى تسجيل الدخول",
+  "recoveryResetDiscardBody": "سيؤدي ذلك إلى مسح إعداد الاسترداد غير المكتمل على هذا الجهاز. ستحتاج إلى عبارة الاسترداد الجديدة أو إعادة تعيين الخزنة مجدداً بعد تسجيل الدخول.",
+  "recoveryPhraseSaved": "لقد حفظت عبارة الاسترداد الجديدة.",
+  "recoveryResetStarting": "جارٍ بدء إعادة التعيين…"
 }

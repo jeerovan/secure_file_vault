@@ -1,5 +1,8 @@
 {
   "@@locale": "es",
+  "localSessionCleanupTitle": "Borrando datos locales",
+  "localSessionCleanupDescription": "Tu sesión ha finalizado. FiFe debe terminar de borrar los datos locales de la cuenta antes de que puedas iniciar sesión de nuevo. Tus archivos originales se conservan. Inténtalo de nuevo para terminar.",
+  "localSessionCleanupInProgress": "Borrando los datos de FiFe de este dispositivo…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "No hay elementos.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Perdí la frase de recuperación",
+  "lostRecoveryIntro": "Si otro dispositivo sigue conectado, exporta tu frase de recuperación desde él antes de empezar de nuevo.",
+  "lostRecoveryDeleteConsequence": "Tu bóveda FiFe actual, los archivos respaldados y la configuración del almacenamiento vinculado se eliminarán permanentemente.",
+  "lostRecoveryDevicesConsequence": "Se eliminarán todos los registros de dispositivos actuales.",
+  "lostRecoveryLogoutConsequence": "Los otros dispositivos cerrarán sesión y borrarán sus datos locales de FiFe cuando detecten su eliminación al conectarse a internet.",
+  "lostRecoveryKeepConsequence": "Se conservarán tu cuenta de correo, suscripción, archivos originales y copias exportadas fuera de FiFe.",
+  "lostRecoveryWaitConsequence": "Tu nueva bóveda permanecerá bloqueada hasta verificar la eliminación en la nube. Esto puede tardar 24 horas o más. Puedes cerrar FiFe y continuar más tarde.",
+  "lostRecoveryNewPhraseConsequence": "Cuando termine la eliminación, guarda una nueva frase de recuperación de 24 palabras para usar tu nueva bóveda.",
+  "recoveryResetContinue": "Continuar con el restablecimiento",
+  "recoveryResetConfirmTitle": "¿Eliminar permanentemente tu bóveda FiFe?",
+  "recoveryResetConfirmBody": "Esta acción no se puede deshacer. Tu frase de recuperación actual dejará de funcionar y se eliminarán todos tus dispositivos.",
+  "recoveryResetDelete": "Eliminar bóveda y empezar de nuevo",
+  "recoveryResetPendingTitle": "Eliminando tu bóveda anterior",
+  "recoveryResetPendingBody": "FiFe está verificando la eliminación en la nube. Puedes cerrar la app y volver más tarde.",
+  "recoveryResetWaitUntil": "La verificación no puede terminar antes de {when}.",
+  "recoveryResetStorageBlocked": "La eliminación en la nube requiere atención. Restablece el acceso y los permisos de eliminación del almacenamiento vinculado e inténtalo de nuevo.",
+  "recoveryResetSignin": "Inicia sesión de nuevo para continuar el restablecimiento.",
+  "recoveryResetSigninAs": "Inicia sesión como {email} para continuar el restablecimiento.",
+  "recoveryResetNeedsConfirmation": "Confirma el restablecimiento para continuar. FiFe comprobará si ya se ha iniciado.",
+  "recoveryResetConfirmationWait": "Una confirmación anterior sigue siendo válida. Vuelve a comprobarlo cuando caduque antes de iniciar una nueva confirmación.",
+  "recoveryResetConfirmationUntil": "Vuelve a comprobarlo después de {when}.",
+  "recoveryResetMissingKeys": "Las nuevas claves de recuperación no están disponibles en este dispositivo. Continúa en el dispositivo que inició el restablecimiento. Si se perdieron, espera a que termine la eliminación, inicia sesión y vuelve a elegir «Perdí la frase de recuperación».",
+  "recoveryResetDiscard": "Volver al inicio de sesión",
+  "recoveryResetDiscardBody": "Esto borra la configuración de recuperación incompleta de este dispositivo. Tras iniciar sesión necesitarás la nueva frase de recuperación o restablecer la bóveda otra vez.",
+  "recoveryPhraseSaved": "He guardado mi nueva frase de recuperación.",
+  "recoveryResetStarting": "Iniciando restablecimiento…"
 }

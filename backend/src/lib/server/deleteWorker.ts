@@ -1,5 +1,6 @@
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { authenticate, deleteFileVersion } from './backblaze';
+import { authenticate } from './backblaze';
+import { deleteBackblazeS3Version } from './backblazeS3';
 import {
 	getCredentialByStorageId,
 	getUser,
@@ -11,6 +12,9 @@ import {
 import { CredentialKeys, FileKeys, PartKeys, StorageProvider, UserKeys } from './db/keys';
 import type { Db, Tx } from './db';
 import { createGenericS3Client, type GenericS3Credentials } from './s3';
+import { vaultState } from './db/schema';
+import { eq } from 'drizzle-orm';
+import { vaultObjectPrefix } from './recoveryStorage';
 
 export async function deleteFileFromStorage(db: Db | Tx, fileRow: Record<string, unknown>) {
 	const parts = fileRow[FileKeys.PARTS] as number;
@@ -24,10 +28,11 @@ export async function deleteFileFromStorage(db: Db | Tx, fileRow: Record<string,
 	if (storageId == null || userRow == undefined) return;
 	const credential = await getCredentialByStorageId(db, userId, storageId);
 	const supabaseId = userRow[UserKeys.REMOTE_AUTH_ID];
+	const [state] = await db.select().from(vaultState).where(eq(vaultState.userId, userId)).limit(1);
+	const prefix = vaultObjectPrefix(supabaseId, state?.generation ?? 'legacy');
 	let allRemoved = true;
-	for (const index in partNumbers) {
-		const partNumber = partNumbers[index];
-		const file_name = `${supabaseId}/${fileHash}_${partNumber}`;
+	for (const partNumber of partNumbers) {
+		const file_name = `${prefix}${fileHash}_${partNumber}`;
 		const filePart = await getUserFilePart(db, userId, fileId, partNumber);
 		if (filePart && filePart[PartKeys.PART_SIZE] > 0) {
 			if (providerId == StorageProvider.FIFE || providerId == StorageProvider.BACKBLAZE) {
@@ -38,17 +43,7 @@ export async function deleteFileFromStorage(db: Db | Tx, fileRow: Record<string,
 				if (!authData) {
 					return;
 				}
-				const response = await deleteFileVersion({
-					apiUrl: authData.apiUrl,
-					authorizationToken: authData.authorizationToken,
-					fileName: file_name,
-					fileId: b2_id
-				});
-				const result = await response.json();
-				if (result.success === 1) {
-					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
-					await resetUserFilePart(db, userId, fileId, partNumber);
-				} else if (result.message == 'file_not_found') {
+				if (await deleteBackblazeS3Version(authData, file_name, b2_id)) {
 					await updateStorageUsedSize(db, storageId, userId, filePart[PartKeys.PART_SIZE], false);
 					await resetUserFilePart(db, userId, fileId, partNumber);
 				} else {
@@ -59,8 +54,9 @@ export async function deleteFileFromStorage(db: Db | Tx, fileRow: Record<string,
 					appId: string;
 					appKey: string;
 					bucketName: string;
+					accountId: string;
 				};
-				const accountId = credential[CredentialKeys.ID];
+				const accountId = credsData.accountId;
 				const s3Endpoint = `https://${accountId}.r2.cloudflarestorage.com`;
 				const region = 'auto';
 				const s3Client = new S3Client({

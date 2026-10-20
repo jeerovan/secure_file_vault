@@ -8,6 +8,8 @@ import type { KVNamespace } from '@cloudflare/workers-types';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { getLocalTestIdentity, tokensMatch } from './localTest';
+import { authorizeRegisteredDevice } from './deviceAccess';
+import { authorizeVaultBootstrap } from './vaultBootstrap';
 
 export interface AuthUser {
 	authorized: boolean;
@@ -17,6 +19,46 @@ export interface AuthUser {
 	deviceUuid?: string;
 	message?: number;
 	localTesting?: boolean;
+	reason?:
+		| 'device_revoked'
+		| 'account_removed'
+		| 'vault_replaced'
+		| 'vault_reset_pending'
+		| 'client_update_required';
+	vaultProtocol?: number;
+	requestedVaultGeneration?: string;
+	vaultGeneration?: string;
+	objectPrefix?: string;
+}
+
+/** Bootstrap routes use requireAuth; vault data requires live membership. */
+export async function requireDeviceAuth(
+	db: Db | Tx,
+	request: Request,
+	kv?: KVNamespace
+): Promise<AuthUser> {
+	const auth = {
+		...(await requireAuth(db, request, kv)),
+		vaultProtocol: request.headers.get('x-fife-vault-protocol') === '1' ? 1 : 0,
+		requestedVaultGeneration: request.headers.get('x-fife-vault-generation') ?? undefined
+	};
+	if (
+		!auth.authorized &&
+		auth.message === ErrorCode.NO_USER &&
+		auth.remoteAuthId &&
+		request.headers.get('device_uuid')
+	) {
+		return { ...auth, reason: 'account_removed' };
+	}
+	return authorizeRegisteredDevice(db, auth);
+}
+
+export async function requireBootstrapAuth(
+	db: Db | Tx,
+	request: Request,
+	kv?: KVNamespace
+): Promise<AuthUser> {
+	return authorizeVaultBootstrap(db, await requireAuth(db, request, kv), request);
 }
 
 /**

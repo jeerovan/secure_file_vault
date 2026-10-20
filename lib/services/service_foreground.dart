@@ -9,6 +9,7 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
 import 'service_events.dart';
+import 'service_session_cleanup.dart';
 
 class ServiceForeground {
   ServiceForeground._();
@@ -86,6 +87,10 @@ class ServiceForeground {
   }
 
   void _onTaskData(Object data) {
+    if (data == sessionStateChangedMessage) {
+      unawaited(SessionCleanup.instance.observeExternalState());
+      return;
+    }
     final isRunning = ForegroundSyncStateMessage.decode(data);
     if (isRunning == null) return;
     EventStream().publish(AppEvent(

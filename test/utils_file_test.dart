@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -6,6 +7,63 @@ import 'package:crypto/crypto.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/utils_file.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+
+class _EarlyUploadResponse extends http.BaseClient {
+  _EarlyUploadResponse(this.failTransport);
+  final bool failTransport;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    if (failTransport) {
+      throw const SocketException('Connection failed before body');
+    }
+    return http.StreamedResponse(const Stream<List<int>>.empty(), 403);
+  }
+}
+
+class _SlowUploadResponse extends http.BaseClient {
+  int received = 0;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    await for (final chunk in request.finalize()) {
+      received += chunk.length;
+      await Future<void>.delayed(const Duration(milliseconds: 30));
+    }
+    return http.StreamedResponse(const Stream<List<int>>.empty(), 200);
+  }
+}
+
+class _StalledUploadResponse extends http.BaseClient {
+  final response = Completer<http.StreamedResponse>();
+  StreamSubscription<List<int>>? body;
+  int received = 0;
+  bool aborted = false;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    body = request.finalize().listen((chunk) {
+      received += chunk.length;
+      body!.pause();
+    });
+    if (request is http.Abortable) {
+      request.abortTrigger?.then((_) {
+        aborted = true;
+        close();
+      });
+    }
+    return response.future;
+  }
+
+  @override
+  void close() {
+    unawaited(body?.cancel());
+    if (!response.isCompleted) {
+      response.completeError(const SocketException('Stalled upload closed'));
+    }
+  }
+}
 
 void main() {
   group('FileSplitter', () {
@@ -17,12 +75,36 @@ void main() {
       (size: 25 * mib + 1, expected: <int>[25 * mib + 1]),
       (size: 35 * mib, expected: <int>[25 * mib, 10 * mib]),
       (size: 50 * mib + 1, expected: <int>[25 * mib, 25 * mib + 1]),
+      (size: 35 * mib - 1, expected: <int>[35 * mib - 1]),
+      (size: 500 * mib, expected: List<int>.filled(20, 25 * mib)),
+      (
+        size: 500 * mib + 1,
+        expected: <int>[...List<int>.filled(9, 50 * mib), 50 * mib + 1]
+      ),
+      (
+        size: 510 * mib - 1,
+        expected: <int>[...List<int>.filled(9, 50 * mib), 60 * mib - 1]
+      ),
+      (size: 1000 * mib, expected: List<int>.filled(20, 50 * mib)),
+      (
+        size: 1000 * mib + 1,
+        expected: <int>[...List<int>.filled(11, 90 * mib), 10 * mib + 1]
+      ),
+      (
+        size: 1090 * mib - 1,
+        expected: <int>[...List<int>.filled(11, 90 * mib), 100 * mib - 1]
+      ),
+      (
+        size: 1090 * mib,
+        expected: <int>[...List<int>.filled(12, 90 * mib), 10 * mib]
+      ),
     ]) {
       test('covers all ${sample.size} bytes without gaps or overlaps', () {
         final splitter = FileSplitter(fileSize: sample.size);
         expect(splitter.partSizes, sample.expected);
         var position = 0;
         for (var part = 1; part <= splitter.partSizes.length; part++) {
+          expect(splitter.partSizes[part - 1], lessThan(100 * mib));
           final range = splitter.getStartEndIndexForPart(part);
           expect(range.start, position);
           expect(range.end, greaterThan(range.start));
@@ -168,6 +250,93 @@ void main() {
       }
     } finally {
       await server.close(force: true);
+      await directory.delete(recursive: true);
+    }
+  });
+
+  for (final failTransport in [true, false]) {
+    test(
+        'upload handles early ${failTransport ? 'connection failure' : 'HTTP rejection'} without hanging',
+        () async {
+      final directory =
+          await Directory.systemTemp.createTemp('fife-early-upload-');
+      final source = File('${directory.path}/source')
+        ..writeAsBytesSync([1, 2, 3]);
+      final client = _EarlyUploadResponse(failTransport);
+      try {
+        final result = await uploadFileStream(
+          method: 'PUT',
+          file: source,
+          url: 'https://bucket.example.test/part',
+          headers: null,
+          httpClient: client,
+          timeout: const Duration(milliseconds: 100),
+        ).timeout(const Duration(seconds: 1));
+        expect(result.succeeded, isFalse);
+        expect(result.isRetryable, isTrue);
+        expect(
+            result.failureKind,
+            failTransport
+                ? UploadFailureKind.transport
+                : UploadFailureKind.authorization);
+      } finally {
+        client.close();
+        await directory.delete(recursive: true);
+      }
+    });
+  }
+
+  test('upload inactivity timeout also covers a paused HTTP body', () async {
+    final directory =
+        await Directory.systemTemp.createTemp('fife-stalled-upload-');
+    final source = File('${directory.path}/source')
+      ..writeAsBytesSync(List<int>.filled(512 * 1024, 7));
+    final client = _StalledUploadResponse();
+    try {
+      final result = await uploadFileStream(
+        method: 'PUT',
+        file: source,
+        url: 'https://bucket.example.test/part',
+        headers: null,
+        httpClient: client,
+        timeout: const Duration(milliseconds: 100),
+      ).timeout(const Duration(seconds: 1));
+      expect(result.succeeded, isFalse);
+      expect(result.failureKind, UploadFailureKind.transport);
+      expect(result.isRetryable, isTrue);
+      expect(client.received, greaterThan(0));
+      expect(client.received, lessThan(await source.length()));
+      expect(client.aborted, isTrue);
+      expect(await source.length(), 512 * 1024,
+          reason: 'A timed-out upload must preserve its retry source');
+    } finally {
+      client.close();
+      await directory.delete(recursive: true);
+    }
+  });
+
+  test('upload allows continuous progress longer than the inactivity timeout',
+      () async {
+    final directory =
+        await Directory.systemTemp.createTemp('fife-slow-upload-');
+    final source = File('${directory.path}/source')
+      ..writeAsBytesSync(List<int>.filled(512 * 1024, 7));
+    final client = _SlowUploadResponse();
+    final elapsed = Stopwatch()..start();
+    try {
+      final result = await uploadFileStream(
+        method: 'PUT',
+        file: source,
+        url: 'https://bucket.example.test/part',
+        headers: null,
+        httpClient: client,
+        timeout: const Duration(milliseconds: 100),
+      );
+      expect(result.succeeded, isTrue);
+      expect(client.received, await source.length());
+      expect(elapsed.elapsedMilliseconds, greaterThan(100));
+    } finally {
+      client.close();
       await directory.delete(recursive: true);
     }
   });

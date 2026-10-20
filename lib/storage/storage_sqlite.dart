@@ -10,6 +10,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../utils/common.dart';
 import '../models/model_setting.dart';
 import '../services/service_logger.dart';
+import '../services/service_session_work.dart';
 
 enum SyncPageMutationType { upsertIfNewer, deleteIfNotNewer, updateExisting }
 
@@ -50,6 +51,7 @@ class StorageSqlite {
 
   // Track execution mode to handle background isolate behaviors safely
   static ExecutionMode _currentMode = ExecutionMode.mainApp;
+  static ExecutionMode get executionMode => _currentMode;
 
   late AppLogger logger;
   StorageSqlite._init() {
@@ -79,8 +81,10 @@ class StorageSqlite {
   DatabaseExecutor? get _transactionExecutor =>
       Zone.current[_transactionExecutorKey] as DatabaseExecutor?;
 
-  Future<DatabaseExecutor> get executor async =>
-      _transactionExecutor ?? await database;
+  Future<DatabaseExecutor> get executor async {
+    await SessionWork.checkpoint();
+    return _transactionExecutor ?? await database;
+  }
 
   Future<T> runInTransaction<T>(Future<T> Function() action) async {
     if (_transactionExecutor != null) return action();
@@ -94,11 +98,26 @@ class StorageSqlite {
   ) {
     return db.transaction(
       (txn) => runZoned(
-        action,
+        () async {
+          await SessionWork.checkpoint();
+          final result = await action();
+          await SessionWork.checkpoint();
+          return result;
+        },
         zoneValues: {_transactionExecutorKey: txn},
       ),
       exclusive: true,
     );
+  }
+
+  static Future<T> _guardedTransaction<T>(
+      Database db, Future<T> Function(Transaction) action) {
+    return db.transaction((txn) async {
+      await SessionWork.checkpoint();
+      final result = await action(txn);
+      await SessionWork.checkpoint();
+      return result;
+    });
   }
 
   Future<Database> _initDB(String dbFileName) async {
@@ -377,23 +396,29 @@ class StorageSqlite {
   }
 
   Future<int> insert(String tableName, Map<String, dynamic> row) async {
-    final db = await executor;
-    return db.insert(
-      tableName,
-      row,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return runInTransaction(() async {
+      final db = await executor;
+      return db.insert(
+        tableName,
+        row,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
   }
 
   Future<int> update(
       String tableName, Map<String, dynamic> row, dynamic id) async {
-    final db = await executor;
-    return db.update(tableName, row, where: 'id = ?', whereArgs: [id]);
+    return runInTransaction(() async {
+      final db = await executor;
+      return db.update(tableName, row, where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   Future<int> delete(String tableName, dynamic id) async {
-    final db = await executor;
-    return db.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    return runInTransaction(() async {
+      final db = await executor;
+      return db.delete(tableName, where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   Future<int> insertWithChange(
@@ -427,7 +452,7 @@ class StorageSqlite {
     Map<String, dynamic> row,
     Map<String, dynamic>? changeRow,
   ) {
-    return db.transaction((txn) async {
+    return _guardedTransaction(db, (txn) async {
       final result = await txn.insert(
         tableName,
         row,
@@ -474,7 +499,7 @@ class StorageSqlite {
     dynamic id,
     Map<String, dynamic>? changeRow,
   ) {
-    return db.transaction((txn) async {
+    return _guardedTransaction(db, (txn) async {
       final result =
           await txn.update(tableName, row, where: 'id = ?', whereArgs: [id]);
       if (changeRow != null) {
@@ -516,7 +541,7 @@ class StorageSqlite {
     dynamic id,
     Map<String, dynamic>? changeRow,
   ) {
-    return db.transaction((txn) async {
+    return _guardedTransaction(db, (txn) async {
       final result =
           await txn.delete(tableName, where: 'id = ?', whereArgs: [id]);
       if (changeRow != null) {
@@ -542,8 +567,10 @@ class StorageSqlite {
   }
 
   Future<void> clearTable(String tableName) async {
-    final db = await executor;
-    await db.delete(tableName);
+    await runInTransaction(() async {
+      final db = await executor;
+      await db.delete(tableName);
+    });
   }
 
   Future<void> applySyncPage(
@@ -710,7 +737,7 @@ class StorageSqlite {
     List<SyncPageMutation> mutations,
     Map<String, int> cursors,
   ) async {
-    await db.transaction((txn) async {
+    await _guardedTransaction(db, (txn) async {
       for (final mutation in mutations) {
         switch (mutation.type) {
           case SyncPageMutationType.upsertIfNewer:
@@ -776,7 +803,7 @@ class StorageSqlite {
     });
   }
 
-  Future<void> clearDb() async {
+  Future<void> clearDb({Set<String> preserveStateKeys = const {}}) async {
     final db = await instance.database;
     List<String> tables = [
       "profiles",
@@ -791,7 +818,14 @@ class StorageSqlite {
     ];
     await db.transaction((txn) async {
       for (String table in tables) {
-        await txn.delete(table);
+        if (table == Tables.states.string && preserveStateKeys.isNotEmpty) {
+          await txn.delete(table,
+              where:
+                  'id NOT IN (${List.filled(preserveStateKeys.length, '?').join(',')})',
+              whereArgs: preserveStateKeys.toList());
+        } else {
+          await txn.delete(table);
+        }
       }
     });
   }

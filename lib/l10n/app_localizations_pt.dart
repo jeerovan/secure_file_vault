@@ -9,6 +9,17 @@ class AppLocalizationsPt extends AppLocalizations {
   AppLocalizationsPt([String locale = 'pt']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'A eliminar dados locais';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'A sua sessão terminou. O FiFe tem de concluir a eliminação dos dados locais da conta antes de poder iniciar sessão novamente. Os seus ficheiros originais são mantidos. Tente novamente para concluir.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'A eliminar os dados do FiFe deste dispositivo…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -777,4 +788,104 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noItems => 'Sem itens.';
+
+  @override
+  String get lostRecoveryPhrase => 'Perdi a frase de recuperação';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Se outro dispositivo ainda estiver conectado, exporte sua frase de recuperação por ele antes de recomeçar.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Seu cofre FiFe atual, os arquivos de backup e as configurações de armazenamento vinculado serão excluídos permanentemente.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Todos os registros de dispositivos existentes serão removidos.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Os outros dispositivos sairão da conta e apagarão seus dados locais do FiFe quando detectarem a remoção ao se conectarem à internet.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Sua conta de e-mail, assinatura, arquivos originais e cópias exportadas para fora do FiFe serão mantidos.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Seu novo cofre ficará bloqueado até que a exclusão na nuvem seja verificada. Isso pode levar 24 horas ou mais. Você pode fechar o FiFe e continuar depois.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Quando a exclusão terminar, salve uma nova frase de recuperação de 24 palavras para usar seu novo cofre.';
+
+  @override
+  String get recoveryResetContinue => 'Continuar redefinição';
+
+  @override
+  String get recoveryResetConfirmTitle =>
+      'Excluir permanentemente seu cofre FiFe?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Esta ação não pode ser desfeita. Sua frase de recuperação atual deixará de funcionar e todos os seus dispositivos serão removidos.';
+
+  @override
+  String get recoveryResetDelete => 'Excluir cofre e recomeçar';
+
+  @override
+  String get recoveryResetPendingTitle => 'Excluindo seu cofre anterior';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'O FiFe está verificando a exclusão na nuvem. Você pode fechar o app e voltar depois.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'A verificação não poderá terminar antes de $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'A exclusão na nuvem precisa de atenção. Restaure o acesso e as permissões de exclusão do armazenamento vinculado e tente novamente.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Entre novamente para retomar esta redefinição.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Entre como $email para retomar esta redefinição.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Confirme a redefinição para continuar. O FiFe verificará se ela já foi iniciada.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Uma confirmação anterior ainda é válida. Verifique novamente após ela expirar antes de iniciar uma nova confirmação.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Verifique novamente após $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'As novas chaves de recuperação não estão disponíveis neste dispositivo. Continue no dispositivo que iniciou a redefinição. Se essas chaves foram perdidas, aguarde a exclusão terminar, entre e escolha novamente “Perdi a frase de recuperação”.';
+
+  @override
+  String get recoveryResetDiscard => 'Voltar para entrar';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Isso apaga a configuração de recuperação incompleta neste dispositivo. Após entrar, você precisará da nova frase de recuperação ou de outra redefinição do cofre.';
+
+  @override
+  String get recoveryPhraseSaved => 'Salvei minha nova frase de recuperação.';
+
+  @override
+  String get recoveryResetStarting => 'Iniciando redefinição…';
 }

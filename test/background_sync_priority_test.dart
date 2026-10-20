@@ -138,13 +138,23 @@ void main() {
 
   group('idle transfer dispatcher', () {
     const paths = MethodChannel('plugins.flutter.io/path_provider');
+    const secure =
+        MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     late Directory directory;
+    var pendingReset = false;
 
     setUp(() async {
       directory = await Directory.systemTemp.createTemp('fife-idle-queue-');
       messenger.setMockMethodCallHandler(paths, (_) async => directory.path);
+      pendingReset = false;
+      messenger.setMockMethodCallHandler(
+          secure,
+          (call) async => call.method == 'containsKey'
+              ? pendingReset &&
+                  call.arguments['key'] == AppString.recoveryResetStage.string
+              : null);
       await StorageSqlite.initialize(ExecutionMode.backgroundWorker);
     });
 
@@ -152,6 +162,7 @@ void main() {
       await TaskManager.stopBackgroundWakes();
       await StorageSqlite.instance.close();
       messenger.setMockMethodCallHandler(paths, null);
+      messenger.setMockMethodCallHandler(secure, null);
       await directory.delete(recursive: true);
     });
 
@@ -185,6 +196,28 @@ void main() {
         expect(await db.query('states'), isEmpty);
       });
     }
+
+    test(
+        'pending recovery blocks eligible transfers before any connectivity probe',
+        () async {
+      pendingReset = true;
+      final db = await StorageSqlite.instance.database;
+      await db.insert('item_tasks', {
+        'id': 'retired-transfer',
+        'task': ItemTask.upload.value,
+        'state': 'pending',
+        'attempt_count': 2
+      });
+      final before = await db.query('item_tasks');
+      var probes = 0;
+      await HttpOverrides.runZoned(TaskManager.init, createHttpClient: (_) {
+        probes++;
+        throw StateError('A pending reset cannot initiate a transfer');
+      });
+      expect(probes, 0);
+      expect(await db.query('item_tasks'), before);
+      expect(await db.query('states'), isEmpty);
+    });
 
     test('offline eligible work stays pending without consuming retries',
         () async {

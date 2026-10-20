@@ -1,18 +1,20 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import { CredentialKeys, ErrorCode } from '$lib/server/db/keys';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getCredentialByStorageId } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
+import { isVaultPartName } from '$lib/server/recoveryStorage';
+import { finalDeviceResponse } from '$lib/server/deviceAccess';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	let body;
 
@@ -23,6 +25,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	}
 
 	const { file_id, storage_id } = body;
+	if (file_id !== undefined && !isVaultPartName(file_id))
+		return json({ success: 0, message: ErrorCode.INVALID_DATA });
 
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
@@ -38,7 +42,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		namespace: string;
 		region: string;
 	};
-	const file_path = `${authUser.remoteAuthId}/${file_id}`;
+	const file_path = `${authUser.objectPrefix}${file_id}`;
 	const s3Endpoint = `https://${credsData.namespace}.compat.objectstorage.${credsData.region}.oraclecloud.com`;
 	const s3Client = new S3Client({
 		region: credsData.region,
@@ -60,7 +64,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			expiresIn: 3600
 		});
 
-		return json({ success: 1, data: presignedUrl });
+		return finalDeviceResponse(db, authUser, json({ success: 1, data: presignedUrl }));
 	} catch (e) {
 		let error = e;
 		if (e instanceof Error) {

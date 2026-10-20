@@ -12,6 +12,8 @@ import '../../storage/storage_secure.dart';
 import '../../ui/common_widgets.dart';
 import '../../utils/common.dart';
 import '../../utils/enums.dart';
+import '../../services/service_session_work.dart';
+import '../../services/service_recovery_reset.dart';
 
 class PageSignin extends StatefulWidget {
   const PageSignin({super.key});
@@ -42,6 +44,18 @@ class _PageSigninState extends State<PageSignin> {
   void initState() {
     super.initState();
     _checkInitialAuthState();
+    _prefillRecoveryEmail();
+  }
+
+  Future<void> _prefillRecoveryEmail() async {
+    final pending = await RecoveryResetService.instance.pendingEmail();
+    if (mounted &&
+        !otpSent &&
+        !processing &&
+        emailController.text.isEmpty &&
+        pending != null) {
+      emailController.text = pending;
+    }
   }
 
   void _checkInitialAuthState() {
@@ -72,6 +86,10 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> sendOtp(String text) async {
+    return SessionWork.run(() => _sendOtp(text));
+  }
+
+  Future<void> _sendOtp(String text) async {
     if (processing) return;
     email = text.trim();
     if (email.isEmpty) return;
@@ -125,6 +143,10 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> verifyOtp(String text) async {
+    return SessionWork.run(() => _verifyOtp(text));
+  }
+
+  Future<void> _verifyOtp(String text) async {
     if (processing) return;
     final otp = text.trim();
     final String savedEmail =

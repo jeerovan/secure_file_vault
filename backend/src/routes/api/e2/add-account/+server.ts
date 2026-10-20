@@ -1,10 +1,11 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import { ErrorCode, StorageProvider } from '$lib/server/db/keys';
 import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3';
 import { addCredentials } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
+import { withDeviceWrite } from '$lib/server/deviceAccess';
 
 async function verifyR2Credentials(
 	bucket: string,
@@ -39,7 +40,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	let body;
 
@@ -60,11 +61,15 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			appId: app_id,
 			appKey: app_key,
 			bucketName: bucket,
-			region: region
+			region: region,
+			endpoint: `https://s3.${region}.idrivee2.com`,
+			forcePathStyle: true
 		};
 		const provider = StorageProvider.IDRIVE;
-		await addCredentials(db, authUser.userId!, credentials, provider);
-		return json({ success: 1 });
+		return withDeviceWrite(db, authUser, async (tx) => {
+			await addCredentials(tx, authUser.userId!, credentials, provider);
+			return json({ success: 1 });
+		});
 	} else {
 		// TODO flag user with attempt count
 		return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });

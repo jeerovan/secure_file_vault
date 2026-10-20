@@ -9,6 +9,17 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Borrando datos locales';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Tu sesión ha finalizado. FiFe debe terminar de borrar los datos locales de la cuenta antes de que puedas iniciar sesión de nuevo. Tus archivos originales se conservan. Inténtalo de nuevo para terminar.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Borrando los datos de FiFe de este dispositivo…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -779,4 +790,105 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noItems => 'No hay elementos.';
+
+  @override
+  String get lostRecoveryPhrase => 'Perdí la frase de recuperación';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Si otro dispositivo sigue conectado, exporta tu frase de recuperación desde él antes de empezar de nuevo.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Tu bóveda FiFe actual, los archivos respaldados y la configuración del almacenamiento vinculado se eliminarán permanentemente.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Se eliminarán todos los registros de dispositivos actuales.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Los otros dispositivos cerrarán sesión y borrarán sus datos locales de FiFe cuando detecten su eliminación al conectarse a internet.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Se conservarán tu cuenta de correo, suscripción, archivos originales y copias exportadas fuera de FiFe.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Tu nueva bóveda permanecerá bloqueada hasta verificar la eliminación en la nube. Esto puede tardar 24 horas o más. Puedes cerrar FiFe y continuar más tarde.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Cuando termine la eliminación, guarda una nueva frase de recuperación de 24 palabras para usar tu nueva bóveda.';
+
+  @override
+  String get recoveryResetContinue => 'Continuar con el restablecimiento';
+
+  @override
+  String get recoveryResetConfirmTitle =>
+      '¿Eliminar permanentemente tu bóveda FiFe?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Esta acción no se puede deshacer. Tu frase de recuperación actual dejará de funcionar y se eliminarán todos tus dispositivos.';
+
+  @override
+  String get recoveryResetDelete => 'Eliminar bóveda y empezar de nuevo';
+
+  @override
+  String get recoveryResetPendingTitle => 'Eliminando tu bóveda anterior';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe está verificando la eliminación en la nube. Puedes cerrar la app y volver más tarde.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'La verificación no puede terminar antes de $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'La eliminación en la nube requiere atención. Restablece el acceso y los permisos de eliminación del almacenamiento vinculado e inténtalo de nuevo.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Inicia sesión de nuevo para continuar el restablecimiento.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Inicia sesión como $email para continuar el restablecimiento.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Confirma el restablecimiento para continuar. FiFe comprobará si ya se ha iniciado.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Una confirmación anterior sigue siendo válida. Vuelve a comprobarlo cuando caduque antes de iniciar una nueva confirmación.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Vuelve a comprobarlo después de $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Las nuevas claves de recuperación no están disponibles en este dispositivo. Continúa en el dispositivo que inició el restablecimiento. Si se perdieron, espera a que termine la eliminación, inicia sesión y vuelve a elegir «Perdí la frase de recuperación».';
+
+  @override
+  String get recoveryResetDiscard => 'Volver al inicio de sesión';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Esto borra la configuración de recuperación incompleta de este dispositivo. Tras iniciar sesión necesitarás la nueva frase de recuperación o restablecer la bóveda otra vez.';
+
+  @override
+  String get recoveryPhraseSaved =>
+      'He guardado mi nueva frase de recuperación.';
+
+  @override
+  String get recoveryResetStarting => 'Iniciando restablecimiento…';
 }

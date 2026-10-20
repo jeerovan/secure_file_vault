@@ -1,0 +1,9 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"allowJs": false,
+		"checkJs": false,
+		"types": ["@cloudflare/workers-types", "vite/client"]
+	},
+	"include": ["worker.ts", "src/generated-worker.d.ts", "src/app.d.ts"]
+}

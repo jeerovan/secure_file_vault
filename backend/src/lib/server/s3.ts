@@ -1,4 +1,7 @@
-import { HeadBucketCommand, S3Client } from '@aws-sdk/client-s3';
+import { HeadBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+export const PRESIGNED_UPLOAD_EXPIRY_SECONDS = 900;
 
 export type GenericS3Credentials = {
 	endpoint: string;
@@ -85,19 +88,42 @@ export function createGenericS3Client(credentials: GenericS3Credentials): S3Clie
 			accessKeyId: credentials.appId,
 			secretAccessKey: credentials.appKey
 		},
-		forcePathStyle: credentials.forcePathStyle
+		forcePathStyle: credentials.forcePathStyle,
+		// URL issuance has no body: an SDK-generated empty-body CRC would reject
+		// the client's actual ciphertext. Required operation checksums still apply.
+		requestChecksumCalculation: 'WHEN_REQUIRED'
 	});
+}
+
+export async function presignS3UploadUrl(credentials: GenericS3Credentials, key: string) {
+	const client = createGenericS3Client(credentials);
+	try {
+		return await getSignedUrl(
+			client,
+			new PutObjectCommand({
+				Bucket: credentials.bucketName,
+				Key: key,
+				ContentType: 'application/octet-stream'
+			}),
+			{ expiresIn: PRESIGNED_UPLOAD_EXPIRY_SECONDS }
+		);
+	} finally {
+		client.destroy();
+	}
 }
 
 export async function verifyGenericS3Credentials(
 	credentials: GenericS3Credentials
 ): Promise<boolean> {
+	const client = createGenericS3Client(credentials);
 	try {
-		await createGenericS3Client(credentials).send(
-			new HeadBucketCommand({ Bucket: credentials.bucketName })
-		);
+		await client.send(new HeadBucketCommand({ Bucket: credentials.bucketName }), {
+			abortSignal: AbortSignal.timeout(15_000)
+		});
 		return true;
 	} catch {
 		return false;
+	} finally {
+		client.destroy();
 	}
 }

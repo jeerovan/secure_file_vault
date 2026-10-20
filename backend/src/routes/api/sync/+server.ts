@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import {
 	fetchChanges,
 	saveFileChanges,
@@ -11,6 +11,7 @@ import {
 import { ErrorCode } from '$lib/server/db/keys';
 import { getDb } from '$lib/server/db';
 import { assertSyncTable } from '$lib/server/syncValidation';
+import { authorizeRegisteredDevice } from '$lib/server/deviceAccess';
 
 function optionalCursorId(url: URL, name: string): number | null {
 	const value = url.searchParams.get(name);
@@ -24,7 +25,7 @@ export const GET: RequestHandler = async ({ request, url, platform }) => {
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	if (!authUser.deviceUuid) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
@@ -65,7 +66,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	const userId = authUser.userId!;
 	const deviceUuid = authUser.deviceUuid;
@@ -75,21 +76,31 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	try {
 		const { table_maps } = await request.json();
-		for (const { table, changes } of table_maps) {
-			assertSyncTable(table);
-			switch (table) {
-				case 'files':
-					await saveFileChanges(db, userId, deviceUuid, changes);
-					break;
-				case 'items':
-					await saveItemChanges(db, userId, deviceUuid, changes);
-					break;
-				case 'parts':
-					await savePartChanges(db, userId, deviceUuid, changes);
-					break;
+		const access = await db.transaction(async (tx) => {
+			// A removal racing the initial authorization must win before any
+			// metadata write or heartbeat can restore the retired registration.
+			const current = await authorizeRegisteredDevice(tx, authUser, true);
+			if (!current.authorized) return current;
+			for (const { table, changes } of table_maps) {
+				assertSyncTable(table);
+				switch (table) {
+					case 'files':
+						await saveFileChanges(tx, userId, deviceUuid, changes);
+						break;
+					case 'items':
+						await saveItemChanges(tx, userId, deviceUuid, changes);
+						break;
+					case 'parts':
+						await savePartChanges(tx, userId, deviceUuid, changes);
+						break;
+				}
 			}
+			await updateDeviceStatus(tx, userId, deviceUuid, 1);
+			return current;
+		});
+		if (!access.authorized) {
+			return json({ success: 0, message: access.message, reason: access.reason });
 		}
-		await updateDeviceStatus(db, userId, deviceUuid, 1);
 	} catch (error) {
 		if (error instanceof Error) {
 			console.log(error.stack);

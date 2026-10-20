@@ -19,6 +19,10 @@ class RepositoryEntity<T> {
   Future<DatabaseExecutor> get executor async =>
       _database ?? await StorageSqlite.instance.executor;
 
+  Future<R> write<R>(Future<R> Function() action) => _database != null
+      ? action()
+      : StorageSqlite.instance.runInTransaction(action);
+
   Future<T?> get(String id) async {
     final db = await executor;
     final rows = await db.query(table, where: 'id = ?', whereArgs: [id]);
@@ -26,27 +30,35 @@ class RepositoryEntity<T> {
   }
 
   Future<int> insert(Map<String, dynamic> row) async {
-    final db = await executor;
-    return db.insert(
-      table,
-      row,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    return write(() async {
+      final db = await executor;
+      return db.insert(
+        table,
+        row,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    });
   }
 
   Future<int> update(String id, Map<String, dynamic> row) async {
-    final db = await executor;
-    return db.update(table, row, where: 'id = ?', whereArgs: [id]);
+    return write(() async {
+      final db = await executor;
+      return db.update(table, row, where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   Future<int> delete(String id) async {
-    final db = await executor;
-    return db.delete(table, where: 'id = ?', whereArgs: [id]);
+    return write(() async {
+      final db = await executor;
+      return db.delete(table, where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   Future<int> clear() async {
-    final db = await executor;
-    return db.delete(table);
+    return write(() async {
+      final db = await executor;
+      return db.delete(table);
+    });
   }
 
   Future<int> upsertFromServer(
@@ -125,38 +137,42 @@ class RepositoryTask<T> extends RepositoryEntity<T> {
   }) : super(table: Tables.itemTasks.string);
 
   Future<int> recoverInterrupted({required int now}) async {
-    final db = await executor;
-    return db.rawUpdate(
-      'UPDATE item_tasks SET state = ?, next_attempt_at = ?, '
-      'last_error = ?, updated_at = ? '
-      'WHERE state = ? AND next_attempt_at <= ?',
-      [
-        'retryWaiting',
-        now,
-        'process_interrupted',
-        now,
-        'running',
-        now,
-      ],
-    );
+    return write(() async {
+      final db = await executor;
+      return db.rawUpdate(
+        'UPDATE item_tasks SET state = ?, next_attempt_at = ?, '
+        'last_error = ?, updated_at = ? '
+        'WHERE state = ? AND next_attempt_at <= ?',
+        [
+          'retryWaiting',
+          now,
+          'process_interrupted',
+          now,
+          'running',
+          now,
+        ],
+      );
+    });
   }
 
   Future<int> recoverTransientBlocks({required int now}) async {
-    final db = await executor;
-    return db.rawUpdate(
-      'UPDATE item_tasks SET state = ?, next_attempt_at = ?, '
-      'last_error = ?, updated_at = ? '
-      'WHERE state = ? AND last_error IN (?, ?)',
-      [
-        'pending',
-        0,
-        null,
-        now,
-        'blocked',
-        'missing_file_metadata',
-        'missing_part_metadata',
-      ],
-    );
+    return write(() async {
+      final db = await executor;
+      return db.rawUpdate(
+        'UPDATE item_tasks SET state = ?, next_attempt_at = ?, '
+        'last_error = ?, updated_at = ? '
+        'WHERE state = ? AND last_error IN (?, ?)',
+        [
+          'pending',
+          0,
+          null,
+          now,
+          'blocked',
+          'missing_file_metadata',
+          'missing_part_metadata',
+        ],
+      );
+    });
   }
 
   Future<String?> fetchPendingId(

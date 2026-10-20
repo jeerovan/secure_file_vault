@@ -1,6 +1,7 @@
 import '../utils/enums.dart';
 
 import '../storage/storage_sqlite.dart';
+import '../services/service_session_work.dart';
 
 class ModelSetting {
   static Map<String, String> settingJson = {};
@@ -24,9 +25,10 @@ class ModelSetting {
           await getRaw(AppString.foregroundSyncIntervalMinutes.string));
 
   static Future<void> set(String key, String value) async {
-    settingJson[key] = value;
     final dbHelper = StorageSqlite.instance;
     await dbHelper.insert(Tables.settings.string, {'id': key, 'value': value});
+    await SessionWork.checkpoint();
+    settingJson[key] = value;
   }
 
   static Future<String> getRaw(String key, {String defaultValue = ""}) async {
@@ -54,9 +56,10 @@ class ModelSetting {
   }
 
   static Future<void> delete(String key) async {
-    settingJson.remove(key);
     final dbHelper = StorageSqlite.instance;
     await dbHelper.delete(Tables.settings.string, key);
+    await SessionWork.checkpoint();
+    settingJson.remove(key);
   }
 
   static void clear() {

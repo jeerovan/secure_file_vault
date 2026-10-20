@@ -14,9 +14,14 @@ import '../../ui/common_widgets.dart';
 import '../../storage/storage_secure.dart';
 import '../../utils/utils_crypto.dart';
 import '../../utils/enums.dart';
+import '../../services/service_session_work.dart';
+import '../../services/service_recovery_reset.dart';
+import '../../models/model_setting.dart';
+import 'page_lost_recovery.dart';
 
 class PageAccessKeyDecode extends StatefulWidget {
-  const PageAccessKeyDecode({super.key});
+  const PageAccessKeyDecode({super.key, this.recoveryService});
+  final RecoveryResetService? recoveryService;
 
   @override
   State<PageAccessKeyDecode> createState() => _PageAccessKeyDecodeState();
@@ -25,6 +30,7 @@ class PageAccessKeyDecode extends StatefulWidget {
 class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
   final _formKey = GlobalKey<FormState>();
   final _textController = TextEditingController();
+  final _phraseFocus = FocusNode();
   final SecureStorage secureStorage = SecureStorage();
 
   bool processing = false;
@@ -36,6 +42,7 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
 
   @override
   void dispose() {
+    _phraseFocus.dispose();
     _textController.dispose();
     super.dispose();
   }
@@ -47,12 +54,34 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
 
   Future<void> _pasteFromClipboard() async {
     final clipboardData = await Clipboard.getData(Clipboard.kTextPlain);
-    if (clipboardData?.text != null) {
+    if (mounted && clipboardData?.text != null) {
       _textController.text = clipboardData!.text!;
     }
   }
 
   Future<void> _processWords(String words) async {
+    try {
+      await SessionWork.run(() => _decodeWords(words));
+    } on SessionInvalidated {
+      if (mounted) await context.read<AppSetupState>().recheckStatus();
+    }
+  }
+
+  Future<void> _lostPhrase() async {
+    if (processing) return;
+    _phraseFocus.unfocus();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    final page = PageLostRecovery(service: widget.recoveryService);
+    await Navigator.of(context).push(reduceMotion
+        ? PageRouteBuilder<void>(
+            pageBuilder: (context, animation, secondaryAnimation) => page,
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero)
+        : MaterialPageRoute<void>(builder: (_) => page));
+    if (mounted) _phraseFocus.requestFocus();
+  }
+
+  Future<void> _decodeWords(String words) async {
     setState(() => processing = true);
 
     try {
@@ -144,6 +173,8 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
           await context.read<AppSetupState>().registerDevice();
         }
       }
+    } on SessionInvalidated {
+      rethrow;
     } catch (e) {
       if (mounted) {
         showAlertMessage(
@@ -170,6 +201,7 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
         final file = File(selectedFile!.path!);
         final content = await file.readAsString();
 
+        if (!mounted) return;
         if (_validateWordCount(content)) {
           _textController.text = content.trim();
           await _processWords(content.trim());
@@ -224,6 +256,7 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                 const SizedBox(height: 32.0),
                 TextFormField(
                   controller: _textController,
+                  focusNode: _phraseFocus,
                   enabled: !processing,
                   autofocus: true,
                   minLines: 4,
@@ -256,8 +289,10 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                                 ? Colors.red
                                 : Colors.grey.shade600);
 
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        return Wrap(
+                          alignment: WrapAlignment.spaceBetween,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          spacing: 12,
                           children: [
                             TextButton.icon(
                               onPressed:
@@ -365,6 +400,17 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                     style: const TextStyle(fontSize: 16.0),
                   ),
                 ),
+                if (!simulateTesting() &&
+                    !localTesting() &&
+                    ModelSetting.get(AppString.recoveryResetAvailable.string) ==
+                        'yes') ...[
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: processing ? null : _lostPhrase,
+                    child:
+                        Text(AppLocalizations.of(context)!.lostRecoveryPhrase),
+                  ),
+                ],
               ],
             ),
           ),

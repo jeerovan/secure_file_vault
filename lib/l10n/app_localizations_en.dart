@@ -9,6 +9,17 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Clearing local data';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Your session has ended. FiFe needs to finish clearing its local account data before you can sign in again. Your original files are kept. Try again to finish.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Clearing FiFe data from this device…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -766,4 +777,102 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noItems => 'No items.';
+
+  @override
+  String get lostRecoveryPhrase => 'Lost recovery phrase';
+
+  @override
+  String get lostRecoveryIntro =>
+      'If another device is still signed in, export your recovery phrase from it before starting over.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Your existing FiFe vault, backed-up files and linked storage settings will be permanently deleted.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'All existing device registrations will be removed.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Other devices will sign out and clear their FiFe local data when they next discover their removal while online.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Your email account, subscription, original source files and copies exported outside FiFe will be kept.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Your new vault will stay locked until cloud deletion is verified. This may take 24 hours or longer. You can close FiFe and resume later.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'After deletion finishes, save a new 24-word recovery phrase to use your fresh vault.';
+
+  @override
+  String get recoveryResetContinue => 'Continue to reset';
+
+  @override
+  String get recoveryResetConfirmTitle => 'Permanently delete your FiFe vault?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'This cannot be undone. Your existing recovery phrase will stop working, and all your devices will be removed.';
+
+  @override
+  String get recoveryResetDelete => 'Delete vault and start fresh';
+
+  @override
+  String get recoveryResetPendingTitle => 'Deleting your previous vault';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe is verifying cloud deletion. You can close the app and return later.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'Verification cannot finish before $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'Cloud deletion needs attention. Restore access and deletion permissions for your linked storage, then try again.';
+
+  @override
+  String get recoveryResetSignin => 'Sign in again to resume this reset.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Sign in as $email to resume this reset.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Confirm the reset to continue. FiFe will check whether it has already started.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'A previous confirmation is still valid. Check again after it expires before starting a new confirmation.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Check again after $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'The new recovery keys are not available on this device. Continue on the device that started the reset. If those keys were lost, wait for deletion to finish, then sign in and choose “Lost recovery phrase” again.';
+
+  @override
+  String get recoveryResetDiscard => 'Return to sign-in';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'This clears the unfinished recovery setup on this device. You will need the new recovery phrase or another vault reset after signing in.';
+
+  @override
+  String get recoveryPhraseSaved => 'I have saved my new recovery phrase.';
+
+  @override
+  String get recoveryResetStarting => 'Starting reset…';
 }

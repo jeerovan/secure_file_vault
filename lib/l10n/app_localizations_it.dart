@@ -9,6 +9,17 @@ class AppLocalizationsIt extends AppLocalizations {
   AppLocalizationsIt([String locale = 'it']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Eliminazione dei dati locali';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'La sessione è terminata. FiFe deve completare l\'eliminazione dei dati locali dell\'account prima che tu possa accedere di nuovo. I file originali vengono conservati. Riprova per completare.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Eliminazione dei dati FiFe da questo dispositivo…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -774,4 +785,105 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get noItems => 'Nessun elemento.';
+
+  @override
+  String get lostRecoveryPhrase => 'Frase di recupero persa';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Se un altro dispositivo è ancora connesso, esporta la frase di recupero da lì prima di ricominciare.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'La cassaforte FiFe attuale, i file di backup e le impostazioni degli archivi collegati verranno eliminati definitivamente.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Tutte le registrazioni dei dispositivi esistenti verranno rimosse.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Gli altri dispositivi si disconnetteranno e cancelleranno i dati FiFe locali quando rileveranno la propria rimozione mentre sono online.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Il tuo account e-mail, abbonamento, file originali e copie esportate al di fuori di FiFe verranno conservati.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'La nuova cassaforte resterà bloccata finché l’eliminazione nel cloud non sarà verificata. Potrebbero volerci 24 ore o più. Puoi chiudere FiFe e riprendere più tardi.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Al termine dell’eliminazione, salva una nuova frase di recupero di 24 parole per usare la nuova cassaforte.';
+
+  @override
+  String get recoveryResetContinue => 'Continua con il ripristino';
+
+  @override
+  String get recoveryResetConfirmTitle =>
+      'Eliminare definitivamente la cassaforte FiFe?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'L’operazione è irreversibile. La frase di recupero attuale smetterà di funzionare e tutti i tuoi dispositivi verranno rimossi.';
+
+  @override
+  String get recoveryResetDelete => 'Elimina la cassaforte e ricomincia';
+
+  @override
+  String get recoveryResetPendingTitle =>
+      'Eliminazione della cassaforte precedente';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe sta verificando l’eliminazione nel cloud. Puoi chiudere l’app e tornare più tardi.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'La verifica non può terminare prima di $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'L’eliminazione nel cloud richiede un intervento. Ripristina l’accesso e le autorizzazioni di eliminazione per gli archivi collegati, poi riprova.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Accedi di nuovo per riprendere questo ripristino.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Accedi come $email per riprendere questo ripristino.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Conferma il ripristino per continuare. FiFe controllerà se è già iniziato.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Una conferma precedente è ancora valida. Ricontrolla dopo la scadenza prima di avviare una nuova conferma.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Ricontrolla dopo $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Le nuove chiavi di recupero non sono disponibili su questo dispositivo. Continua sul dispositivo che ha avviato il ripristino. Se le chiavi sono state perse, attendi la fine dell’eliminazione, accedi e scegli di nuovo «Frase di recupero persa».';
+
+  @override
+  String get recoveryResetDiscard => 'Torna all’accesso';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Questa operazione cancella la configurazione di recupero incompleta su questo dispositivo. Dopo l’accesso servirà la nuova frase di recupero o un altro ripristino della cassaforte.';
+
+  @override
+  String get recoveryPhraseSaved => 'Ho salvato la nuova frase di recupero.';
+
+  @override
+  String get recoveryResetStarting => 'Avvio del ripristino…';
 }

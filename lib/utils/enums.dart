@@ -1,5 +1,7 @@
 enum SetupStep {
   loading,
+  sessionCleanup,
+  recoveryReset,
   onboard,
   signin,
   checkAccessKey,
@@ -92,6 +94,11 @@ enum AppString {
   otpSentAt,
   jwtToken,
   sessionCookie,
+  recoveryResetStage,
+  vaultGeneration,
+  recoveryResetAvailable,
+  recoveryReauthentication,
+  pendingDeviceUuid,
 
   // Sync
   lastReconRunningAt,
@@ -145,6 +152,16 @@ extension AppStringExtension on AppString {
         return "storage_full";
       case AppString.sessionCookie:
         return "session_cookie";
+      case AppString.recoveryResetStage:
+        return 'recovery_reset_stage';
+      case AppString.vaultGeneration:
+        return 'vault_generation';
+      case AppString.recoveryResetAvailable:
+        return 'recovery_reset_available';
+      case AppString.recoveryReauthentication:
+        return 'recovery_reauthentication';
+      case AppString.pendingDeviceUuid:
+        return 'pending_device_uuid';
       case AppString.jwtToken:
         return "jwt_token";
       case AppString.fileHashKeyContext:

@@ -11,6 +11,8 @@ import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
 import '../../utils/common.dart';
 import '../common_widgets.dart';
+import '../../services/service_session_work.dart';
+import '../../services/service_recovery_reset.dart';
 
 class PageRegisterDevice extends StatefulWidget {
   const PageRegisterDevice({
@@ -35,6 +37,14 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
   }
 
   Future<void> _registerDevice() async {
+    try {
+      await SessionWork.run(_performRegistration);
+    } on SessionInvalidated {
+      if (mounted) await context.read<AppSetupState>().recheckStatus();
+    }
+  }
+
+  Future<void> _performRegistration() async {
     logger.info("Registering..");
     setState(() {
       _isLoading = true;
@@ -42,6 +52,14 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     });
     Uuid uuid = Uuid();
     String deviceUuid = uuid.v4();
+    if (await RecoveryResetService.instance.hasPending()) {
+      final pending =
+          await ModelSetting.getRaw(AppString.pendingDeviceUuid.string);
+      if (pending.isEmpty) {
+        throw StateError('Reset phrase acknowledgment is required');
+      }
+      deviceUuid = pending;
+    }
     String deviceName = await getDeviceName();
     int deviceType = await getDeviceType();
     bool deviceRegistered = false;
@@ -84,6 +102,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
         "parent_id": "fife",
       });
       await deviceItem.insert();
+      await RecoveryResetService.instance.finishRegistration(deviceUuid);
       if (mounted) {
         await context.read<AppSetupState>().recheckStatus();
       }

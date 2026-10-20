@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import { getDb } from '$lib/server/db';
 import { getUserFile, getUserFilePart } from '$lib/server/db/api';
 import { ErrorCode, FileKeys } from '$lib/server/db/keys';
@@ -10,7 +10,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	let body;
 

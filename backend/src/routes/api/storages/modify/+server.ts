@@ -1,7 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import { getDb } from '$lib/server/db';
+import { withDeviceWrite } from '$lib/server/deviceAccess';
 import { getUserData, removeDevice, updateStorageLimit } from '$lib/server/db/api';
 import { ErrorCode } from '$lib/server/db/keys';
 
@@ -10,7 +11,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	let body;
 
@@ -28,16 +29,18 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	if (bytes < 1073741824) {
 		return json({ success: 0, message: ErrorCode.INVALID_DATA });
 	}
-	const planData = await getUserData(db, authUser.userId!);
-	let planExpiresAt = 0;
-	if (planData) {
-		planExpiresAt = planData.planExpiresAt;
-	}
-	const hasPlan = planExpiresAt > Date.now();
-	if (hasPlan) {
-		await updateStorageLimit(db, authUser.userId!, provider_id, bytes);
-	} else {
-		return json({ success: 0, message: ErrorCode.NO_PRO });
-	}
-	return json({ success: 1 });
+	return withDeviceWrite(db, authUser, async (tx) => {
+		const planData = await getUserData(tx, authUser.userId!);
+		let planExpiresAt = 0;
+		if (planData) {
+			planExpiresAt = planData.planExpiresAt;
+		}
+		const hasPlan = planExpiresAt > Date.now();
+		if (hasPlan) {
+			await updateStorageLimit(tx, authUser.userId!, provider_id, bytes);
+		} else {
+			return json({ success: 0, message: ErrorCode.NO_PRO });
+		}
+		return json({ success: 1 });
+	});
 };

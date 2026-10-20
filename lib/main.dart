@@ -20,6 +20,12 @@ import '../storage/storage_sqlite.dart';
 import '../ui/common_widgets.dart';
 import 'l10n/app_localizations.dart';
 import 'services/service_locale.dart';
+import 'services/service_events.dart';
+import 'services/service_session_cleanup.dart';
+import 'services/service_session_work.dart';
+import 'services/service_recovery_reset.dart';
+import 'ui/pages/page_recovery_reset.dart';
+import 'ui/pages/page_session_cleanup.dart';
 import 'ui/pages/page_access_key_display.dart';
 import '../ui/pages/page_access_key_notice.dart';
 import '../ui/pages/page_devices.dart';
@@ -71,6 +77,7 @@ void backgroundTaskDispatcher() async {
           task: () async {
             SyncBudget.check();
             await StorageSqlite.initialize(ExecutionMode.backgroundWorker);
+            if (!await SessionCleanup.instance.resume()) return false;
             if (await ModelSetting.getRaw(AppString.signedIn.string,
                         defaultValue: 'no') !=
                     'yes' ||
@@ -113,7 +120,22 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppLogger.clearLegacyLogsOnce();
   await StorageSqlite.initialize(ExecutionMode.mainApp);
-  await initializeInParallel();
+  try {
+    if (await SessionCleanup.instance.resume()) {
+      await initializeInParallel();
+      if (AppEnv.effectiveApiBaseUrl.isNotEmpty &&
+          !await RecoveryResetService.instance.hasPending() &&
+          await ModelSetting.getRaw(AppString.signedIn.string) == 'yes' &&
+          (await getDeviceUuid()).isNotEmpty) {
+        await SessionWork.run(SyncUtils.checkDeviceStatus);
+      }
+    }
+  } on SessionInvalidated {
+    // A pending cleanup must still render its retry screen.
+  } catch (error) {
+    // Let setup display its retry screen when private storage is unavailable.
+    logger.warning('Startup session check will retry: ${error.runtimeType}');
+  }
   SecureStorage prefs = SecureStorage();
   runApp(
     MultiProvider(
@@ -146,6 +168,7 @@ Future<void> initializeInParallel() async {
 
 Future<void> initializeBackgroundExecution() async {
   try {
+    if (await RecoveryResetService.instance.hasPending()) return;
     await BackgroundExecutionService.instance.initialize(
       iosCallbackDispatcher: backgroundTaskDispatcher,
     );
@@ -184,13 +207,17 @@ Future<void> initializePurchases() async {
 // --- Main Application Widget ---
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, this.recoveryService});
+  final RecoveryResetService? recoveryService;
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  GlobalKey<NavigatorState> _navigationKey = GlobalKey<NavigatorState>();
+  StreamSubscription<AppEvent>? _sessionEvents;
+  bool _checkingSession = false;
   final ValueNotifier<ThemeMode> themeNotifier =
       ValueNotifier(ThemeMode.system);
 
@@ -199,6 +226,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _sessionEvents = EventStream().events.listen((event) {
+      if (event.key == EventKey.sessionInvalidated && mounted) {
+        // Discard protected routes and dialogs as well as the home page.
+        setState(() => _navigationKey = GlobalKey<NavigatorState>());
+      }
+    });
     // Load the theme from saved preferences
     String savedTheme = ModelSetting.get(AppString.theme.string);
     switch (savedTheme) {
@@ -217,10 +250,40 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    unawaited(_sessionEvents?.cancel());
     WidgetsBinding.instance.removeObserver(this);
     themeNotifier.dispose();
     AppHttpClients.closeAll();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_checkSession());
+  }
+
+  Future<void> _checkSession() async {
+    if (_checkingSession) return;
+    _checkingSession = true;
+    try {
+      if (!await SessionCleanup.instance.resume()) {
+        if (mounted) await context.read<AppSetupState>().recheckStatus();
+        return;
+      }
+      // A lightweight identity check never reconciles files or starts sync.
+      if (AppEnv.effectiveApiBaseUrl.isNotEmpty &&
+          !await RecoveryResetService.instance.hasPending() &&
+          await ModelSetting.getRaw(AppString.signedIn.string) == 'yes' &&
+          (await getDeviceUuid()).isNotEmpty) {
+        await SessionWork.run(SyncUtils.checkDeviceStatus);
+      }
+    } on SessionInvalidated {
+      // Cleanup owns navigation and durable retry state.
+    } catch (error) {
+      logger.warning('Identity check will retry: ${error.runtimeType}');
+    } finally {
+      _checkingSession = false;
+    }
   }
 
   // Toggle between light and dark modes
@@ -246,6 +309,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       valueListenable: themeNotifier,
       builder: (context, ThemeMode currentMode, child) {
         return MaterialApp(
+          navigatorKey: _navigationKey,
           locale: localeProvider.locale,
           supportedLocales: L10n.all,
           localizationsDelegates: const [
@@ -260,6 +324,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           // Uses system theme by default
           home: AppNavigator(
             onThemeChange: _onThemeChange,
+            recoveryService: widget.recoveryService,
           ),
           debugShowCheckedModeBanner: false,
         );
@@ -270,10 +335,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
 class AppNavigator extends StatelessWidget {
   final Function(String?) onThemeChange;
+  final RecoveryResetService? recoveryService;
 
   const AppNavigator({
     super.key,
     required this.onThemeChange,
+    this.recoveryService,
   });
 
   @override
@@ -283,6 +350,10 @@ class AppNavigator extends StatelessWidget {
         switch (setupState.currentStep) {
           case SetupStep.loading:
             return const PageLoading();
+          case SetupStep.sessionCleanup:
+            return const PageSessionCleanup();
+          case SetupStep.recoveryReset:
+            return PageRecoveryReset(service: recoveryService);
           case SetupStep.onboard:
             return const FiFeOnboardingScreen();
           case SetupStep.signin:
@@ -292,7 +363,7 @@ class AppNavigator extends StatelessWidget {
           case SetupStep.generateAccessKey:
             return const PageAccessKeyNotice();
           case SetupStep.decodeAccessKey:
-            return PageAccessKeyDecode();
+            return PageAccessKeyDecode(recoveryService: recoveryService);
           case SetupStep.showAccessKey:
             return const PageAccessKey();
           case SetupStep.registerDevice:

@@ -1,5 +1,8 @@
 {
   "@@locale": "it",
+  "localSessionCleanupTitle": "Eliminazione dei dati locali",
+  "localSessionCleanupDescription": "La sessione è terminata. FiFe deve completare l'eliminazione dei dati locali dell'account prima che tu possa accedere di nuovo. I file originali vengono conservati. Riprova per completare.",
+  "localSessionCleanupInProgress": "Eliminazione dei dati FiFe da questo dispositivo…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "Nessun elemento.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Frase di recupero persa",
+  "lostRecoveryIntro": "Se un altro dispositivo è ancora connesso, esporta la frase di recupero da lì prima di ricominciare.",
+  "lostRecoveryDeleteConsequence": "La cassaforte FiFe attuale, i file di backup e le impostazioni degli archivi collegati verranno eliminati definitivamente.",
+  "lostRecoveryDevicesConsequence": "Tutte le registrazioni dei dispositivi esistenti verranno rimosse.",
+  "lostRecoveryLogoutConsequence": "Gli altri dispositivi si disconnetteranno e cancelleranno i dati FiFe locali quando rileveranno la propria rimozione mentre sono online.",
+  "lostRecoveryKeepConsequence": "Il tuo account e-mail, abbonamento, file originali e copie esportate al di fuori di FiFe verranno conservati.",
+  "lostRecoveryWaitConsequence": "La nuova cassaforte resterà bloccata finché l’eliminazione nel cloud non sarà verificata. Potrebbero volerci 24 ore o più. Puoi chiudere FiFe e riprendere più tardi.",
+  "lostRecoveryNewPhraseConsequence": "Al termine dell’eliminazione, salva una nuova frase di recupero di 24 parole per usare la nuova cassaforte.",
+  "recoveryResetContinue": "Continua con il ripristino",
+  "recoveryResetConfirmTitle": "Eliminare definitivamente la cassaforte FiFe?",
+  "recoveryResetConfirmBody": "L’operazione è irreversibile. La frase di recupero attuale smetterà di funzionare e tutti i tuoi dispositivi verranno rimossi.",
+  "recoveryResetDelete": "Elimina la cassaforte e ricomincia",
+  "recoveryResetPendingTitle": "Eliminazione della cassaforte precedente",
+  "recoveryResetPendingBody": "FiFe sta verificando l’eliminazione nel cloud. Puoi chiudere l’app e tornare più tardi.",
+  "recoveryResetWaitUntil": "La verifica non può terminare prima di {when}.",
+  "recoveryResetStorageBlocked": "L’eliminazione nel cloud richiede un intervento. Ripristina l’accesso e le autorizzazioni di eliminazione per gli archivi collegati, poi riprova.",
+  "recoveryResetSignin": "Accedi di nuovo per riprendere questo ripristino.",
+  "recoveryResetSigninAs": "Accedi come {email} per riprendere questo ripristino.",
+  "recoveryResetNeedsConfirmation": "Conferma il ripristino per continuare. FiFe controllerà se è già iniziato.",
+  "recoveryResetConfirmationWait": "Una conferma precedente è ancora valida. Ricontrolla dopo la scadenza prima di avviare una nuova conferma.",
+  "recoveryResetConfirmationUntil": "Ricontrolla dopo {when}.",
+  "recoveryResetMissingKeys": "Le nuove chiavi di recupero non sono disponibili su questo dispositivo. Continua sul dispositivo che ha avviato il ripristino. Se le chiavi sono state perse, attendi la fine dell’eliminazione, accedi e scegli di nuovo «Frase di recupero persa».",
+  "recoveryResetDiscard": "Torna all’accesso",
+  "recoveryResetDiscardBody": "Questa operazione cancella la configurazione di recupero incompleta su questo dispositivo. Dopo l’accesso servirà la nuova frase di recupero o un altro ripristino della cassaforte.",
+  "recoveryPhraseSaved": "Ho salvato la nuova frase di recupero.",
+  "recoveryResetStarting": "Avvio del ripristino…"
 }

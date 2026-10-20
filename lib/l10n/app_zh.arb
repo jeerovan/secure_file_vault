@@ -1,5 +1,8 @@
 {
   "@@locale": "zh",
+  "localSessionCleanupTitle": "清除本地数据",
+  "localSessionCleanupDescription": "您的会话已结束。FiFe 需要完成清除本地账户数据后，您才能再次登录。您的原始文件会保留。请重试以完成清除。",
+  "localSessionCleanupInProgress": "正在清除此设备上的 FiFe 数据…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "暂无项目。",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "遗失恢复短语",
+  "lostRecoveryIntro": "如果其他设备仍处于登录状态，请先从该设备导出恢复短语，再重新开始。",
+  "lostRecoveryDeleteConsequence": "现有的 FiFe 保险库、已备份文件和关联存储设置将被永久删除。",
+  "lostRecoveryDevicesConsequence": "所有现有设备注册都将被移除。",
+  "lostRecoveryLogoutConsequence": "其他设备联网后发现自己已被移除时，将自动退出登录并清除本地 FiFe 数据。",
+  "lostRecoveryKeepConsequence": "您的邮箱账户、订阅、原始文件以及导出到 FiFe 之外的副本都会保留。",
+  "lostRecoveryWaitConsequence": "在确认云端数据已删除之前，新保险库将保持锁定。这可能需要 24 小时或更长时间。您可以关闭 FiFe，稍后继续。",
+  "lostRecoveryNewPhraseConsequence": "删除完成后，请保存新的 24 词恢复短语，以使用新保险库。",
+  "recoveryResetContinue": "继续重置",
+  "recoveryResetConfirmTitle": "永久删除您的 FiFe 保险库？",
+  "recoveryResetConfirmBody": "此操作无法撤销。现有恢复短语将失效，您的所有设备都将被移除。",
+  "recoveryResetDelete": "删除保险库并重新开始",
+  "recoveryResetPendingTitle": "正在删除旧保险库",
+  "recoveryResetPendingBody": "FiFe 正在验证云端删除结果。您可以关闭应用，稍后返回。",
+  "recoveryResetWaitUntil": "验证无法在 {when} 之前完成。",
+  "recoveryResetStorageBlocked": "云端删除需要处理。请恢复关联存储的访问和删除权限，然后重试。",
+  "recoveryResetSignin": "请重新登录以继续此次重置。",
+  "recoveryResetSigninAs": "请以 {email} 登录以继续此次重置。",
+  "recoveryResetNeedsConfirmation": "请确认重置以继续。FiFe 会检查重置是否已经开始。",
+  "recoveryResetConfirmationWait": "之前的确认仍然有效。请在其过期后再次检查，然后再发起新的确认。",
+  "recoveryResetConfirmationUntil": "请在 {when} 之后再次检查。",
+  "recoveryResetMissingKeys": "此设备上没有新的恢复密钥。请在发起重置的设备上继续。如果这些密钥已遗失，请等待删除完成，然后登录并再次选择“遗失恢复短语”。",
+  "recoveryResetDiscard": "返回登录",
+  "recoveryResetDiscardBody": "这将清除此设备上未完成的恢复设置。登录后，您需要使用新的恢复短语或再次重置保险库。",
+  "recoveryPhraseSaved": "我已保存新的恢复短语。",
+  "recoveryResetStarting": "正在开始重置…"
 }

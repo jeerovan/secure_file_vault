@@ -9,6 +9,16 @@ class AppLocalizationsHe extends AppLocalizations {
   AppLocalizationsHe([String locale = 'he']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'מחיקת נתונים מקומיים';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'ההפעלה שלך הסתיימה. FiFe צריך לסיים את מחיקת נתוני החשבון המקומיים לפני שתוכל להתחבר שוב. הקבצים המקוריים שלך נשמרים. נסה שוב כדי לסיים.';
+
+  @override
+  String get localSessionCleanupInProgress => 'נתוני FiFe נמחקים ממכשיר זה…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -762,4 +772,102 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get noItems => 'אין פריטים.';
+
+  @override
+  String get lostRecoveryPhrase => 'איבדתי את ביטוי השחזור';
+
+  @override
+  String get lostRecoveryIntro =>
+      'אם מכשיר אחר עדיין מחובר, יש לייצא ממנו את ביטוי השחזור לפני שמתחילים מחדש.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'הכספת הקיימת ב-FiFe, הקבצים המגובים והגדרות האחסון המקושר יימחקו לצמיתות.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'כל רישומי המכשירים הקיימים יוסרו.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'המכשירים האחרים יתנתקו וימחקו את נתוני FiFe המקומיים כאשר יגלו שהוסרו בזמן שהם מחוברים לאינטרנט.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'חשבון הדוא״ל, המינוי, קובצי המקור והעותקים שיוצאו מחוץ ל-FiFe יישמרו.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'הכספת החדשה תישאר נעולה עד לאימות המחיקה בענן. התהליך עשוי להימשך 24 שעות או יותר. אפשר לסגור את FiFe ולהמשיך מאוחר יותר.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'לאחר סיום המחיקה, יש לשמור ביטוי שחזור חדש בן 24 מילים כדי להשתמש בכספת החדשה.';
+
+  @override
+  String get recoveryResetContinue => 'המשך לאיפוס';
+
+  @override
+  String get recoveryResetConfirmTitle => 'למחוק לצמיתות את כספת FiFe?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'לא ניתן לבטל פעולה זו. ביטוי השחזור הקיים יפסיק לפעול וכל המכשירים שלך יוסרו.';
+
+  @override
+  String get recoveryResetDelete => 'מחיקת הכספת והתחלה מחדש';
+
+  @override
+  String get recoveryResetPendingTitle => 'מחיקת הכספת הקודמת';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe מאמת את המחיקה בענן. אפשר לסגור את האפליקציה ולחזור מאוחר יותר.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'האימות לא יכול להסתיים לפני $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'המחיקה בענן דורשת טיפול. יש לשחזר גישה והרשאות מחיקה לאחסון המקושר ולנסות שוב.';
+
+  @override
+  String get recoveryResetSignin => 'יש להתחבר מחדש כדי להמשיך באיפוס.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'יש להתחבר בתור $email כדי להמשיך באיפוס.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'יש לאשר את האיפוס כדי להמשיך. FiFe יבדוק אם הוא כבר התחיל.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'אישור קודם עדיין תקף. יש לבדוק שוב לאחר שיפוג לפני התחלת אישור חדש.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'יש לבדוק שוב לאחר $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'מפתחות השחזור החדשים אינם זמינים במכשיר הזה. יש להמשיך במכשיר שהתחיל את האיפוס. אם המפתחות אבדו, יש להמתין לסיום המחיקה, להתחבר ולבחור שוב באפשרות ״איבדתי את ביטוי השחזור״.';
+
+  @override
+  String get recoveryResetDiscard => 'חזרה להתחברות';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'הפעולה מנקה את הגדרת השחזור שלא הושלמה במכשיר הזה. לאחר ההתחברות יידרש ביטוי השחזור החדש או איפוס נוסף של הכספת.';
+
+  @override
+  String get recoveryPhraseSaved => 'שמרתי את ביטוי השחזור החדש שלי.';
+
+  @override
+  String get recoveryResetStarting => 'מתחילים באיפוס…';
 }

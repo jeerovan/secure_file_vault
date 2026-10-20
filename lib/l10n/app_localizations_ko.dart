@@ -9,6 +9,16 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => '로컬 데이터 삭제';
+
+  @override
+  String get localSessionCleanupDescription =>
+      '세션이 종료되었습니다. 다시 로그인하려면 FiFe에서 로컬 계정 데이터 삭제를 완료해야 합니다. 원본 파일은 유지됩니다. 완료하려면 다시 시도하세요.';
+
+  @override
+  String get localSessionCleanupInProgress => '이 기기에서 FiFe 데이터를 삭제하는 중…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -740,4 +750,101 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get noItems => '항목이 없습니다.';
+
+  @override
+  String get lostRecoveryPhrase => '복구 문구를 잃어버렸어요';
+
+  @override
+  String get lostRecoveryIntro =>
+      '다른 기기에 아직 로그인되어 있다면 처음부터 다시 시작하기 전에 해당 기기에서 복구 문구를 내보내세요.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      '기존 FiFe 보관함, 백업된 파일, 연결된 저장소 설정이 영구적으로 삭제됩니다.';
+
+  @override
+  String get lostRecoveryDevicesConsequence => '기존 기기 등록이 모두 삭제됩니다.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      '다른 기기는 온라인 상태에서 등록 삭제를 감지하면 로그아웃하고 FiFe 로컬 데이터를 지웁니다.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      '이메일 계정, 구독, 원본 파일, FiFe 외부로 내보낸 사본은 유지됩니다.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      '클라우드 삭제가 확인될 때까지 새 보관함은 잠겨 있습니다. 24시간 이상 걸릴 수 있습니다. FiFe를 닫고 나중에 계속할 수 있습니다.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      '삭제가 끝나면 새 보관함을 사용할 수 있도록 24단어로 된 새 복구 문구를 저장하세요.';
+
+  @override
+  String get recoveryResetContinue => '재설정 계속하기';
+
+  @override
+  String get recoveryResetConfirmTitle => 'FiFe 보관함을 영구적으로 삭제할까요?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      '이 작업은 되돌릴 수 없습니다. 기존 복구 문구는 더 이상 작동하지 않으며 모든 기기가 삭제됩니다.';
+
+  @override
+  String get recoveryResetDelete => '보관함 삭제 후 새로 시작';
+
+  @override
+  String get recoveryResetPendingTitle => '이전 보관함 삭제 중';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe가 클라우드 삭제를 확인하고 있습니다. 앱을 닫고 나중에 돌아올 수 있습니다.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return '$when 이전에는 확인이 완료될 수 없습니다.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      '클라우드 삭제에 조치가 필요합니다. 연결된 저장소의 접근 및 삭제 권한을 복구한 다음 다시 시도하세요.';
+
+  @override
+  String get recoveryResetSignin => '이 재설정을 계속하려면 다시 로그인하세요.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return '이 재설정을 계속하려면 $email 계정으로 로그인하세요.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      '계속하려면 재설정을 확인하세요. FiFe가 이미 시작되었는지 확인합니다.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      '이전 확인이 아직 유효합니다. 만료된 후 다시 확인하고 새 확인을 시작하세요.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return '$when 이후에 다시 확인하세요.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      '이 기기에서 새 복구 키를 사용할 수 없습니다. 재설정을 시작한 기기에서 계속하세요. 키를 잃어버렸다면 삭제가 끝날 때까지 기다린 후 로그인하여 다시 ‘복구 문구를 잃어버렸어요’를 선택하세요.';
+
+  @override
+  String get recoveryResetDiscard => '로그인으로 돌아가기';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      '이 기기의 미완료 복구 설정을 지웁니다. 로그인 후 새 복구 문구를 입력하거나 보관함을 다시 재설정해야 합니다.';
+
+  @override
+  String get recoveryPhraseSaved => '새 복구 문구를 저장했습니다.';
+
+  @override
+  String get recoveryResetStarting => '재설정 시작 중…';
 }

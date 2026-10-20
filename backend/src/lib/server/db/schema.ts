@@ -1,4 +1,13 @@
-import { pgTable, serial, integer, bigint, text, index, jsonb } from 'drizzle-orm/pg-core';
+import {
+	pgTable,
+	serial,
+	integer,
+	bigint,
+	text,
+	index,
+	jsonb,
+	primaryKey
+} from 'drizzle-orm/pg-core';
 import {
 	UserKeys,
 	UserDataKeys,
@@ -43,6 +52,82 @@ export const user = pgTable('user', {
 	[UserKeys.CIPHER]: text(UserKeys.CIPHER).notNull(),
 	[UserKeys.NONCE]: text(UserKeys.NONCE).notNull()
 });
+
+// Additive reset state: absence means a legacy, generation-zero vault.
+export const vaultState = pgTable('vault_state', {
+	userId: integer('user_id')
+		.primaryKey()
+		.references(() => user[UserKeys.ID], { onDelete: 'cascade' }),
+	generation: text('generation').notNull(),
+	resetAt: bigint('reset_at', { mode: 'number' }).notNull().default(0),
+	initiatingSessionHash: text('initiating_session_hash'),
+	ready: integer('ready').notNull().default(1)
+}).enableRLS();
+
+// Issuance and reset share the account lock. Absence is not evidence that old
+// capabilities have expired: retain the conservative rollout/readiness floor.
+export const vaultUploadCapability = pgTable(
+	'vault_upload_capability',
+	{
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user[UserKeys.ID], { onDelete: 'cascade' }),
+		generation: text('generation').notNull(),
+		expiresAt: bigint('expires_at', { mode: 'number' }).notNull()
+	},
+	(table) => [primaryKey({ columns: [table.userId, table.generation] })]
+).enableRLS();
+
+export const recoveryReset = pgTable(
+	'recovery_reset',
+	{
+		id: text('id').primaryKey(),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user[UserKeys.ID], { onDelete: 'cascade' }),
+		expectedGeneration: text('expected_generation').notNull(),
+		nextGeneration: text('next_generation').notNull(),
+		sessionHash: text('session_hash').notNull(),
+		challengeHash: text('challenge_hash').notNull(),
+		createdAt: bigint('created_at', { mode: 'number' }).notNull(),
+		expiresAt: bigint('expires_at', { mode: 'number' }).notNull(),
+		committedAt: bigint('committed_at', { mode: 'number' }),
+		notBefore: bigint('not_before', { mode: 'number' }),
+		envelopeHash: text('envelope_hash'),
+		phase: text('phase').notNull().default('prepared'),
+		error: text('error')
+	},
+	(table) => [
+		index('recovery_reset_user').on(table.userId),
+		index('recovery_reset_phase').on(table.phase)
+	]
+).enableRLS();
+
+export const recoveryCleanupTarget = pgTable(
+	'recovery_cleanup_target',
+	{
+		id: text('id').primaryKey(),
+		operationId: text('operation_id')
+			.notNull()
+			.references(() => recoveryReset.id, { onDelete: 'cascade' }),
+		providerId: integer('provider_id').notNull(),
+		prefix: text('prefix').notNull(),
+		credentials: jsonb('credentials').$type<Record<string, unknown>>().notNull(),
+		cursor: jsonb('cursor').$type<Record<string, unknown>>().notNull().default({}),
+		phase: text('phase').notNull().default('pending'),
+		leaseOwner: text('lease_owner'),
+		leaseUntil: bigint('lease_until', { mode: 'number' }).notNull().default(0),
+		nextAttemptAt: bigint('next_attempt_at', { mode: 'number' }).notNull().default(0),
+		attempts: integer('attempts').notNull().default(0),
+		error: text('error')
+	},
+	(table) => [index('recovery_cleanup_due').on(table.phase, table.nextAttemptAt)]
+).enableRLS();
+
+export const recoveryWorkerState = pgTable('recovery_worker_state', {
+	id: text('id').primaryKey(),
+	lastRunAt: bigint('last_run_at', { mode: 'number' }).notNull()
+}).enableRLS();
 
 export const credential = pgTable(
 	'credential',

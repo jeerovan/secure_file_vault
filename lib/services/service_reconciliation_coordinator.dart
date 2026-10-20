@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:uuid/uuid.dart';
 
 import '../storage/storage_sqlite.dart';
+import 'service_session_work.dart';
 
 class OperationLease {
   final String operationId;
@@ -72,6 +73,7 @@ class ExclusiveOperationCoordinator {
   static const _uuid = Uuid();
 
   static Future<OperationLease?> tryAcquire(String operationId) async {
+    await SessionWork.checkpoint();
     if (!_activeOperations.add(operationId)) return null;
 
     final owner = _uuid.v4();

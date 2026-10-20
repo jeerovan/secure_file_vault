@@ -136,6 +136,24 @@ abstract class AppLocalizations {
     Locale('zh')
   ];
 
+  /// Title while finishing local data removal after session revocation
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing local data'**
+  String get localSessionCleanupTitle;
+
+  /// Explains why a failed local cleanup must be retried before signing in
+  ///
+  /// In en, this message translates to:
+  /// **'Your session has ended. FiFe needs to finish clearing its local account data before you can sign in again. Your original files are kept. Try again to finish.'**
+  String get localSessionCleanupDescription;
+
+  /// Accessible status while retrying local account cleanup
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing FiFe data from this device…'**
+  String get localSessionCleanupInProgress;
+
   /// App title
   ///
   /// In en, this message translates to:
@@ -1473,6 +1491,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No items.'**
   String get noItems;
+
+  /// No description provided for @lostRecoveryPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost recovery phrase'**
+  String get lostRecoveryPhrase;
+
+  /// No description provided for @lostRecoveryIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'If another device is still signed in, export your recovery phrase from it before starting over.'**
+  String get lostRecoveryIntro;
+
+  /// No description provided for @lostRecoveryDeleteConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your existing FiFe vault, backed-up files and linked storage settings will be permanently deleted.'**
+  String get lostRecoveryDeleteConsequence;
+
+  /// No description provided for @lostRecoveryDevicesConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'All existing device registrations will be removed.'**
+  String get lostRecoveryDevicesConsequence;
+
+  /// No description provided for @lostRecoveryLogoutConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Other devices will sign out and clear their FiFe local data when they next discover their removal while online.'**
+  String get lostRecoveryLogoutConsequence;
+
+  /// No description provided for @lostRecoveryKeepConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email account, subscription, original source files and copies exported outside FiFe will be kept.'**
+  String get lostRecoveryKeepConsequence;
+
+  /// No description provided for @lostRecoveryWaitConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Your new vault will stay locked until cloud deletion is verified. This may take 24 hours or longer. You can close FiFe and resume later.'**
+  String get lostRecoveryWaitConsequence;
+
+  /// No description provided for @lostRecoveryNewPhraseConsequence.
+  ///
+  /// In en, this message translates to:
+  /// **'After deletion finishes, save a new 24-word recovery phrase to use your fresh vault.'**
+  String get lostRecoveryNewPhraseConsequence;
+
+  /// No description provided for @recoveryResetContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to reset'**
+  String get recoveryResetContinue;
+
+  /// No description provided for @recoveryResetConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete your FiFe vault?'**
+  String get recoveryResetConfirmTitle;
+
+  /// No description provided for @recoveryResetConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This cannot be undone. Your existing recovery phrase will stop working, and all your devices will be removed.'**
+  String get recoveryResetConfirmBody;
+
+  /// No description provided for @recoveryResetDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete vault and start fresh'**
+  String get recoveryResetDelete;
+
+  /// No description provided for @recoveryResetPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleting your previous vault'**
+  String get recoveryResetPendingTitle;
+
+  /// No description provided for @recoveryResetPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'FiFe is verifying cloud deletion. You can close the app and return later.'**
+  String get recoveryResetPendingBody;
+
+  /// No description provided for @recoveryResetWaitUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Verification cannot finish before {when}.'**
+  String recoveryResetWaitUntil(String when);
+
+  /// No description provided for @recoveryResetStorageBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud deletion needs attention. Restore access and deletion permissions for your linked storage, then try again.'**
+  String get recoveryResetStorageBlocked;
+
+  /// No description provided for @recoveryResetSignin.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to resume this reset.'**
+  String get recoveryResetSignin;
+
+  /// No description provided for @recoveryResetSigninAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in as {email} to resume this reset.'**
+  String recoveryResetSigninAs(String email);
+
+  /// No description provided for @recoveryResetNeedsConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm the reset to continue. FiFe will check whether it has already started.'**
+  String get recoveryResetNeedsConfirmation;
+
+  /// No description provided for @recoveryResetConfirmationWait.
+  ///
+  /// In en, this message translates to:
+  /// **'A previous confirmation is still valid. Check again after it expires before starting a new confirmation.'**
+  String get recoveryResetConfirmationWait;
+
+  /// No description provided for @recoveryResetConfirmationUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Check again after {when}.'**
+  String recoveryResetConfirmationUntil(String when);
+
+  /// No description provided for @recoveryResetMissingKeys.
+  ///
+  /// In en, this message translates to:
+  /// **'The new recovery keys are not available on this device. Continue on the device that started the reset. If those keys were lost, wait for deletion to finish, then sign in and choose “Lost recovery phrase” again.'**
+  String get recoveryResetMissingKeys;
+
+  /// No description provided for @recoveryResetDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Return to sign-in'**
+  String get recoveryResetDiscard;
+
+  /// No description provided for @recoveryResetDiscardBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This clears the unfinished recovery setup on this device. You will need the new recovery phrase or another vault reset after signing in.'**
+  String get recoveryResetDiscardBody;
+
+  /// No description provided for @recoveryPhraseSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'I have saved my new recovery phrase.'**
+  String get recoveryPhraseSaved;
+
+  /// No description provided for @recoveryResetStarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting reset…'**
+  String get recoveryResetStarting;
 }
 
 class _AppLocalizationsDelegate

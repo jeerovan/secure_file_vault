@@ -9,6 +9,17 @@ class AppLocalizationsTh extends AppLocalizations {
   AppLocalizationsTh([String locale = 'th']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'กำลังล้างข้อมูลในเครื่อง';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'เซสชันของคุณสิ้นสุดแล้ว FiFe ต้องล้างข้อมูลบัญชีในเครื่องให้เสร็จก่อนที่คุณจะลงชื่อเข้าใช้อีกครั้ง ไฟล์ต้นฉบับของคุณจะยังคงอยู่ ลองอีกครั้งเพื่อดำเนินการให้เสร็จ';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'กำลังล้างข้อมูล FiFe จากอุปกรณ์นี้…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -754,4 +765,103 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get noItems => 'ไม่มีรายการ';
+
+  @override
+  String get lostRecoveryPhrase => 'ทำวลีการกู้คืนหาย';
+
+  @override
+  String get lostRecoveryIntro =>
+      'หากอุปกรณ์อื่นยังลงชื่อเข้าใช้อยู่ ให้ส่งออกวลีการกู้คืนจากอุปกรณ์นั้นก่อนเริ่มต้นใหม่';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'ห้องนิรภัย FiFe ปัจจุบัน ไฟล์สำรอง และการตั้งค่าที่เก็บข้อมูลที่เชื่อมโยงจะถูกลบอย่างถาวร';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'การลงทะเบียนอุปกรณ์ที่มีอยู่ทั้งหมดจะถูกลบ';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'อุปกรณ์อื่นจะออกจากระบบและล้างข้อมูล FiFe ในเครื่อง เมื่อเชื่อมต่ออินเทอร์เน็ตและตรวจพบว่าถูกนำออกแล้ว';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'บัญชีอีเมล การสมัครสมาชิก ไฟล์ต้นฉบับ และสำเนาที่ส่งออกไปนอก FiFe จะยังคงอยู่';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'ห้องนิรภัยใหม่จะยังถูกล็อกจนกว่าจะยืนยันการลบบนคลาวด์ได้ ซึ่งอาจใช้เวลา 24 ชั่วโมงขึ้นไป คุณสามารถปิด FiFe แล้วกลับมาทำต่อภายหลังได้';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'เมื่อการลบเสร็จสิ้น ให้บันทึกวลีการกู้คืนใหม่ 24 คำเพื่อใช้ห้องนิรภัยใหม่';
+
+  @override
+  String get recoveryResetContinue => 'ดำเนินการรีเซ็ตต่อ';
+
+  @override
+  String get recoveryResetConfirmTitle => 'ลบห้องนิรภัย FiFe อย่างถาวรหรือไม่';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'การดำเนินการนี้ไม่สามารถย้อนกลับได้ วลีการกู้คืนปัจจุบันจะใช้งานไม่ได้ และอุปกรณ์ทั้งหมดของคุณจะถูกนำออก';
+
+  @override
+  String get recoveryResetDelete => 'ลบห้องนิรภัยและเริ่มใหม่';
+
+  @override
+  String get recoveryResetPendingTitle => 'กำลังลบห้องนิรภัยเดิม';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe กำลังตรวจสอบการลบบนคลาวด์ คุณสามารถปิดแอปแล้วกลับมาภายหลังได้';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'การตรวจสอบจะเสร็จก่อน $when ไม่ได้';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'การลบบนคลาวด์ต้องได้รับการแก้ไข โปรดคืนสิทธิ์เข้าถึงและสิทธิ์ลบสำหรับที่เก็บข้อมูลที่เชื่อมโยง แล้วลองอีกครั้ง';
+
+  @override
+  String get recoveryResetSignin =>
+      'ลงชื่อเข้าใช้อีกครั้งเพื่อดำเนินการรีเซ็ตต่อ';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'ลงชื่อเข้าใช้ด้วย $email เพื่อดำเนินการรีเซ็ตต่อ';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'ยืนยันการรีเซ็ตเพื่อดำเนินการต่อ FiFe จะตรวจสอบว่าเริ่มไปแล้วหรือยัง';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'การยืนยันก่อนหน้ายังมีผล โปรดตรวจสอบอีกครั้งหลังหมดอายุก่อนเริ่มการยืนยันใหม่';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'ตรวจสอบอีกครั้งหลัง $when';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'คีย์กู้คืนใหม่ไม่พร้อมใช้งานบนอุปกรณ์นี้ ให้ดำเนินการต่อบนอุปกรณ์ที่เริ่มรีเซ็ต หากคีย์สูญหาย ให้รอจนการลบเสร็จสิ้น จากนั้นลงชื่อเข้าใช้แล้วเลือก “ทำวลีการกู้คืนหาย” อีกครั้ง';
+
+  @override
+  String get recoveryResetDiscard => 'กลับไปลงชื่อเข้าใช้';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'การดำเนินการนี้จะล้างการตั้งค่าการกู้คืนที่ยังไม่เสร็จบนอุปกรณ์นี้ หลังลงชื่อเข้าใช้ คุณจะต้องใช้วลีการกู้คืนใหม่หรือรีเซ็ตห้องนิรภัยอีกครั้ง';
+
+  @override
+  String get recoveryPhraseSaved => 'ฉันบันทึกวลีการกู้คืนใหม่แล้ว';
+
+  @override
+  String get recoveryResetStarting => 'กำลังเริ่มรีเซ็ต…';
 }

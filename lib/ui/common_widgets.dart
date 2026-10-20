@@ -17,6 +17,9 @@ import '../utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../services/service_logger.dart';
+import '../services/service_events.dart';
+import '../services/service_session_cleanup.dart';
+import '../services/service_session_work.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../utils/common.dart';
@@ -28,9 +31,34 @@ class AppSetupState extends ChangeNotifier {
 
   // User data
   String? _selectedPlan;
+  late final StreamSubscription<AppEvent> _sessionEvents;
+  int _checkId = 0;
+  bool _disposed = false;
 
   AppSetupState(this._prefs) {
+    _sessionEvents = EventStream().events.listen((event) {
+      if (event.key == EventKey.sessionInvalidated) {
+        _checkId++;
+        _setStep(SetupStep.sessionCleanup);
+      } else if (event.key == EventKey.signout) {
+        unawaited(recheckStatus());
+      }
+    });
     _checkSetupStatus();
+  }
+
+  void _setStep(SetupStep step, [int? checkId]) {
+    if (_disposed || (checkId != null && checkId != _checkId)) return;
+    _currentStep = step;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _checkId++;
+    unawaited(_sessionEvents.cancel());
+    super.dispose();
   }
 
   // Getters
@@ -39,17 +67,43 @@ class AppSetupState extends ChangeNotifier {
 
   // Check all setup steps on app start
   Future<void> _checkSetupStatus() async {
+    try {
+      await _readSetupStatus();
+    } on SessionInvalidated {
+      _setStep(SetupStep.sessionCleanup);
+    } catch (_) {
+      // Unavailable key storage must not display cached private data.
+      _setStep(SetupStep.sessionCleanup);
+    }
+  }
+
+  Future<void> _readSetupStatus() async {
     logger.info("Checking..");
-    _currentStep = SetupStep.loading;
-    notifyListeners();
+    final checkId = ++_checkId;
+    if (_currentStep != SetupStep.sessionCleanup) {
+      _setStep(SetupStep.loading, checkId);
+    }
+    if (!await SessionCleanup.instance.resume()) {
+      _setStep(SetupStep.sessionCleanup, checkId);
+      return;
+    }
+    if (_disposed || checkId != _checkId) return;
 
     bool onboarded = await ModelSetting.getRaw(AppString.onboarding.string,
             defaultValue: "no") ==
         "yes";
     if (!onboarded) {
       logger.info("Onboarding");
-      _currentStep = SetupStep.onboard;
-      notifyListeners();
+      _setStep(SetupStep.onboard, checkId);
+      return;
+    }
+
+    if (await _prefs.containsKey(key: AppString.recoveryResetStage.string)) {
+      final reauthenticate = await ModelSetting.getRaw(
+              AppString.recoveryReauthentication.string) ==
+          'yes';
+      _setStep(
+          reauthenticate ? SetupStep.signin : SetupStep.recoveryReset, checkId);
       return;
     }
 
@@ -57,8 +111,7 @@ class AppSetupState extends ChangeNotifier {
             defaultValue: "no") ==
         "no") {
       logger.info("Signin");
-      _currentStep = SetupStep.signin;
-      notifyListeners();
+      _setStep(SetupStep.signin, checkId);
       return;
     }
 
@@ -66,8 +119,7 @@ class AppSetupState extends ChangeNotifier {
     String? securityKey = await _prefs.read(key: AppString.masterKey.string);
     if (securityKey == null) {
       logger.info("SecurityKey");
-      _currentStep = SetupStep.checkAccessKey;
-      notifyListeners();
+      _setStep(SetupStep.checkAccessKey, checkId);
       return;
     }
 
@@ -75,16 +127,14 @@ class AppSetupState extends ChangeNotifier {
     String deviceId = await getDeviceUuid();
     if (deviceId.isEmpty) {
       logger.info("Registration");
-      _currentStep = SetupStep.registerDevice;
-      notifyListeners();
+      _setStep(SetupStep.registerDevice, checkId);
       return;
     }
 
     PermissionStatus storagePermission = await getStoragePermissionStatus();
     if (!storagePermission.isGranted) {
       logger.info("Storage Permission");
-      _currentStep = SetupStep.storagePermission;
-      notifyListeners();
+      _setStep(SetupStep.storagePermission, checkId);
       return;
     }
 
@@ -98,10 +148,10 @@ class AppSetupState extends ChangeNotifier {
       if (quickSyncRequired) {
         if (!notificationPermission.isGranted) {
           logger.info("Notification Permission");
-          _currentStep = SetupStep.notificationPermission;
-          notifyListeners();
+          _setStep(SetupStep.notificationPermission, checkId);
           return;
         } else {
+          if (_disposed || checkId != _checkId) return;
           await BackgroundExecutionService.instance.setEnabled(true);
         }
       }
@@ -113,57 +163,66 @@ class AppSetupState extends ChangeNotifier {
               defaultValue: "no") ==
           "yes";
       if (backgroundSyncRequired) {
+        if (_disposed || checkId != _checkId) return;
         await BackgroundExecutionService.instance.setEnabled(true);
       }
     }
 
     // All setup complete
-    _currentStep = SetupStep.explorer;
-    notifyListeners();
+    _setStep(SetupStep.explorer, checkId);
   }
 
   // Onboarded
   Future<void> onBoarded() async {
-    _currentStep = SetupStep.signin;
-    notifyListeners();
+    _advance(SetupStep.signin);
   }
 
   // Registration
   Future<void> completeSignin() async {
-    _currentStep = SetupStep.checkAccessKey;
-    notifyListeners();
+    final checkId = _checkId;
+    final pending =
+        await _prefs.containsKey(key: AppString.recoveryResetStage.string);
+    if (_disposed || checkId != _checkId) return;
+    await ModelSetting.delete(AppString.recoveryReauthentication.string);
+    SessionWork.check();
+    _setStep(
+        pending ? SetupStep.recoveryReset : SetupStep.checkAccessKey, checkId);
+  }
+
+  Future<void> showRecoveryReset() async {
+    SessionWork.check();
+    _setStep(SetupStep.recoveryReset);
   }
 
   // Security key
   Future<void> decodeAccessKey() async {
-    _currentStep = SetupStep.decodeAccessKey;
-    notifyListeners();
+    _advance(SetupStep.decodeAccessKey);
   }
 
   Future<void> generateAccessKey() async {
-    _currentStep = SetupStep.generateAccessKey;
-    notifyListeners();
+    _advance(SetupStep.generateAccessKey);
   }
 
   Future<void> showAccessKeys() async {
-    _currentStep = SetupStep.showAccessKey;
-    notifyListeners();
+    _advance(SetupStep.showAccessKey);
   }
 
   // Device setup
   Future<void> registerDevice() async {
-    _currentStep = SetupStep.registerDevice;
-    notifyListeners();
+    _advance(SetupStep.registerDevice);
   }
 
   Future<void> manageDevices() async {
-    _currentStep = SetupStep.manageDevices;
-    notifyListeners();
+    _advance(SetupStep.manageDevices);
   }
 
   Future<void> showExplorer() async {
-    _currentStep = SetupStep.explorer;
-    notifyListeners();
+    _advance(SetupStep.explorer);
+  }
+
+  void _advance(SetupStep step) {
+    SessionWork.check();
+    _setStep(step);
   }
 
   // Logout / Reset

@@ -1,5 +1,17 @@
 {
   "@@locale": "en",
+  "localSessionCleanupTitle": "Clearing local data",
+  "@localSessionCleanupTitle": {
+    "description": "Title while finishing local data removal after session revocation"
+  },
+  "localSessionCleanupDescription": "Your session has ended. FiFe needs to finish clearing its local account data before you can sign in again. Your original files are kept. Try again to finish.",
+  "@localSessionCleanupDescription": {
+    "description": "Explains why a failed local cleanup must be retried before signing in"
+  },
+  "localSessionCleanupInProgress": "Clearing FiFe data from this device…",
+  "@localSessionCleanupInProgress": {
+    "description": "Accessible status while retrying local account cleanup"
+  },
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -994,5 +1006,52 @@
   "noItems": "No items.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Lost recovery phrase",
+  "lostRecoveryIntro": "If another device is still signed in, export your recovery phrase from it before starting over.",
+  "lostRecoveryDeleteConsequence": "Your existing FiFe vault, backed-up files and linked storage settings will be permanently deleted.",
+  "lostRecoveryDevicesConsequence": "All existing device registrations will be removed.",
+  "lostRecoveryLogoutConsequence": "Other devices will sign out and clear their FiFe local data when they next discover their removal while online.",
+  "lostRecoveryKeepConsequence": "Your email account, subscription, original source files and copies exported outside FiFe will be kept.",
+  "lostRecoveryWaitConsequence": "Your new vault will stay locked until cloud deletion is verified. This may take 24 hours or longer. You can close FiFe and resume later.",
+  "lostRecoveryNewPhraseConsequence": "After deletion finishes, save a new 24-word recovery phrase to use your fresh vault.",
+  "recoveryResetContinue": "Continue to reset",
+  "recoveryResetConfirmTitle": "Permanently delete your FiFe vault?",
+  "recoveryResetConfirmBody": "This cannot be undone. Your existing recovery phrase will stop working, and all your devices will be removed.",
+  "recoveryResetDelete": "Delete vault and start fresh",
+  "recoveryResetPendingTitle": "Deleting your previous vault",
+  "recoveryResetPendingBody": "FiFe is verifying cloud deletion. You can close the app and return later.",
+  "recoveryResetWaitUntil": "Verification cannot finish before {when}.",
+  "@recoveryResetWaitUntil": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryResetStorageBlocked": "Cloud deletion needs attention. Restore access and deletion permissions for your linked storage, then try again.",
+  "recoveryResetSignin": "Sign in again to resume this reset.",
+  "recoveryResetSigninAs": "Sign in as {email} to resume this reset.",
+  "@recoveryResetSigninAs": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryResetNeedsConfirmation": "Confirm the reset to continue. FiFe will check whether it has already started.",
+  "recoveryResetConfirmationWait": "A previous confirmation is still valid. Check again after it expires before starting a new confirmation.",
+  "recoveryResetConfirmationUntil": "Check again after {when}.",
+  "@recoveryResetConfirmationUntil": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "recoveryResetMissingKeys": "The new recovery keys are not available on this device. Continue on the device that started the reset. If those keys were lost, wait for deletion to finish, then sign in and choose “Lost recovery phrase” again.",
+  "recoveryResetDiscard": "Return to sign-in",
+  "recoveryResetDiscardBody": "This clears the unfinished recovery setup on this device. You will need the new recovery phrase or another vault reset after signing in.",
+  "recoveryPhraseSaved": "I have saved my new recovery phrase.",
+  "recoveryResetStarting": "Starting reset…"
 }

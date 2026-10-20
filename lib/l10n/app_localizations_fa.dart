@@ -9,6 +9,17 @@ class AppLocalizationsFa extends AppLocalizations {
   AppLocalizationsFa([String locale = 'fa']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'پاک کردن داده‌های محلی';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'نشست شما پایان یافته است. FiFe باید پیش از ورود دوباره، پاک کردن داده‌های محلی حساب را کامل کند. فایل‌های اصلی شما حفظ می‌شوند. برای تکمیل دوباره تلاش کنید.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'در حال پاک کردن داده‌های FiFe از این دستگاه…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -757,4 +768,102 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get noItems => 'موردی وجود ندارد.';
+
+  @override
+  String get lostRecoveryPhrase => 'عبارت بازیابی را گم کرده‌ام';
+
+  @override
+  String get lostRecoveryIntro =>
+      'اگر دستگاه دیگری هنوز وارد حساب است، پیش از شروع دوباره عبارت بازیابی را از آن صادر کنید.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'خزانهٔ فعلی FiFe، فایل‌های پشتیبان‌گیری‌شده و تنظیمات فضای ذخیره‌سازی متصل برای همیشه حذف می‌شوند.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'ثبت همهٔ دستگاه‌های فعلی حذف خواهد شد.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'دستگاه‌های دیگر وقتی آنلاین شوند و حذف شدن خود را تشخیص دهند، از حساب خارج شده و داده‌های محلی FiFe را پاک می‌کنند.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'حساب ایمیل، اشتراک، فایل‌های اصلی و نسخه‌های صادرشده خارج از FiFe حفظ می‌شوند.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'خزانهٔ جدید تا تأیید حذف ابری قفل می‌ماند. این کار ممکن است ۲۴ ساعت یا بیشتر طول بکشد. می‌توانید FiFe را ببندید و بعداً ادامه دهید.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'پس از پایان حذف، برای استفاده از خزانهٔ جدید یک عبارت بازیابی تازهٔ ۲۴ کلمه‌ای ذخیره کنید.';
+
+  @override
+  String get recoveryResetContinue => 'ادامهٔ بازنشانی';
+
+  @override
+  String get recoveryResetConfirmTitle => 'خزانهٔ FiFe برای همیشه حذف شود؟';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'این کار برگشت‌پذیر نیست. عبارت بازیابی فعلی دیگر کار نمی‌کند و همهٔ دستگاه‌هایتان حذف می‌شوند.';
+
+  @override
+  String get recoveryResetDelete => 'حذف خزانه و شروع دوباره';
+
+  @override
+  String get recoveryResetPendingTitle => 'در حال حذف خزانهٔ قبلی';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe در حال تأیید حذف ابری است. می‌توانید برنامه را ببندید و بعداً برگردید.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'تأیید نمی‌تواند پیش از $when پایان یابد.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'حذف ابری به رسیدگی نیاز دارد. دسترسی و مجوز حذف فضای ذخیره‌سازی متصل را بازگردانید و دوباره تلاش کنید.';
+
+  @override
+  String get recoveryResetSignin => 'برای ادامهٔ بازنشانی دوباره وارد شوید.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'برای ادامهٔ بازنشانی با $email وارد شوید.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'برای ادامه، بازنشانی را تأیید کنید. FiFe بررسی می‌کند که آیا از قبل شروع شده است.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'تأیید قبلی هنوز معتبر است. پیش از شروع تأیید جدید، پس از پایان اعتبار آن دوباره بررسی کنید.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'پس از $when دوباره بررسی کنید.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'کلیدهای بازیابی جدید روی این دستگاه موجود نیستند. در دستگاهی که بازنشانی را آغاز کرده ادامه دهید. اگر کلیدها گم شده‌اند، منتظر پایان حذف بمانید، سپس وارد شوید و دوباره «عبارت بازیابی را گم کرده‌ام» را انتخاب کنید.';
+
+  @override
+  String get recoveryResetDiscard => 'بازگشت به ورود';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'این کار تنظیمات ناتمام بازیابی را روی این دستگاه پاک می‌کند. پس از ورود به عبارت بازیابی جدید یا بازنشانی دوبارهٔ خزانه نیاز دارید.';
+
+  @override
+  String get recoveryPhraseSaved => 'عبارت بازیابی جدیدم را ذخیره کرده‌ام.';
+
+  @override
+  String get recoveryResetStarting => 'در حال شروع بازنشانی…';
 }

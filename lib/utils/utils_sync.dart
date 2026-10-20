@@ -2,12 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_auth.dart';
-import 'package:file_vault_bb/services/service_foreground.dart';
-import 'package:file_vault_bb/services/service_background_execution.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
-import 'package:purchases_flutter/purchases_flutter.dart';
 import '../models/model_change.dart';
 import 'package:flutter/foundation.dart';
 import '../services/service_backend.dart';
@@ -15,6 +11,9 @@ import '../services/service_events.dart';
 import '../services/service_recon.dart';
 import '../services/service_reconciliation_coordinator.dart';
 import '../services/service_sync_budget.dart';
+import '../services/service_session_cleanup.dart';
+import '../services/service_session_work.dart';
+import '../storage/storage_secure.dart';
 import '../storage/storage_channel.dart';
 import '../storage/storage_sqlite.dart';
 import '../storage/local_item_access.dart';
@@ -26,7 +25,6 @@ import '../models/model_item_task.dart';
 import '../models/model_part.dart';
 import '../models/model_state.dart';
 import '../services/service_logger.dart';
-import '../storage/storage_secure.dart';
 import '../utils/utils_crypto.dart';
 import '../utils/utils_file.dart';
 import '../utils/utils_sync_cursor.dart';
@@ -77,6 +75,10 @@ class SyncUtils {
 
   // Pass inBackground flag to determine if we should await everything
   Future<bool> reconFolders({String caller = ""}) async {
+    return SessionWork.run(() => _reconFolders(caller: caller));
+  }
+
+  Future<bool> _reconFolders({String caller = ""}) async {
     String? userId = await getSignedInUserId();
     if (userId == null) {
       return true;
@@ -150,6 +152,10 @@ class SyncUtils {
   }
 
   Future<bool> triggerSync({String caller = ""}) async {
+    return SessionWork.run(() => _triggerSync(caller: caller));
+  }
+
+  Future<bool> _triggerSync({String caller = ""}) async {
     SyncBudget.check();
     final lease = await ExclusiveOperationCoordinator.tryAcquire('metadata');
     if (lease == null) {
@@ -227,12 +233,24 @@ class SyncUtils {
 
   // to sync, one must have masterKey with
   static Future<bool> canSync() async {
+    if (await SecureStorage()
+        .containsKey(key: AppString.recoveryResetStage.string)) {
+      return false;
+    }
     String? masterKey = await getMasterKey();
     bool hasKeys = masterKey != null;
     return hasKeys;
   }
 
   static Future<bool> checkDeviceStatus() async {
+    try {
+      return await SessionWork.run(_checkDeviceStatus);
+    } on SessionInvalidated {
+      return true;
+    }
+  }
+
+  static Future<bool> _checkDeviceStatus() async {
     bool removed = false;
     if (!simulateTesting()) {
       final api = BackendApi();
@@ -240,18 +258,29 @@ class SyncUtils {
         String deviceId = await getDeviceUuid();
         final response = await api.get(
             endpoint: '/devices', queryParameters: {'device_uuid': deviceId});
+        if (!SessionWork.active) return true;
         final status = response["success"];
         if (status == -1) {
           logger.error("checkDeviceStatus", error: response["message"]);
         } else if (status == 1) {
           final data = response["data"];
-          removed = data == null || data.isEmpty || data["active"] == 0;
+          removed = data == null ||
+              (data is Map && (data.isEmpty || data["active"] == 0));
+        } else if (status == 0 &&
+            response['message'].toString() == '1' &&
+            deviceId.isNotEmpty &&
+            await getMasterKey() != null) {
+          // NO_USER is revocation only for an already registered local vault.
+          // A fresh OTP sign-in with no server keys still uses normal onboarding.
+          removed = true;
         }
 
         if (removed) {
-          // signout
-          await signout();
+          // Revoked devices cannot rely on authenticated remote signout.
+          await SessionCleanup.instance.request();
         }
+      } on SessionInvalidated {
+        rethrow;
       } catch (e, s) {
         logger.error("checkDeviceStatus", error: e, stackTrace: s);
       }
@@ -297,37 +326,7 @@ class SyncUtils {
   }
 
   static Future<bool> resetDevice() async {
-    SecureStorage storage = SecureStorage();
-    try {
-      if (!simulateTesting() && subscriptionsSupported) {
-        final isAnonymous = await Purchases.isAnonymous;
-        if (!isAnonymous) {
-          await Purchases.logOut();
-        }
-      }
-      if (Platform.isAndroid) {
-        await ServiceForeground.instance.stop();
-      } else if (Platform.isIOS) {
-        await BackgroundExecutionService.instance.cancelIosWork();
-      }
-      final locale = await ModelSetting.getRaw(AppString.locale.string);
-      await storage.clear();
-      final dbHelper = StorageSqlite.instance;
-      await dbHelper.clearDb();
-      ModelSetting.clear();
-      await clearFiFeDirectory();
-      // keep locale
-      if (locale.isNotEmpty) {
-        await ModelSetting.set(AppString.locale.string, locale);
-      }
-      await ModelSetting.set(AppString.onboarding.string, "yes");
-      EventStream().publish(AppEvent(
-          type: EventType.system, id: "signout", key: EventKey.signout));
-      return true;
-    } catch (e, s) {
-      logger.error("Resetting device", error: e, stackTrace: s);
-      return false;
-    }
+    return SessionCleanup.instance.request();
   }
 
   static Future<Map<String, dynamic>?> prepareChangeToPush(

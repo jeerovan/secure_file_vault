@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'service_session_work.dart';
+
 class BackgroundSyncInterrupted implements Exception {
   const BackgroundSyncInterrupted(this.reason);
   final String reason;
@@ -70,10 +72,14 @@ class SyncBudget {
     _abortActions.clear();
   }
 
-  static void check({Duration reserve = Duration.zero}) =>
-      current?.checkpoint(reserve: reserve);
+  static void check({Duration reserve = Duration.zero}) {
+    SessionWork.check();
+    current?.checkpoint(reserve: reserve);
+  }
 
-  static Stream<T> guardStream<T>(Stream<T> source) => source.map((value) {
+  static Stream<T> guardStream<T>(Stream<T> source) =>
+      source.asyncMap((value) async {
+        await SessionWork.checkpoint();
         check();
         return value;
       });

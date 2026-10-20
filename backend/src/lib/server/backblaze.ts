@@ -8,6 +8,7 @@ import {
 } from './db/api';
 import { CredentialKeys, StorageProvider } from './db/keys';
 import type { Db, Tx } from './db';
+import { backblazeCredentialsFromAuthorization } from './backblazeCredentials';
 
 export async function authorize(appId: string, appKey: string) {
 	let data;
@@ -15,22 +16,22 @@ export async function authorize(appId: string, appKey: string) {
 	const B2_API_URL = 'https://api.backblazeb2.com/b2api/v4';
 	try {
 		const authResponse = await fetch(`${B2_API_URL}/b2_authorize_account`, {
-			headers: { Authorization: `Basic ${btoa(`${appId}:${appKey}`)}` }
+			headers: { Authorization: `Basic ${btoa(`${appId}:${appKey}`)}` },
+			redirect: 'manual',
+			signal: AbortSignal.timeout(15_000)
 		});
 
 		if (!authResponse.ok) {
 			const errorData = await authResponse.json();
-			message = `${errorData.code}:${errorData.message}`;
+			message =
+				typeof errorData?.code === 'string' && /^[a-z0-9_]+$/.test(errorData.code)
+					? errorData.code
+					: 'authorization_failed';
 		} else {
 			data = await authResponse.json();
 		}
-	} catch (e) {
-		if (e instanceof Error) {
-			console.log(e.stack);
-			message = e.message;
-		} else {
-			message = e;
-		}
+	} catch {
+		message = 'authorization_failed';
 	}
 	return { message, data };
 }
@@ -40,33 +41,9 @@ export async function addAccount(
 	userId: number,
 	appId: string,
 	appKey: string,
-	data: any
+	data: unknown
 ) {
-	const {
-		accountId,
-		authorizationToken,
-		apiInfo: {
-			storageApi: {
-				apiUrl,
-				downloadUrl,
-				allowed: {
-					buckets: [{ id: bucketId, name: bucketName }]
-				},
-				s3ApiUrl
-			}
-		}
-	} = data;
-	const credentials = {
-		accountId,
-		appId,
-		appKey,
-		authorizationToken,
-		bucketId,
-		bucketName,
-		apiUrl,
-		downloadUrl,
-		s3ApiUrl
-	};
+	const credentials = backblazeCredentialsFromAuthorization(appId, appKey, data);
 	const providerId = StorageProvider.BACKBLAZE;
 	await addCredentials(db, userId, credentials, providerId);
 	return json({ success: 1 });
@@ -79,6 +56,12 @@ export async function authenticate(db: Db | Tx, userId: number, storageId: numbe
 		// TODO user should be flagged here
 		return undefined;
 	}
+	if (
+		![StorageProvider.FIFE, StorageProvider.BACKBLAZE].includes(
+			credential[CredentialKeys.PROVIDER_ID]
+		)
+	)
+		return undefined;
 
 	const creds = credential[CredentialKeys.CREDENTIALS] as {
 		accountId: string;
@@ -108,6 +91,7 @@ export async function authenticate(db: Db | Tx, userId: number, storageId: numbe
 
 	// Bundle the existing credentials to easily return them
 	const existingData = {
+		...creds,
 		accountId,
 		appId,
 		appKey,
@@ -117,6 +101,10 @@ export async function authenticate(db: Db | Tx, userId: number, storageId: numbe
 		apiUrl: existingApiUrl,
 		downloadUrl: existingDownloadUrl,
 		s3ApiUrl: existingS3ApiUrl
+	};
+	const currentCredentials = async () => {
+		const latest = await getCredentialByStorageId(db, userId, storageId);
+		return latest?.[CredentialKeys.CREDENTIALS] as typeof existingData | undefined;
 	};
 
 	// 2. If another process is currently updating, return the old data immediately
@@ -130,54 +118,38 @@ export async function authenticate(db: Db | Tx, userId: number, storageId: numbe
 	const diffHours = (now - updatedAt) / (1000 * 60 * 60);
 
 	// If token exists and was updated less than 20 hours ago, return it
-	if (existingToken && diffHours < 20) {
+	if (existingToken && existingS3ApiUrl && diffHours < 20) {
 		return existingData;
 	}
 
 	// 4. Mark as updating (Atomic lock to prevent race conditions)
-	const lockResult = await markCredentialsUpdating(db, credential[CredentialKeys.ID]);
+	const lockResult = await markCredentialsUpdating(db, credential[CredentialKeys.ID], creds);
 
 	// If no rows are returned, another process grabbed the lock right before us
 	if (lockResult.length === 0) {
-		return existingData;
+		return currentCredentials();
 	}
 
 	// 5. Authenticate with B2
 	const { data } = await authorize(appId, appKey);
 	if (data) {
-		const {
-			authorizationToken,
-			apiInfo: {
-				storageApi: { apiUrl, downloadUrl, s3ApiUrl }
-			}
-		} = data;
-		const credentials = {
-			accountId,
-			appId,
-			appKey,
-			authorizationToken,
-			bucketId,
-			bucketName,
-			apiUrl,
-			downloadUrl,
-			s3ApiUrl
-		};
-		await updateCredentials(db, credential[CredentialKeys.ID], credentials);
+		let credentials;
+		try {
+			const discovered = backblazeCredentialsFromAuthorization(appId, appKey, data);
+			if (discovered.bucketId !== bucketId) throw new Error('Bucket changed');
+			credentials = { ...creds, ...discovered };
+		} catch {
+			await markCredentialsUpdated(db, credential[CredentialKeys.ID], creds);
+			return currentCredentials();
+		}
+		const updated = await updateCredentials(db, credential[CredentialKeys.ID], credentials, creds);
+		if (!updated.length) return currentCredentials();
 
 		// Return the newly fetched credentials alongside the existing bucketId
-		return {
-			appId,
-			appKey,
-			authorizationToken,
-			bucketId,
-			bucketName,
-			apiUrl,
-			downloadUrl,
-			s3ApiUrl
-		};
+		return credentials;
 	} else {
-		await markCredentialsUpdated(db, credential[CredentialKeys.ID]);
-		return existingData;
+		await markCredentialsUpdated(db, credential[CredentialKeys.ID], creds);
+		return currentCredentials();
 	}
 }
 
@@ -188,8 +160,14 @@ export interface B2BaseParams {
 }
 
 // Helper to handle the repetitive fetch boilerplate
-async function b2Fetch(endpoint: string, params: B2BaseParams, payload: any) {
+async function b2Fetch(
+	endpoint: string,
+	params: B2BaseParams,
+	payload: any,
+	options: Pick<RequestInit, 'signal' | 'redirect'> = {}
+) {
 	const response = await fetch(`${params.apiUrl}/b2api/v4/${endpoint}`, {
+		...options,
 		method: 'POST',
 		headers: {
 			Authorization: params.authorizationToken,
@@ -214,9 +192,12 @@ export interface GetUploadUrlParams extends B2BaseParams {
  * Gets an upload URL and upload authorization token for uploading a standard file.
  */
 export async function getUploadUrl(params: GetUploadUrlParams) {
-	return b2Fetch('b2_get_upload_url', params, {
-		bucketId: params.bucketId
-	});
+	return b2Fetch(
+		'b2_get_upload_url',
+		params,
+		{ bucketId: params.bucketId },
+		{ signal: AbortSignal.timeout(15_000), redirect: 'manual' }
+	);
 }
 
 export interface ListFileNamesParams extends B2BaseParams {

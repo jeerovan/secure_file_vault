@@ -8,6 +8,8 @@ import '../../l10n/app_localizations.dart';
 import '../../services/service_backend.dart';
 import '../../services/service_logger.dart';
 import '../common_widgets.dart';
+import '../../models/model_setting.dart';
+import '../../services/service_session_work.dart';
 
 class PageAccessKeyCheck extends StatefulWidget {
   const PageAccessKeyCheck({
@@ -32,6 +34,14 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
   }
 
   Future<void> _performCheck() async {
+    try {
+      await SessionWork.run(_checkKeys);
+    } on SessionInvalidated {
+      if (mounted) await context.read<AppSetupState>().recheckStatus();
+    }
+  }
+
+  Future<void> _checkKeys() async {
     logger.info("Checking..");
     setState(() {
       _isLoading = true;
@@ -48,7 +58,9 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
       if (status == -1) {
         _errorMessage = response["message"];
       } else if (status == 0) {
-        if (response["message"].toString() == "1") {
+        if (response['reason'] == 'vault_reset_pending') {
+          if (mounted) await context.read<AppSetupState>().showRecoveryReset();
+        } else if (response["message"].toString() == "1") {
           if (mounted) {
             await context.read<AppSetupState>().generateAccessKey();
           }
@@ -60,6 +72,13 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
       } else if (status == 1) {
         final data = response["data"];
         if (data.containsKey("cipher") && data.containsKey("nonce")) {
+          await ModelSetting.set(
+              AppString.vaultGeneration.string,
+              data['vault_generation'] is String
+                  ? data['vault_generation']
+                  : 'legacy');
+          await ModelSetting.set(AppString.recoveryResetAvailable.string,
+              data['recovery_reset_available'] == true ? 'yes' : 'no');
           await storage.write(
             key: AppString.keyCipher.string,
             value: data["cipher"],

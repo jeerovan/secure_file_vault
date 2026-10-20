@@ -9,6 +9,17 @@ class AppLocalizationsTr extends AppLocalizations {
   AppLocalizationsTr([String locale = 'tr']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Yerel veriler temizleniyor';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Oturumunuz sona erdi. Tekrar giriş yapabilmeniz için FiFe\'nin yerel hesap verilerini temizlemeyi tamamlaması gerekiyor. Orijinal dosyalarınız korunur. Tamamlamak için tekrar deneyin.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Bu cihazdaki FiFe verileri temizleniyor…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -760,4 +771,104 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get noItems => 'Öğe yok.';
+
+  @override
+  String get lostRecoveryPhrase => 'Kurtarma ifademi kaybettim';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Başka bir cihazda hâlâ oturum açıksa yeniden başlamadan önce kurtarma ifadenizi o cihazdan dışa aktarın.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Mevcut FiFe kasanız, yedeklenen dosyalarınız ve bağlı depolama ayarlarınız kalıcı olarak silinecek.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Mevcut tüm cihaz kayıtları kaldırılacak.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Diğer cihazlar çevrimiçiyken kaldırıldıklarını fark ettiklerinde oturumu kapatacak ve yerel FiFe verilerini temizleyecek.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'E-posta hesabınız, aboneliğiniz, özgün kaynak dosyalarınız ve FiFe dışına aktarılan kopyalar korunacak.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Buluttan silme doğrulanana kadar yeni kasanız kilitli kalacak. Bu işlem 24 saat veya daha uzun sürebilir. FiFe\'ı kapatıp daha sonra devam edebilirsiniz.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Silme tamamlandığında yeni kasanızı kullanmak için 24 kelimelik yeni bir kurtarma ifadesi kaydedin.';
+
+  @override
+  String get recoveryResetContinue => 'Sıfırlamaya devam et';
+
+  @override
+  String get recoveryResetConfirmTitle =>
+      'FiFe kasanız kalıcı olarak silinsin mi?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Bu işlem geri alınamaz. Mevcut kurtarma ifadeniz çalışmayı durduracak ve tüm cihazlarınız kaldırılacak.';
+
+  @override
+  String get recoveryResetDelete => 'Kasayı sil ve yeniden başla';
+
+  @override
+  String get recoveryResetPendingTitle => 'Önceki kasanız siliniyor';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe buluttan silmeyi doğruluyor. Uygulamayı kapatıp daha sonra dönebilirsiniz.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'Doğrulama $when öncesinde tamamlanamaz.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'Buluttan silme için müdahale gerekiyor. Bağlı depolamanızın erişim ve silme izinlerini geri yükleyip yeniden deneyin.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Bu sıfırlamaya devam etmek için yeniden oturum açın.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Bu sıfırlamaya devam etmek için $email olarak oturum açın.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Devam etmek için sıfırlamayı onaylayın. FiFe işlemin zaten başlayıp başlamadığını kontrol edecek.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Önceki onay hâlâ geçerli. Yeni bir onay başlatmadan önce süresi dolduktan sonra tekrar kontrol edin.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return '$when sonrasında tekrar kontrol edin.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Yeni kurtarma anahtarları bu cihazda kullanılamıyor. Sıfırlamayı başlatan cihazda devam edin. Bu anahtarlar kaybolduysa silmenin tamamlanmasını bekleyin, ardından oturum açıp tekrar “Kurtarma ifademi kaybettim” seçeneğini seçin.';
+
+  @override
+  String get recoveryResetDiscard => 'Oturum açmaya dön';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Bu işlem, bu cihazdaki tamamlanmamış kurtarma kurulumunu temizler. Oturum açtıktan sonra yeni kurtarma ifadesine veya kasayı yeniden sıfırlamaya ihtiyacınız olacak.';
+
+  @override
+  String get recoveryPhraseSaved => 'Yeni kurtarma ifademi kaydettim.';
+
+  @override
+  String get recoveryResetStarting => 'Sıfırlama başlatılıyor…';
 }

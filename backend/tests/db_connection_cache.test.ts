@@ -39,3 +39,18 @@ test('production Hyperdrive clients stay request scoped', () => {
 	const platform = localHyperdrive();
 	assert.notEqual(getDb(platform, false), getDb(platform, false));
 });
+
+test('explicit development database overrides emulated Hyperdrive only in development', () => {
+	const previous = process.env.FIFE_LOCAL_DATABASE_URL;
+	process.env.FIFE_LOCAL_DATABASE_URL = 'postgres://localhost:55432/isolated-provider-test';
+	try {
+		const platform = localHyperdrive();
+		const development = getDb(platform, true);
+		assert.equal(development.$client.options.database, 'isolated-provider-test');
+		assert.equal(development, getDb(undefined, true));
+		assert.equal(getDb(platform, false).$client.options.database, 'fife-release-test');
+	} finally {
+		if (previous === undefined) delete process.env.FIFE_LOCAL_DATABASE_URL;
+		else process.env.FIFE_LOCAL_DATABASE_URL = previous;
+	}
+});

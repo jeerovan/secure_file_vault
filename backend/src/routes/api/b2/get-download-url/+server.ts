@@ -1,18 +1,19 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import { authenticate } from '$lib/server/backblaze';
 import { ErrorCode } from '$lib/server/db/keys';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { backblazeS3Download } from '$lib/server/backblazeS3';
 import { getDb } from '$lib/server/db';
+import { isVaultPartName } from '$lib/server/recoveryStorage';
+import { finalDeviceResponse } from '$lib/server/deviceAccess';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	let body;
 
@@ -23,6 +24,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	}
 
 	const { file_id, storage_id } = body;
+	if (file_id !== undefined && !isVaultPartName(file_id))
+		return json({ success: 0, message: ErrorCode.INVALID_DATA });
 
 	if (!file_id) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
@@ -31,33 +34,10 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	if (!authData) {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
-	const file_path = `${authUser.remoteAuthId}/${file_id}`;
-	const s3Endpoint = authData.s3ApiUrl;
-	const region = extractRegion(s3Endpoint);
-	const s3Client = new S3Client({
-		endpoint: s3Endpoint,
-		region: region,
-		credentials: {
-			accessKeyId: authData.appId,
-			secretAccessKey: authData.appKey
-		}
-	});
-	const command = new GetObjectCommand({
-		Bucket: authData.bucketName,
-		Key: file_path
-	});
-
-	// Generates the URL purely locally using cryptographic signing
-	const presignedUrl = await getSignedUrl(s3Client, command, {
-		expiresIn: 3600
-	});
-
-	return json({ success: 1, data: presignedUrl });
+	try {
+		const presignedUrl = await backblazeS3Download(authData, `${authUser.objectPrefix}${file_id}`);
+		return finalDeviceResponse(db, authUser, json({ success: 1, data: presignedUrl }));
+	} catch {
+		return json({ success: 0, message: ErrorCode.INVALID_DATA });
+	}
 };
-
-function extractRegion(url: string): string {
-	const { hostname } = new URL(url);
-
-	const parts = hostname.split('.');
-	return parts[1];
-}

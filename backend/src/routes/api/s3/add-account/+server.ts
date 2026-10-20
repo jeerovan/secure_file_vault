@@ -1,9 +1,10 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import { ErrorCode, StorageProvider } from '$lib/server/db/keys';
 import { addCredentials } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
+import { withDeviceWrite } from '$lib/server/deviceAccess';
 import {
 	normalizePublicS3Endpoint,
 	verifyGenericS3Credentials,
@@ -15,7 +16,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 
 	let body: Record<string, unknown>;
@@ -63,6 +64,8 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		return json({ success: 0, message: ErrorCode.INVALID_CREDENTIALS });
 	}
 
-	await addCredentials(db, authUser.userId!, credentials, StorageProvider.S3);
-	return json({ success: 1 });
+	return withDeviceWrite(db, authUser, async (tx) => {
+		await addCredentials(tx, authUser.userId!, credentials, StorageProvider.S3);
+		return json({ success: 1 });
+	});
 };

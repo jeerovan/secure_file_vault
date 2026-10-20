@@ -1,5 +1,8 @@
 {
   "@@locale": "fr",
+  "localSessionCleanupTitle": "Suppression des données locales",
+  "localSessionCleanupDescription": "Votre session est terminée. FiFe doit terminer la suppression des données locales du compte avant votre prochaine connexion. Vos fichiers originaux sont conservés. Réessayez pour terminer.",
+  "localSessionCleanupInProgress": "Suppression des données FiFe de cet appareil…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "Aucun élément.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Phrase de récupération perdue",
+  "lostRecoveryIntro": "Si un autre appareil est encore connecté, exportez votre phrase de récupération depuis celui-ci avant de repartir de zéro.",
+  "lostRecoveryDeleteConsequence": "Votre coffre FiFe actuel, les fichiers sauvegardés et les paramètres de stockage lié seront définitivement supprimés.",
+  "lostRecoveryDevicesConsequence": "Tous les enregistrements d’appareils existants seront supprimés.",
+  "lostRecoveryLogoutConsequence": "Les autres appareils se déconnecteront et effaceront leurs données FiFe locales lorsqu’ils détecteront leur suppression en ligne.",
+  "lostRecoveryKeepConsequence": "Votre compte e-mail, votre abonnement, vos fichiers originaux et les copies exportées hors de FiFe seront conservés.",
+  "lostRecoveryWaitConsequence": "Votre nouveau coffre restera verrouillé jusqu’à la vérification de la suppression dans le cloud. Cela peut prendre 24 heures ou plus. Vous pouvez fermer FiFe et reprendre plus tard.",
+  "lostRecoveryNewPhraseConsequence": "Une fois la suppression terminée, enregistrez une nouvelle phrase de récupération de 24 mots pour utiliser votre nouveau coffre.",
+  "recoveryResetContinue": "Poursuivre la réinitialisation",
+  "recoveryResetConfirmTitle": "Supprimer définitivement votre coffre FiFe ?",
+  "recoveryResetConfirmBody": "Cette action est irréversible. Votre phrase de récupération actuelle cessera de fonctionner et tous vos appareils seront supprimés.",
+  "recoveryResetDelete": "Supprimer le coffre et repartir de zéro",
+  "recoveryResetPendingTitle": "Suppression de votre ancien coffre",
+  "recoveryResetPendingBody": "FiFe vérifie la suppression dans le cloud. Vous pouvez fermer l’app et revenir plus tard.",
+  "recoveryResetWaitUntil": "La vérification ne peut pas se terminer avant {when}.",
+  "recoveryResetStorageBlocked": "La suppression dans le cloud nécessite votre intervention. Rétablissez l’accès et les autorisations de suppression du stockage lié, puis réessayez.",
+  "recoveryResetSignin": "Reconnectez-vous pour reprendre cette réinitialisation.",
+  "recoveryResetSigninAs": "Connectez-vous avec {email} pour reprendre cette réinitialisation.",
+  "recoveryResetNeedsConfirmation": "Confirmez la réinitialisation pour continuer. FiFe vérifiera si elle a déjà commencé.",
+  "recoveryResetConfirmationWait": "Une confirmation précédente est encore valide. Vérifiez après son expiration avant de lancer une nouvelle confirmation.",
+  "recoveryResetConfirmationUntil": "Vérifiez à nouveau après {when}.",
+  "recoveryResetMissingKeys": "Les nouvelles clés de récupération ne sont pas disponibles sur cet appareil. Continuez sur l’appareil qui a lancé la réinitialisation. Si ces clés sont perdues, attendez la fin de la suppression, connectez-vous et choisissez à nouveau « Phrase de récupération perdue ».",
+  "recoveryResetDiscard": "Revenir à la connexion",
+  "recoveryResetDiscardBody": "Cela efface la configuration de récupération inachevée sur cet appareil. Après connexion, il vous faudra la nouvelle phrase de récupération ou réinitialiser à nouveau le coffre.",
+  "recoveryPhraseSaved": "J’ai enregistré ma nouvelle phrase de récupération.",
+  "recoveryResetStarting": "Démarrage de la réinitialisation…"
 }

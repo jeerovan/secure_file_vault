@@ -9,6 +9,17 @@ class AppLocalizationsFr extends AppLocalizations {
   AppLocalizationsFr([String locale = 'fr']) : super(locale);
 
   @override
+  String get localSessionCleanupTitle => 'Suppression des données locales';
+
+  @override
+  String get localSessionCleanupDescription =>
+      'Votre session est terminée. FiFe doit terminer la suppression des données locales du compte avant votre prochaine connexion. Vos fichiers originaux sont conservés. Réessayez pour terminer.';
+
+  @override
+  String get localSessionCleanupInProgress =>
+      'Suppression des données FiFe de cet appareil…';
+
+  @override
   String get appTitle => 'FiFe';
 
   @override
@@ -774,4 +785,105 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get noItems => 'Aucun élément.';
+
+  @override
+  String get lostRecoveryPhrase => 'Phrase de récupération perdue';
+
+  @override
+  String get lostRecoveryIntro =>
+      'Si un autre appareil est encore connecté, exportez votre phrase de récupération depuis celui-ci avant de repartir de zéro.';
+
+  @override
+  String get lostRecoveryDeleteConsequence =>
+      'Votre coffre FiFe actuel, les fichiers sauvegardés et les paramètres de stockage lié seront définitivement supprimés.';
+
+  @override
+  String get lostRecoveryDevicesConsequence =>
+      'Tous les enregistrements d’appareils existants seront supprimés.';
+
+  @override
+  String get lostRecoveryLogoutConsequence =>
+      'Les autres appareils se déconnecteront et effaceront leurs données FiFe locales lorsqu’ils détecteront leur suppression en ligne.';
+
+  @override
+  String get lostRecoveryKeepConsequence =>
+      'Votre compte e-mail, votre abonnement, vos fichiers originaux et les copies exportées hors de FiFe seront conservés.';
+
+  @override
+  String get lostRecoveryWaitConsequence =>
+      'Votre nouveau coffre restera verrouillé jusqu’à la vérification de la suppression dans le cloud. Cela peut prendre 24 heures ou plus. Vous pouvez fermer FiFe et reprendre plus tard.';
+
+  @override
+  String get lostRecoveryNewPhraseConsequence =>
+      'Une fois la suppression terminée, enregistrez une nouvelle phrase de récupération de 24 mots pour utiliser votre nouveau coffre.';
+
+  @override
+  String get recoveryResetContinue => 'Poursuivre la réinitialisation';
+
+  @override
+  String get recoveryResetConfirmTitle =>
+      'Supprimer définitivement votre coffre FiFe ?';
+
+  @override
+  String get recoveryResetConfirmBody =>
+      'Cette action est irréversible. Votre phrase de récupération actuelle cessera de fonctionner et tous vos appareils seront supprimés.';
+
+  @override
+  String get recoveryResetDelete => 'Supprimer le coffre et repartir de zéro';
+
+  @override
+  String get recoveryResetPendingTitle => 'Suppression de votre ancien coffre';
+
+  @override
+  String get recoveryResetPendingBody =>
+      'FiFe vérifie la suppression dans le cloud. Vous pouvez fermer l’app et revenir plus tard.';
+
+  @override
+  String recoveryResetWaitUntil(String when) {
+    return 'La vérification ne peut pas se terminer avant $when.';
+  }
+
+  @override
+  String get recoveryResetStorageBlocked =>
+      'La suppression dans le cloud nécessite votre intervention. Rétablissez l’accès et les autorisations de suppression du stockage lié, puis réessayez.';
+
+  @override
+  String get recoveryResetSignin =>
+      'Reconnectez-vous pour reprendre cette réinitialisation.';
+
+  @override
+  String recoveryResetSigninAs(String email) {
+    return 'Connectez-vous avec $email pour reprendre cette réinitialisation.';
+  }
+
+  @override
+  String get recoveryResetNeedsConfirmation =>
+      'Confirmez la réinitialisation pour continuer. FiFe vérifiera si elle a déjà commencé.';
+
+  @override
+  String get recoveryResetConfirmationWait =>
+      'Une confirmation précédente est encore valide. Vérifiez après son expiration avant de lancer une nouvelle confirmation.';
+
+  @override
+  String recoveryResetConfirmationUntil(String when) {
+    return 'Vérifiez à nouveau après $when.';
+  }
+
+  @override
+  String get recoveryResetMissingKeys =>
+      'Les nouvelles clés de récupération ne sont pas disponibles sur cet appareil. Continuez sur l’appareil qui a lancé la réinitialisation. Si ces clés sont perdues, attendez la fin de la suppression, connectez-vous et choisissez à nouveau « Phrase de récupération perdue ».';
+
+  @override
+  String get recoveryResetDiscard => 'Revenir à la connexion';
+
+  @override
+  String get recoveryResetDiscardBody =>
+      'Cela efface la configuration de récupération inachevée sur cet appareil. Après connexion, il vous faudra la nouvelle phrase de récupération ou réinitialiser à nouveau le coffre.';
+
+  @override
+  String get recoveryPhraseSaved =>
+      'J’ai enregistré ma nouvelle phrase de récupération.';
+
+  @override
+  String get recoveryResetStarting => 'Démarrage de la réinitialisation…';
 }

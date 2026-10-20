@@ -100,6 +100,180 @@ void main() {
     });
   });
 
+  for (final provider in [1, 2]) {
+    test('provider $provider negotiates B2 S3 and restores modified bytes',
+        () async {
+      final api = TransferApi(providerId: provider, b2S3: true);
+      await api.run(() async {
+        final initial = await discover('s3.txt', utf8.encode('before edit'));
+        await finishUpload(initial);
+        final edited = utf8.encode('after edit through Backblaze S3');
+        final current = await discover('s3.txt', edited);
+        await finishUpload(current);
+        final part = (await ModelPart.get('${current.fileHash}_1'))!;
+        expect(part.data['fileId'], 'bucket-object-${current.fileHash}_1');
+        final authorizations = api.requests.where(
+            (request) => request.url.path.endsWith('/b2/get-upload-url'));
+        expect(authorizations.length, 2);
+        for (final request in authorizations) {
+          final body = jsonDecode(request.body) as Map<String, dynamic>;
+          expect(body['upload_protocol'], 's3');
+          expect(body['content_length'], greaterThan(0));
+          expect(body['content_sha1'], matches(RegExp(r'^[a-f0-9]{40}$')));
+          expect(base64Decode(body['content_md5'] as String).length, 16);
+        }
+        expect(api.uploadBodies.length, 2);
+        await File('${fixture.source.path}/s3.txt').delete();
+        await download(current);
+        expect(
+            await File('${fixture.source.path}/s3.txt').readAsBytes(), edited);
+        expect(await ModelItemTask.get(current.id), isNull);
+      });
+    });
+  }
+
+  for (final provider in [3, 4, 5, 6]) {
+    test('presigned provider $provider authorizes only a ready ciphertext part',
+        () async {
+      final api = TransferApi(providerId: provider);
+      final readiness = <bool>[];
+      api.beforeUploadAuthorization = (body) async {
+        final part = await ModelPart.get(body['file_id'] as String);
+        final artifact =
+            File('${fixture.directory.path}/${body['file_id']}.crypt.ready');
+        final exists = await artifact.exists();
+        readiness.add(part != null &&
+            exists &&
+            part.size == await artifact.length() &&
+            part.data['sha1'] ==
+                (await sha1.bind(artifact.openRead()).first).toString());
+      };
+      await api.run(() async {
+        final item =
+            await discover('prepared.txt', utf8.encode('prepare first'));
+        await finishUpload(item);
+        expect(readiness, [true]);
+        final authorization = api.requests.singleWhere(
+            (request) => request.url.path.endsWith('/get-upload-url'));
+        expect((jsonDecode(authorization.body) as Map).keys,
+            unorderedEquals(['storage_id', 'file_id']));
+      });
+    });
+
+    test('presigned provider $provider does not sign when preparation fails',
+        () async {
+      final api = TransferApi(providerId: provider);
+      await api.run(() async {
+        final item = await discover('locked.txt', utf8.encode('locked source'));
+        fixture.secrets.remove(AppString.masterKey.string);
+        await TaskManager()
+            .checkInitUpload((await ModelItemTask.get(item.id))!);
+        expect(
+            api.requests.where(
+                (request) => request.url.path.endsWith('/get-upload-url')),
+            isEmpty);
+        expect(api.uploadBodies, isEmpty);
+        expect(await File('${fixture.source.path}/locked.txt').readAsString(),
+            'locked source');
+      });
+    });
+
+    test('presigned provider $provider refreshes expired URLs with same bytes',
+        () async {
+      final api = TransferApi(providerId: provider)..uploadStatuses.add(403);
+      await api.run(() async {
+        final item =
+            await discover('expired.txt', utf8.encode('retry snapshot'));
+        await TaskManager()
+            .checkInitUpload((await ModelItemTask.get(item.id))!);
+        final retained = (await ModelPart.get('${item.fileHash}_1'))!;
+        expect(retained.uploaded, 0);
+        expect(api.objects, isEmpty);
+        await finishUpload(item);
+        final uploads = api.requests
+            .where((request) => request.url.host == 'bucket.example.test')
+            .toList();
+        expect(uploads.length, 2);
+        expect(uploads[0].url, isNot(uploads[1].url));
+        expect(api.uploadBodies[0], api.uploadBodies[1]);
+        expect((await ModelPart.get('${item.fileHash}_1'))?.cipher,
+            retained.cipher);
+      });
+    });
+
+    test(
+        'presigned provider $provider preserves preparation after auth failure',
+        () async {
+      final api = TransferApi(providerId: provider)
+        ..authorizationFailure = {
+          'success': 0,
+          'message': 'provider_unavailable'
+        };
+      await api.run(() async {
+        final item = await discover('retry.txt', utf8.encode('retry auth'));
+        await TaskManager()
+            .checkInitUpload((await ModelItemTask.get(item.id))!);
+        final part = await ModelPart.get('${item.fileHash}_1');
+        expect(part, isNotNull);
+        expect(part!.uploaded, 0);
+        final artifact =
+            File('${fixture.directory.path}/${item.fileHash}_1.crypt.ready');
+        expect(await artifact.exists(), isTrue);
+        expect(api.uploadBodies, isEmpty);
+        api.authorizationFailure = null;
+        await finishUpload(item);
+        expect(
+            (await ModelPart.get('${item.fileHash}_1'))?.cipher, part.cipher);
+        expect(api.uploadBodies.length, 1);
+      });
+    });
+  }
+
+  for (final missingVersion in [false, true]) {
+    test(
+        'B2 S3 reconciles ${missingVersion ? 'missing version header' : 'lost success response'} without another upload',
+        () async {
+      final api = TransferApi(providerId: 2, b2S3: true)
+        ..loseNextUploadResponse = !missingVersion
+        ..omitUploadVersionId = missingVersion;
+      await api.run(() async {
+        final item =
+            await discover('recovery.txt', utf8.encode('S3 committed'));
+        await TaskManager()
+            .checkInitUpload((await ModelItemTask.get(item.id))!);
+        expect(api.objects.length, 1);
+        expect((await ModelPart.get('${item.fileHash}_1'))?.uploaded, 0);
+        await finishUpload(item);
+        expect(api.uploadBodies.length, 1);
+        expect((await ModelPart.get('${item.fileHash}_1'))?.data['fileId'],
+            'bucket-object-${item.fileHash}_1');
+      });
+    });
+  }
+
+  test('B2 S3 authorization failure obtains a fresh URL and reuses ciphertext',
+      () async {
+    final api = TransferApi(providerId: 2, b2S3: true)..uploadStatuses.add(403);
+    await api.run(() async {
+      final item =
+          await discover('expired.txt', utf8.encode('retry ciphertext'));
+      await TaskManager().checkInitUpload((await ModelItemTask.get(item.id))!);
+      final retained = (await ModelPart.get('${item.fileHash}_1'))!;
+      expect(retained.uploaded, 0);
+      expect(api.objects, isEmpty);
+      await finishUpload(item);
+      expect(api.uploadBodies.length, 2);
+      expect(api.uploadBodies[0], api.uploadBodies[1]);
+      expect(
+          (await ModelPart.get('${item.fileHash}_1'))?.cipher, retained.cipher);
+      final attempts = api.requests
+          .where((request) => request.url.host == 'bucket.example.test')
+          .toList();
+      expect(attempts.length, 2);
+      expect(attempts[0].url != attempts[1].url, isTrue);
+    });
+  });
+
   for (final bytes in [
     <int>[],
     [0],

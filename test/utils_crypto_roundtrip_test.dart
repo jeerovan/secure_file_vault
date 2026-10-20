@@ -40,6 +40,27 @@ void main() {
     });
   }
 
+  test('largest merged upload part encrypts to less than 101 MiB', () async {
+    const mib = 1024 * 1024;
+    // A final part just below 10 MiB can be merged into a 90 MiB part.
+    const plainBytes = 100 * mib - 1;
+    final source = File('${directory.path}/largest-part');
+    final handle = await source.open(mode: FileMode.write);
+    try {
+      await handle.truncate(plainBytes);
+    } finally {
+      await handle.close();
+    }
+    final encrypted = File('${directory.path}/largest-part.encrypted');
+    final result = await crypto.encryptFile(source.path, encrypted.path);
+
+    expect(result.isSuccess, isTrue);
+    // Secretstream has a 24-byte header and 17 bytes per 4096-byte chunk.
+    expect(await encrypted.length(), 105292823);
+    expect(await encrypted.length(), lessThan(101 * mib));
+    expect(await source.length(), plainBytes);
+  });
+
   for (final corrupt in [
     'wrong key',
     'modified ciphertext',

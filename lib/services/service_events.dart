@@ -6,6 +6,7 @@ enum EventType { settings, system }
 
 const foregroundSyncIntervalChangedMessage = 'foregroundSyncIntervalChanged';
 const foregroundSyncActivityChangedMessage = 'foregroundSyncActivityChanged';
+const sessionStateChangedMessage = 'sessionStateChanged';
 
 enum EventKey {
   object,
@@ -20,6 +21,7 @@ enum EventKey {
   stopped,
   logging,
   signout,
+  sessionInvalidated,
   storageFull,
 }
 

@@ -1,7 +1,8 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
 import { getDb } from '$lib/server/db';
+import { authorizeRegisteredDevice } from '$lib/server/deviceAccess';
 import {
 	addTempStorage,
 	getCredentials,
@@ -23,7 +24,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
 	let body;
 
@@ -39,6 +40,9 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	const result = await db.transaction(async (tx) => {
+		const current = await authorizeRegisteredDevice(tx, authUser, true);
+		if (!current.authorized)
+			return { success: 0, message: current.message, reason: current.reason };
 		const userId = authUser.userId!;
 		await lockStorageAllocation(tx, userId);
 		const fileRow = await getUserFile(tx, userId, file_hash);

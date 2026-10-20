@@ -1,20 +1,21 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { requireAuth } from '$lib/server/auth';
-import { CredentialKeys, ErrorCode } from '$lib/server/db/keys';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { requireDeviceAuth as requireAuth } from '$lib/server/auth';
+import { CredentialKeys, ErrorCode, StorageProvider } from '$lib/server/db/keys';
+import { PRESIGNED_UPLOAD_EXPIRY_SECONDS, presignS3UploadUrl } from '$lib/server/s3';
 import { getCredentialByStorageId } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
+import { isVaultPartName } from '$lib/server/recoveryStorage';
+import { withUploadAuthorization } from '$lib/server/uploadCapability';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
 	const kv = platform?.env.FIFE_AUTH_CACHE;
 	const authUser = await requireAuth(db, request, kv!);
 	if (!authUser.authorized) {
-		return json({ success: 0, message: authUser.message });
+		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
-	let body;
+	let body: Record<string, unknown>;
 
 	try {
 		body = await request.json();
@@ -22,51 +23,48 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
+	if (!body || typeof body !== 'object' || Array.isArray(body))
+		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	const { file_id, storage_id } = body;
+	if (file_id !== undefined && !isVaultPartName(file_id))
+		return json({ success: 0, message: ErrorCode.INVALID_DATA });
 
-	if (!file_id) {
+	if (
+		!file_id ||
+		typeof storage_id !== 'number' ||
+		!Number.isSafeInteger(storage_id) ||
+		storage_id <= 0
+	) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
-	const credentials = await getCredentialByStorageId(db, authUser.userId!, storage_id);
-	if (!credentials) {
-		return json({ success: 0, message: ErrorCode.NO_STORAGE });
-	}
-	const credsData = credentials[CredentialKeys.CREDENTIALS] as {
-		appId: string;
-		appKey: string;
-		bucketName: string;
-		namespace: string;
-		region: string;
-	};
-	const file_path = `${authUser.remoteAuthId}/${file_id}`;
-	const s3Endpoint = `https://${credsData.namespace}.compat.objectstorage.${credsData.region}.oraclecloud.com`;
-	const s3Client = new S3Client({
-		region: credsData.region,
-		endpoint: s3Endpoint,
-		credentials: {
-			accessKeyId: credsData.appId,
-			secretAccessKey: credsData.appKey
-		},
-		forcePathStyle: true
-	});
-	const command = new PutObjectCommand({
-		Bucket: credsData.bucketName,
-		Key: file_path,
-		ContentType: 'application/octet-stream'
-	});
+	return withUploadAuthorization(
+		db,
+		authUser,
+		PRESIGNED_UPLOAD_EXPIRY_SECONDS,
+		async (tx, current) => {
+			const credentials = await getCredentialByStorageId(tx, current.userId!, storage_id);
+			if (!credentials || credentials[CredentialKeys.PROVIDER_ID] !== StorageProvider.OCI) {
+				return json({ success: 0, message: ErrorCode.NO_STORAGE });
+			}
+			const credsData = credentials[CredentialKeys.CREDENTIALS] as {
+				appId: string;
+				appKey: string;
+				bucketName: string;
+				namespace: string;
+				region: string;
+			};
+			const file_path = `${current.objectPrefix}${file_id}`;
+			const s3Endpoint = `https://${credsData.namespace}.compat.objectstorage.${credsData.region}.oraclecloud.com`;
+			try {
+				const presignedUrl = await presignS3UploadUrl(
+					{ ...credsData, endpoint: s3Endpoint, forcePathStyle: true },
+					file_path
+				);
 
-	try {
-		// Generates the URL purely locally using cryptographic signing
-		const presignedUrl = await getSignedUrl(s3Client, command, {
-			expiresIn: 3600
-		});
-
-		return json({ success: 1, data: presignedUrl });
-	} catch (e) {
-		let error = e;
-		if (e instanceof Error) {
-			error = e.message;
+				return json({ success: 1, data: presignedUrl });
+			} catch {
+				return json({ success: 0, message: ErrorCode.INVALID_DATA });
+			}
 		}
-		return json({ success: 0, message: error });
-	}
+	);
 };

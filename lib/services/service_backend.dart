@@ -5,10 +5,13 @@ import 'dart:io';
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
+import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:http/http.dart' as http;
 import 'service_sync_budget.dart';
+import 'service_session_work.dart';
+import 'service_session_cleanup.dart';
 
 class BackendApi {
   final SecureStorage _storage;
@@ -95,16 +98,26 @@ class BackendApi {
 
   Future<Map<String, String>> _headers({
     required bool withAuth,
+    required bool bootstrap,
     Map<String, String>? extra,
   }) async {
     String? accessToken = await _getAccessToken();
     final h = <String, String>{
       'Content-Type': 'application/json',
+      'X-FiFe-Vault-Protocol': '1',
       if (withAuth && accessToken != null)
         'Authorization': 'Bearer $accessToken',
       'Service': _isLocalTesting ? 'local-test' : 'neon'
     };
     if (extra != null) h.addAll(extra);
+    final generation = ModelSetting.get(AppString.vaultGeneration.string);
+    if (generation.isNotEmpty && generation != 'legacy') {
+      h['X-FiFe-Vault-Generation'] = generation;
+    }
+    if (withAuth && bootstrap && !_isLocalTesting && _base.scheme == 'https') {
+      final cookie = await _storage.read(key: AppString.sessionCookie.string);
+      if (cookie != null && cookie.isNotEmpty) h['X-FiFe-Session'] = cookie;
+    }
     final deviceUuid = await (_deviceUuidProvider?.call() ?? getDeviceUuid());
     if (deviceUuid.isNotEmpty) {
       h.addAll({'device_uuid': deviceUuid});
@@ -202,6 +215,25 @@ class BackendApi {
     return response;
   }
 
+  Future<Map<String, dynamic>> _processResponse(
+      http.Response res, bool withAuth) async {
+    final response = _formatResponse(res);
+    final revoked = (response['reason'] == 'device_revoked' ||
+            response['reason'] == 'vault_replaced') &&
+        response['message'].toString() == '8';
+    final removed = response['reason'] == 'account_removed' &&
+        response['message'].toString() == '1';
+    if (withAuth &&
+        res.statusCode >= 200 &&
+        res.statusCode < 300 &&
+        response['success'] == 0 &&
+        (revoked || removed)) {
+      await SessionCleanup.instance.request();
+      throw const SessionInvalidated();
+    }
+    return response;
+  }
+
   bool _isNetworkException(Object e) =>
       e is SocketException ||
       e is TimeoutException ||
@@ -225,26 +257,34 @@ class BackendApi {
   }
 
   Future<http.Response> _sendWithAuthRetry({
+    required String endpoint,
     required bool withAuth,
     required bool retryUnauthorized,
     required Map<String, String>? extraHeaders,
     required Future<http.Response> Function(Map<String, String>) send,
   }) async {
-    final initialHeaders =
-        await _headers(withAuth: withAuth, extra: extraHeaders);
+    await SessionWork.checkpoint();
+    final path = endpoint.replaceFirst(RegExp(r'^/'), '');
+    final bootstrap = path == 'keys' ||
+        path == 'devices' ||
+        path.startsWith('recovery-reset/');
+    final initialHeaders = await _headers(
+        withAuth: withAuth, bootstrap: bootstrap, extra: extraHeaders);
     SyncBudget.check();
     var response = await send(initialHeaders).timeout(timeout);
+    await SessionWork.checkpoint();
     if (withAuth &&
         retryUnauthorized &&
         !_isLocalTesting &&
         _isUnauthorized(response)) {
       final previousAuthorization = initialHeaders['Authorization'];
       await _refreshAuth();
-      final refreshedHeaders =
-          await _headers(withAuth: true, extra: extraHeaders);
+      final refreshedHeaders = await _headers(
+          withAuth: true, bootstrap: bootstrap, extra: extraHeaders);
       if (refreshedHeaders['Authorization'] != previousAuthorization) {
         SyncBudget.check();
         response = await send(refreshedHeaders).timeout(timeout);
+        await SessionWork.checkpoint();
       }
     }
     return response;
@@ -254,11 +294,22 @@ class BackendApi {
     required String endpoint,
     Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
+  }) =>
+      SessionWork.run(() => _get(
+          endpoint: endpoint,
+          queryParameters: queryParameters,
+          headers: headers));
+
+  Future<Map<String, dynamic>> _get({
+    required String endpoint,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
   }) async {
     try {
       final withAuth = await _shouldAuthenticate();
       logger.info('GET $endpoint');
       final res = await _sendWithAuthRetry(
+        endpoint: endpoint,
         withAuth: withAuth,
         retryUnauthorized: true,
         extraHeaders: headers,
@@ -267,7 +318,9 @@ class BackendApi {
           headers: requestHeaders,
         ),
       );
-      return _formatResponse(res);
+      return await _processResponse(res, withAuth);
+    } on SessionInvalidated {
+      rethrow;
     } catch (e) {
       logger.error(e.toString());
       if (_isNetworkException(e)) {
@@ -282,12 +335,25 @@ class BackendApi {
     required Map<String, dynamic> jsonBody,
     Map<String, String>? headers,
     bool retryUnauthorized = false,
+  }) =>
+      SessionWork.run(() => _post(
+          endpoint: endpoint,
+          jsonBody: jsonBody,
+          headers: headers,
+          retryUnauthorized: retryUnauthorized));
+
+  Future<Map<String, dynamic>> _post({
+    required String endpoint,
+    required Map<String, dynamic> jsonBody,
+    Map<String, String>? headers,
+    bool retryUnauthorized = false,
   }) async {
     try {
       final withAuth = await _shouldAuthenticate();
       logger.info('POST $endpoint');
       final encodedBody = jsonEncode(jsonBody);
       final res = await _sendWithAuthRetry(
+        endpoint: endpoint,
         withAuth: withAuth,
         retryUnauthorized: retryUnauthorized,
         extraHeaders: headers,
@@ -297,7 +363,9 @@ class BackendApi {
           body: encodedBody,
         ),
       );
-      return _formatResponse(res);
+      return await _processResponse(res, withAuth);
+    } on SessionInvalidated {
+      rethrow;
     } catch (e) {
       logger.error(endpoint, error: e.toString());
       if (_isNetworkException(e)) {
@@ -311,11 +379,22 @@ class BackendApi {
     required String endpoint,
     Map<String, dynamic>? queryParameters,
     Map<String, String>? headers,
+  }) =>
+      SessionWork.run(() => _delete(
+          endpoint: endpoint,
+          queryParameters: queryParameters,
+          headers: headers));
+
+  Future<Map<String, dynamic>> _delete({
+    required String endpoint,
+    Map<String, dynamic>? queryParameters,
+    Map<String, String>? headers,
   }) async {
     try {
       final withAuth = await _shouldAuthenticate();
       logger.info('DELETE $endpoint');
       final res = await _sendWithAuthRetry(
+        endpoint: endpoint,
         withAuth: withAuth,
         retryUnauthorized: true,
         extraHeaders: headers,
@@ -324,7 +403,9 @@ class BackendApi {
           headers: requestHeaders,
         ),
       );
-      return _formatResponse(res);
+      return await _processResponse(res, withAuth);
+    } on SessionInvalidated {
+      rethrow;
     } catch (e) {
       logger.error(e.toString());
       if (_isNetworkException(e)) {

@@ -1,5 +1,8 @@
 {
   "@@locale": "nl",
+  "localSessionCleanupTitle": "Lokale gegevens wissen",
+  "localSessionCleanupDescription": "Je sessie is beëindigd. FiFe moet de lokale accountgegevens volledig wissen voordat je opnieuw kunt inloggen. Je oorspronkelijke bestanden blijven behouden. Probeer het opnieuw om dit af te ronden.",
+  "localSessionCleanupInProgress": "FiFe-gegevens worden van dit apparaat gewist…",
   "appTitle": "FiFe",
   "@appTitle": {
     "description": "App title",
@@ -981,5 +984,31 @@
   "noItems": "Geen items.",
   "@noItems": {
     "description": "Empty state text shown when the trash has no items"
-  }
+  },
+  "lostRecoveryPhrase": "Herstelzin kwijt",
+  "lostRecoveryIntro": "Als een ander apparaat nog is aangemeld, exporteer daar dan je herstelzin voordat je opnieuw begint.",
+  "lostRecoveryDeleteConsequence": "Je bestaande FiFe-kluis, back-upbestanden en instellingen van gekoppelde opslag worden permanent verwijderd.",
+  "lostRecoveryDevicesConsequence": "Alle bestaande apparaatregistraties worden verwijderd.",
+  "lostRecoveryLogoutConsequence": "Andere apparaten melden zich af en wissen hun lokale FiFe-gegevens zodra ze online ontdekken dat ze zijn verwijderd.",
+  "lostRecoveryKeepConsequence": "Je e-mailaccount, abonnement, oorspronkelijke bestanden en kopieën die buiten FiFe zijn geëxporteerd blijven behouden.",
+  "lostRecoveryWaitConsequence": "Je nieuwe kluis blijft vergrendeld totdat de verwijdering in de cloud is geverifieerd. Dit kan 24 uur of langer duren. Je kunt FiFe sluiten en later verdergaan.",
+  "lostRecoveryNewPhraseConsequence": "Sla na de verwijdering een nieuwe herstelzin van 24 woorden op om je nieuwe kluis te gebruiken.",
+  "recoveryResetContinue": "Doorgaan met opnieuw instellen",
+  "recoveryResetConfirmTitle": "Je FiFe-kluis permanent verwijderen?",
+  "recoveryResetConfirmBody": "Dit kan niet ongedaan worden gemaakt. Je bestaande herstelzin werkt daarna niet meer en al je apparaten worden verwijderd.",
+  "recoveryResetDelete": "Kluis verwijderen en opnieuw beginnen",
+  "recoveryResetPendingTitle": "Je vorige kluis wordt verwijderd",
+  "recoveryResetPendingBody": "FiFe verifieert de verwijdering in de cloud. Je kunt de app sluiten en later terugkomen.",
+  "recoveryResetWaitUntil": "De verificatie kan niet eerder dan {when} worden voltooid.",
+  "recoveryResetStorageBlocked": "De verwijdering in de cloud vereist aandacht. Herstel de toegang en verwijderrechten voor je gekoppelde opslag en probeer het opnieuw.",
+  "recoveryResetSignin": "Meld je opnieuw aan om verder te gaan met deze herinstelling.",
+  "recoveryResetSigninAs": "Meld je aan als {email} om verder te gaan met deze herinstelling.",
+  "recoveryResetNeedsConfirmation": "Bevestig de herinstelling om door te gaan. FiFe controleert of deze al is gestart.",
+  "recoveryResetConfirmationWait": "Een eerdere bevestiging is nog geldig. Controleer opnieuw nadat deze is verlopen voordat je een nieuwe bevestiging start.",
+  "recoveryResetConfirmationUntil": "Controleer opnieuw na {when}.",
+  "recoveryResetMissingKeys": "De nieuwe herstelsleutels zijn niet beschikbaar op dit apparaat. Ga verder op het apparaat dat de herinstelling heeft gestart. Als die sleutels kwijt zijn, wacht dan tot het verwijderen klaar is, meld je aan en kies opnieuw ‘Herstelzin kwijt’.",
+  "recoveryResetDiscard": "Terug naar aanmelden",
+  "recoveryResetDiscardBody": "Hiermee wis je de onvoltooide herstelconfiguratie op dit apparaat. Na het aanmelden heb je de nieuwe herstelzin nodig of moet je de kluis opnieuw instellen.",
+  "recoveryPhraseSaved": "Ik heb mijn nieuwe herstelzin opgeslagen.",
+  "recoveryResetStarting": "Opnieuw instellen wordt gestart…"
 }

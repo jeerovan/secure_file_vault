@@ -44,6 +44,8 @@ import {
 import { deleteFileFromStorage } from '../deleteWorker';
 import type { Db, Tx } from '.';
 import { parseSyncChangeData } from '../syncValidation';
+import { ensureDefaultFiFeStorage } from '../defaultStorage';
+export { ensureDefaultFiFeStorage } from '../defaultStorage';
 
 export async function getUserByRemoteId(
 	db: Db | Tx,
@@ -99,34 +101,7 @@ export async function addUser(
 			[UserDataKeys.DEVICE_UUID]: 'Server'
 		});
 
-		// add default fife storage for this user
-		const fifeUser = await getUserByRemoteId(tx, 'fife');
-		if (!fifeUser) return newUser;
-
-		const fifeCredentials = await getUserCredential(
-			tx,
-			fifeUser[UserKeys.ID],
-			StorageProvider.FIFE
-		);
-		if (fifeCredentials) {
-			const [fifeProvider] = await tx
-				.select()
-				.from(provider)
-				.where(eq(provider[ProviderKeys.ID], StorageProvider.FIFE))
-				.limit(1);
-
-			if (fifeProvider) {
-				await addStorage(
-					tx,
-					newUser[UserKeys.ID],
-					fifeCredentials[CredentialKeys.ID],
-					fifeProvider[ProviderKeys.FREE_BYTES],
-					fifeProvider[ProviderKeys.FREE_BYTES],
-					fifeProvider[ProviderKeys.PRIORITY],
-					{}
-				);
-			}
-		}
+		await ensureDefaultFiFeStorage(tx, newUser[UserKeys.ID]);
 		return newUser;
 	});
 }
@@ -873,7 +848,8 @@ export async function addCredentials(
 			await tx
 				.update(credential)
 				.set({
-					[CredentialKeys.CREDENTIALS]: credentialsData
+					[CredentialKeys.CREDENTIALS]: credentialsData,
+					[CredentialKeys.UPDATING]: 0
 				})
 				.where(eq(credential[CredentialKeys.ID], existingEntry[CredentialKeys.ID]));
 		}
@@ -912,29 +888,69 @@ export async function getCredentialByStorageId(db: Db | Tx, userId: number, stor
 	}
 }
 
-export async function markCredentialsUpdating(db: Db | Tx, Id: number) {
+export async function markCredentialsUpdating(
+	db: Db | Tx,
+	Id: number,
+	expectedCredentials: unknown
+) {
+	// Claim only the JSON snapshot read by this refresh. Lock changes must not
+	// advance the timestamp of the last successful authorization.
 	return await db
 		.update(credential)
-		.set({ [CredentialKeys.UPDATING]: 1 })
-		.where(and(eq(credential[CredentialKeys.ID], Id), eq(credential[CredentialKeys.UPDATING], 0)))
+		.set({
+			[CredentialKeys.UPDATING]: 1,
+			[CredentialKeys.SERVER_UPDATED_AT]: sql`${credential[CredentialKeys.SERVER_UPDATED_AT]}`
+		})
+		.where(
+			and(
+				eq(credential[CredentialKeys.ID], Id),
+				eq(credential[CredentialKeys.UPDATING], 0),
+				eq(credential[CredentialKeys.CREDENTIALS], expectedCredentials)
+			)
+		)
 		.returning();
 }
 
-export async function markCredentialsUpdated(db: Db | Tx, Id: number) {
+export async function markCredentialsUpdated(
+	db: Db | Tx,
+	Id: number,
+	expectedCredentials: unknown
+) {
 	await db
 		.update(credential)
-		.set({ [CredentialKeys.UPDATING]: 0 })
-		.where(eq(credential[CredentialKeys.ID], Id));
+		.set({
+			[CredentialKeys.UPDATING]: 0,
+			[CredentialKeys.SERVER_UPDATED_AT]: sql`${credential[CredentialKeys.SERVER_UPDATED_AT]}`
+		})
+		.where(
+			and(
+				eq(credential[CredentialKeys.ID], Id),
+				eq(credential[CredentialKeys.CREDENTIALS], expectedCredentials)
+			)
+		);
 }
 
-export async function updateCredentials(db: Db | Tx, Id: number, creds: any) {
-	await db
+export async function updateCredentials(
+	db: Db | Tx,
+	Id: number,
+	creds: unknown,
+	expectedCredentials: unknown
+) {
+	// Reconnecting a provider can replace its JSON while authorization is in flight.
+	// A stale response must never overwrite that newer connection.
+	return await db
 		.update(credential)
 		.set({
 			[CredentialKeys.CREDENTIALS]: creds,
 			[CredentialKeys.UPDATING]: 0
 		})
-		.where(eq(credential[CredentialKeys.ID], Id));
+		.where(
+			and(
+				eq(credential[CredentialKeys.ID], Id),
+				eq(credential[CredentialKeys.CREDENTIALS], expectedCredentials)
+			)
+		)
+		.returning({ id: credential[CredentialKeys.ID] });
 }
 
 export async function addStorage(
