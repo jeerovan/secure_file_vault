@@ -201,6 +201,20 @@ void main() {
     interceptNotification = null;
   }
 
+  test('a running notification updates its title with the current language',
+      () async {
+    final handler = await readyHandler(() async => true);
+    for (final locale in ['de', 'en']) {
+      await ModelSetting.set(AppString.locale.string, locale);
+      await expectNotification(
+          locale == 'de' ? 'Alle 15 Minuten ausführen' : 'Run every 15 minutes',
+          () => handler.onReceiveData(foregroundSyncActivityChangedMessage));
+      final update = calls.lastWhere((c) => c.method == 'updateService');
+      expect(update.arguments['notificationContentTitle'],
+          locale == 'de' ? 'Datei-Sync-Dienst' : 'File sync service');
+    }
+  });
+
   test('app activity reaches the task and restores the latest idle subtitle',
       () async {
     var runs = 0;

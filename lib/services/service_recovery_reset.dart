@@ -19,6 +19,7 @@ import 'service_session_work.dart';
 enum RecoveryResetPhase {
   confirmation,
   waiting,
+  generation,
   phrase,
   registration,
   signIn,
@@ -341,7 +342,8 @@ class RecoveryResetService {
       });
 
   Future<RecoveryResetView> _inspect(
-      Map<String, dynamic> stage, String revision) async {
+      Map<String, dynamic> stage, String revision,
+      {bool activateKeys = false}) async {
     Map<String, dynamic>? operation;
     try {
       operation = (await _status(stage['operationId']))['operation']
@@ -376,11 +378,12 @@ class RecoveryResetService {
               ? 'confirmation_expiring'
               : operation['error']);
     }
-    return _committed(stage, operation, revision);
+    return _committed(stage, operation, revision, activateKeys: activateKeys);
   }
 
   Future<RecoveryResetView> _committed(Map<String, dynamic> original,
-      Map<String, dynamic> operation, String revision) async {
+      Map<String, dynamic> operation, String revision,
+      {bool activateKeys = false}) async {
     var stage = original;
     if (operation['operationId'] != stage['operationId'] ||
         operation['generation'] != stage['generation'] ||
@@ -420,6 +423,18 @@ class RecoveryResetService {
             email: stage['email']);
       }
       await _validateKeys(stage);
+      final activationStarted =
+          ['activating', 'phrase', 'acknowledged'].contains(stage['phase']);
+      if (!activationStarted && !activateKeys) {
+        return RecoveryResetView(RecoveryResetPhase.generation,
+            email: stage['email']);
+      }
+      if (!activationStarted) {
+        // The explicit generation action is durable before activating keys.
+        // A crash after a partial secure-store write resumes this same key set.
+        stage = {...stage, 'phase': 'activating'};
+        await _save(stage, revision);
+      }
       for (final entry in (stage['privateKeys'] as Map).entries) {
         await _check(revision);
         await _storage.write(key: entry.key, value: entry.value);
@@ -439,6 +454,20 @@ class RecoveryResetService {
           email: stage['email']);
     });
   }
+
+  /// The existing generation notice calls this only after the user continues.
+  /// Recheck cloud readiness and use the exact keys bound to this reset.
+  Future<RecoveryResetView> generateKeys() => _singleFlight(() async {
+        await SessionWork.checkpoint();
+        final revision = SessionWork.revision;
+        final stage = await _load();
+        if (stage == null) return _missingKeys('staging_lost');
+        if (!await _sameAccount(stage)) {
+          return RecoveryResetView(RecoveryResetPhase.signIn,
+              email: stage['email']);
+        }
+        return _inspect(stage, revision, activateKeys: true);
+      });
 
   Future<void> _validateKeys(Map<String, dynamic> stage) async {
     try {

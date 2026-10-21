@@ -11,6 +11,7 @@ import { StorageProvider } from './db/keys';
 import { createGenericS3Client, type GenericS3Credentials } from './s3';
 import { RecoveryFault } from './recoverySession';
 import { createBackblazeS3Client } from './backblazeS3';
+import { isVaultPartName, isManagedPartName } from './partObject';
 
 export interface RecoveryTarget {
 	providerId: number;
@@ -37,13 +38,13 @@ export function vaultObjectPrefix(remoteId: string, generation = 'legacy'): stri
 
 export function isRetiredVaultObject(prefix: string, key: unknown): key is string {
 	return (
-		typeof key === 'string' && key.startsWith(prefix) && isVaultPartName(key.slice(prefix.length))
+		typeof key === 'string' &&
+		key.startsWith(prefix) &&
+		(isVaultPartName(key.slice(prefix.length)) || isManagedPartName(key.slice(prefix.length)))
 	);
 }
 
-export function isVaultPartName(value: unknown): value is string {
-	return typeof value === 'string' && /^[A-Za-z0-9_-]{43}_[1-9][0-9]*$/.test(value);
-}
+export { isVaultPartName } from './partObject';
 
 function required(target: RecoveryTarget, key: string): string {
 	const value = target.credentials[key];
@@ -51,11 +52,11 @@ function required(target: RecoveryTarget, key: string): string {
 	return value;
 }
 
-export function createRecoveryS3Client(target: RecoveryTarget): S3Client {
+export function createRecoveryS3Client(target: RecoveryTarget, maxAttempts = 2): S3Client {
 	if ([StorageProvider.FIFE, StorageProvider.BACKBLAZE].includes(target.providerId))
-		return createBackblazeS3Client(target.credentials);
+		return createBackblazeS3Client(target.credentials, maxAttempts);
 	if (target.providerId === StorageProvider.S3)
-		return createGenericS3Client(target.credentials as GenericS3Credentials);
+		return createGenericS3Client(target.credentials as GenericS3Credentials, maxAttempts);
 	let region: string;
 	let endpoint: string;
 	if (target.providerId === StorageProvider.CLOUDFLARE) {
@@ -76,7 +77,8 @@ export function createRecoveryS3Client(target: RecoveryTarget): S3Client {
 			accessKeyId: required(target, 'appId'),
 			secretAccessKey: required(target, 'appKey')
 		},
-		maxAttempts: 2
+		requestChecksumCalculation: 'WHEN_REQUIRED',
+		maxAttempts
 	});
 }
 

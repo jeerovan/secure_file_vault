@@ -787,7 +787,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'ستُحذف خزنة FiFe الحالية والملفات المنسوخة احتياطياً وإعدادات التخزين المرتبط نهائياً.';
+      'سيتم حذف خزنة FiFe الحالية والملفات المنسوخة احتياطيًا ومفاتيح التشفير القديمة نهائيًا.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -799,7 +799,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'سيُحتفظ بحساب بريدك الإلكتروني واشتراكك والملفات الأصلية والنسخ المصدّرة خارج FiFe.';
+      'سيتم الاحتفاظ بحساب بريدك الإلكتروني واشتراكك واتصالات التخزين السحابي وبيانات اعتماد المزوّدين. ستبقى أيضًا الملفات الموجودة في مجلداتك الخاصة خارج FiFe.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -807,7 +807,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'بعد اكتمال الحذف، احفظ عبارة استرداد جديدة من 24 كلمة لاستخدام خزنتك الجديدة.';
+      'ستبقى مسجّل الدخول على هذا الجهاز. بعد التحقق من الحذف، أنشئ واحفظ عبارة استرداد جديدة من 24 كلمة.';
 
   @override
   String get recoveryResetContinue => 'متابعة إعادة التعيين';

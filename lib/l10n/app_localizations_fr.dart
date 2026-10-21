@@ -795,7 +795,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Votre coffre FiFe actuel, les fichiers sauvegardés et les paramètres de stockage lié seront définitivement supprimés.';
+      'Votre coffre FiFe actuel, vos fichiers sauvegardés et vos anciennes clés de chiffrement seront définitivement supprimés.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -807,7 +807,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Votre compte e-mail, votre abonnement, vos fichiers originaux et les copies exportées hors de FiFe seront conservés.';
+      'Votre compte e-mail, votre abonnement, vos connexions au stockage cloud et les identifiants des fournisseurs seront conservés. Les fichiers de vos propres dossiers en dehors de FiFe seront également conservés.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -815,7 +815,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Une fois la suppression terminée, enregistrez une nouvelle phrase de récupération de 24 mots pour utiliser votre nouveau coffre.';
+      'Vous resterez connecté sur cet appareil. Une fois la suppression vérifiée, générez et enregistrez une nouvelle phrase de récupération de 24 mots.';
 
   @override
   String get recoveryResetContinue => 'Poursuivre la réinitialisation';

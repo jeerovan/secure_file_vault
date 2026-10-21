@@ -787,7 +787,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Your existing FiFe vault, backed-up files and linked storage settings will be permanently deleted.';
+      'Your existing FiFe vault, backed-up files and old encryption keys will be permanently deleted.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -799,7 +799,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Your email account, subscription, original source files and copies exported outside FiFe will be kept.';
+      'Your email account, subscription, cloud storage connections and provider credentials will be kept. Files in your own folders outside FiFe will also be kept.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -807,7 +807,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'After deletion finishes, save a new 24-word recovery phrase to use your fresh vault.';
+      'You stay signed in on this device. After deletion is verified, generate and save a new 24-word recovery phrase.';
 
   @override
   String get recoveryResetContinue => 'Continue to reset';

@@ -17,6 +17,7 @@ import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_display.dart';
+import 'package:file_vault_bb/ui/pages/page_access_key_notice.dart';
 import 'package:file_vault_bb/ui/pages/page_signin.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -83,8 +84,12 @@ class _NativeCleanupTestTask extends TaskHandler {
 }
 
 void main() {
+  registerRecoveryNativeTests();
+}
+
+void registerRecoveryNativeTests({bool reportResults = true}) {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  recordIphoneResults(binding, 'recovery');
+  if (reportResults) recordIphoneResults(binding, 'recovery');
   final storage = SecureStorage();
 
   setUpAll(() async {
@@ -113,6 +118,10 @@ void main() {
     await fresh();
     await ModelSetting.set(AppString.onboarding.string, 'yes');
     await ModelSetting.set(AppString.signedIn.string, 'no');
+    await ModelSetting.set(
+        'managed_upload:native-fixture', 'private upload receipt fixture');
+    await ModelSetting.set(
+        'managed_cleanup:native-fixture', 'private cleanup receipt fixture');
     await (await ModelProfile.fromMap(
             {'id': 'native-fixture-user', 'email': 'native@example.test'}))
         .insert();
@@ -181,6 +190,10 @@ void main() {
       expect(await storage.read(key: 'retired-native-key'), isNull);
       expect(await ModelProfile.get(), isNull);
       expect(await ModelSetting.getRaw('retired-native-setting'), isEmpty);
+      expect(
+          await ModelSetting.getRaw('managed_upload:native-fixture'), isEmpty);
+      expect(
+          await ModelSetting.getRaw('managed_cleanup:native-fixture'), isEmpty);
       expect(await owned.exists(), isFalse);
       expect(await upload.exists(), isFalse);
       expect(await export.exists(), isFalse);
@@ -221,7 +234,25 @@ void main() {
     expect(await getMasterKey(), isNull);
     expect((await peer.service().refresh()).phase, RecoveryResetPhase.waiting);
     peer.phase = 'ready';
-    expect((await peer.service().refresh()).phase, RecoveryResetPhase.phrase);
+    expect(
+        (await peer.service().refresh()).phase, RecoveryResetPhase.generation);
+    expect(await getMasterKey(), isNull);
+    expect(await storage.read(key: AppString.sessionCookie.string),
+        'native-fixture-cookie');
+    var generated = false;
+    await tester.pumpWidget(MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: PageAccessKeyNotice(onGenerate: () async {
+        expect((await peer.service().generateKeys()).phase,
+            RecoveryResetPhase.phrase);
+        generated = true;
+      }),
+    ));
+    await tester.tap(find.descendant(
+        of: find.byType(PageAccessKeyNotice),
+        matching: find.byType(FilledButton)));
+    await until(tester, () => generated);
     expect(await storage.read(key: AppString.masterKey.string),
         staged['privateKeys'][AppString.masterKey.string]);
     var acknowledged = false;

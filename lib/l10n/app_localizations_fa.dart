@@ -778,7 +778,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'خزانهٔ فعلی FiFe، فایل‌های پشتیبان‌گیری‌شده و تنظیمات فضای ذخیره‌سازی متصل برای همیشه حذف می‌شوند.';
+      'خزانه فعلی FiFe، فایل‌های پشتیبان‌گیری‌شده و کلیدهای رمزگذاری قدیمی شما برای همیشه حذف خواهند شد.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -790,7 +790,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'حساب ایمیل، اشتراک، فایل‌های اصلی و نسخه‌های صادرشده خارج از FiFe حفظ می‌شوند.';
+      'حساب ایمیل، اشتراک، اتصال‌های فضای ذخیره‌سازی ابری و اطلاعات ورود ارائه‌دهندگان حفظ می‌شوند. فایل‌های پوشه‌های شخصی شما خارج از FiFe نیز حفظ خواهند شد.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -798,7 +798,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'پس از پایان حذف، برای استفاده از خزانهٔ جدید یک عبارت بازیابی تازهٔ ۲۴ کلمه‌ای ذخیره کنید.';
+      'در این دستگاه وارد حساب می‌مانید. پس از تأیید حذف، یک عبارت بازیابی جدید 24 کلمه‌ای ایجاد و ذخیره کنید.';
 
   @override
   String get recoveryResetContinue => 'ادامهٔ بازنشانی';

@@ -12,9 +12,10 @@ import {
 import { CredentialKeys, FileKeys, PartKeys, StorageProvider, UserKeys } from './db/keys';
 import type { Db, Tx } from './db';
 import { createGenericS3Client, type GenericS3Credentials } from './s3';
-import { vaultState } from './db/schema';
-import { eq } from 'drizzle-orm';
+import { vaultState, vaultUpload } from './db/schema';
+import { and, eq, ne, sql } from 'drizzle-orm';
 import { vaultObjectPrefix } from './recoveryStorage';
+import { storedPartObjectKey } from './partObject';
 
 export async function deleteFileFromStorage(db: Db | Tx, fileRow: Record<string, unknown>) {
 	const parts = fileRow[FileKeys.PARTS] as number;
@@ -25,16 +26,35 @@ export async function deleteFileFromStorage(db: Db | Tx, fileRow: Record<string,
 	const storageId = fileRow[FileKeys.STORAGE_ID] as number | null;
 	const fileHash = fileRow[FileKeys.FILE_HASH] as string;
 	const userRow = await getUser(db, userId);
-	if (storageId == null || userRow == undefined) return;
-	const credential = await getCredentialByStorageId(db, userId, storageId);
+	if (userRow == undefined) return;
 	const supabaseId = userRow[UserKeys.REMOTE_AUTH_ID];
 	const [state] = await db.select().from(vaultState).where(eq(vaultState.userId, userId)).limit(1);
-	const prefix = vaultObjectPrefix(supabaseId, state?.generation ?? 'legacy');
+	const generation = state?.generation ?? 'legacy';
+	const prefix = vaultObjectPrefix(supabaseId, generation);
+	// Also retire uploads that began before allocation/part-count metadata was
+	// synchronized. Their durable manifests outlive the ordinary file rows.
+	await db
+		.update(vaultUpload)
+		.set({ retired: 1, nextAttemptAt: Date.now() })
+		.where(
+			and(
+				eq(vaultUpload.userId, userId),
+				eq(vaultUpload.generation, generation),
+				ne(vaultUpload.phase, 'deleted'),
+				sql`left(${vaultUpload.partName}, ${fileHash.length + 1}) = ${fileHash + '_'}`
+			)
+		);
+	if (storageId == null) return;
+	const credential = await getCredentialByStorageId(db, userId, storageId);
 	let allRemoved = true;
 	for (const partNumber of partNumbers) {
-		const file_name = `${prefix}${fileHash}_${partNumber}`;
 		const filePart = await getUserFilePart(db, userId, fileId, partNumber);
 		if (filePart && filePart[PartKeys.PART_SIZE] > 0) {
+			const file_name = storedPartObjectKey(
+				prefix,
+				`${fileHash}_${partNumber}`,
+				filePart[PartKeys.JSON]
+			);
 			if (providerId == StorageProvider.FIFE || providerId == StorageProvider.BACKBLAZE) {
 				const partData = filePart[PartKeys.JSON];
 				const parsedData = typeof partData === 'string' ? JSON.parse(partData) : partData;

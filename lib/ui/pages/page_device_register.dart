@@ -41,6 +41,15 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
       await SessionWork.run(_performRegistration);
     } on SessionInvalidated {
       if (mounted) await context.read<AppSetupState>().recheckStatus();
+    } catch (error, stackTrace) {
+      logger.error('Device registration failed: ${error.runtimeType}',
+          stackTrace: stackTrace);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = AppLocalizations.of(context)!.pleaseTryAgain;
+        });
+      }
     }
   }
 

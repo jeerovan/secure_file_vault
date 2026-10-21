@@ -8,6 +8,7 @@ import { getCredentialByStorageId } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
 import { isVaultPartName } from '$lib/server/recoveryStorage';
 import { finalDeviceResponse } from '$lib/server/deviceAccess';
+import { getPartObjectKey } from '$lib/server/partObject';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
@@ -42,7 +43,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		namespace: string;
 		region: string;
 	};
-	const file_path = `${authUser.objectPrefix}${file_id}`;
+
 	const s3Endpoint = `https://${credsData.namespace}.compat.objectstorage.${credsData.region}.oraclecloud.com`;
 	const s3Client = new S3Client({
 		region: credsData.region,
@@ -53,12 +54,12 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		},
 		forcePathStyle: true
 	});
-	const command = new GetObjectCommand({
-		Bucket: credsData.bucketName,
-		Key: file_path
-	});
 
 	try {
+		const command = new GetObjectCommand({
+			Bucket: credsData.bucketName,
+			Key: await getPartObjectKey(db, authUser.userId!, storage_id, file_id, authUser.objectPrefix!)
+		});
 		// Generates the URL purely locally using cryptographic signing
 		const presignedUrl = await getSignedUrl(s3Client, command, {
 			expiresIn: 3600

@@ -780,7 +780,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Brankas FiFe saat ini, file cadangan, dan pengaturan penyimpanan tertaut akan dihapus permanen.';
+      'Brankas FiFe yang ada, file cadangan, dan kunci enkripsi lama Anda akan dihapus secara permanen.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -792,7 +792,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Akun email, langganan, file sumber asli, dan salinan yang diekspor ke luar FiFe akan dipertahankan.';
+      'Akun email, langganan, koneksi penyimpanan cloud, dan kredensial penyedia Anda akan dipertahankan. File dalam folder Anda sendiri di luar FiFe juga akan dipertahankan.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -800,7 +800,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Setelah penghapusan selesai, simpan frasa pemulihan baru berisi 24 kata untuk menggunakan brankas baru.';
+      'Anda tetap masuk di perangkat ini. Setelah penghapusan diverifikasi, buat dan simpan frasa pemulihan baru yang terdiri dari 24 kata.';
 
   @override
   String get recoveryResetContinue => 'Lanjutkan pengaturan ulang';

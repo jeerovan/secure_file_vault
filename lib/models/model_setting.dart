@@ -24,12 +24,16 @@ class ModelSetting {
       parseForegroundSyncIntervalMinutes(
           await getRaw(AppString.foregroundSyncIntervalMinutes.string));
 
-  static Future<void> set(String key, String value) async {
-    final dbHelper = StorageSqlite.instance;
-    await dbHelper.insert(Tables.settings.string, {'id': key, 'value': value});
-    await SessionWork.checkpoint();
-    settingJson[key] = value;
-  }
+  static Future<void> set(String key, String value) =>
+      SessionWork.run(() async {
+        // SQL can finish before cleanup while this continuation resumes after
+        // a new login. Keep cache publication bound to the original session.
+        final dbHelper = StorageSqlite.instance;
+        await dbHelper
+            .insert(Tables.settings.string, {'id': key, 'value': value});
+        await SessionWork.checkpoint();
+        settingJson[key] = value;
+      });
 
   static Future<String> getRaw(String key, {String defaultValue = ""}) async {
     final dbHelper = StorageSqlite.instance;
@@ -55,12 +59,12 @@ class ModelSetting {
     }
   }
 
-  static Future<void> delete(String key) async {
-    final dbHelper = StorageSqlite.instance;
-    await dbHelper.delete(Tables.settings.string, key);
-    await SessionWork.checkpoint();
-    settingJson.remove(key);
-  }
+  static Future<void> delete(String key) => SessionWork.run(() async {
+        final dbHelper = StorageSqlite.instance;
+        await dbHelper.delete(Tables.settings.string, key);
+        await SessionWork.checkpoint();
+        settingJson.remove(key);
+      });
 
   static void clear() {
     settingJson.clear();

@@ -10,6 +10,7 @@ import {
 	credential,
 	storage,
 	tempStorage,
+	vaultUpload,
 	provider
 } from '$lib/server/db/schema';
 import {
@@ -44,6 +45,7 @@ import {
 import { deleteFileFromStorage } from '../deleteWorker';
 import type { Db, Tx } from '.';
 import { parseSyncChangeData } from '../syncValidation';
+import { referencesPartObject } from '../partObject';
 import { ensureDefaultFiFeStorage } from '../defaultStorage';
 export { ensureDefaultFiFeStorage } from '../defaultStorage';
 
@@ -612,7 +614,8 @@ export async function savePartChanges(
 	db: Db | Tx,
 	userId: number,
 	deviceId: string,
-	changes: any[]
+	changes: any[],
+	managedUploads = false
 ) {
 	if (!changes || changes.length === 0) return;
 
@@ -648,7 +651,10 @@ export async function savePartChanges(
 							fileId: part[PartKeys.FILE_ID],
 							partNumber: part[PartKeys.PART_NUMBER],
 							clientUpdatedAt: part[PartKeys.CLIENT_UPDATED_AT],
-							uploaded: part[PartKeys.UPLOADED]
+							uploaded: part[PartKeys.UPLOADED],
+							size: part[PartKeys.PART_SIZE],
+							cipher: part[PartKeys.CIPHER],
+							nonce: part[PartKeys.NONCE]
 						})
 						.from(part)
 						.where(
@@ -657,6 +663,18 @@ export async function savePartChanges(
 				: [];
 
 		const partMap = new Map(existingParts.map((p) => [`${p.fileId}_${p.partNumber}`, p]));
+		const ownedUploads = await tx
+			.select()
+			.from(vaultUpload)
+			.where(
+				and(
+					eq(vaultUpload.userId, userId),
+					inArray(
+						vaultUpload.partName,
+						changes.map((change) => change.id)
+					)
+				)
+			);
 
 		for (const change of changes) {
 			const filePartId = change['id'];
@@ -679,7 +697,38 @@ export async function savePartChanges(
 			const deleted = change['deleted'];
 			const uploaded = change['uploaded'];
 			const partBytes = change['size'];
+			const owners = ownedUploads.filter(
+				(row) => row.partName === filePartId && row.phase !== 'deleted'
+			);
+			const owner = owners.find((row) => !row.retired) ?? owners[0];
+			if (!deleted && (changedData?.managedUploadId || changedData?.managedObjectKey)) {
+				// Completion and its keys are already committed by the server.
+				// An old/new client's delayed ACK must never restore an object that
+				// has since been replaced, retired or deleted by garbage collection.
+				continue;
+			}
+			if (
+				owner &&
+				!deleted &&
+				(uploaded !== 1 || (managedUploads && changedData?.legacyUpload !== true))
+			) {
+				// Prepared metadata cannot displace a staged/accepted key. A legacy
+				// *completed* direct upload can still win the existing timestamp
+				// rule, because it uses a separate canonical cloud object.
+				continue;
+			}
+			// Managed clients must adopt the accepted encryption key instead of
+			// overwriting it with metadata prepared concurrently on another device.
+			// Legacy clients retain their existing wire/update behavior.
+			if (
+				managedUploads &&
+				changedData?.legacyUpload !== true &&
+				existingRow?.uploaded === 1 &&
+				!deleted
+			)
+				continue;
 			let updateUsedBytes = uploaded === 1;
+			const acceptedChange = !existingRow || incomingUpdatedAt > existingRow.clientUpdatedAt;
 
 			if (existingRow) {
 				if (existingRow.uploaded === 1) {
@@ -722,12 +771,48 @@ export async function savePartChanges(
 				});
 			}
 
-			if (updateUsedBytes) {
+			if (updateUsedBytes && acceptedChange && !deleted) {
 				const storageId = fileEntry[FileKeys.STORAGE_ID];
 				if (storageId != null) {
 					await updateStorageUsedSize(tx, storageId, userId, partBytes, true);
 					await updateTempStorageSize(tx, userId, fileId, partBytes);
 				}
+			}
+			if (
+				acceptedChange &&
+				!deleted &&
+				uploaded === 1 &&
+				existingRow?.uploaded === 1 &&
+				existingRow.size !== partBytes &&
+				fileEntry[FileKeys.STORAGE_ID] != null
+			) {
+				const delta = partBytes - existingRow.size;
+				await updateStorageUsedSize(
+					tx,
+					fileEntry[FileKeys.STORAGE_ID]!,
+					userId,
+					Math.abs(delta),
+					delta > 0
+				);
+			}
+			// Keep the exact-object manifest independently of client metadata. A
+			// legacy replacement must not lose the cleanup obligation for the
+			// managed object it no longer references.
+			for (const replaced of owners.filter(
+				(row) =>
+					acceptedChange &&
+					!deleted &&
+					uploaded === 1 &&
+					!referencesPartObject(row.objectKey, filePartId, changedData)
+			)) {
+				await tx
+					.update(vaultUpload)
+					.set({
+						retired: 1,
+						nextAttemptAt: Date.now(),
+						phase: replaced.leaseUntil > Date.now() ? replaced.phase : 'cleanup'
+					})
+					.where(eq(vaultUpload.id, replaced.id));
 			}
 		}
 	});

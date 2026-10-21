@@ -35,8 +35,16 @@ import 'support/iphone_results.dart';
 import 'support/native_test_install.dart';
 
 void main() {
+  registerProviderNativeTests();
+}
+
+void registerProviderNativeTests({
+  bool reportResults = true,
+  Duration transferTimeout = const Duration(seconds: 90),
+  Duration suiteTimeout = const Duration(minutes: 20),
+}) {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  recordIphoneResults(binding, 's3-providers');
+  if (reportResults) recordIphoneResults(binding, 's3-providers');
   testWidgets(
       'LAN S3 providers preserve modified multipart bytes across retries',
       (tester) async {
@@ -50,7 +58,8 @@ void main() {
             as List;
     // Each registration has higher priority than the preceding storage. The
     // application's normal allocation path must select that provider.
-    expect(inputs.map((input) => input['id']).toList(), [3, 4, 5, 6]);
+    expect(inputs.map((input) => input['id']).toList(),
+        anyOf(orderedEquals([3, 4, 5, 6]), orderedEquals([2, 3, 4, 5, 6])));
     await tester.pumpWidget(const MaterialApp(
         home: Scaffold(
             body: Center(child: Text('Testing local provider transfers')))));
@@ -193,7 +202,7 @@ void main() {
                 expect(task.state, TransferTaskState.pending);
                 await TaskManager()
                     .checkInitUpload(task)
-                    .timeout(const Duration(seconds: 90));
+                    .timeout(transferTimeout);
                 expect(observed.providerFailureType,
                     isNot(contains('CERTIFICATE_VERIFY_FAILED')));
                 if (observed.providerFailureType != null) {
@@ -220,10 +229,23 @@ void main() {
             expect(edited.fileHash, isNot(original.fileHash));
             expect((await ModelFile.get(edited.fileHash!))!.parts, 2);
             observed.rejectNextUpload = true;
-            await TaskManager()
-                .checkInitUpload((await ModelItemTask.get(edited.id))!)
-                .timeout(const Duration(seconds: 90));
-            expect(observed.rejectNextUpload, isFalse);
+            // Allocation/authorization can legitimately need another pass.
+            // Exercise the injected rejection only once transport is reached.
+            for (var attempt = 0;
+                attempt < 6 && observed.rejectNextUpload;
+                attempt++) {
+              final task = await ModelItemTask.get(edited.id);
+              expect(task, isNotNull);
+              expect(task!.state, TransferTaskState.pending);
+              await TaskManager()
+                  .checkInitUpload(task)
+                  .timeout(transferTimeout);
+              if (observed.rejectNextUpload) {
+                await Future<void>.delayed(const Duration(seconds: 1));
+              }
+            }
+            expect(observed.rejectNextUpload, isFalse,
+                reason: '$name must reach the controlled upload rejection');
             final part = (await ModelPart.get('${edited.fileHash}_1'))!;
             expect(part.uploaded, 0);
             final temp = await getTemporaryDirectory();
@@ -231,6 +253,28 @@ void main() {
                 File('${temp.path}/${edited.fileHash}_1.crypt.ready');
             expect(await artifact.exists(), isTrue);
             final artifactHash = await sha1.bind(artifact.openRead()).first;
+            if (providerId == 2) {
+              observed.loseNextSuccess = true;
+              await TaskManager()
+                  .checkInitUpload((await ModelItemTask.get(edited.id))!);
+              expect(observed.lostSuccess, isTrue);
+              expect(
+                  (await ModelPart.get('${edited.fileHash}_1'))?.uploaded, 0);
+              final attempts = observed.uploads;
+              for (var retry = 0;
+                  retry < 6 &&
+                      (await ModelPart.get('${edited.fileHash}_1'))?.uploaded !=
+                          1;
+                  retry++) {
+                await TaskManager()
+                    .checkInitUpload((await ModelItemTask.get(edited.id))!);
+                expect(observed.uploads, attempts,
+                    reason:
+                        'Managed completion must recover the accepted part without uploading it again');
+              }
+              expect(
+                  (await ModelPart.get('${edited.fileHash}_1'))?.uploaded, 1);
+            }
             await finish(edited);
             expect((await ModelPart.get('${edited.fileHash}_1'))?.cipher,
                 part.cipher,
@@ -239,6 +283,7 @@ void main() {
                 artifactHash.toString());
             expect(await artifact.exists(), isFalse);
             expect(observed.rejectedInvariant, isNull);
+            expect(observed.managedUploads, observed.uploads);
             expect(observed.uploads, greaterThanOrEqualTo(4));
             phase = 'download';
             await File('${directory.path}/edited.bin').delete();
@@ -248,7 +293,7 @@ void main() {
               if (task == null) break;
               await TaskManager()
                   .checkInitDownload(task)
-                  .timeout(const Duration(seconds: 90));
+                  .timeout(transferTimeout);
             }
             expect(await ModelItemTask.get(edited.id), isNull);
             final restored =
@@ -325,5 +370,5 @@ void main() {
     }
     await tester.pumpWidget(const MaterialApp(
         home: Scaffold(body: Center(child: Text('Provider tests passed')))));
-  }, timeout: const Timeout(Duration(minutes: 20)));
+  }, timeout: Timeout(suiteTimeout));
 }

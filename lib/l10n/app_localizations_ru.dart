@@ -791,7 +791,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Ваше текущее хранилище FiFe, резервные копии файлов и настройки подключённых хранилищ будут удалены навсегда.';
+      'Текущее хранилище FiFe, резервные копии файлов и старые ключи шифрования будут удалены навсегда.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -803,7 +803,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Аккаунт электронной почты, подписка, исходные файлы и копии, экспортированные за пределы FiFe, сохранятся.';
+      'Ваш почтовый аккаунт, подписка, подключения к облачным хранилищам и учётные данные провайдеров сохранятся. Файлы в ваших собственных папках вне FiFe также сохранятся.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -811,7 +811,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'После завершения удаления сохраните новую фразу восстановления из 24 слов, чтобы пользоваться новым хранилищем.';
+      'Вы останетесь в аккаунте на этом устройстве. После подтверждения удаления создайте и сохраните новую фразу восстановления из 24 слов.';
 
   @override
   String get recoveryResetContinue => 'Продолжить сброс';

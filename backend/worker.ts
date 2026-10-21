@@ -4,6 +4,8 @@ import { getDb } from './src/lib/server/db';
 import { recoveryWorkerState } from './src/lib/server/db/schema';
 import { drainRecoveryCleanup } from './src/lib/server/recoveryCleanup';
 import { ProviderRecoveryStorage } from './src/lib/server/recoveryStorage';
+import { drainManagedUploads } from './src/lib/server/managedUploadCleanup';
+import { ProviderManagedUploadStorage } from './src/lib/server/managedUploadStorage';
 
 type Env = App.Platform['env'];
 
@@ -15,6 +17,7 @@ export default {
 		const db = getDb({ env }, false);
 		try {
 			// Pending deletion continues even when new reset entry is disabled.
+			await drainManagedUploads(db, new ProviderManagedUploadStorage(), { limit: 2 });
 			await drainRecoveryCleanup(db, new ProviderRecoveryStorage(), { limit: 2 });
 			const lastRunAt = Date.now();
 			await db

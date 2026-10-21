@@ -89,6 +89,8 @@ migrate_working_dir/
 # Web
 **/web/main.dart.js
 **/web/main.dart.js.map
+.svelte-kit/
+.vite/
 
 # Firebase / secrets
 /.secrets/

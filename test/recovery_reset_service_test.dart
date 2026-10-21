@@ -33,6 +33,70 @@ void main() {
   Map<String, dynamic> stage() => jsonDecode(fixture.secrets[stageKey]!);
 
   test(
+      'verified deletion returns to generation without signing out or activating keys',
+      () async {
+    final service = peer.service();
+    await service.confirm();
+    final staged = stage()['privateKeys'];
+    peer.phase = 'ready';
+    final ready = await peer.service().refresh();
+    expect(ready.phase, RecoveryResetPhase.generation);
+    expect(await getMasterKey(), isNull);
+    expect(await getSignedInUserId(), 'fixture-user');
+    expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
+    expect(await getDeviceUuid(), isEmpty);
+    expect(await SyncUtils.canSync(), isFalse);
+    expect(
+        (await peer.service().refresh()).phase, RecoveryResetPhase.generation);
+    expect(stage()['privateKeys'], staged);
+    expect(peer.confirmCalls, 1);
+  });
+
+  test('generation cannot activate keys before verified deletion', () async {
+    await peer.service().confirm();
+    final before = stage()['privateKeys'];
+    expect((await peer.service().generateKeys()).phase,
+        RecoveryResetPhase.waiting);
+    expect(await getMasterKey(), isNull);
+    expect(stage()['privateKeys'], before);
+    expect(stage()['phase'], 'waiting');
+    expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
+  });
+
+  test('failed durable generation action activates no keys and can be retried',
+      () async {
+    await peer.service().confirm();
+    final before = stage()['privateKeys'];
+    peer.phase = 'ready';
+    fixture.beforeWrite = (key, value) async {
+      if (key == stageKey && jsonDecode(value)['phase'] == 'activating') {
+        throw PlatformException(code: 'WRITE_FAILED');
+      }
+    };
+    expect((await peer.service().generateKeys()).phase,
+        RecoveryResetPhase.unavailable);
+    expect(await getMasterKey(), isNull);
+    fixture.beforeWrite = null;
+    expect(
+        (await peer.service().refresh()).phase, RecoveryResetPhase.generation);
+    expect(
+        (await peer.service().generateKeys()).phase, RecoveryResetPhase.phrase);
+    expect(stage()['privateKeys'], before);
+    expect(peer.confirmCalls, 1);
+  });
+
+  test('an obsolete reset cannot activate keys from the generation action',
+      () async {
+    await peer.service().confirm();
+    peer.statusError = 'vault_changed';
+    expect(
+        (await peer.service().generateKeys()).phase, RecoveryResetPhase.signIn);
+    expect(await getMasterKey(), isNull);
+    expect(await ModelProfile.get(), isNull);
+    expect(fixture.secrets[stageKey], isNull);
+  });
+
+  test(
       'commit retains only the current session/staging and waits before revealing new words',
       () async {
     final original = await fixture.text('source.txt', 'external original');
@@ -55,7 +119,11 @@ void main() {
       AppString.fileHashKey.string
     });
     peer.phase = 'ready';
-    expect((await peer.service().refresh()).phase, RecoveryResetPhase.phrase);
+    expect(
+        (await peer.service().refresh()).phase, RecoveryResetPhase.generation);
+    expect(await getMasterKey(), isNull);
+    expect(
+        (await peer.service().generateKeys()).phase, RecoveryResetPhase.phrase);
     expect(fixture.secrets[AppString.masterKey.string],
         saved['privateKeys'][AppString.masterKey.string]);
     final crypto = CryptoUtils(fixture.sodium);
@@ -260,7 +328,9 @@ void main() {
         throw PlatformException(code: 'WRITE_FAILED');
       }
     };
-    expect((await service.refresh()).phase, RecoveryResetPhase.unavailable);
+    expect((await service.refresh()).phase, RecoveryResetPhase.generation);
+    expect(
+        (await service.generateKeys()).phase, RecoveryResetPhase.unavailable);
     final before = stage()['privateKeys'];
     expect((await peer.service().refresh()).phase, RecoveryResetPhase.phrase);
     expect(stage()['privateKeys'], before);
@@ -289,7 +359,10 @@ void main() {
         .insert();
     await ModelSetting.set(AppString.signedIn.string, 'yes');
     peer.phase = 'ready';
-    expect((await peer.service().refresh()).phase, RecoveryResetPhase.phrase);
+    expect(
+        (await peer.service().refresh()).phase, RecoveryResetPhase.generation);
+    expect(
+        (await peer.service().generateKeys()).phase, RecoveryResetPhase.phrase);
     expect(peer.confirmCalls, 1);
   });
 

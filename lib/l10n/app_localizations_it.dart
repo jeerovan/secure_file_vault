@@ -795,7 +795,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'La cassaforte FiFe attuale, i file di backup e le impostazioni degli archivi collegati verranno eliminati definitivamente.';
+      'La cassaforte FiFe attuale, i file di backup e le vecchie chiavi di crittografia verranno eliminati definitivamente.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -807,7 +807,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Il tuo account e-mail, abbonamento, file originali e copie esportate al di fuori di FiFe verranno conservati.';
+      'Il tuo account e-mail, l\'abbonamento, le connessioni di archiviazione cloud e le credenziali dei provider verranno conservati. Verranno conservati anche i file nelle tue cartelle personali al di fuori di FiFe.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -815,7 +815,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Al termine dell’eliminazione, salva una nuova frase di recupero di 24 parole per usare la nuova cassaforte.';
+      'Resterai connesso su questo dispositivo. Dopo la verifica dell\'eliminazione, genera e salva una nuova frase di recupero di 24 parole.';
 
   @override
   String get recoveryResetContinue => 'Continua con il ripristino';

@@ -760,7 +760,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      '기존 FiFe 보관함, 백업된 파일, 연결된 저장소 설정이 영구적으로 삭제됩니다.';
+      '현재 FiFe 보관함, 백업된 파일 및 이전 암호화 키가 영구적으로 삭제됩니다.';
 
   @override
   String get lostRecoveryDevicesConsequence => '기존 기기 등록이 모두 삭제됩니다.';
@@ -771,7 +771,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      '이메일 계정, 구독, 원본 파일, FiFe 외부로 내보낸 사본은 유지됩니다.';
+      '이메일 계정, 구독, 클라우드 저장소 연결 및 공급자 인증 정보는 유지됩니다. FiFe 외부의 개인 폴더에 있는 파일도 유지됩니다.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -779,7 +779,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      '삭제가 끝나면 새 보관함을 사용할 수 있도록 24단어로 된 새 복구 문구를 저장하세요.';
+      '이 기기에서는 로그인 상태가 유지됩니다. 삭제가 확인되면 새로운 24단어 복구 문구를 생성하고 저장하세요.';
 
   @override
   String get recoveryResetContinue => '재설정 계속하기';

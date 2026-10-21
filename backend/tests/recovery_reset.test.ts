@@ -10,6 +10,7 @@ import {
 	UserDeviceKeys as V,
 	CredentialKeys as C,
 	StorageKeys as S,
+	TempStorageKeys as T,
 	ProviderKeys as P,
 	FileKeys as F,
 	PartKeys as A,
@@ -233,6 +234,52 @@ test(
 			return (await db.select().from(tables.user).where(eq(tables.user[U.ID], id)))[0];
 		}
 		try {
+			await t.test(
+				'reset retains in-flight uploads and cannot finish until their cleanup is verified',
+				async () => {
+					const f = await seed();
+					const id = crypto.randomUUID();
+					await db.insert(tables.vaultUpload).values({
+						id,
+						userId: f.account[U.ID],
+						deviceUuid: 'old-device',
+						generation: 'legacy',
+						storageId: f.allocations[1][S.ID],
+						providerId: 6,
+						objectKey: `fixture-user/${'a'.repeat(43)}_1`,
+						partName: `${'a'.repeat(43)}_1`,
+						credentials: f.owned[C.CREDENTIALS] as Record<string, unknown>,
+						receiptHash: '0'.repeat(64),
+						contentLength: 10,
+						sha1: 'a'.repeat(40),
+						md5: 'AAAAAAAAAAAAAAAAAAAAAA==',
+						uploadId: 'provider-upload',
+						phase: 'uploading',
+						createdAt: now,
+						updatedAt: now
+					});
+					await f.controller.prepare(f.preparation);
+					const committed = await f.controller.confirm(f.confirmation);
+					const [tracked] = await db.select().from(tables.vaultUpload);
+					assert.equal(tracked.retired, 1);
+					assert.equal(tracked.operationId, f.operationId);
+					assert.equal(tracked.uploadId, 'provider-upload');
+					assert.deepEqual(
+						await db.select().from(tables.part).where(eq(tables.part[A.USER_ID], f.account[U.ID])),
+						[]
+					);
+					now = committed.notBefore + 1;
+					await cleanup.drainRecoveryCleanup(db, cloud, { now: () => now, limit: 4 });
+					assert.equal((await f.controller.status(f.operationId)).phase, 'cleanup_pending');
+					assert.equal((await db.select().from(tables.vaultState))[0].ready, 0);
+					await db
+						.update(tables.vaultUpload)
+						.set({ phase: 'deleted' })
+						.where(eq(tables.vaultUpload.id, id));
+					await cleanup.drainRecoveryCleanup(db, cloud, { now: () => now, limit: 4 });
+					assert.equal((await f.controller.status(f.operationId)).phase, 'ready');
+				}
+			);
 			const authorization = (userId: number) => ({
 				authorized: true,
 				userId,
@@ -440,6 +487,95 @@ test(
 				assert.equal((await db.select().from(tables.recoveryCleanupTarget)).length, 0);
 			});
 			await t.test(
+				'reset retains provider connections and credentials through cleanup and retries',
+				async () => {
+					const f = await seed();
+					await db.insert(tables.credential).values({
+						[C.USER_ID]: f.account[U.ID],
+						[C.PROVIDER_ID]: 6,
+						[C.CREDENTIALS]: {
+							...(f.owned[C.CREDENTIALS] as Record<string, unknown>),
+							bucketName: 'saved-unlinked-bucket'
+						}
+					});
+					const [pendingFile] = await db
+						.select()
+						.from(tables.file)
+						.where(eq(tables.file[F.USER_ID], f.account[U.ID]));
+					await db.insert(tables.tempStorage).values({
+						[T.USER_ID]: f.account[U.ID],
+						[T.FILE_ID]: pendingFile[F.ID],
+						[T.STORAGE_ID]: f.allocations[0][S.ID],
+						[T.PROVIDER_ID]: 1,
+						[T.SIZE]: 64
+					});
+					await db
+						.update(tables.storage)
+						.set({
+							[S.USED_BYTES]: 512,
+							[S.PRIORITY]: 42,
+							[S.LIMIT_BYTES]: 4096,
+							[S.LIMIT_FREE_BYTES]: 2048,
+							[S.JSON]: { title: 'Keep my bucket', configured: true }
+						})
+						.where(eq(tables.storage[S.USER_ID], f.account[U.ID]));
+					await db
+						.update(tables.storage)
+						.set({ [S.USED_BYTES]: 99 })
+						.where(eq(tables.storage[S.USER_ID], f.other[U.ID]));
+					const credentials = await db
+						.select()
+						.from(tables.credential)
+						.orderBy(tables.credential[C.ID]);
+					const providers = await db.select().from(tables.provider).orderBy(tables.provider[P.ID]);
+					const connections = await db.select().from(tables.storage).orderBy(tables.storage[S.ID]);
+					const configuration = (rows: any[]) =>
+						rows.map((row) =>
+							Object.fromEntries(
+								[
+									S.ID,
+									S.USER_ID,
+									S.CREDENTIAL_ID,
+									S.LIMIT_BYTES,
+									S.LIMIT_FREE_BYTES,
+									S.PRIORITY,
+									S.JSON
+								].map((key) => [key, row[key]])
+							)
+						);
+					const preserved = async () => {
+						assert.equal((await db.select().from(tables.tempStorage)).length, 0);
+						assert.deepEqual(
+							await db.select().from(tables.credential).orderBy(tables.credential[C.ID]),
+							credentials
+						);
+						assert.deepEqual(
+							await db.select().from(tables.provider).orderBy(tables.provider[P.ID]),
+							providers
+						);
+						const current = await db.select().from(tables.storage).orderBy(tables.storage[S.ID]);
+						assert.deepEqual(configuration(current), configuration(connections));
+						for (const connection of current)
+							assert.equal(
+								connection[S.USED_BYTES],
+								connection[S.USER_ID] === f.account[U.ID] ? 0 : 99
+							);
+					};
+					await f.controller.prepare(f.preparation);
+					const committed = await f.controller.confirm(f.confirmation);
+					await preserved();
+					await f.controller.confirm(f.confirmation);
+					await preserved();
+					now = committed.notBefore + 1;
+					await cleanup.drainRecoveryCleanup(db, cloud, { now: () => now, limit: 4 });
+					assert.equal((await f.controller.status(f.operationId)).phase, 'ready');
+					assert.equal((await db.select().from(tables.recoveryCleanupTarget)).length, 0);
+					await preserved();
+					await cleanup.drainRecoveryCleanup(db, cloud, { now: () => now, limit: 4 });
+					await preserved();
+				}
+			);
+			await t.test(
 				'commit replaces exactly one vault and preserves billing, another user and shared credentials',
 				async () => {
 					const f = await seed();
@@ -458,8 +594,11 @@ test(
 					assert.equal(profile[D.USER_NAME], null);
 					assert.equal(profile[D.PROFILE_IMAGE], null);
 					const credentials = await db.select().from(tables.credential);
-					assert.equal(credentials.length, 1);
-					assert.equal(credentials[0][C.ID], f.shared[C.ID]);
+					assert.equal(credentials.length, 2);
+					assert.deepEqual(
+						new Set(credentials.map((row) => row[C.ID])),
+						new Set([f.shared[C.ID], f.owned[C.ID]])
+					);
 					const manifests = await db.select().from(tables.recoveryCleanupTarget);
 					assert.equal(manifests.length, 2);
 					assert.ok(manifests.every((target) => target.prefix === 'fixture-user/'));
@@ -592,7 +731,7 @@ test(
 								.from(tables.storage)
 								.where(eq(tables.storage[S.USER_ID], f.account[U.ID]))
 						).length,
-						0
+						2
 					);
 					objects.add('late-upload');
 					now = committed.notBefore - 1;
@@ -623,7 +762,7 @@ test(
 								.from(tables.storage)
 								.where(eq(tables.storage[S.USER_ID], f.account[U.ID]))
 						).length,
-						1
+						2
 					);
 					assert.equal(calls.filter((time) => time > committed.notBefore).length, 2);
 					await cleanup.drainRecoveryCleanup(db, cloud, { now: () => now });
@@ -634,7 +773,7 @@ test(
 								.from(tables.storage)
 								.where(eq(tables.storage[S.USER_ID], f.account[U.ID]))
 						).length,
-						1
+						2
 					);
 				}
 			);
@@ -801,7 +940,18 @@ test(
 						'x-fife-vault-generation': committed.generation
 					};
 					assert.equal((await call('sync', headers)).success, 1);
-					assert.equal((await call('storages', headers)).success, 1);
+					const connected = await call('storages', headers);
+					assert.equal(connected.success, 1);
+					const entries = connected.data as Array<{ id: number; added: number; used: number }>;
+					// The new device can reuse both connections without adding them again.
+					assert.deepEqual(
+						entries
+							.filter((row) => row.added === 1)
+							.map((row) => row.id)
+							.sort(),
+						[1, 6]
+					);
+					assert.ok(entries.every((row) => row.used === 0));
 					const originalFetch = globalThis.fetch;
 					globalThis.fetch = async (input, init) => {
 						assert.equal(new URL(String(input)).hostname, 'auth.example.test');

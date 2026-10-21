@@ -39,10 +39,12 @@ class ObservedTransfers extends http.BaseClient {
   final http.Client delegate;
   final String? endpointHost;
   int uploads = 0;
+  int managedUploads = 0;
   bool loseNextSuccess = false;
   bool rejectNextUpload = false;
   bool closed = false;
   String? lostVersion;
+  bool lostSuccess = false;
   String? rejectedInvariant;
   String? providerFailureType;
 
@@ -56,6 +58,8 @@ class ObservedTransfers extends http.BaseClient {
             : request.url.host == endpointHost ||
                 request.url.host.endsWith('.$endpointHost'));
     if (upload) {
+      final managed =
+          request.url.queryParameters['uploadId']?.isNotEmpty == true;
       final checks = {
         'fixture_scope': request.url.scheme == 'https' &&
             (endpointHost == null
@@ -67,7 +71,9 @@ class ObservedTransfers extends http.BaseClient {
           'md5_header': request.headers['content-md5']?.isNotEmpty == true,
         if (endpointHost == null)
           'sha1_metadata':
-              request.headers['x-amz-meta-sha1']?.isNotEmpty == true,
+              managed || request.headers['x-amz-meta-sha1']?.isNotEmpty == true,
+        'managed_part':
+            !managed || request.url.queryParameters['partNumber'] == '1',
         'expiry': request.url.queryParameters['X-Amz-Expires'] == '900',
       };
       for (final check in checks.entries) {
@@ -79,6 +85,7 @@ class ObservedTransfers extends http.BaseClient {
         }
       }
       uploads++;
+      if (managed) managedUploads++;
       providerFailureType = null;
       if (rejectNextUpload) {
         rejectNextUpload = false;
@@ -102,6 +109,7 @@ class ObservedTransfers extends http.BaseClient {
     }
     if (upload && loseNextSuccess && response.statusCode == 200) {
       loseNextSuccess = false;
+      lostSuccess = true;
       lostVersion = response.headers['x-amz-version-id'];
       await response.stream.drain<void>();
       throw http.ClientException(

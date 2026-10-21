@@ -758,7 +758,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      '現在のFiFe保管庫、バックアップ済みファイル、連携ストレージの設定は完全に削除されます。';
+      '現在のFiFe保管庫、バックアップ済みファイル、古い暗号化キーは完全に削除されます。';
 
   @override
   String get lostRecoveryDevicesConsequence => '既存の端末登録はすべて削除されます。';
@@ -769,7 +769,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'メールアカウント、サブスクリプション、元のファイル、FiFe外にエクスポートしたコピーは保持されます。';
+      'メールアカウント、サブスクリプション、クラウドストレージの接続設定とプロバイダーの認証情報は保持されます。FiFe外のご自身のフォルダーにあるファイルも保持されます。';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -777,7 +777,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      '削除が完了したら、新しい保管庫を使うために24語の新しい復元フレーズを保存してください。';
+      'このデバイスではログイン状態を維持します。削除の確認後、新しい24語の復元フレーズを生成して保存してください。';
 
   @override
   String get recoveryResetContinue => 'リセットに進む';

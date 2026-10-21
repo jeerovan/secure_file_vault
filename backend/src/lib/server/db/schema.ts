@@ -8,6 +8,7 @@ import {
 	jsonb,
 	primaryKey
 } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import {
 	UserKeys,
 	UserDataKeys,
@@ -76,6 +77,48 @@ export const vaultUploadCapability = pgTable(
 		expiresAt: bigint('expires_at', { mode: 'number' }).notNull()
 	},
 	(table) => [primaryKey({ columns: [table.userId, table.generation] })]
+).enableRLS();
+
+// Operational upload records deliberately have no FK to files, parts, devices
+// or storage: reset/removal must not erase an outstanding cleanup obligation.
+export const vaultUpload = pgTable(
+	'vault_upload',
+	{
+		id: text('id').primaryKey(),
+		userId: integer('user_id')
+			.notNull()
+			.references(() => user[UserKeys.ID], { onDelete: 'cascade' }),
+		deviceUuid: text('device_uuid').notNull(),
+		generation: text('generation').notNull(),
+		storageId: integer('storage_id').notNull(),
+		providerId: integer('provider_id').notNull(),
+		objectKey: text('object_key').notNull(),
+		partName: text('part_name').notNull(),
+		credentials: jsonb('credentials').$type<Record<string, unknown>>().notNull(),
+		receiptHash: text('receipt_hash').notNull(),
+		contentLength: bigint('content_length', { mode: 'number' }).notNull(),
+		sha1: text('sha1').notNull(),
+		md5: text('md5').notNull(),
+		uploadId: text('upload_id'),
+		versionId: text('version_id'),
+		phase: text('phase').notNull().default('creating'),
+		uncertain: text('uncertain'),
+		cleanupCursor: jsonb('cleanup_cursor').$type<Record<string, unknown>>().notNull().default({}),
+		operationId: text('operation_id'),
+		retired: integer('retired').notNull().default(0),
+		createdAt: bigint('created_at', { mode: 'number' }).notNull(),
+		updatedAt: bigint('updated_at', { mode: 'number' }).notNull(),
+		leaseOwner: text('lease_owner'),
+		leaseUntil: bigint('lease_until', { mode: 'number' }).notNull().default(0),
+		nextAttemptAt: bigint('next_attempt_at', { mode: 'number' }).notNull().default(0),
+		attempts: integer('attempts').notNull().default(0),
+		error: text('error')
+	},
+	(table) => [
+		index('vault_upload_owner').on(table.userId, table.generation),
+		index('vault_upload_object').on(table.userId, table.storageId, table.objectKey),
+		index('vault_upload_due').on(table.phase, table.nextAttemptAt)
+	]
 ).enableRLS();
 
 export const recoveryReset = pgTable(
@@ -336,7 +379,10 @@ export const part = pgTable(
 			table[PartKeys.FILE_ID],
 			table[PartKeys.PART_NUMBER]
 		),
-		index('part_idx_user_id').on(table[PartKeys.USER_ID])
+		index('part_idx_user_id').on(table[PartKeys.USER_ID]),
+		index('part_managed_object')
+			.on(sql`(${table[PartKeys.JSON]} ->> 'managedObjectKey')`)
+			.where(sql`${table[PartKeys.UPLOADED]} = 1 AND ${table[PartKeys.DELETED]} = 0`)
 	]
 );
 

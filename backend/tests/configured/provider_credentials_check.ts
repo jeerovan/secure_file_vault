@@ -1,7 +1,7 @@
-// Explicit read-only provider calls; all persisted credentials use a disposable local DB.
+// Provider checks use disposable local SQL; opt-in writes stay under fixture prefixes.
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import dotenv from 'dotenv';
 import { createServer } from 'vite';
@@ -18,6 +18,8 @@ import {
 import { createRecoveryDatabase, recoveryTestUrl } from '../support/recoveryDatabase';
 import { checkProviderTransfers } from './provider_transfers';
 import { checkProviderInFlightUpload } from './provider_in_flight';
+import { checkManagedProviderUploads } from './provider_managed_uploads';
+import { checkProviderResetLifecycle } from './provider_reset_lifecycle';
 
 const writes = process.env.FIFE_RUN_PROVIDER_WRITE_CHECKS === '1';
 
@@ -90,12 +92,19 @@ test(
 			LOCAL_TEST_USER_ID: 'fixture-local-user',
 			LOCAL_TEST_EMAIL: 'fixture@example.test'
 		});
+		if (process.env.FIFE_RUN_PROVIDER_RESET_CHECKS === '1')
+			Object.assign(process.env, {
+				RECOVERY_RESET_ENABLED: 'true',
+				RECOVERY_WORKER_READY: 'true',
+				RECOVERY_RESET_EMAILS: 'jeevan@jeero.one'
+			});
 		const vite = await createServer({
 			root: process.cwd(),
 			logLevel: 'silent',
 			server: { middlewareMode: true, watch: { ignored: ['**/*'] } }
 		});
 		let closeRoutes: (() => Promise<void>) | undefined;
+		const managedCleanupPending = new Set<string>();
 		try {
 			const [account] = await database.db
 				.insert(tables.user)
@@ -109,6 +118,13 @@ test(
 				})
 				.returning();
 			if (writes) t.diagnostic(`Generated cloud prefix: ${account[U.REMOTE_AUTH_ID]}/`);
+			if (process.env.FIFE_RUN_PROVIDER_RESET_CHECKS === '1')
+				await database.db.insert(tables.user).values({
+					[U.REMOTE_AUTH_ID]: 'fife',
+					[U.EMAIL]: 'service@example.test',
+					[U.CIPHER]: 'fixture-service-envelope',
+					[U.NONCE]: 'fixture-service-nonce'
+				});
 			await database.db.insert(tables.userDevice).values({
 				[V.USER_ID]: account[U.ID],
 				[V.DEVICE_UUID]: 'fixture-device',
@@ -203,6 +219,95 @@ test(
 								.from(tables.storage)
 								.where(eq(tables.storage[S.CREDENTIAL_ID], row[C.ID]));
 							assert.ok(storage);
+							if (process.env.FIFE_RUN_PROVIDER_RESET_CHECKS === '1') {
+								await providerTest.test(
+									`${provider.name} resets and reuses its retained connection`,
+									async (resetTest) => {
+										managedCleanupPending.add(provider.name);
+										await checkProviderResetLifecycle({
+											db: database.db,
+											vite,
+											databaseUrl: database.url,
+											providerName: provider.name,
+											providerId: provider.id,
+											credentials: data!,
+											diagnostic: (message) => resetTest.diagnostic(message),
+											onCleanupVerified: () => {
+												managedCleanupPending.delete(provider.name);
+											}
+										});
+									}
+								);
+								return;
+							}
+							if (process.env.FIFE_RUN_PROVIDER_MANAGED_CHECKS === '1') {
+								const managed = await vite.ssrLoadModule('/src/lib/server/managedUpload.ts');
+								const ports = await vite.ssrLoadModule('/src/lib/server/managedUploadStorage.ts');
+								await providerTest.test(
+									`${provider.name} manages completion, late bodies and abandoned uploads`,
+									async () => {
+										managedCleanupPending.add(provider.name);
+										await checkManagedProviderUploads({
+											onCleanupVerified: () => {
+												managedCleanupPending.delete(provider.name);
+											},
+											db: database.db,
+											userId: account[U.ID],
+											storageId: storage[S.ID],
+											target: {
+												providerId: provider.id,
+												prefix: `${account[U.REMOTE_AUTH_ID]}/`,
+												credentials: data!
+											},
+											drain: (now) =>
+												managed.drainManagedUploads(
+													database.db,
+													new ports.ProviderManagedUploadStorage(),
+													{ now: () => now, limit: 10 }
+												),
+											download: async (file_id) => {
+												const route = await vite.ssrLoadModule(
+													`/src/routes/api/${provider.name}/get-download-url/+server.ts`
+												);
+												const response = await route.POST({
+													platform,
+													request: new Request('https://local.example.test/api/download', {
+														method: 'POST',
+														headers: {
+															authorization: 'Bearer fixture-token',
+															service: 'neon',
+															device_uuid: 'fixture-device',
+															'content-type': 'application/json'
+														},
+														body: JSON.stringify({ file_id, storage_id: storage[S.ID] })
+													})
+												});
+												return response.json();
+											},
+											call: async (action, payload) => {
+												const route = await vite.ssrLoadModule(
+													`/src/routes/api/uploads/${action}/+server.ts`
+												);
+												const response = await route.POST({
+													platform,
+													request: new Request(`https://local.example.test/api/uploads/${action}`, {
+														method: 'POST',
+														headers: {
+															authorization: 'Bearer fixture-token',
+															service: 'neon',
+															device_uuid: 'fixture-device',
+															'content-type': 'application/json'
+														},
+														body: JSON.stringify(payload)
+													})
+												});
+												return { status: response.status, body: await response.json() };
+											}
+										});
+									}
+								);
+								return;
+							}
 							if (process.env.FIFE_RUN_PROVIDER_IN_FLIGHT_CHECKS === '1') {
 								await providerTest.test(
 									`${provider.name} finishes a PUT across expiry and cleanup`,
@@ -259,7 +364,20 @@ test(
 		} finally {
 			await closeRoutes?.();
 			await vite.close();
-			await database.close();
+			if (managedCleanupPending.size) {
+				await writeFile(
+					`/tmp/fife-provider-cleanup-${randomUUID()}.json`,
+					JSON.stringify({
+						databaseUrl: database.url,
+						providers: [...managedCleanupPending]
+					}),
+					{ mode: 0o600 }
+				);
+				t.diagnostic(
+					'Cloud verification incomplete; private disposable SQL cleanup records retained for retry.'
+				);
+			}
+			await database.close({ preserve: managedCleanupPending.size > 0 });
 		}
 	}
 );

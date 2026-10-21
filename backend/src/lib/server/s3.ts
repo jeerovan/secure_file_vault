@@ -80,7 +80,10 @@ export function normalizePublicS3Endpoint(value: string): string {
 	return endpoint.toString().replace(/\/$/, '');
 }
 
-export function createGenericS3Client(credentials: GenericS3Credentials): S3Client {
+export function createGenericS3Client(
+	credentials: GenericS3Credentials,
+	maxAttempts?: number
+): S3Client {
 	return new S3Client({
 		endpoint: credentials.endpoint,
 		region: credentials.region,
@@ -91,7 +94,8 @@ export function createGenericS3Client(credentials: GenericS3Credentials): S3Clie
 		forcePathStyle: credentials.forcePathStyle,
 		// URL issuance has no body: an SDK-generated empty-body CRC would reject
 		// the client's actual ciphertext. Required operation checksums still apply.
-		requestChecksumCalculation: 'WHEN_REQUIRED'
+		requestChecksumCalculation: 'WHEN_REQUIRED',
+		...(maxAttempts === undefined ? {} : { maxAttempts })
 	});
 }
 

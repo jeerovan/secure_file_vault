@@ -8,6 +8,7 @@ import { getCredentialByStorageId } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
 import { isVaultPartName } from '$lib/server/recoveryStorage';
 import { finalDeviceResponse } from '$lib/server/deviceAccess';
+import { getPartObjectKey } from '$lib/server/partObject';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
@@ -41,7 +42,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		appKey: string;
 		bucketName: string;
 	};
-	const file_path = `${authUser.objectPrefix}${file_id}`;
+
 	const s3Endpoint = `https://${credsData.accountId}.r2.cloudflarestorage.com`;
 	const region = 'auto';
 	const s3Client = new S3Client({
@@ -52,12 +53,12 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			secretAccessKey: credsData.appKey
 		}
 	});
-	const command = new GetObjectCommand({
-		Bucket: credsData.bucketName,
-		Key: file_path
-	});
 
 	try {
+		const command = new GetObjectCommand({
+			Bucket: credsData.bucketName,
+			Key: await getPartObjectKey(db, authUser.userId!, storage_id, file_id, authUser.objectPrefix!)
+		});
 		// Generates the URL purely locally using cryptographic signing
 		const presignedUrl = await getSignedUrl(s3Client, command, {
 			expiresIn: 3600

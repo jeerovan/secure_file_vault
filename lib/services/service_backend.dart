@@ -105,6 +105,7 @@ class BackendApi {
     final h = <String, String>{
       'Content-Type': 'application/json',
       'X-FiFe-Vault-Protocol': '1',
+      'X-FiFe-Managed-Uploads': '1',
       if (withAuth && accessToken != null)
         'Authorization': 'Bearer $accessToken',
       'Service': _isLocalTesting ? 'local-test' : 'neon'
@@ -335,18 +336,21 @@ class BackendApi {
     required Map<String, dynamic> jsonBody,
     Map<String, String>? headers,
     bool retryUnauthorized = false,
+    bool includeHttpStatus = false,
   }) =>
       SessionWork.run(() => _post(
           endpoint: endpoint,
           jsonBody: jsonBody,
           headers: headers,
-          retryUnauthorized: retryUnauthorized));
+          retryUnauthorized: retryUnauthorized,
+          includeHttpStatus: includeHttpStatus));
 
   Future<Map<String, dynamic>> _post({
     required String endpoint,
     required Map<String, dynamic> jsonBody,
     Map<String, String>? headers,
     bool retryUnauthorized = false,
+    bool includeHttpStatus = false,
   }) async {
     try {
       final withAuth = await _shouldAuthenticate();
@@ -363,7 +367,9 @@ class BackendApi {
           body: encodedBody,
         ),
       );
-      return await _processResponse(res, withAuth);
+      final response = await _processResponse(res, withAuth);
+      if (includeHttpStatus) response['_httpStatus'] = res.statusCode;
+      return response;
     } on SessionInvalidated {
       rethrow;
     } catch (e) {

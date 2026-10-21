@@ -7,6 +7,7 @@ import '../../l10n/app_localizations.dart';
 import '../../services/service_recovery_reset.dart';
 import '../common_widgets.dart';
 import 'page_access_key_display.dart';
+import 'page_access_key_notice.dart';
 import 'page_lost_recovery.dart';
 
 class PageRecoveryReset extends StatefulWidget {
@@ -31,7 +32,8 @@ class _PageRecoveryResetState extends State<PageRecoveryReset>
     WidgetsBinding.instance.addObserver(this);
     unawaited(_refresh());
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (_view?.phase != RecoveryResetPhase.phrase &&
+      if (_view?.phase != RecoveryResetPhase.generation &&
+          _view?.phase != RecoveryResetPhase.phrase &&
           _view?.phase != RecoveryResetPhase.registration) {
         unawaited(_refresh());
       }
@@ -230,16 +232,25 @@ class _PageRecoveryResetState extends State<PageRecoveryReset>
   @override
   Widget build(BuildContext context) {
     final phrase = _view?.phase == RecoveryResetPhase.phrase;
+    final generation = _view?.phase == RecoveryResetPhase.generation;
     return AnimatedSwitcher(
         duration: MediaQuery.disableAnimationsOf(context)
             ? Duration.zero
             : const Duration(milliseconds: 180),
         child: KeyedSubtree(
-            key: ValueKey(phrase ? 'phrase' : 'progress'),
+            key: ValueKey(generation
+                ? 'generation'
+                : phrase
+                    ? 'phrase'
+                    : 'progress'),
             child: phrase
                 ? PageAccessKey(
                     requireAcknowledgment: true,
                     onAcknowledged: () => _run(_service.acknowledgePhrase))
-                : _progress()));
+                : generation
+                    ? PageAccessKeyNotice(
+                        busy: _busy,
+                        onGenerate: () => _run(_service.generateKeys))
+                    : _progress()));
   }
 }

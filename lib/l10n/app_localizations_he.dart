@@ -782,7 +782,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'הכספת הקיימת ב-FiFe, הקבצים המגובים והגדרות האחסון המקושר יימחקו לצמיתות.';
+      'הכספת הנוכחית שלך ב-FiFe, הקבצים המגובים ומפתחות ההצפנה הישנים יימחקו לצמיתות.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -794,7 +794,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'חשבון הדוא״ל, המינוי, קובצי המקור והעותקים שיוצאו מחוץ ל-FiFe יישמרו.';
+      'חשבון הדוא״ל, המינוי, חיבורי האחסון בענן ופרטי הגישה לספקים יישמרו. גם קבצים בתיקיות האישיות שלך מחוץ ל-FiFe יישמרו.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -802,7 +802,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'לאחר סיום המחיקה, יש לשמור ביטוי שחזור חדש בן 24 מילים כדי להשתמש בכספת החדשה.';
+      'החשבון יישאר מחובר במכשיר הזה. לאחר אימות המחיקה, יש ליצור ולשמור ביטוי שחזור חדש בן 24 מילים.';
 
   @override
   String get recoveryResetContinue => 'המשך לאיפוס';

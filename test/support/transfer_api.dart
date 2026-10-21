@@ -22,9 +22,19 @@ class TransferApi {
   bool loseNextUploadResponse = false;
   bool b2S3;
   bool omitUploadVersionId = false;
+  final bool managed;
+  final Map<String, Map<String, dynamic>> managedRecords = {};
+  final Map<String, List<int>> managedParts = {};
+  final List<int> completionStatuses = [];
+  bool loseNextCompletionResponse = false;
+  bool deletionVerified = false;
+  bool includeManagedMetadata = true;
+  Future<void> Function()? afterManagedPut;
+  Map<String, dynamic>? existingFile;
+  Map<String, dynamic>? existingPart;
   HttpServer? _downloads;
 
-  TransferApi({this.providerId = 6, this.b2S3 = false});
+  TransferApi({this.providerId = 6, this.b2S3 = false, this.managed = false});
 
   Future<T> run<T>(Future<T> Function() action) async {
     AppHttpClients.closeAll();
@@ -62,6 +72,117 @@ class TransferApi {
   Future<http.Response> handle(http.Request request) async {
     requests.add(request);
     final path = request.url.path;
+    // This fixture deliberately represents a backend predating managed uploads.
+    if (path.contains('/uploads/')) {
+      if (!managed) return http.Response('Not found', 404);
+      if (path.endsWith('/protocol')) {
+        return json({
+          'success': 1,
+          'data': {'protocol': 'managed-v1'}
+        });
+      }
+      final body = jsonDecode(request.body) as Map<String, dynamic>;
+      final id = body['id'] as String;
+      Map<String, dynamic> data(String state) => {
+            'protocol': 'managed-v1',
+            'id': id,
+            'state': state,
+            if (state == 'complete')
+              'fileId': 'bucket-object-${managedRecords[id]!['file_id']}',
+          };
+      if (path.endsWith('/prepare')) {
+        await beforeUploadAuthorization?.call(body);
+        if (authorizationFailure != null) return json(authorizationFailure!);
+        if (existingFile != null && existingPart != null) {
+          return json({
+            'success': 1,
+            'data': {
+              ...data('existing'),
+              'file': existingFile,
+              'part': existingPart,
+            }
+          });
+        }
+        managedRecords.putIfAbsent(id, () => Map.of(body));
+        return json({
+          'success': 1,
+          'data': {
+            ...data('upload'),
+            'method': 'PUT',
+            'uploadUrl':
+                'https://bucket.example.test/${body['file_id']}?uploadId=$id',
+            'headers': {
+              'Content-MD5': body['content_md5'],
+              'Content-Length': '${body['content_length']}'
+            },
+          }
+        });
+      }
+      if (path.endsWith('/complete')) {
+        if (completionStatuses.isNotEmpty) {
+          final status = completionStatuses.removeAt(0);
+          if (status != 200) return http.Response('unavailable', status);
+        }
+        final part = managedParts[id];
+        if (part == null) {
+          return http.Response(
+              jsonEncode({'success': 0, 'message': 'upload_not_ready'}), 409);
+        }
+        objects[managedRecords[id]!['file_id'] as String] = part;
+        if (loseNextCompletionResponse) {
+          loseNextCompletionResponse = false;
+          throw http.ClientException('completion response lost');
+        }
+        final record = managedRecords[id]!;
+        final name = record['file_id'] as String;
+        final separator = name.lastIndexOf('_');
+        return json({
+          'success': 1,
+          'data': {
+            ...data('complete'),
+            if (includeManagedMetadata) ...{
+              'file': {
+                '6': name.substring(0, separator),
+                '7': 1,
+                '8': 0,
+                '9': 0,
+                '10': providerId,
+                '11': record['storage_id'],
+                '12': {},
+                '13': 1
+              },
+              'part': {
+                '6': name.substring(0, separator),
+                '7': int.parse(name.substring(separator + 1)),
+                '8': record['content_length'],
+                '9': record['part_metadata']['cipher'],
+                '10': record['part_metadata']['nonce'],
+                '11': {
+                  'sha1': record['content_sha1'],
+                  'managedUploadId': id,
+                  'managedObjectKey': 'fixture/$name~$id',
+                  'fileId': 'bucket-object-$name'
+                },
+                '12': 1,
+                '14': 1
+              }
+            }
+          }
+        });
+      }
+      if (path.endsWith('/report')) {
+        if (deletionVerified) {
+          objects.remove(managedRecords[id]?['file_id']);
+          managedParts.remove(id);
+        }
+        return http.Response(
+            jsonEncode({
+              'success': 1,
+              'data': data(deletionVerified ? 'deleted' : 'cleanup_pending')
+            }),
+            deletionVerified ? 200 : 202);
+      }
+    }
     if (request.url.host == 'bucket.example.test') {
       final id = request.headers['x-bz-file-name'] != null
           ? Uri.decodeComponent(request.headers['x-bz-file-name']!)
@@ -80,6 +201,20 @@ class TransferApi {
       uploadBodies.add(List.of(request.bodyBytes));
       final status = uploadStatuses.isEmpty ? 200 : uploadStatuses.removeAt(0);
       if (status != 200) return http.Response('upload unavailable', status);
+      final managedId = request.url.queryParameters['uploadId'];
+      if (managed && managedId != null) {
+        if (request.headers['content-md5'] !=
+            base64Encode(md5.convert(request.bodyBytes).bytes)) {
+          return http.Response('bad checksum', 400);
+        }
+        managedParts[managedId] = List.of(request.bodyBytes);
+        await afterManagedPut?.call();
+        if (loseNextUploadResponse) {
+          loseNextUploadResponse = false;
+          throw http.ClientException('response lost after part commit');
+        }
+        return http.Response('', 200);
+      }
       if (b2S3) {
         if (request.method != 'PUT' ||
             request.headers['content-md5'] !=

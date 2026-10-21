@@ -91,7 +91,13 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 						await saveItemChanges(tx, userId, deviceUuid, changes);
 						break;
 					case 'parts':
-						await savePartChanges(tx, userId, deviceUuid, changes);
+						await savePartChanges(
+							tx,
+							userId,
+							deviceUuid,
+							changes,
+							request.headers.get('x-fife-managed-uploads') === '1'
+						);
 						break;
 				}
 			}

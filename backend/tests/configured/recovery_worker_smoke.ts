@@ -6,6 +6,7 @@ import { createServer as createHttpServer } from 'node:http';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { eq } from 'drizzle-orm';
 import { createRecoveryDatabase, recoveryTestUrl } from '../support/recoveryDatabase';
 import {
 	provider,
@@ -13,7 +14,8 @@ import {
 	user,
 	vaultState,
 	recoveryReset,
-	recoveryCleanupTarget
+	recoveryCleanupTarget,
+	vaultUpload
 } from '../../src/lib/server/db/schema';
 import { ProviderKeys, UserKeys } from '../../src/lib/server/db/keys';
 
@@ -32,6 +34,7 @@ test(
 		const sentinel = `fixture-${crypto.randomUUID()}`;
 		const prefix = 'fixture-user/';
 		const ownedKey = `${prefix}${'A'.repeat(43)}_1`;
+		const managedKey = `${prefix}${'C'.repeat(43)}_1`;
 		const outsideKey = `outside-user/${'B'.repeat(43)}_1`;
 		let ownedDeleted = false;
 		const cloudActions: string[] = [];
@@ -42,9 +45,34 @@ test(
 					request.headers.authorization ?? '',
 					/^AWS4-HMAC-SHA256 Credential=fixture-access\//
 				);
-				assert.equal(url.pathname, '/fixture-bucket/');
 				response.setHeader('content-type', 'application/xml');
+				if (url.pathname === `/fixture-bucket/${managedKey}`) {
+					if (
+						request.method === 'DELETE' &&
+						url.searchParams.get('uploadId') === 'fixture-upload'
+					) {
+						cloudActions.push('managed-abort');
+						response.statusCode = 204;
+						response.end();
+						return;
+					}
+					response.statusCode = 404;
+					if (request.method === 'HEAD') response.end();
+					else {
+						cloudActions.push('managed-terminal');
+						response.end('<Error><Code>NoSuchUpload</Code></Error>');
+					}
+					return;
+				}
+				assert.equal(url.pathname, '/fixture-bucket/');
 				if (url.searchParams.has('versions')) {
+					if (url.searchParams.get('prefix') === managedKey) {
+						cloudActions.push('managed-versions');
+						response.end(
+							'<ListVersionsResult><IsTruncated>false</IsTruncated></ListVersionsResult>'
+						);
+						return;
+					}
 					cloudActions.push('versions');
 					assert.equal(url.searchParams.get('prefix'), prefix);
 					response.end(
@@ -93,27 +121,26 @@ test(
 		const operationId = crypto.randomUUID(),
 			now = Date.now();
 		await database.db
-			.insert(recoveryReset)
-			.values({
-				id: operationId,
-				userId: account[UserKeys.ID],
-				expectedGeneration: 'legacy',
-				nextGeneration: 'next-generation',
-				sessionHash: 'fixture-session',
-				challengeHash: 'fixture-challenge',
-				createdAt: now - 60_000,
-				expiresAt: now + 60_000,
-				committedAt: now - 30_000,
-				notBefore: now - 1,
-				phase: 'cleanup_pending'
-			});
-		await database.db
-			.insert(recoveryCleanupTarget)
+			.insert(vaultUpload)
 			.values({
 				id: crypto.randomUUID(),
-				operationId,
+				userId: account[UserKeys.ID],
+				deviceUuid: 'retired-device',
+				generation: 'legacy',
+				storageId: 1,
 				providerId: 6,
-				prefix,
+				objectKey: managedKey,
+				partName: `${'C'.repeat(43)}_1`,
+				contentLength: 17,
+				sha1: 'a'.repeat(40),
+				md5: 'AAAAAAAAAAAAAAAAAAAAAA==',
+				receiptHash: 'fixture-receipt',
+				uploadId: 'fixture-upload',
+				phase: 'cleanup',
+				retired: 1,
+				operationId,
+				createdAt: now - 60_000,
+				updatedAt: now - 60_000,
 				credentials: {
 					appId: 'fixture-access',
 					appKey: 'fixture-secret',
@@ -123,6 +150,33 @@ test(
 					forcePathStyle: true
 				}
 			});
+		await database.db.insert(recoveryReset).values({
+			id: operationId,
+			userId: account[UserKeys.ID],
+			expectedGeneration: 'legacy',
+			nextGeneration: 'next-generation',
+			sessionHash: 'fixture-session',
+			challengeHash: 'fixture-challenge',
+			createdAt: now - 60_000,
+			expiresAt: now + 60_000,
+			committedAt: now - 30_000,
+			notBefore: now - 1,
+			phase: 'cleanup_pending'
+		});
+		await database.db.insert(recoveryCleanupTarget).values({
+			id: crypto.randomUUID(),
+			operationId,
+			providerId: 6,
+			prefix,
+			credentials: {
+				appId: 'fixture-access',
+				appKey: 'fixture-secret',
+				bucketName: 'fixture-bucket',
+				region: 'fixture-region',
+				endpoint: `http://127.0.0.1:${cloudPort}`,
+				forcePathStyle: true
+			}
+		});
 		await database.db.insert(provider).values({
 			[ProviderKeys.ID]: 937000001,
 			[ProviderKeys.TITLE]: sentinel,
@@ -190,7 +244,19 @@ test(
 				`${base}/__scheduled?cron=${encodeURIComponent('*/5 * * * *')}`
 			);
 			assert.equal(scheduled.status, 200);
+			const [checkpoint] = await database.db.select().from(vaultUpload);
+			assert.equal(checkpoint.phase, 'cleanup');
+			assert.equal(
+				checkpoint.cleanupCursor.settled,
+				true,
+				'Cron must commit terminal-upload proof before deleting objects'
+			);
+			assert.equal(ownedDeleted, false, 'Reset prefix sweep must wait for the managed upload');
 			for (let tick = 0; tick < 4; tick++) {
+				await database.db
+					.update(vaultUpload)
+					.set({ nextAttemptAt: 0 })
+					.where(eq(vaultUpload.id, checkpoint.id));
 				const [operation] = await database.db.select().from(recoveryReset);
 				if (operation.phase === 'ready') break;
 				assert.equal(
@@ -207,6 +273,13 @@ test(
 			assert.equal(ownedDeleted, true);
 			assert.ok(cloudActions.includes('delete'));
 			assert.ok(cloudActions.includes('uploads'));
+			assert.ok(cloudActions.includes('managed-abort'));
+			assert.ok(cloudActions.includes('managed-terminal'));
+			assert.ok(cloudActions.includes('managed-versions'));
+			const [deletedUpload] = await database.db.select().from(vaultUpload);
+			assert.equal(deletedUpload.phase, 'deleted');
+			assert.equal(deletedUpload.contentLength, 0);
+			assert.deepEqual(deletedUpload.credentials, {});
 			const [worker] = await database.db.select().from(recoveryWorkerState);
 			assert.equal(worker.id, 'cleanup');
 			assert.ok(Date.now() - worker.lastRunAt < 30_000);

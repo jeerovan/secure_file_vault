@@ -37,8 +37,12 @@ import 'support/iphone_results.dart';
 import 'support/native_test_install.dart';
 
 void main() {
+  registerRevocationNativeTests();
+}
+
+void registerRevocationNativeTests({bool reportResults = true}) {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-  recordIphoneResults(binding, 'revocation');
+  if (reportResults) recordIphoneResults(binding, 'revocation');
 
   testWidgets('LAN revocation preserves offline data then erases on discovery',
       (tester) async {
@@ -295,12 +299,17 @@ void main() {
               type: EventType.system, id: 'metadata', key: EventKey.stopped));
         }
         await Future<void>.delayed(const Duration(seconds: 3));
-        await ServiceForeground.instance.stop();
         markNativeCheckpoint(NativeTestCheckpoint.notificationLocale);
         await ModelSetting.set(AppString.locale.string, 'hi');
-        await ServiceForeground.instance.start();
+        // Refresh the running engine. Restarting the service would hide a
+        // stale-title regression because startService supplies a new title.
+        expect(await ServiceForeground.instance.updateSyncInterval(), isTrue);
+        expect(await FlutterForegroundTask.isRunningService, isTrue);
         final loc = lookupAppLocalizations(const Locale('hi'));
         expect(loc.quickSyncNotificationTitle.isNotEmpty, isTrue);
+        await Future<void>.delayed(const Duration(seconds: 5));
+        await ModelSetting.set(AppString.locale.string, 'en');
+        expect(await ServiceForeground.instance.updateSyncInterval(), isTrue);
         await Future<void>.delayed(const Duration(seconds: 3));
       } else {
         expect(find.byType(AutoSyncIntervalSetting), findsNothing);

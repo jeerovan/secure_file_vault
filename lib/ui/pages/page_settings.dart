@@ -14,6 +14,7 @@ import '../../models/model_setting.dart';
 import '../../services/service_locale.dart';
 import '../../services/service_logger.dart';
 import '../../services/service_foreground.dart';
+import '../../services/service_session_work.dart';
 import '../../utils/common.dart';
 import '../../utils/enums.dart';
 import '../common_widgets.dart';
@@ -139,14 +140,11 @@ class SettingsPageState extends State<SettingsPage> {
       if (!await ServiceForeground.instance.updateSyncInterval()) {
         throw StateError('Foreground interval update failed');
       }
+    } on SessionInvalidated {
+      // Root cleanup removes this page; never restore the retired cache.
     } catch (error, stackTrace) {
       logger.error('Failed to update auto sync interval',
           error: error, stackTrace: stackTrace);
-      if (!saved) {
-        ModelSetting
-                .settingJson[AppString.foregroundSyncIntervalMinutes.string] =
-            '$previousMinutes';
-      }
       if (mounted) {
         final loc = AppLocalizations.of(context)!;
         if (!saved) {

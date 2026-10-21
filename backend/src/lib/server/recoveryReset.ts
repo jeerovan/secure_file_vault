@@ -1,9 +1,10 @@
-import { and, asc, eq, gt, notExists } from 'drizzle-orm';
+import { and, asc, eq, gt, ne } from 'drizzle-orm';
 import type { Db, Tx } from './db';
 import {
 	user,
 	vaultState,
 	vaultUploadCapability,
+	vaultUpload,
 	recoveryReset,
 	recoveryCleanupTarget,
 	userDevice,
@@ -36,7 +37,12 @@ import {
 	requireCurrentVaultSession,
 	type RecoverySession
 } from './recoverySession';
-import { vaultObjectPrefix, type RecoveryStorage, type RecoveryTarget } from './recoveryStorage';
+import {
+	vaultObjectPrefix,
+	isRetiredVaultObject,
+	type RecoveryStorage,
+	type RecoveryTarget
+} from './recoveryStorage';
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const challengeHash = /^[a-f0-9]{64}$/;
@@ -121,6 +127,21 @@ export async function recoveryTargets(
 			providerId,
 			prefix,
 			credentials: normalizedCredentials(providerId, row[CredentialKeys.CREDENTIALS])
+		};
+		targets.set(JSON.stringify(target), target);
+	}
+	// A provider connection may have been removed/replaced during an upload.
+	// Its original private cleanup snapshot still belongs to the retired vault.
+	const uploads = await db
+		.select()
+		.from(vaultUpload)
+		.where(and(eq(vaultUpload.userId, userId), ne(vaultUpload.phase, 'deleted')));
+	for (const upload of uploads) {
+		if (!isRetiredVaultObject(prefix, upload.objectKey)) continue;
+		const target = {
+			providerId: upload.providerId,
+			prefix,
+			credentials: normalizedCredentials(upload.providerId, upload.credentials)
 		};
 		targets.set(JSON.stringify(target), target);
 	}
@@ -379,25 +400,30 @@ export class RecoveryResetService {
 					operationId: operation.id,
 					...target
 				});
+			// Retain upload obligations independently of the ordinary vault rows.
+			// In-flight provider requests finish outside SQL and observe retirement
+			// when checkpointing; readiness also waits for this durable record.
+			await tx
+				.update(vaultUpload)
+				.set({ retired: 1, operationId: operation.id, nextAttemptAt: now })
+				.where(
+					and(
+						eq(vaultUpload.userId, this.userId),
+						eq(vaultUpload.generation, operation.expectedGeneration)
+					)
+				);
 			await tx.delete(userDevice).where(eq(userDevice[UserDeviceKeys.USER_ID], this.userId));
 			await tx.delete(item).where(eq(item[ItemKeys.USER_ID], this.userId));
 			await tx.delete(part).where(eq(part[PartKeys.USER_ID], this.userId));
 			await tx.delete(tempStorage).where(eq(tempStorage[TempStorageKeys.USER_ID], this.userId));
 			await tx.delete(file).where(eq(file[FileKeys.USER_ID], this.userId));
-			await tx.delete(storage).where(eq(storage[StorageKeys.USER_ID], this.userId));
+			// Connections and provider credentials belong to the account, not the
+			// retired encryption keys. Keep their IDs/configuration so the fresh
+			// vault can reuse them after verified cleanup; only old usage is reset.
 			await tx
-				.delete(credential)
-				.where(
-					and(
-						eq(credential[CredentialKeys.USER_ID], this.userId),
-						notExists(
-							tx
-								.select({ id: storage[StorageKeys.ID] })
-								.from(storage)
-								.where(eq(storage[StorageKeys.CREDENTIAL_ID], credential[CredentialKeys.ID]))
-						)
-					)
-				);
+				.update(storage)
+				.set({ [StorageKeys.USED_BYTES]: 0 })
+				.where(eq(storage[StorageKeys.USER_ID], this.userId));
 			await tx
 				.update(userData)
 				.set({

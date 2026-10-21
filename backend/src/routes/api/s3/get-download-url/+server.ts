@@ -9,6 +9,7 @@ import { isVaultPartName } from '$lib/server/recoveryStorage';
 import { finalDeviceResponse } from '$lib/server/deviceAccess';
 import { CredentialKeys, ErrorCode, StorageProvider } from '$lib/server/db/keys';
 import { createGenericS3Client, type GenericS3Credentials } from '$lib/server/s3';
+import { getPartObjectKey } from '$lib/server/partObject';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
@@ -39,7 +40,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	try {
 		const command = new GetObjectCommand({
 			Bucket: credentials.bucketName,
-			Key: `${authUser.objectPrefix}${file_id}`
+			Key: await getPartObjectKey(db, authUser.userId!, storage_id, file_id, authUser.objectPrefix!)
 		});
 		const url = await getSignedUrl(createGenericS3Client(credentials), command, {
 			expiresIn: 3600

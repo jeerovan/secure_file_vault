@@ -797,7 +797,7 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Το υπάρχον θησαυροφυλάκιο FiFe, τα αντίγραφα ασφαλείας και οι ρυθμίσεις συνδεδεμένου χώρου αποθήκευσης θα διαγραφούν οριστικά.';
+      'Το υπάρχον θησαυροφυλάκιο FiFe, τα αντίγραφα ασφαλείας των αρχείων και τα παλιά κλειδιά κρυπτογράφησης θα διαγραφούν οριστικά.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -809,7 +809,7 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Ο λογαριασμός email, η συνδρομή, τα αρχικά αρχεία και τα αντίγραφα που εξήχθησαν εκτός FiFe θα διατηρηθούν.';
+      'Ο λογαριασμός email, η συνδρομή, οι συνδέσεις αποθήκευσης στο cloud και τα διαπιστευτήρια παρόχων θα διατηρηθούν. Θα διατηρηθούν επίσης τα αρχεία στους δικούς σας φακέλους εκτός FiFe.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -817,7 +817,7 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Μόλις ολοκληρωθεί η διαγραφή, αποθηκεύστε μια νέα φράση ανάκτησης 24 λέξεων για να χρησιμοποιήσετε το νέο θησαυροφυλάκιο.';
+      'Θα παραμείνετε συνδεδεμένοι σε αυτή τη συσκευή. Αφού επαληθευτεί η διαγραφή, δημιουργήστε και αποθηκεύστε μια νέα φράση ανάκτησης 24 λέξεων.';
 
   @override
   String get recoveryResetContinue => 'Συνέχεια στην επαναφορά';

@@ -11,7 +11,13 @@ if (!['localhost', '127.0.0.1', '[::1]'].includes(databaseUrl.hostname)) {
 }
 const client = postgres(databaseUrl.toString(), { max: 1, connect_timeout: 10 });
 try {
-	for (const migrationId of ['0001_recovery_reset', '0002_upload_capability'])
+	for (const migrationId of [
+		'0001_recovery_reset',
+		'0002_upload_capability',
+		'0003_managed_upload',
+		'0004_upload_cleanup_cursor',
+		'0005_managed_object_index'
+	])
 		await applyRecoveryMigration(
 			client,
 			await readFile(new URL(`../migrations/${migrationId}.sql`, import.meta.url), 'utf8'),

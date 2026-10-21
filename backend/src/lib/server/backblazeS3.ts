@@ -42,7 +42,7 @@ export function backblazeS3Credentials(value: unknown): GenericS3Credentials {
 	};
 }
 
-export function createBackblazeS3Client(value: unknown): S3Client {
+export function createBackblazeS3Client(value: unknown, maxAttempts = 2): S3Client {
 	const data = backblazeS3Credentials(value);
 	return new S3Client({
 		endpoint: data.endpoint,
@@ -52,7 +52,7 @@ export function createBackblazeS3Client(value: unknown): S3Client {
 		// The client supplies the actual ciphertext MD5. Never sign an SDK-generated
 		// checksum of an absent body when issuing a presigned upload URL.
 		requestChecksumCalculation: 'WHEN_REQUIRED',
-		maxAttempts: 2
+		maxAttempts
 	});
 }
 

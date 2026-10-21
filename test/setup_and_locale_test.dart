@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:file_vault_bb/l10n/app_localizations.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_locale.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
+import 'package:file_vault_bb/ui/pages/page_device_register.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/sync_fixture.dart';
@@ -83,5 +86,43 @@ void main() {
     expect(provider.locale, const Locale('en'));
     expect(await ModelSetting.getRaw(AppString.locale.string), 'en');
     expect(changes, 0);
+  });
+
+  testWidgets('registration can retry unavailable reset staging storage',
+      (tester) async {
+    final originalSecrets = Map<String, String>.of(fixture.secrets);
+    var attempts = 0;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(SyncFixture.secure, (call) async {
+      if (call.method == 'containsKey') {
+        attempts++;
+        throw PlatformException(code: 'KEY_STORE_UNAVAILABLE');
+      }
+      if (call.method == 'read') {
+        return fixture.secrets[call.arguments['key']];
+      }
+      return null;
+    });
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: const PageRegisterDevice(),
+    ));
+    await tester.pump();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Please try again.'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    await tester.tap(find.text('Try Again'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Try Again'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(attempts, 2);
+    expect(fixture.secrets, originalSecrets);
+    final profiles =
+        await tester.runAsync(() async => (await fixture.db).query('profiles'));
+    expect(profiles!.length, 1);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }

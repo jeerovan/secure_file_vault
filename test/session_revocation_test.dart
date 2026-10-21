@@ -17,6 +17,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'support/sync_fixture.dart';
 
@@ -271,6 +272,54 @@ void main() {
     expect(await cleanup, isTrue);
     expect(await ModelSetting.getRaw('old_work'), isEmpty);
   });
+
+  for (final deleting in [false, true]) {
+    test(
+        'late settings ${deleting ? 'deletion' : 'save'} cannot change a new session cache',
+        () async {
+      expect(await SessionCleanup.instance.resume(), isTrue);
+      final key = AppString.foregroundSyncIntervalMinutes.string;
+      if (deleting) await ModelSetting.set(key, '15');
+      final observer = await openDatabase((await fixture.db).path,
+          readOnly: true, singleInstance: false);
+      final entered = Completer<void>(), release = Completer<void>();
+      final readRevision = SessionWork.readRevision!;
+      SessionWork.readRevision = () async {
+        final revision = await readRevision();
+        // A separate WAL reader sees this mutation only after SQL commits.
+        // Pause cache publication at that boundary, without relying on probe
+        // counts or holding a transaction that would prevent cleanup.
+        final rows =
+            await observer.query('settings', where: 'id = ?', whereArgs: [key]);
+        final committed = deleting
+            ? rows.isEmpty
+            : rows.isNotEmpty && rows.single['value'] == '30';
+        if (committed && !entered.isCompleted) {
+          entered.complete();
+          await release.future;
+        }
+        return revision;
+      };
+      final oldMutation =
+          (deleting ? ModelSetting.delete(key) : ModelSetting.set(key, '30'))
+              .then<Object?>((_) => null, onError: (Object error) => error);
+      try {
+        await entered.future.timeout(const Duration(seconds: 10));
+        expect(await SessionCleanup.instance.request(), isTrue);
+        await ModelSetting.set(key, '7');
+        release.complete();
+        final outcome = await oldMutation;
+        expect(await ModelSetting.getRaw(key), '7');
+        expect(ModelSetting.foregroundSyncIntervalMinutes, 7);
+        expect(outcome, isA<SessionInvalidated>());
+        expect(fixture.secrets, isEmpty);
+      } finally {
+        if (!release.isCompleted) release.complete();
+        await oldMutation;
+        await observer.close();
+      }
+    });
+  }
 
   test('a platform key write in flight finishes before cleanup deletes keys',
       () async {

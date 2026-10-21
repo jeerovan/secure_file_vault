@@ -796,7 +796,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Dein bisheriger FiFe-Tresor, gesicherte Dateien und Einstellungen verknüpfter Speicher werden dauerhaft gelöscht.';
+      'Dein bestehender FiFe-Tresor, deine gesicherten Dateien und deine alten Verschlüsselungsschlüssel werden dauerhaft gelöscht.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -808,7 +808,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Dein E-Mail-Konto, Abonnement, Originaldateien und außerhalb von FiFe exportierte Kopien bleiben erhalten.';
+      'Dein E-Mail-Konto, dein Abonnement, deine Cloud-Speicher-Verbindungen und Anbieter-Zugangsdaten bleiben erhalten. Dateien in deinen eigenen Ordnern außerhalb von FiFe bleiben ebenfalls erhalten.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -816,7 +816,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Speichere nach Abschluss der Löschung eine neue Wiederherstellungsphrase aus 24 Wörtern, um deinen neuen Tresor zu verwenden.';
+      'Du bleibst auf diesem Gerät angemeldet. Erstelle und sichere nach bestätigter Löschung eine neue Wiederherstellungsphrase mit 24 Wörtern.';
 
   @override
   String get recoveryResetContinue => 'Mit Zurücksetzen fortfahren';

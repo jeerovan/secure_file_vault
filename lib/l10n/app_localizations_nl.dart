@@ -792,7 +792,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Je bestaande FiFe-kluis, back-upbestanden en instellingen van gekoppelde opslag worden permanent verwijderd.';
+      'Je bestaande FiFe-kluis, geback-upte bestanden en oude versleutelingssleutels worden permanent verwijderd.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -804,7 +804,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Je e-mailaccount, abonnement, oorspronkelijke bestanden en kopieën die buiten FiFe zijn geëxporteerd blijven behouden.';
+      'Je e-mailaccount, abonnement, cloudopslagverbindingen en inloggegevens van providers blijven behouden. Bestanden in je eigen mappen buiten FiFe blijven ook behouden.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -812,7 +812,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Sla na de verwijdering een nieuwe herstelzin van 24 woorden op om je nieuwe kluis te gebruiken.';
+      'Je blijft op dit apparaat ingelogd. Maak en bewaar na bevestiging van de verwijdering een nieuwe herstelzin van 24 woorden.';
 
   @override
   String get recoveryResetContinue => 'Doorgaan met opnieuw instellen';

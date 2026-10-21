@@ -7,6 +7,7 @@ import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_display.dart';
+import 'package:file_vault_bb/ui/pages/page_access_key_notice.dart';
 import 'package:file_vault_bb/ui/pages/page_lost_recovery.dart';
 import 'package:file_vault_bb/ui/pages/page_recovery_reset.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -178,7 +179,7 @@ void main() {
   });
 
   testWidgets(
-      'pending reset resumes read-only after rebuilding and reveals phrase only when ready',
+      'verified deletion shows generation before revealing the fresh phrase',
       (tester) async {
     await tester.runAsync(() => peer.service().confirm());
     final saved = fixture.secrets[AppString.recoveryResetStage.string];
@@ -205,6 +206,23 @@ void main() {
           )));
     });
     await ioFrames(
+        tester, () => find.byType(PageAccessKeyNotice).evaluate().isNotEmpty);
+    expect(find.byType(PageAccessKey), findsNothing);
+    expect(fixture.secrets[AppString.masterKey.string], isNull);
+    final release = Completer<void>();
+    addTearDown(() {
+      if (!release.isCompleted) release.complete();
+    });
+    peer.beforeStatus = () => release.future;
+    final generate = find.descendant(
+        of: find.byType(PageAccessKeyNotice),
+        matching: find.byType(FilledButton));
+    await tester.tap(generate);
+    await tester.pump();
+    expect(tester.widget<FilledButton>(generate).onPressed, isNull);
+    await tester.tap(generate);
+    release.complete();
+    await ioFrames(
         tester, () => find.byType(PageAccessKey).evaluate().isNotEmpty);
     expect(peer.confirmCalls, 1);
     final now =
@@ -212,6 +230,60 @@ void main() {
     expect(now['privateKeys'], jsonDecode(saved!)['privateKeys']);
     expect(find.byType(CheckboxListTile), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  for (final locale in [const Locale('en'), const Locale('ar')]) {
+    testWidgets('generation stays reachable at large text in $locale',
+        (tester) async {
+      tester.view.physicalSize = const Size(360, 640);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.runAsync(() => peer.service().confirm());
+      peer.phase = 'ready';
+      await mount(tester, PageRecoveryReset(service: peer.service()),
+          locale: locale, brightness: Brightness.dark, largeText: true);
+      await ioFrames(
+          tester, () => find.byType(PageAccessKeyNotice).evaluate().isNotEmpty);
+      final generate = find.descendant(
+          of: find.byType(PageAccessKeyNotice),
+          matching: find.byType(FilledButton));
+      await tester.ensureVisible(generate);
+      await tester.pump();
+      expect(tester.widget<FilledButton>(generate).onPressed, isNotNull);
+      expect(find.byType(PageAccessKey), findsNothing);
+      expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+      'generation waits for resume verification before enabling its action',
+      (tester) async {
+    await tester.runAsync(() => peer.service().confirm());
+    peer.phase = 'ready';
+    await mount(tester, PageRecoveryReset(service: peer.service()));
+    await ioFrames(
+        tester, () => find.byType(PageAccessKeyNotice).evaluate().isNotEmpty);
+    final release = Completer<void>();
+    peer.beforeStatus = () => release.future;
+    final generate = find.descendant(
+        of: find.byType(PageAccessKeyNotice),
+        matching: find.byType(FilledButton));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    try {
+      expect(tester.widget<FilledButton>(generate).onPressed, isNull);
+      expect(fixture.secrets[AppString.masterKey.string], isNull);
+    } finally {
+      release.complete();
+      peer.beforeStatus = null;
+      await ioFrames(tester,
+          () => tester.widget<FilledButton>(generate).onPressed != null);
+    }
+    expect(find.byType(PageAccessKey), findsNothing);
+    expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
   });
 
   testWidgets('status polling does not interrupt an open reset confirmation',

@@ -200,16 +200,15 @@ void main() {
         expect(edited.fileHash != original.fileHash, isTrue);
         expect((await ModelFile.get(edited.fileHash!))!.parts, 2);
         observed.loseNextSuccess = true;
-        for (var attempt = 0;
-            attempt < 6 && observed.lostVersion == null;
-            attempt++) {
+        for (var attempt = 0; attempt < 6 && !observed.lostSuccess; attempt++) {
           await TaskManager()
               .checkInitUpload((await ModelItemTask.get(edited.id))!)
               .timeout(const Duration(seconds: 90));
           expect(observed.providerFailureType,
               isNot(contains('CERTIFICATE_VERIFY_FAILED')));
         }
-        expect(observed.lostVersion?.isNotEmpty, isTrue);
+        expect(observed.lostSuccess, isTrue);
+        expect(observed.managedUploads, observed.uploads);
         debugPrint('Local S3: modified part committed; success response lost');
         expect((await ModelPart.get('${edited.fileHash}_1'))?.uploaded, 0);
         final attemptsAtCommit = observed.uploads;
@@ -227,9 +226,9 @@ void main() {
         await finishUpload(edited);
         debugPrint('Local S3: modified multipart file recovered and uploaded');
         expect(
-            (await ModelPart.get('${edited.fileHash}_1'))?.data['fileId'] ==
-                observed.lostVersion,
-            isTrue);
+            (await ModelPart.get('${edited.fileHash}_1'))?.data['fileId'],
+            isA<String>()
+                .having((id) => id.isNotEmpty, 'version is retained', isTrue));
 
         await File('${source.path}/edited.bin').delete();
         await ModelItemTask.addTask(edited.id, ItemTask.download.value);

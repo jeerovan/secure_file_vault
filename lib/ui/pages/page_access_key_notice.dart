@@ -14,7 +14,10 @@ import '../../utils/utils_crypto.dart';
 import '../../services/service_session_work.dart';
 
 class PageAccessKeyNotice extends StatefulWidget {
-  const PageAccessKeyNotice({super.key});
+  const PageAccessKeyNotice({super.key, this.onGenerate, this.busy = false});
+
+  final Future<void> Function()? onGenerate;
+  final bool busy;
 
   @override
   State<PageAccessKeyNotice> createState() => _PageAccessKeyNoticeState();
@@ -34,6 +37,16 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   }
 
   Future<void> generateKeys() async {
+    if (widget.onGenerate case final onGenerate?) {
+      if (processing || widget.busy) return;
+      setState(() => processing = true);
+      try {
+        await onGenerate();
+      } finally {
+        if (mounted) setState(() => processing = false);
+      }
+      return;
+    }
     return SessionWork.run(_generateKeys);
   }
 
@@ -113,60 +126,72 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
 
   @override
   Widget build(BuildContext context) {
+    final busy = processing || widget.busy;
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.importantTitle),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              AppLocalizations.of(context)!.accessKeyNoticePrimary,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              AppLocalizations.of(context)!
-                  .accessKeyNoticeResponsibility(appName),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w400),
-            ),
-            const SizedBox(height: 30),
-            FilledButton(
-              onPressed: processing ? null : generateKeys,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (processing)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: DefaultTextStyle.of(context).style.color,
+      body: SafeArea(
+          child: Center(
+              child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 480),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 20),
+                        Text(
+                          AppLocalizations.of(context)!.accessKeyNoticePrimary,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w400),
                         ),
-                      ),
+                        const SizedBox(height: 20),
+                        Text(
+                          AppLocalizations.of(context)!
+                              .accessKeyNoticeResponsibility(appName),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w400),
+                        ),
+                        const SizedBox(height: 30),
+                        FilledButton(
+                          onPressed: busy ? null : generateKeys,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (busy)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: DefaultTextStyle.of(context)
+                                          .style
+                                          .color,
+                                    ),
+                                  ),
+                                ),
+                              Flexible(
+                                  child: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  AppLocalizations.of(context)!
+                                      .showKeyConfirmation,
+                                  textAlign: TextAlign.center,
+                                ),
+                              )),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      AppLocalizations.of(context)!.showKeyConfirmation,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+                  )))),
     );
   }
 }

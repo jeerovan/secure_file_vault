@@ -1507,7 +1507,7 @@ abstract class AppLocalizations {
   /// No description provided for @lostRecoveryDeleteConsequence.
   ///
   /// In en, this message translates to:
-  /// **'Your existing FiFe vault, backed-up files and linked storage settings will be permanently deleted.'**
+  /// **'Your existing FiFe vault, backed-up files and old encryption keys will be permanently deleted.'**
   String get lostRecoveryDeleteConsequence;
 
   /// No description provided for @lostRecoveryDevicesConsequence.
@@ -1525,7 +1525,7 @@ abstract class AppLocalizations {
   /// No description provided for @lostRecoveryKeepConsequence.
   ///
   /// In en, this message translates to:
-  /// **'Your email account, subscription, original source files and copies exported outside FiFe will be kept.'**
+  /// **'Your email account, subscription, cloud storage connections and provider credentials will be kept. Files in your own folders outside FiFe will also be kept.'**
   String get lostRecoveryKeepConsequence;
 
   /// No description provided for @lostRecoveryWaitConsequence.
@@ -1537,7 +1537,7 @@ abstract class AppLocalizations {
   /// No description provided for @lostRecoveryNewPhraseConsequence.
   ///
   /// In en, this message translates to:
-  /// **'After deletion finishes, save a new 24-word recovery phrase to use your fresh vault.'**
+  /// **'You stay signed in on this device. After deletion is verified, generate and save a new 24-word recovery phrase.'**
   String get lostRecoveryNewPhraseConsequence;
 
   /// No description provided for @recoveryResetContinue.

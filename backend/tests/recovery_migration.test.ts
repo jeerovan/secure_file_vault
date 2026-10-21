@@ -7,7 +7,8 @@ import {
 	user,
 	recoveryReset,
 	vaultState,
-	vaultUploadCapability
+	vaultUploadCapability,
+	vaultUpload
 } from '../src/lib/server/db/schema';
 import { UserKeys } from '../src/lib/server/db/keys';
 
@@ -63,6 +64,41 @@ test(
 			const [capabilityRls] = await database.db
 				.$client`SELECT relrowsecurity FROM pg_class WHERE relname = 'vault_upload_capability'`;
 			assert.equal(capabilityRls.relrowsecurity, true);
+			const managed = await readFile(
+				new URL('../migrations/0003_managed_upload.sql', import.meta.url),
+				'utf8'
+			);
+			await applyRecoveryMigration(database.db.$client, managed, '0003_managed_upload');
+			await applyRecoveryMigration(database.db.$client, managed, '0003_managed_upload');
+			const cursor = await readFile(
+				new URL('../migrations/0004_upload_cleanup_cursor.sql', import.meta.url),
+				'utf8'
+			);
+			await applyRecoveryMigration(database.db.$client, cursor, '0004_upload_cleanup_cursor');
+			await applyRecoveryMigration(database.db.$client, cursor, '0004_upload_cleanup_cursor');
+			const index = await readFile(
+				new URL('../migrations/0005_managed_object_index.sql', import.meta.url),
+				'utf8'
+			);
+			await applyRecoveryMigration(database.db.$client, index, '0005_managed_object_index');
+			await applyRecoveryMigration(database.db.$client, index, '0005_managed_object_index');
+			const indexes = await database.db
+				.$client`SELECT indexdef FROM pg_indexes WHERE indexname = 'part_managed_object'`;
+			assert.equal(indexes.length, 1);
+			assert.match(indexes[0].indexdef, /managedObjectKey/);
+			assert.deepEqual(await database.db.select().from(vaultUpload), []);
+			assert.deepEqual((await database.db.select().from(user))[0], original);
+			const [managedRls] = await database.db
+				.$client`SELECT relrowsecurity FROM pg_class WHERE relname = 'vault_upload'`;
+			assert.equal(managedRls.relrowsecurity, true);
+			await assert.rejects(
+				applyRecoveryMigration(
+					database.db.$client,
+					`${managed}\n-- changed`,
+					'0003_managed_upload'
+				),
+				/checksum differs/
+			);
 		} finally {
 			await database.close();
 		}

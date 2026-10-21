@@ -747,8 +747,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get lostRecoveryIntro => '如果其他设备仍处于登录状态，请先从该设备导出恢复短语，再重新开始。';
 
   @override
-  String get lostRecoveryDeleteConsequence =>
-      '现有的 FiFe 保险库、已备份文件和关联存储设置将被永久删除。';
+  String get lostRecoveryDeleteConsequence => '您现有的 FiFe 保险库、备份文件和旧加密密钥将被永久删除。';
 
   @override
   String get lostRecoveryDevicesConsequence => '所有现有设备注册都将被移除。';
@@ -759,7 +758,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      '您的邮箱账户、订阅、原始文件以及导出到 FiFe 之外的副本都会保留。';
+      '您的电子邮件账户、订阅、云存储连接和提供商凭据将被保留。FiFe 之外您自己文件夹中的文件也会保留。';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -767,7 +766,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      '删除完成后，请保存新的 24 词恢复短语，以使用新保险库。';
+      '您将在此设备上保持登录。删除验证完成后，请生成并保存新的 24 词恢复短语。';
 
   @override
   String get recoveryResetContinue => '继续重置';

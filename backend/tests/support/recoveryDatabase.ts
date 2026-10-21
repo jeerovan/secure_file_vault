@@ -24,6 +24,7 @@ export async function createRecoveryDatabase(options: { legacy?: boolean } = {})
 			for (const key of [
 				'vaultState',
 				'vaultUploadCapability',
+				'vaultUpload',
 				'recoveryReset',
 				'recoveryCleanupTarget',
 				'recoveryWorkerState'
@@ -44,9 +45,9 @@ export async function createRecoveryDatabase(options: { legacy?: boolean } = {})
 	return {
 		url: url.toString(),
 		db: drizzle(client, { schema }),
-		async close() {
+		async close(options: { preserve?: boolean } = {}) {
 			await client.end();
-			await admin.unsafe(`DROP DATABASE "${name}" WITH (FORCE)`);
+			if (!options.preserve) await admin.unsafe(`DROP DATABASE "${name}" WITH (FORCE)`);
 			await admin.end();
 		}
 	};

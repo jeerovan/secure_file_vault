@@ -29,6 +29,8 @@ import '../services/service_logger.dart';
 import '../services/service_sync_budget.dart';
 import '../services/service_session_work.dart';
 import '../services/service_session_cleanup.dart';
+import '../services/service_managed_upload.dart';
+import '../storage/storage_sqlite.dart';
 import 'utils_crypto.dart';
 
 class TaskManager {
@@ -88,15 +90,13 @@ class TaskManager {
 
     _instance._cancelRetryWakeTimer();
 
-    await ModelItemTask.recoverInterruptedTasks();
-
     _instance._syncCompleter = Completer<void>();
 
     // Clear history on a fresh start for accurate session estimates
     _instance._recentTaskDurationsMs.clear();
 
     // Fire and forget start, but block init() using the completer
-    _instance.start();
+    _instance.start(prepare: true);
 
     return _instance._syncCompleter!.future;
   }
@@ -110,7 +110,7 @@ class TaskManager {
   }
 
   /// Dispatcher function
-  Future<void> start() async {
+  Future<void> start({bool prepare = false}) async {
     // Maintains running state in a flag to ignore start request if already running
     if (_isDispatching) return;
     if (SyncBudget.current?.interrupted == true) {
@@ -121,6 +121,12 @@ class TaskManager {
     _isDispatching = true;
 
     try {
+      if (prepare) {
+        // Hold the dispatcher guard across cleanup/network and queue recovery.
+        // A second sync start must join this run's existing completer.
+        await ManagedUploadClient().drainCleanup();
+        await ModelItemTask.recoverInterruptedTasks();
+      }
       // An idle queue needs neither a network probe nor a transfer-sized
       // reserve. Keep blocked/future-retry work intact and schedule its wake.
       if (await ModelItemTask.fetchPendingTask(_activeTaskIds) == null) {
@@ -171,10 +177,19 @@ class TaskManager {
         await _scheduleNextRetryWake();
         _checkCompletion();
       }
+    } on SessionInvalidated {
+      // Cleanup already canceled this session. Settle startup without querying
+      // its cleared queue or scheduling a wake for the next signed-in account.
+      _checkCompletion();
     } catch (e, s) {
       logger.error('Error in dispatcher', error: e.toString(), stackTrace: s);
-      await _scheduleNextRetryWake();
-      _checkCompletion();
+      try {
+        await _scheduleNextRetryWake();
+      } on SessionInvalidated {
+        // Revocation can also arrive while recovering from another failure.
+      } finally {
+        _checkCompletion();
+      }
     } finally {
       // Release dispatcher lock so finishing processes can re-trigger it
       _isDispatching = false;
@@ -613,7 +628,82 @@ class TaskManager {
 
     String sha1Hash = await _sha1ForFile(encryptedFile);
     int contentLength = await encryptedFile.length();
-    if (uploadInfo["provider"] == "b2" && uploadInfo["url"] == null) {
+    final modelFile = await ModelFile.get(fileHash);
+    final partCount = modelFile?.parts ?? 1;
+    var lastProgress = itemTask.progress;
+    Future<void> onProgress(int sent, int total) async {
+      final currentPartPercent = total <= 0 ? 100 : sent * 100 ~/ total;
+      final overall =
+          (((part - 1) * 100 + currentPartPercent) ~/ partCount).clamp(0, 99);
+      if (overall <= lastProgress) return;
+      lastProgress = overall;
+      itemTask.progress = overall;
+      await itemTask.update(["progress"]);
+    }
+
+    final transferWatch = Stopwatch()..start();
+    final managedClient = ManagedUploadClient();
+    final preparedPart = await ModelPart.get(fileHashPart);
+    if (preparedPart == null) return true;
+    final managed = await managedClient.transfer(
+      part: fileHashPart,
+      storageId: uploadInfo['storage_id'] as int,
+      sha1: sha1Hash,
+      md5: base64Encode((await md5.bind(encryptedFile.openRead()).first).bytes),
+      size: contentLength,
+      partMetadata: {
+        'cipher': preparedPart.cipher,
+        'nonce': preparedPart.nonce
+      },
+      send: (url, signedHeaders) => uploadFileStream(
+          method: 'PUT',
+          file: encryptedFile,
+          url: url,
+          headers: signedHeaders,
+          onProgress: onProgress),
+    );
+    final existing = managed.existing;
+    if (existing != null) {
+      final acceptedPart = await ModelPart.fromServerMap(
+          Map<String, dynamic>.from(existing['part'] as Map));
+      final acceptedFile = await ModelFile.fromServerMap(
+          Map<String, dynamic>.from(existing['file'] as Map));
+      if (acceptedPart.id != fileHashPart ||
+          acceptedFile.id != fileHash ||
+          acceptedPart.uploaded != 1) {
+        return true;
+      }
+      await StorageSqlite.instance.runInTransaction(() async {
+        // Replace the abandoned local encryption key and its pending change
+        // together; otherwise a later sync could overwrite the accepted key.
+        await acceptedPart.upcertFromServer(overwrite: true);
+        await StorageSqlite.instance
+            .delete(Tables.changes.string, 'parts|$fileHashPart');
+        final currentFile = await ModelFile.get(fileHash);
+        if (currentFile != null) {
+          currentFile.storageId = acceptedFile.storageId;
+          currentFile.providerId = acceptedFile.providerId;
+          if (acceptedFile.parts > 0) currentFile.parts = acceptedFile.parts;
+          await currentFile.update(['storage_id', 'provider_id', 'parts']);
+        }
+      });
+      if (managed.sent && transferWatch.elapsedMilliseconds > 0) {
+        await _recordTransferRate(
+            'upload', contentLength, transferWatch.elapsedMilliseconds);
+      }
+      if (existing['cleanupRequired'] == true) {
+        await managedClient.abandon(fileHashPart);
+      } else {
+        await managedClient.forget(fileHashPart);
+      }
+      if (await encryptedFile.exists()) await encryptedFile.delete();
+      await itemTask.markPending();
+      return true;
+    }
+    if (managed.supported && managed.result == null) return true;
+    if (!managed.supported &&
+        uploadInfo["provider"] == "b2" &&
+        uploadInfo["url"] == null) {
       final contentMd5 =
           base64Encode((await md5.bind(encryptedFile.openRead()).first).bytes);
       final result = await BackendApi().post(
@@ -654,7 +744,9 @@ class TaskManager {
         uploadInfo["token"] = descriptor["authorizationToken"];
       }
     }
-    if (uploadInfo["provider"] == "s3" && uploadInfo["url"] == null) {
+    if (!managed.supported &&
+        uploadInfo["provider"] == "s3" &&
+        uploadInfo["url"] == null) {
       final providerPath = uploadInfo["provider_path"];
       final result = await BackendApi().post(
         endpoint: '/$providerPath/get-upload-url',
@@ -671,10 +763,12 @@ class TaskManager {
       uploadInfo["url"] = result["data"];
     }
     String method = 'POST';
-    if (uploadInfo["provider"] == "b2" && uploadInfo["protocol"] == "s3") {
+    if (!managed.supported &&
+        uploadInfo["provider"] == "b2" &&
+        uploadInfo["protocol"] == "s3") {
       method = 'PUT';
       headers = Map<String, String>.from(uploadInfo["headers"]);
-    } else if (uploadInfo["provider"] == "b2") {
+    } else if (!managed.supported && uploadInfo["provider"] == "b2") {
       String? userId = await getSignedInUserId();
       final generation = ModelSetting.get(AppString.vaultGeneration.string);
       final prefix = generation.isEmpty || generation == 'legacy'
@@ -687,20 +781,17 @@ class TaskManager {
         "Content-Length": contentLength.toString(),
         "Content-Type": "application/octet-stream",
       };
-    } else if (uploadInfo["provider"] == "s3") {
+    } else if (!managed.supported && uploadInfo["provider"] == "s3") {
       method = 'PUT';
       headers = {
         "Content-Length": contentLength.toString(),
         "Content-Type": "application/octet-stream",
       };
     }
-    String uploadUrl = uploadInfo["url"];
+    String uploadUrl = uploadInfo["url"] ?? '';
     logger.info("Uploading encrypted file part");
-    final modelFile = await ModelFile.get(fileHash);
-    final partCount = modelFile?.parts ?? 1;
-    var lastProgress = itemTask.progress;
-    UploadFileResult? uploadResult;
-    if (uploadInfo["provider"] == "b2") {
+    UploadFileResult? uploadResult = managed.result;
+    if (!managed.supported && uploadInfo["provider"] == "b2") {
       final storedPart = await ModelPart.get(fileHashPart);
       if (storedPart == null) {
         logger.error("PushFilePart", error: "file or part missing");
@@ -734,22 +825,13 @@ class TaskManager {
         await storedPart.update(["data"]);
       }
     }
-    final transferWatch = Stopwatch()..start();
-    final needsUpload = uploadResult == null;
+    final needsUpload = managed.sent || uploadResult == null;
     uploadResult ??= await uploadFileStream(
         method: method,
         file: encryptedFile,
         url: uploadUrl,
         headers: headers,
-        onProgress: (sent, total) async {
-          final currentPartPercent = total <= 0 ? 100 : sent * 100 ~/ total;
-          final overall = (((part - 1) * 100 + currentPartPercent) ~/ partCount)
-              .clamp(0, 99);
-          if (overall <= lastProgress) return;
-          lastProgress = overall;
-          itemTask.progress = overall;
-          await itemTask.update(["progress"]);
-        });
+        onProgress: onProgress);
     // update uploaded
     if (uploadResult.succeeded) {
       SyncBudget.check();
@@ -771,20 +853,31 @@ class TaskManager {
       //update
       ModelPart? modelPart = await ModelPart.get(fileHashPart);
       if (modelPart == null) {
+        if (managed.supported) await managedClient.abandon(fileHashPart);
         logger.error("PushFilePart", error: "file or part missing");
         return true;
       }
       modelPart.uploaded = 1;
       List<String> partAttrs = ["uploaded"];
+      final partData = modelPart.data;
+      if (managed.supported) {
+        if (uploadResult.data['managedUploadId'] is String) {
+          partData['managedUploadId'] = uploadResult.data['managedUploadId'];
+        }
+      } else {
+        partData.remove('managedUploadId');
+        partData.remove('managedObjectKey');
+        partData['legacyUpload'] = true;
+      }
 
       if (uploadResult.data.containsKey("fileId")) {
         String b2FileId = uploadResult.data["fileId"];
-        Map<String, dynamic> partData = modelPart.data;
         partData["fileId"] = b2FileId;
-        modelPart.data = partData;
-        partAttrs.add("data");
       }
+      modelPart.data = partData;
+      partAttrs.add("data");
       await modelPart.update(partAttrs);
+      if (managed.supported) await managedClient.forget(fileHashPart);
       // Broadcast upload progress
       if (modelFile != null) {
         int parts = modelFile.parts;

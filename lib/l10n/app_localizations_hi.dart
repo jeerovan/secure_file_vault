@@ -778,7 +778,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'आपकी मौजूदा FiFe वॉल्ट, बैकअप की गई फ़ाइलें और जुड़े स्टोरेज की सेटिंग हमेशा के लिए मिटा दी जाएँगी।';
+      'आपका मौजूदा FiFe वॉल्ट, बैकअप की गई फ़ाइलें और पुरानी एन्क्रिप्शन कुंजियाँ स्थायी रूप से हटा दी जाएँगी।';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -790,7 +790,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'आपका ईमेल खाता, सदस्यता, मूल फ़ाइलें और FiFe के बाहर निर्यात की गई प्रतियाँ सुरक्षित रहेंगी।';
+      'आपका ईमेल खाता, सदस्यता, क्लाउड स्टोरेज कनेक्शन और प्रदाता क्रेडेंशियल सुरक्षित रखे जाएँगे। FiFe के बाहर आपके अपने फ़ोल्डरों की फ़ाइलें भी बनी रहेंगी।';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -798,7 +798,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'डेटा मिट जाने पर नई वॉल्ट इस्तेमाल करने के लिए 24 शब्दों का नया रिकवरी वाक्यांश सहेजें।';
+      'इस डिवाइस पर आप साइन इन रहेंगे। डेटा हटने की पुष्टि के बाद, 24 शब्दों का नया रिकवरी वाक्यांश बनाएँ और सहेजें।';
 
   @override
   String get recoveryResetContinue => 'रीसेट के लिए आगे बढ़ें';

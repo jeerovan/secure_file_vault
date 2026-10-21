@@ -777,7 +777,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Kho FiFe hiện tại, các tệp đã sao lưu và cài đặt bộ nhớ liên kết sẽ bị xóa vĩnh viễn.';
+      'Kho FiFe hiện tại, các tệp sao lưu và khóa mã hóa cũ của bạn sẽ bị xóa vĩnh viễn.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -789,7 +789,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Tài khoản email, gói đăng ký, tệp gốc và bản sao đã xuất ra ngoài FiFe sẽ được giữ lại.';
+      'Tài khoản email, gói đăng ký, kết nối lưu trữ đám mây và thông tin xác thực nhà cung cấp sẽ được giữ lại. Các tệp trong thư mục riêng của bạn bên ngoài FiFe cũng sẽ được giữ lại.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -797,7 +797,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Sau khi xóa xong, hãy lưu cụm từ khôi phục mới gồm 24 từ để sử dụng kho mới.';
+      'Bạn vẫn đăng nhập trên thiết bị này. Sau khi xác minh việc xóa, hãy tạo và lưu cụm từ khôi phục mới gồm 24 từ.';
 
   @override
   String get recoveryResetContinue => 'Tiếp tục đặt lại';

@@ -800,7 +800,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Tu bóveda FiFe actual, los archivos respaldados y la configuración del almacenamiento vinculado se eliminarán permanentemente.';
+      'Tu bóveda actual de FiFe, los archivos respaldados y las claves de cifrado antiguas se eliminarán permanentemente.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -812,7 +812,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Se conservarán tu cuenta de correo, suscripción, archivos originales y copias exportadas fuera de FiFe.';
+      'Se conservarán tu cuenta de correo, suscripción, conexiones de almacenamiento en la nube y credenciales de proveedores. También se conservarán los archivos en tus propias carpetas fuera de FiFe.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -820,7 +820,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Cuando termine la eliminación, guarda una nueva frase de recuperación de 24 palabras para usar tu nueva bóveda.';
+      'Seguirás conectado en este dispositivo. Cuando se verifique la eliminación, genera y guarda una nueva frase de recuperación de 24 palabras.';
 
   @override
   String get recoveryResetContinue => 'Continuar con el restablecimiento';

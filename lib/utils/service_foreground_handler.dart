@@ -113,6 +113,7 @@ class ForegroundTaskHandler extends TaskHandler {
       final activeSync = _syncRunning || await isRecordOrSyncInProgress();
       if (!_ready || _destroyed) return;
       final result = await FlutterForegroundTask.updateService(
+        notificationTitle: localizations.quickSyncNotificationTitle,
         notificationText: activeSync
             ? localizations.quickSyncNotificationInProgress
             : localizations.quickSyncNotificationText(minutes),

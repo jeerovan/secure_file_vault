@@ -798,7 +798,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Seu cofre FiFe atual, os arquivos de backup e as configurações de armazenamento vinculado serão excluídos permanentemente.';
+      'Seu cofre atual do FiFe, os arquivos de backup e as chaves de criptografia antigas serão excluídos permanentemente.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -810,7 +810,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'Sua conta de e-mail, assinatura, arquivos originais e cópias exportadas para fora do FiFe serão mantidos.';
+      'Sua conta de e-mail, assinatura, conexões de armazenamento em nuvem e credenciais dos provedores serão mantidas. Os arquivos em suas próprias pastas fora do FiFe também serão mantidos.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -818,7 +818,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Quando a exclusão terminar, salve uma nova frase de recuperação de 24 palavras para usar seu novo cofre.';
+      'Você continuará conectado neste dispositivo. Após a verificação da exclusão, gere e salve uma nova frase de recuperação de 24 palavras.';
 
   @override
   String get recoveryResetContinue => 'Continuar redefinição';

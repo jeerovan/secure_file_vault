@@ -44,12 +44,6 @@ def prepare() -> Path:
     for name in ("DebugProfile.entitlements", "Release.entitlements"):
         path = destination / "macos/Runner" / name
         path.write_text(path.read_text().replace("com.jeerovan.fife", bundle))
-    # Xcode 27 cannot build a 10.15 target. Raise only this disposable fixture;
-    # leave the application's supported deployment target unchanged.
-    for relative in ("macos/Runner.xcodeproj/project.pbxproj", "macos/Podfile"):
-        path = destination / relative
-        if path.exists():
-            path.write_text(path.read_text().replace("10.15", "12.0"))
     return destination
 
 

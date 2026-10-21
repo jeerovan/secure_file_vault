@@ -781,7 +781,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'Mevcut FiFe kasanız, yedeklenen dosyalarınız ve bağlı depolama ayarlarınız kalıcı olarak silinecek.';
+      'Mevcut FiFe kasanız, yedeklenmiş dosyalarınız ve eski şifreleme anahtarlarınız kalıcı olarak silinecek.';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -793,7 +793,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'E-posta hesabınız, aboneliğiniz, özgün kaynak dosyalarınız ve FiFe dışına aktarılan kopyalar korunacak.';
+      'E-posta hesabınız, aboneliğiniz, bulut depolama bağlantılarınız ve sağlayıcı kimlik bilgileriniz korunacak. FiFe dışındaki kendi klasörlerinizde bulunan dosyalar da korunacak.';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -801,7 +801,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'Silme tamamlandığında yeni kasanızı kullanmak için 24 kelimelik yeni bir kurtarma ifadesi kaydedin.';
+      'Bu cihazda oturumunuz açık kalacak. Silme işlemi doğrulandıktan sonra 24 kelimelik yeni bir kurtarma ifadesi oluşturup kaydedin.';
 
   @override
   String get recoveryResetContinue => 'Sıfırlamaya devam et';

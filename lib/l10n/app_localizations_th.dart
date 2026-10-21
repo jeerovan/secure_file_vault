@@ -775,7 +775,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get lostRecoveryDeleteConsequence =>
-      'ห้องนิรภัย FiFe ปัจจุบัน ไฟล์สำรอง และการตั้งค่าที่เก็บข้อมูลที่เชื่อมโยงจะถูกลบอย่างถาวร';
+      'คลัง FiFe ปัจจุบัน ไฟล์ที่สำรองไว้ และคีย์เข้ารหัสเดิมของคุณจะถูกลบอย่างถาวร';
 
   @override
   String get lostRecoveryDevicesConsequence =>
@@ -787,7 +787,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get lostRecoveryKeepConsequence =>
-      'บัญชีอีเมล การสมัครสมาชิก ไฟล์ต้นฉบับ และสำเนาที่ส่งออกไปนอก FiFe จะยังคงอยู่';
+      'บัญชีอีเมล การสมัครสมาชิก การเชื่อมต่อที่เก็บข้อมูลบนคลาวด์ และข้อมูลรับรองของผู้ให้บริการจะยังคงอยู่ ไฟล์ในโฟลเดอร์ส่วนตัวของคุณนอก FiFe จะยังคงอยู่ด้วย';
 
   @override
   String get lostRecoveryWaitConsequence =>
@@ -795,7 +795,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
-      'เมื่อการลบเสร็จสิ้น ให้บันทึกวลีการกู้คืนใหม่ 24 คำเพื่อใช้ห้องนิรภัยใหม่';
+      'คุณจะยังคงลงชื่อเข้าใช้บนอุปกรณ์นี้ หลังจากยืนยันการลบแล้ว ให้สร้างและบันทึกวลีกู้คืนใหม่ 24 คำ';
 
   @override
   String get recoveryResetContinue => 'ดำเนินการรีเซ็ตต่อ';

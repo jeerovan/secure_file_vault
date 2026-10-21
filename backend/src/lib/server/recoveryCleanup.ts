@@ -1,6 +1,12 @@
-import { and, asc, eq, inArray, lt, lte } from 'drizzle-orm';
+import { and, asc, eq, inArray, lt, lte, ne, notExists } from 'drizzle-orm';
 import type { Db } from './db';
-import { recoveryCleanupTarget as target, recoveryReset, vaultState, user } from './db/schema';
+import {
+	recoveryCleanupTarget as target,
+	recoveryReset,
+	vaultState,
+	vaultUpload,
+	user
+} from './db/schema';
 import { UserKeys } from './db/keys';
 import { ensureDefaultFiFeStorage } from './defaultStorage';
 import { RecoveryFault } from './recoverySession';
@@ -24,6 +30,18 @@ async function refreshOperation(db: Db, operationId: string, now: number) {
 			.where(eq(recoveryReset.id, operationId))
 			.for('update');
 		if (operation.phase !== 'cleanup_pending') return;
+		const [pendingUpload] = await tx
+			.select({ id: vaultUpload.id, error: vaultUpload.error })
+			.from(vaultUpload)
+			.where(and(eq(vaultUpload.operationId, operation.id), ne(vaultUpload.phase, 'deleted')))
+			.limit(1);
+		if (pendingUpload) {
+			await tx
+				.update(recoveryReset)
+				.set({ error: pendingUpload.error === 'upload_cleanup_pending' ? null : pendingUpload.error })
+				.where(eq(recoveryReset.id, operationId));
+			return;
+		}
 		const targets = await tx.select().from(target).where(eq(target.operationId, operationId));
 		const error = targets.find((row) => row.error)?.error ?? null;
 		if (!targets.length || targets.some((row) => row.phase !== 'done')) {
@@ -69,6 +87,19 @@ export async function drainRecoveryCleanup(
 				.where(
 					and(
 						eq(recoveryReset.phase, 'cleanup_pending'),
+						// Preserve the object evidence needed to reconcile a lost
+						// completion before a broad retired-prefix sweep can delete it.
+						notExists(
+							tx
+								.select({ id: vaultUpload.id })
+								.from(vaultUpload)
+								.where(
+									and(
+										eq(vaultUpload.operationId, recoveryReset.id),
+										ne(vaultUpload.phase, 'deleted')
+									)
+								)
+						),
 						inArray(target.phase, ['pending', 'waiting']),
 						lte(target.nextAttemptAt, now),
 						lt(target.leaseUntil, now)

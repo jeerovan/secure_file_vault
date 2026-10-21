@@ -1,0 +1,15 @@
+#!/bin/sh
+# Flutter verifies a universal framework using one -verify_arch followed by
+# multiple architectures. Xcode 27's lipo treats the extra architecture as an
+# input file. Verify every requested slice separately, retaining native errors.
+if [ "$#" -gt 3 ] && [ "$2" = "-verify_arch" ]; then
+    binary=$1
+    shift 2
+    for architecture in "$@"; do
+        /usr/bin/lipo "$binary" -verify_arch "$architecture" || exit "$?"
+    done
+    exit 0
+fi
+
+# Creation, extraction, signing inputs and all other invocations stay native.
+exec /usr/bin/lipo "$@"

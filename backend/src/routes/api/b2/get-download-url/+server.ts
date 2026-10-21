@@ -7,6 +7,7 @@ import { backblazeS3Download } from '$lib/server/backblazeS3';
 import { getDb } from '$lib/server/db';
 import { isVaultPartName } from '$lib/server/recoveryStorage';
 import { finalDeviceResponse } from '$lib/server/deviceAccess';
+import { getPartObjectKey } from '$lib/server/partObject';
 
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
@@ -35,7 +36,14 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
 	try {
-		const presignedUrl = await backblazeS3Download(authData, `${authUser.objectPrefix}${file_id}`);
+		const key = await getPartObjectKey(
+			db,
+			authUser.userId!,
+			storage_id,
+			file_id,
+			authUser.objectPrefix!
+		);
+		const presignedUrl = await backblazeS3Download(authData, key);
 		return finalDeviceResponse(db, authUser, json({ success: 1, data: presignedUrl }));
 	} catch {
 		return json({ success: 0, message: ErrorCode.INVALID_DATA });
