@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Notificación de sincronización rápida",
+  "quickSyncNotificationSettingTitle": "Notificación de sincronización automática",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Intervalo de sincronización automática",
-  "autoSyncIntervalDescription": "Sincroniza automáticamente mientras esté activada la notificación de sincronización rápida.",
+  "autoSyncIntervalDescription": "Sincroniza automáticamente mientras esté activada la notificación de sincronización automática.",
   "syncIntervalMinutes": "{minutes, plural, =1{1 minuto} other{{minutes} minutos}}",
   "autoSyncIntervalSaveError": "No se pudo guardar el intervalo. Inténtalo de nuevo.",
-  "autoSyncIntervalApplyError": "Intervalo guardado. Desactiva y vuelve a activar la notificación de sincronización rápida para aplicarlo.",
+  "autoSyncIntervalApplyError": "Intervalo guardado. Desactiva y vuelve a activar la notificación de sincronización automática para aplicarlo.",
   "quickSyncNotificationTitle": "Servicio de sincronización de archivos",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Se eliminarán todos los registros de dispositivos actuales.",
   "lostRecoveryLogoutConsequence": "Los otros dispositivos cerrarán sesión y borrarán sus datos locales de FiFe cuando detecten su eliminación al conectarse a internet.",
   "lostRecoveryKeepConsequence": "Se conservarán tu cuenta de correo, suscripción, conexiones de almacenamiento en la nube y credenciales de proveedores. También se conservarán los archivos en tus propias carpetas fuera de FiFe.",
-  "lostRecoveryWaitConsequence": "Tu nueva bóveda permanecerá bloqueada hasta verificar la eliminación en la nube. Esto puede tardar 24 horas o más. Puedes cerrar FiFe y continuar más tarde.",
+  "lostRecoveryWaitConsequence": "Tu nueva bóveda permanecerá bloqueada hasta verificar la eliminación en la nube. Esto puede tardar 15 minutos o más. Puedes cerrar FiFe y continuar más tarde.",
   "lostRecoveryNewPhraseConsequence": "Seguirás conectado en este dispositivo. Cuando se verifique la eliminación, genera y guarda una nueva frase de recuperación de 24 palabras.",
+  "recoveryResetUnavailable": "El restablecimiento de la bóveda no está disponible temporalmente. Inténtalo más tarde.",
+  "recoveryResetSigninRequired": "Vuelve a iniciar sesión para verificar tu sesión antes de restablecer la bóveda.",
   "recoveryResetContinue": "Continuar con el restablecimiento",
   "recoveryResetConfirmTitle": "¿Eliminar permanentemente tu bóveda FiFe?",
   "recoveryResetConfirmBody": "Esta acción no se puede deshacer. Tu frase de recuperación actual dejará de funcionar y se eliminarán todos tus dispositivos.",

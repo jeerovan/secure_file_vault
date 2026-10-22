@@ -106,7 +106,20 @@ class SessionCleanup {
   }
 
   Future<bool> request({SessionCleanupMode mode = SessionCleanupMode.forced}) {
-    if (_running case final running?) return running;
+    if (_running case final running?) {
+      final revision = SessionWork.revision;
+      if (!SessionWork.active) return running;
+      return running.then((completed) {
+        // A startup probe may have had nothing to erase. A new revocation
+        // still needs its own durable request after that probe finishes.
+        // If cleanup did change the revision, join it without replaying the
+        // retired request over a later login.
+        if (revision != SessionWork.revision || !SessionWork.active) {
+          return completed;
+        }
+        return request(mode: mode);
+      });
+    }
     SessionWork.check();
     final expectedRevision = SessionWork.revision;
     return _singleFlight(() async {
@@ -117,6 +130,7 @@ class SessionCleanup {
         'mode': mode.name,
         // Do not wait on a transaction owned by the work being canceled.
         'locale': ModelSetting.get(AppString.locale.string),
+        'localTesting': localTesting(),
       };
       _publicationClosing = true;
       try {
@@ -196,8 +210,10 @@ class SessionCleanup {
   Future<bool> expiredAuthentication() async {
     final stage =
         await SecureStorage().read(key: AppString.recoveryResetStage.string);
+    final keySetup =
+        await SecureStorage().read(key: AppString.vaultKeySetupStage.string);
     return request(
-        mode: stage == null
+        mode: stage == null && keySetup == null
             ? SessionCleanupMode.forced
             : SessionCleanupMode.reauthenticate);
   }
@@ -400,6 +416,7 @@ class SessionCleanup {
           if (!recovery && !reauthenticate) return SecureStorage().clear();
           await SecureStorage().clearExcept({
             AppString.recoveryResetStage.string,
+            if (reauthenticate) AppString.vaultKeySetupStage.string,
             AppString.fcmId.string,
             if (recovery) AppString.sessionCookie.string,
             if (recovery) AppString.jwtToken.string,
@@ -417,6 +434,19 @@ class SessionCleanup {
           if (state['mode'] == SessionCleanupMode.reauthenticate.name) {
             await ModelSetting.set(
                 AppString.recoveryReauthentication.string, 'yes');
+            final candidate = await SecureStorage()
+                .read(key: AppString.vaultKeySetupStage.string);
+            if (candidate != null) {
+              try {
+                final decoded = jsonDecode(candidate);
+                if (decoded is Map && decoded['generation'] is String) {
+                  await ModelSetting.set(
+                      AppString.vaultGeneration.string, decoded['generation']);
+                }
+              } catch (_) {
+                /* Keep damaged private staging for explicit recovery. */
+              }
+            }
           }
           if (state['mode'] == SessionCleanupMode.recovery.name) {
             final raw = await SecureStorage()
@@ -433,6 +463,9 @@ class SessionCleanup {
                       {'id': stage!['userId'], 'email': stage['email']}))
                   .insert();
               await ModelSetting.set(AppString.signedIn.string, 'yes');
+              if (state['localTesting'] == true && AppEnv.localTestingBuild) {
+                await ModelSetting.set(AppString.localTesting.string, 'yes');
+              }
             }
           }
         }),

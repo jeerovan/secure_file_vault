@@ -46,14 +46,14 @@ class AppLocalizationsFa extends AppLocalizations {
   String get logging => 'گزارش‌ها';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'اعلان همگام‌سازی سریع';
+  String get quickSyncNotificationSettingTitle => 'اعلان همگام‌سازی خودکار';
 
   @override
   String get autoSyncInterval => 'فاصلهٔ همگام‌سازی خودکار';
 
   @override
   String get autoSyncIntervalDescription =>
-      'تا زمانی که اعلان همگام‌سازی سریع فعال است، همگام‌سازی به‌صورت خودکار انجام می‌شود.';
+      'تا زمانی که اعلان همگام‌سازی خودکار فعال است، همگام‌سازی به‌صورت خودکار انجام می‌شود.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -66,7 +66,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'فاصلهٔ زمانی ذخیره شد. برای اعمال آن، اعلان همگام‌سازی سریع را خاموش و دوباره روشن کنید.';
+      'فاصلهٔ زمانی ذخیره شد. برای اعمال آن، اعلان همگام‌سازی خودکار را خاموش و دوباره روشن کنید.';
 
   @override
   String get quickSyncNotificationTitle => 'سرویس همگام‌سازی فایل‌ها';
@@ -794,11 +794,19 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'خزانهٔ جدید تا تأیید حذف ابری قفل می‌ماند. این کار ممکن است ۲۴ ساعت یا بیشتر طول بکشد. می‌توانید FiFe را ببندید و بعداً ادامه دهید.';
+      'خزانهٔ جدید تا تأیید حذف ابری قفل می‌ماند. این کار ممکن است ۱۵ دقیقه یا بیشتر طول بکشد. می‌توانید FiFe را ببندید و بعداً ادامه دهید.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'در این دستگاه وارد حساب می‌مانید. پس از تأیید حذف، یک عبارت بازیابی جدید 24 کلمه‌ای ایجاد و ذخیره کنید.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'بازنشانی گاوصندوق موقتاً در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'پیش از بازنشانی صندوق، دوباره وارد شوید تا نشست شما تأیید شود.';
 
   @override
   String get recoveryResetContinue => 'ادامهٔ بازنشانی';

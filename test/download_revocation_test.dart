@@ -146,6 +146,92 @@ void main() {
     }
   });
 
+  test('revocation during a no-op startup resume still clears private data',
+      () async {
+    final fixture = await SyncFixture.create();
+    final entered = Completer<void>(), release = Completer<void>();
+    var cleanups = 0;
+    final cleaner = SessionCleanup.test(
+        marker: File('${fixture.directory.path}/startup-cleanup.json'),
+        actions: [
+          SessionCleanupAction('Clear private keys', () async {
+            cleanups++;
+            fixture.secrets.clear();
+          })
+        ]);
+    Future<void>? publication;
+    Future<bool>? startup, revoked, repeated;
+    try {
+      expect(await cleaner.resume(), isTrue);
+      final originalRevision = SessionWork.revision;
+      publication = cleaner.withPublication(() async {
+        entered.complete();
+        await release.future;
+      });
+      await entered.future;
+      startup = cleaner.resume();
+      revoked = cleaner.request();
+      repeated = cleaner.request();
+      release.complete();
+      await publication;
+      expect(await startup, isTrue);
+      expect(await revoked, isTrue);
+      expect(await repeated, isTrue);
+      expect(cleanups, 1);
+      expect(fixture.secrets.isEmpty, isTrue);
+      expect(SessionWork.revision, isNot(originalRevision));
+    } finally {
+      if (!release.isCompleted) release.complete();
+      await publication;
+      await startup;
+      await revoked;
+      await repeated;
+      await fixture.dispose();
+    }
+  });
+
+  test('joined cleanup requests cannot replay over a newer local session',
+      () async {
+    final fixture = await SyncFixture.create();
+    final entered = Completer<void>(), release = Completer<void>();
+    var cleanups = 0;
+    final cleaner = SessionCleanup.test(
+        marker: File('${fixture.directory.path}/joined-cleanup.json'),
+        actions: [
+          SessionCleanupAction('Clear private keys', () async {
+            cleanups++;
+            fixture.secrets.clear();
+          })
+        ]);
+    Future<void>? publication;
+    Future<bool>? first, joined;
+    try {
+      expect(await cleaner.resume(), isTrue);
+      publication = cleaner.withPublication(() async {
+        entered.complete();
+        await release.future;
+      });
+      await entered.future;
+      first = cleaner.request();
+      joined = cleaner.request();
+      release.complete();
+      await publication;
+      expect(await first, isTrue);
+      final currentRevision = SessionWork.revision;
+      fixture.secrets['new-session-key'] = 'new-private-fixture-key';
+      expect(await joined, isTrue);
+      expect(cleanups, 1);
+      expect(SessionWork.revision, currentRevision);
+      expect(fixture.secrets.containsKey('new-session-key'), isTrue);
+    } finally {
+      if (!release.isCompleted) release.complete();
+      await publication;
+      await first;
+      await joined;
+      await fixture.dispose();
+    }
+  });
+
   test('independent coordinators wait for publication beyond lock timeout',
       () async {
     final fixture = await SyncFixture.create();

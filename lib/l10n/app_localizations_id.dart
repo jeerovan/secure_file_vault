@@ -47,14 +47,14 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Notifikasi sinkronisasi cepat';
+      'Notifikasi sinkronisasi otomatis';
 
   @override
   String get autoSyncInterval => 'Interval sinkronisasi otomatis';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Sinkronkan otomatis saat notifikasi sinkronisasi cepat diaktifkan.';
+      'Sinkronkan otomatis saat notifikasi sinkronisasi otomatis diaktifkan.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -67,7 +67,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Interval disimpan. Nonaktifkan lalu aktifkan kembali notifikasi sinkronisasi cepat untuk menerapkannya.';
+      'Interval disimpan. Nonaktifkan lalu aktifkan kembali notifikasi sinkronisasi otomatis untuk menerapkannya.';
 
   @override
   String get quickSyncNotificationTitle => 'Layanan sinkronisasi file';
@@ -796,11 +796,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Brankas baru akan tetap terkunci sampai penghapusan cloud terverifikasi. Ini bisa memakan waktu 24 jam atau lebih. Anda dapat menutup FiFe dan melanjutkan nanti.';
+      'Brankas baru akan tetap terkunci sampai penghapusan cloud terverifikasi. Ini bisa memakan waktu 15 menit atau lebih. Anda dapat menutup FiFe dan melanjutkan nanti.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Anda tetap masuk di perangkat ini. Setelah penghapusan diverifikasi, buat dan simpan frasa pemulihan baru yang terdiri dari 24 kata.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Reset brankas untuk sementara tidak tersedia. Coba lagi nanti.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Masuk lagi untuk memverifikasi sesi Anda sebelum mereset brankas.';
 
   @override
   String get recoveryResetContinue => 'Lanjutkan pengaturan ulang';

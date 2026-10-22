@@ -46,14 +46,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get logging => 'Protokollierung';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick-Sync-Benachrichtigung';
+  String get quickSyncNotificationSettingTitle =>
+      'Benachrichtigung zur automatischen Synchronisierung';
 
   @override
   String get autoSyncInterval => 'Intervall für automatische Synchronisierung';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Automatisch synchronisieren, solange die Schnellsynchronisierungsbenachrichtigung aktiviert ist.';
+      'Automatisch synchronisieren, solange die Benachrichtigung zur automatischen Synchronisierung aktiviert ist.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -72,7 +73,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Intervall gespeichert. Schalte die Schnellsynchronisierungsbenachrichtigung aus und wieder ein, um es anzuwenden.';
+      'Intervall gespeichert. Schalte die Benachrichtigung zur automatischen Synchronisierung aus und wieder ein, um es anzuwenden.';
 
   @override
   String get quickSyncNotificationTitle => 'Datei-Sync-Dienst';
@@ -812,11 +813,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Dein neuer Tresor bleibt gesperrt, bis die Löschung in der Cloud bestätigt ist. Das kann 24 Stunden oder länger dauern. Du kannst FiFe schließen und später fortfahren.';
+      'Dein neuer Tresor bleibt gesperrt, bis die Löschung in der Cloud bestätigt ist. Das kann 15 Minuten oder länger dauern. Du kannst FiFe schließen und später fortfahren.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Du bleibst auf diesem Gerät angemeldet. Erstelle und sichere nach bestätigter Löschung eine neue Wiederherstellungsphrase mit 24 Wörtern.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Das Zurücksetzen des Tresors ist vorübergehend nicht verfügbar. Versuche es später erneut.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Melde dich erneut an, um deine Sitzung vor dem Zurücksetzen des Tresors zu bestätigen.';
 
   @override
   String get recoveryResetContinue => 'Mit Zurücksetzen fortfahren';

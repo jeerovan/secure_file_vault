@@ -46,14 +46,15 @@ class AppLocalizationsTh extends AppLocalizations {
   String get logging => 'บันทึกระบบ';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'การแจ้งเตือนการซิงก์ด่วน';
+  String get quickSyncNotificationSettingTitle =>
+      'การแจ้งเตือนการซิงก์อัตโนมัติ';
 
   @override
   String get autoSyncInterval => 'ช่วงเวลาซิงค์อัตโนมัติ';
 
   @override
   String get autoSyncIntervalDescription =>
-      'ซิงค์อัตโนมัติขณะเปิดใช้การแจ้งเตือนซิงค์ด่วน';
+      'ซิงค์อัตโนมัติขณะเปิดใช้การแจ้งเตือนการซิงก์อัตโนมัติ';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -66,7 +67,7 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'บันทึกช่วงเวลาแล้ว ปิดแล้วเปิดการแจ้งเตือนซิงค์ด่วนอีกครั้งเพื่อใช้ค่าใหม่';
+      'บันทึกช่วงเวลาแล้ว ปิดแล้วเปิดการแจ้งเตือนการซิงก์อัตโนมัติอีกครั้งเพื่อใช้ค่าใหม่';
 
   @override
   String get quickSyncNotificationTitle => 'บริการซิงก์ไฟล์';
@@ -791,11 +792,19 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'ห้องนิรภัยใหม่จะยังถูกล็อกจนกว่าจะยืนยันการลบบนคลาวด์ได้ ซึ่งอาจใช้เวลา 24 ชั่วโมงขึ้นไป คุณสามารถปิด FiFe แล้วกลับมาทำต่อภายหลังได้';
+      'ห้องนิรภัยใหม่จะยังถูกล็อกจนกว่าจะยืนยันการลบบนคลาวด์ได้ ซึ่งอาจใช้เวลา 15 นาทีขึ้นไป คุณสามารถปิด FiFe แล้วกลับมาทำต่อภายหลังได้';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'คุณจะยังคงลงชื่อเข้าใช้บนอุปกรณ์นี้ หลังจากยืนยันการลบแล้ว ให้สร้างและบันทึกวลีกู้คืนใหม่ 24 คำ';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'ไม่สามารถรีเซ็ตห้องนิรภัยได้ชั่วคราว โปรดลองอีกครั้งในภายหลัง';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'ลงชื่อเข้าใช้อีกครั้งเพื่อยืนยันเซสชันของคุณก่อนรีเซ็ตคลังข้อมูล';
 
   @override
   String get recoveryResetContinue => 'ดำเนินการรีเซ็ตต่อ';

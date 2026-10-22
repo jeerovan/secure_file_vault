@@ -45,14 +45,14 @@ class AppLocalizationsHe extends AppLocalizations {
   String get logging => 'יומנים';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'התראת סנכרון מהיר';
+  String get quickSyncNotificationSettingTitle => 'התראת סנכרון אוטומטי';
 
   @override
   String get autoSyncInterval => 'מרווח סנכרון אוטומטי';
 
   @override
   String get autoSyncIntervalDescription =>
-      'סנכרון אוטומטי כל עוד התראת הסנכרון המהיר מופעלת.';
+      'סנכרון אוטומטי כל עוד התראת הסנכרון האוטומטי מופעלת.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -71,7 +71,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'המרווח נשמר. כבו והפעילו מחדש את התראת הסנכרון המהיר כדי להחיל אותו.';
+      'המרווח נשמר. כבו והפעילו מחדש את התראת הסנכרון האוטומטי כדי להחיל אותו.';
 
   @override
   String get quickSyncNotificationTitle => 'שירות סנכרון קבצים';
@@ -798,11 +798,19 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'הכספת החדשה תישאר נעולה עד לאימות המחיקה בענן. התהליך עשוי להימשך 24 שעות או יותר. אפשר לסגור את FiFe ולהמשיך מאוחר יותר.';
+      'הכספת החדשה תישאר נעולה עד לאימות המחיקה בענן. התהליך עשוי להימשך 15 דקות או יותר. אפשר לסגור את FiFe ולהמשיך מאוחר יותר.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'החשבון יישאר מחובר במכשיר הזה. לאחר אימות המחיקה, יש ליצור ולשמור ביטוי שחזור חדש בן 24 מילים.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'איפוס הכספת אינו זמין כרגע. נסו שוב מאוחר יותר.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'יש להתחבר שוב כדי לאמת את ההפעלה לפני איפוס הכספת.';
 
   @override
   String get recoveryResetContinue => 'המשך לאיפוס';

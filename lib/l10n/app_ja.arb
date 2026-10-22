@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "クイック同期通知",
+  "quickSyncNotificationSettingTitle": "自動同期通知",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "自動同期の間隔",
-  "autoSyncIntervalDescription": "クイック同期通知が有効な間、自動的に同期します。",
+  "autoSyncIntervalDescription": "自動同期通知が有効な間、自動的に同期します。",
   "syncIntervalMinutes": "{minutes}分",
   "autoSyncIntervalSaveError": "間隔を保存できませんでした。もう一度お試しください。",
-  "autoSyncIntervalApplyError": "間隔を保存しました。適用するには、クイック同期通知をオフにしてから再びオンにしてください。",
+  "autoSyncIntervalApplyError": "間隔を保存しました。適用するには、自動同期通知をオフにしてから再びオンにしてください。",
   "quickSyncNotificationTitle": "ファイル同期サービス",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "既存の端末登録はすべて削除されます。",
   "lostRecoveryLogoutConsequence": "他の端末は、オンライン時に登録が削除されたことを検出すると、ログアウトしてFiFeのローカルデータを消去します。",
   "lostRecoveryKeepConsequence": "メールアカウント、サブスクリプション、クラウドストレージの接続設定とプロバイダーの認証情報は保持されます。FiFe外のご自身のフォルダーにあるファイルも保持されます。",
-  "lostRecoveryWaitConsequence": "クラウド上の削除が確認されるまで、新しい保管庫はロックされます。24時間以上かかる場合があります。FiFeを閉じて後で再開できます。",
+  "lostRecoveryWaitConsequence": "クラウド上の削除が確認されるまで、新しい保管庫はロックされます。15分以上かかる場合があります。FiFeを閉じて後で再開できます。",
   "lostRecoveryNewPhraseConsequence": "このデバイスではログイン状態を維持します。削除の確認後、新しい24語の復元フレーズを生成して保存してください。",
+  "recoveryResetUnavailable": "現在、保管庫をリセットできません。しばらくしてからもう一度お試しください。",
+  "recoveryResetSigninRequired": "保管庫をリセットする前に、再度サインインしてセッションを確認してください。",
   "recoveryResetContinue": "リセットに進む",
   "recoveryResetConfirmTitle": "FiFe保管庫を完全に削除しますか？",
   "recoveryResetConfirmBody": "この操作は取り消せません。現在の復元フレーズは使えなくなり、すべての端末が削除されます。",

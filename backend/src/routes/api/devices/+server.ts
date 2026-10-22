@@ -16,8 +16,10 @@ export const GET: RequestHandler = async ({ request, url, platform }) => {
 		// status response. Never grant the retired caller a device list or another
 		// device's metadata, and never translate a retryable auth failure to removal.
 		if (
-			deviceUuid && deviceUuid === request.headers.get('device_uuid') &&
-			(authUser.reason === 'device_revoked' || authUser.reason === 'vault_replaced' ||
+			deviceUuid &&
+			deviceUuid === request.headers.get('device_uuid') &&
+			(authUser.reason === 'device_revoked' ||
+				authUser.reason === 'vault_replaced' ||
 				(authUser.message === ErrorCode.NO_USER && authUser.remoteAuthId))
 		) {
 			return json({ success: 1, data: { id: deviceUuid, active: 0 } });
@@ -50,8 +52,11 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 
-	return withBootstrapWrite(db, authUser, (tx) =>
-		addUpdateDevice(tx, authUser.userId!, device_uuid, title, type, notificationId, active)
+	return withBootstrapWrite(
+		db,
+		authUser,
+		(tx) => addUpdateDevice(tx, authUser.userId!, device_uuid, title, type, notificationId, active),
+		true
 	);
 };
 

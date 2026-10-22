@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Notifikasi sinkronisasi cepat",
+  "quickSyncNotificationSettingTitle": "Notifikasi sinkronisasi otomatis",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Interval sinkronisasi otomatis",
-  "autoSyncIntervalDescription": "Sinkronkan otomatis saat notifikasi sinkronisasi cepat diaktifkan.",
+  "autoSyncIntervalDescription": "Sinkronkan otomatis saat notifikasi sinkronisasi otomatis diaktifkan.",
   "syncIntervalMinutes": "{minutes} menit",
   "autoSyncIntervalSaveError": "Tidak dapat menyimpan interval. Coba lagi.",
-  "autoSyncIntervalApplyError": "Interval disimpan. Nonaktifkan lalu aktifkan kembali notifikasi sinkronisasi cepat untuk menerapkannya.",
+  "autoSyncIntervalApplyError": "Interval disimpan. Nonaktifkan lalu aktifkan kembali notifikasi sinkronisasi otomatis untuk menerapkannya.",
   "quickSyncNotificationTitle": "Layanan sinkronisasi file",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Semua pendaftaran perangkat yang ada akan dihapus.",
   "lostRecoveryLogoutConsequence": "Perangkat lain akan keluar dan menghapus data FiFe lokal saat mendeteksi penghapusannya ketika terhubung ke internet.",
   "lostRecoveryKeepConsequence": "Akun email, langganan, koneksi penyimpanan cloud, dan kredensial penyedia Anda akan dipertahankan. File dalam folder Anda sendiri di luar FiFe juga akan dipertahankan.",
-  "lostRecoveryWaitConsequence": "Brankas baru akan tetap terkunci sampai penghapusan cloud terverifikasi. Ini bisa memakan waktu 24 jam atau lebih. Anda dapat menutup FiFe dan melanjutkan nanti.",
+  "lostRecoveryWaitConsequence": "Brankas baru akan tetap terkunci sampai penghapusan cloud terverifikasi. Ini bisa memakan waktu 15 menit atau lebih. Anda dapat menutup FiFe dan melanjutkan nanti.",
   "lostRecoveryNewPhraseConsequence": "Anda tetap masuk di perangkat ini. Setelah penghapusan diverifikasi, buat dan simpan frasa pemulihan baru yang terdiri dari 24 kata.",
+  "recoveryResetUnavailable": "Reset brankas untuk sementara tidak tersedia. Coba lagi nanti.",
+  "recoveryResetSigninRequired": "Masuk lagi untuk memverifikasi sesi Anda sebelum mereset brankas.",
   "recoveryResetContinue": "Lanjutkan pengaturan ulang",
   "recoveryResetConfirmTitle": "Hapus brankas FiFe secara permanen?",
   "recoveryResetConfirmBody": "Tindakan ini tidak dapat dibatalkan. Frasa pemulihan saat ini tidak akan berfungsi lagi dan semua perangkat Anda akan dihapus.",

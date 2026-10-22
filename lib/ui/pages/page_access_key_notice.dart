@@ -1,23 +1,22 @@
-import 'package:file_vault_bb/services/service_backend.dart';
+import 'dart:async';
 
 import '../../l10n/app_localizations.dart';
 import '../../services/service_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sodium/sodium_sumo.dart';
 
-import '../../utils/common.dart';
 import '../common_widgets.dart';
 import '../../utils/enums.dart';
-import '../../storage/storage_secure.dart';
-import '../../utils/utils_crypto.dart';
 import '../../services/service_session_work.dart';
+import '../../services/service_vault_key_setup.dart';
 
 class PageAccessKeyNotice extends StatefulWidget {
-  const PageAccessKeyNotice({super.key, this.onGenerate, this.busy = false});
+  const PageAccessKeyNotice(
+      {super.key, this.onGenerate, this.busy = false, this.service});
 
   final Future<void> Function()? onGenerate;
   final bool busy;
+  final VaultKeySetupService? service;
 
   @override
   State<PageAccessKeyNotice> createState() => _PageAccessKeyNoticeState();
@@ -25,15 +24,18 @@ class PageAccessKeyNotice extends StatefulWidget {
 
 class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   AppLogger logger = AppLogger(prefixes: ["PageAccessKeyNotice"]);
-  SecureStorage secureStorage = SecureStorage();
-  final api = BackendApi();
+  VaultKeySetupService get service =>
+      widget.service ?? VaultKeySetupService.instance;
   bool processing = false;
   String appName = AppString.appName.string;
-  Map<String, dynamic>? _pendingKeys;
 
   @override
   void initState() {
     super.initState();
+    if (widget.onGenerate == null) {
+      processing = true;
+      unawaited(_resume());
+    }
   }
 
   Future<void> generateKeys() async {
@@ -51,69 +53,15 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
   }
 
   Future<void> _generateKeys() async {
-    String? userId = await getSignedInUserId();
-    if (userId == null) return;
+    if (processing) return;
     setState(() {
       processing = true;
     });
-
-    SodiumSumo sodium = await SodiumSumoInit.init();
-    CryptoUtils cryptoUtils = CryptoUtils(sodium);
-
-    if (_pendingKeys == null) {
-      ExecutionResult generationResult = cryptoUtils.generateKeys();
-      _pendingKeys = generationResult.getResult()!;
-    }
-    Map<String, dynamic> keys = _pendingKeys!;
-    Map<String, dynamic> privateKeys = keys[AppString.privateKeys.string];
-    Map<String, dynamic> serverKeys = keys[AppString.serverKeys.string];
     try {
-      bool showKeys = true;
-      if (simulateTesting()) {
-        await Future.delayed(const Duration(seconds: 1));
-        await secureStorage.write(
-          key: AppString.keyCipher.string,
-          value: serverKeys[AppString.cipher.string],
-        );
-        await secureStorage.write(
-          key: AppString.keyNonce.string,
-          value: serverKeys[AppString.nonce.string],
-        );
-      } else {
-        final result = await api.post(endpoint: '/keys', jsonBody: serverKeys);
-        final status = result["success"];
-        if (status <= 0) {
-          showKeys = false;
-          if (mounted) {
-            displaySnackBar(
-              context,
-              message: result["message"].toString(),
-              seconds: 2,
-            );
-          }
-        }
-      }
-      if (showKeys) {
-        String masterKeyBase64 = privateKeys[AppString.masterKey.string];
-        String accessKeyBase64 = privateKeys[AppString.accessKey.string];
-        String fileHashKeyBase64 = privateKeys[AppString.fileHashKey.string];
-        await secureStorage.write(
-          key: AppString.masterKey.string,
-          value: masterKeyBase64,
-        );
-        await secureStorage.write(
-          key: AppString.accessKey.string,
-          value: accessKeyBase64,
-        );
-        await secureStorage.write(
-          key: AppString.fileHashKey.string,
-          value: fileHashKeyBase64,
-        );
-        _pendingKeys = null;
-        if (mounted) {
-          await context.read<AppSetupState>().showAccessKeys();
-        }
-      }
+      final result = await service.generate();
+      await _apply(result, attempted: true);
+    } on SessionInvalidated {
+      // Session cleanup owns the root transition.
     } catch (e, s) {
       logger.error("generateKeys", error: e, stackTrace: s);
     }
@@ -121,6 +69,39 @@ class _PageAccessKeyNoticeState extends State<PageAccessKeyNotice> {
       setState(() {
         processing = false;
       });
+    }
+  }
+
+  Future<void> _resume() async {
+    try {
+      if (await service.hasPending()) await _apply(await service.resume());
+    } on SessionInvalidated {
+      // Never resume private candidates into a replaced login.
+    } catch (e, s) {
+      logger.error('resumeKeys', error: e, stackTrace: s);
+    } finally {
+      if (mounted) setState(() => processing = false);
+    }
+  }
+
+  Future<void> _apply(VaultKeySetupResult result,
+      {bool attempted = false}) async {
+    if (!mounted) return;
+    final setup = context.read<AppSetupState>();
+    switch (result.phase) {
+      case VaultKeySetupPhase.phrase:
+        await setup.showAccessKeys();
+      case VaultKeySetupPhase.registration:
+        await setup.registerDevice();
+      case VaultKeySetupPhase.recovery:
+        await setup.recheckStatus();
+      case VaultKeySetupPhase.generation:
+      case VaultKeySetupPhase.unavailable:
+        if (attempted && mounted) {
+          displaySnackBar(context,
+              message: AppLocalizations.of(context)!.pleaseTryAgain,
+              seconds: 2);
+        }
     }
   }
 

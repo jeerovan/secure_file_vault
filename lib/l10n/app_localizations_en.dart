@@ -46,14 +46,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logging => 'Logging';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Quick sync notification';
+  String get quickSyncNotificationSettingTitle => 'Auto sync notification';
 
   @override
   String get autoSyncInterval => 'Auto sync interval';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Sync automatically while the quick sync notification is enabled.';
+      'Sync automatically while the auto sync notification is enabled.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -72,7 +72,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Interval saved. Turn the quick sync notification off and on to apply it.';
+      'Interval saved. Turn the auto sync notification off and on to apply it.';
 
   @override
   String get quickSyncNotificationTitle => 'File sync service';
@@ -803,11 +803,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Your new vault will stay locked until cloud deletion is verified. This may take 24 hours or longer. You can close FiFe and resume later.';
+      'Your new vault will stay locked until cloud deletion is verified. This may take 15 minutes or longer. You can close FiFe and resume later.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'You stay signed in on this device. After deletion is verified, generate and save a new 24-word recovery phrase.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Vault reset is temporarily unavailable. Try again later.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Sign in again to verify your session before resetting the vault.';
 
   @override
   String get recoveryResetContinue => 'Continue to reset';

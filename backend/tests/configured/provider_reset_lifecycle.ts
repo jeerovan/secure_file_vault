@@ -122,7 +122,11 @@ export async function checkProviderResetLifecycle(input: {
 	let stage = 'initial-upload';
 	let failure: Error | undefined;
 	const oldHeaders = { device_uuid: 'retired-fixture-device' };
-	const bootstrap = { 'x-fife-vault-protocol': '1', 'x-fife-session': 'initiating-session' };
+	const bootstrap = {
+		'x-fife-vault-protocol': '1',
+		'x-fife-recovery-protocol': '2',
+		'x-fife-session': 'initiating-session'
+	};
 	async function call(path: string, body?: unknown, headers: Record<string, string> = {}) {
 		const url = new URL(`https://local.example.test/api/${path}`);
 		const route = await vite.ssrLoadModule(`/src/routes/api/${url.pathname.slice(5)}/+server.ts`);
@@ -311,8 +315,19 @@ export async function checkProviderResetLifecycle(input: {
 		assert.equal(committed.body.data?.phase, 'cleanup_pending');
 		const generation = committed.body.data.generation as string;
 		const deadline = committed.body.data.notBefore as number;
-		const floor = input.providerId === 2 ? 86400_000 : 3600_000;
-		assert.ok(deadline >= Date.now() + floor - 10_000, 'Keep the conservative legacy floor');
+		const [committedReset] = await db
+			.select()
+			.from(tables.recoveryReset)
+			.where(eq(tables.recoveryReset.id, operationId));
+		const [capability] = await db
+			.select()
+			.from(tables.vaultUploadCapability)
+			.where(eq(tables.vaultUploadCapability.userId, userId));
+		assert.equal(
+			deadline,
+			Math.max(committedReset.committedAt! + 15 * 60_000, capability?.expiresAt ?? 0),
+			'A fresh accounted vault waits fifteen minutes or its longest recorded grant'
+		);
 		const statusPath = `recovery-reset/status?operation_id=${operationId}`;
 		assert.equal(
 			(await call(statusPath, undefined, bootstrap)).body.data?.operation.phase,
@@ -410,10 +425,13 @@ export async function checkProviderResetLifecycle(input: {
 		stage = 'new-vault-bootstrap';
 		const keys = await call('keys', undefined, bootstrap);
 		assert.equal(keys.body.success, 1, 'The initiating session remains authenticated');
-		assert.ok(
-			keys.body.data.cipher === envelope.cipher && keys.body.data.nonce === envelope.nonce,
-			'Keep the committed new envelope'
+		assert.equal(keys.body.data.cipher, null);
+		assert.equal(keys.body.data.nonce, null);
+		assert.equal(
+			(await call('keys', { ...envelope, expectedGeneration: generation }, bootstrap)).body.success,
+			1
 		);
+		assert.equal((await call('keys', undefined, bootstrap)).body.data.cipher, envelope.cipher);
 		assert.equal(
 			(await call('keys', undefined, { ...bootstrap, 'x-fife-session': 'retired-session' })).body
 				.reason,

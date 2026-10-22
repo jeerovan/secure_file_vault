@@ -1,10 +1,10 @@
 import { eq } from 'drizzle-orm';
-import { NEON_JWKS } from '$env/static/private';
 import type { AuthUser } from './auth';
 import type { Db, Tx } from './db';
 import { vaultState } from './db/schema';
 import { authorizeRegisteredDevice } from './deviceAccess';
-import { verifyRecoverySession, RecoveryFault } from './recoverySession';
+import { RecoveryFault } from './recoverySession';
+import { supportsVaultSession, verifyRequestSession } from './requestSession';
 import { json } from '@sveltejs/kit';
 import { user } from './db/schema';
 import { UserKeys } from './db/keys';
@@ -12,11 +12,12 @@ import { UserKeys } from './db/keys';
 export async function withBootstrapWrite(
 	db: Db | Tx,
 	auth: AuthUser,
-	action: (tx: Tx) => Promise<Response>
+	action: (tx: Tx) => Promise<Response>,
+	requireKeys = false
 ) {
 	return db.transaction(async (tx) => {
 		const [account] = await tx
-			.select({ id: user[UserKeys.ID] })
+			.select({ id: user[UserKeys.ID], cipher: user[UserKeys.CIPHER], nonce: user[UserKeys.NONCE] })
 			.from(user)
 			.where(eq(user[UserKeys.ID], auth.userId!))
 			.for('update');
@@ -38,6 +39,8 @@ export async function withBootstrapWrite(
 			return json({ success: 0, message: 8, reason: 'vault_replaced' });
 		}
 		if (state?.ready === 0) return json({ success: 0, message: 17, reason: 'vault_reset_pending' });
+		if (requireKeys && (!account.cipher || !account.nonce))
+			return json({ success: 0, message: 15, reason: 'vault_keys_missing' });
 		return action(tx);
 	});
 }
@@ -69,20 +72,11 @@ export async function authorizeVaultBootstrap(
 		return access.authorized || access.reason === 'account_removed' ? access : auth;
 	}
 	if (deviceUuid) return authorizeRegisteredDevice(db, decorated);
-	if (
-		decorated.vaultProtocol !== 1 ||
-		auth.localTesting ||
-		request.headers.get('service') !== 'neon'
-	) {
+	if (decorated.vaultProtocol !== 1 || !supportsVaultSession(auth, request)) {
 		return { ...auth, authorized: false, message: 18, reason: 'client_update_required' };
 	}
 	try {
-		const session = await verifyRecoverySession({
-			jwks: NEON_JWKS,
-			cookie: request.headers.get('x-fife-session'),
-			userId: auth.remoteAuthId!,
-			email: auth.email!
-		});
+		const session = await verifyRequestSession(auth, request);
 		if (session.hash !== state.initiatingSessionHash && session.createdAt <= state.resetAt) {
 			return { ...auth, authorized: false, message: 8, reason: 'vault_replaced' };
 		}

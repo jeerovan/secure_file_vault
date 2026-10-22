@@ -53,15 +53,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Quick sync notification",
+  "quickSyncNotificationSettingTitle": "Auto sync notification",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Auto sync interval",
   "@autoSyncInterval": {
     "description": "Android foreground service sync interval setting"
   },
-  "autoSyncIntervalDescription": "Sync automatically while the quick sync notification is enabled.",
+  "autoSyncIntervalDescription": "Sync automatically while the auto sync notification is enabled.",
   "@autoSyncIntervalDescription": {
     "description": "Explains when the selected auto sync interval applies"
   },
@@ -76,7 +76,7 @@
   "@autoSyncIntervalSaveError": {
     "description": "Shown if saving the auto sync interval fails"
   },
-  "autoSyncIntervalApplyError": "Interval saved. Turn the quick sync notification off and on to apply it.",
+  "autoSyncIntervalApplyError": "Interval saved. Turn the auto sync notification off and on to apply it.",
   "@autoSyncIntervalApplyError": {
     "description": "Recovery when an interval is saved but the running service could not be updated"
   },
@@ -1013,8 +1013,10 @@
   "lostRecoveryDevicesConsequence": "All existing device registrations will be removed.",
   "lostRecoveryLogoutConsequence": "Other devices will sign out and clear their FiFe local data when they next discover their removal while online.",
   "lostRecoveryKeepConsequence": "Your email account, subscription, cloud storage connections and provider credentials will be kept. Files in your own folders outside FiFe will also be kept.",
-  "lostRecoveryWaitConsequence": "Your new vault will stay locked until cloud deletion is verified. This may take 24 hours or longer. You can close FiFe and resume later.",
+  "lostRecoveryWaitConsequence": "Your new vault will stay locked until cloud deletion is verified. This may take 15 minutes or longer. You can close FiFe and resume later.",
   "lostRecoveryNewPhraseConsequence": "You stay signed in on this device. After deletion is verified, generate and save a new 24-word recovery phrase.",
+  "recoveryResetUnavailable": "Vault reset is temporarily unavailable. Try again later.",
+  "recoveryResetSigninRequired": "Sign in again to verify your session before resetting the vault.",
   "recoveryResetContinue": "Continue to reset",
   "recoveryResetConfirmTitle": "Permanently delete your FiFe vault?",
   "recoveryResetConfirmBody": "This cannot be undone. Your existing recovery phrase will stop working, and all your devices will be removed.",

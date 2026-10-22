@@ -46,14 +46,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logging => 'سجل النظام';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'إشعارات المزامنة السريعة';
+  String get quickSyncNotificationSettingTitle => 'إشعار المزامنة التلقائية';
 
   @override
   String get autoSyncInterval => 'الفاصل الزمني للمزامنة التلقائية';
 
   @override
   String get autoSyncIntervalDescription =>
-      'تتم المزامنة تلقائيًا عند تفعيل إشعار المزامنة السريعة.';
+      'تتم المزامنة تلقائيًا عند تفعيل إشعار المزامنة التلقائية.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -75,7 +75,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'تم حفظ الفاصل الزمني. أوقف إشعار المزامنة السريعة ثم فعّله لتطبيقه.';
+      'تم حفظ الفاصل الزمني. أوقف إشعار المزامنة التلقائية ثم فعّله لتطبيقه.';
 
   @override
   String get quickSyncNotificationTitle => 'خدمة مزامنة الملفات';
@@ -803,11 +803,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'ستبقى خزنتك الجديدة مقفلة حتى يتم التحقق من الحذف السحابي. قد يستغرق ذلك 24 ساعة أو أكثر. يمكنك إغلاق FiFe والمتابعة لاحقاً.';
+      'ستبقى خزنتك الجديدة مقفلة حتى يتم التحقق من الحذف السحابي. قد يستغرق ذلك 15 دقيقة أو أكثر. يمكنك إغلاق FiFe والمتابعة لاحقاً.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'ستبقى مسجّل الدخول على هذا الجهاز. بعد التحقق من الحذف، أنشئ واحفظ عبارة استرداد جديدة من 24 كلمة.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'إعادة تعيين الخزنة غير متاحة مؤقتًا. يُرجى المحاولة مرة أخرى لاحقًا.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'سجّل الدخول مرة أخرى للتحقق من جلستك قبل إعادة تعيين الخزنة.';
 
   @override
   String get recoveryResetContinue => 'متابعة إعادة التعيين';

@@ -47,14 +47,14 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Сповіщення про швидку синхронізацію';
+      'Сповіщення про автоматичну синхронізацію';
 
   @override
   String get autoSyncInterval => 'Інтервал автосинхронізації';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Автоматична синхронізація, доки ввімкнено сповіщення швидкої синхронізації.';
+      'Автоматична синхронізація, доки ввімкнено сповіщення про автоматичну синхронізацію.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -75,7 +75,7 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Інтервал збережено. Вимкніть і знову ввімкніть сповіщення швидкої синхронізації, щоб застосувати його.';
+      'Інтервал збережено. Вимкніть і знову ввімкніть сповіщення про автоматичну синхронізацію, щоб застосувати його.';
 
   @override
   String get quickSyncNotificationTitle => 'Сервіс синхронізації файлів';
@@ -815,11 +815,19 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Нове сховище залишатиметься заблокованим до підтвердження видалення з хмари. Це може тривати 24 години або довше. Можна закрити FiFe та продовжити пізніше.';
+      'Нове сховище залишатиметься заблокованим до підтвердження видалення з хмари. Це може тривати 15 хвилин або довше. Можна закрити FiFe та продовжити пізніше.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'На цьому пристрої ви залишитеся в обліковому записі. Після підтвердження видалення створіть і збережіть нову фразу відновлення з 24 слів.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Скидання сховища тимчасово недоступне. Спробуйте пізніше.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Увійдіть знову, щоб підтвердити сеанс перед скиданням сховища.';
 
   @override
   String get recoveryResetContinue => 'Продовжити скидання';

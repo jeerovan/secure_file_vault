@@ -11,6 +11,7 @@ import '../l10n/app_localizations.dart';
 import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../models/model_item_task.dart';
+import '../storage/local_item_access.dart';
 import '../storage/storage_channel.dart';
 import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
@@ -67,19 +68,19 @@ class AppSetupState extends ChangeNotifier {
 
   // Check all setup steps on app start
   Future<void> _checkSetupStatus() async {
+    final checkId = ++_checkId;
     try {
-      await _readSetupStatus();
+      await _readSetupStatus(checkId);
     } on SessionInvalidated {
-      _setStep(SetupStep.sessionCleanup);
+      _setStep(SetupStep.sessionCleanup, checkId);
     } catch (_) {
       // Unavailable key storage must not display cached private data.
-      _setStep(SetupStep.sessionCleanup);
+      _setStep(SetupStep.sessionCleanup, checkId);
     }
   }
 
-  Future<void> _readSetupStatus() async {
+  Future<void> _readSetupStatus(int checkId) async {
     logger.info("Checking..");
-    final checkId = ++_checkId;
     if (_currentStep != SetupStep.sessionCleanup) {
       _setStep(SetupStep.loading, checkId);
     }
@@ -115,6 +116,12 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
 
+    // An interrupted key claim owns its candidate until registration. Never
+    // bypass phrase acknowledgment because only some private writes completed.
+    if (await _prefs.containsKey(key: AppString.vaultKeySetupStage.string)) {
+      _setStep(SetupStep.generateAccessKey, checkId);
+      return;
+    }
     // Check security key
     String? securityKey = await _prefs.read(key: AppString.masterKey.string);
     if (securityKey == null) {
@@ -186,7 +193,12 @@ class AppSetupState extends ChangeNotifier {
     await ModelSetting.delete(AppString.recoveryReauthentication.string);
     SessionWork.check();
     _setStep(
-        pending ? SetupStep.recoveryReset : SetupStep.checkAccessKey, checkId);
+        pending
+            ? SetupStep.recoveryReset
+            : await _prefs.containsKey(key: AppString.vaultKeySetupStage.string)
+                ? SetupStep.generateAccessKey
+                : SetupStep.checkAccessKey,
+        checkId);
   }
 
   Future<void> showRecoveryReset() async {
@@ -1050,6 +1062,7 @@ class _FileListItemState extends State<FileListItem> {
   bool _isDownloading = false;
   bool _requiresBookmark = false;
   int transferProgress = 0;
+  int _fileStateCheck = 0;
 
   @override
   void initState() {
@@ -1096,9 +1109,16 @@ class _FileListItemState extends State<FileListItem> {
     return false;
   }
 
-  Future<bool> fileExistsLocally(ModelItem item) async {
-    String path = await ModelItem.getPathForItem(item.id);
-    return await File(path).exists();
+  Future<bool?> fileExistsLocally(ModelItem item) async {
+    try {
+      return await LocalItemAccess.withAccess(
+          item.id, (path) => File(path).exists());
+    } on PlatformException {
+      // Failed folder permission is an unknown state, not proof of deletion.
+      return null;
+    } on FileSystemException {
+      return null;
+    }
   }
 
   Future<bool> fileUploadedToCloud(ModelItem item) async {
@@ -1110,24 +1130,22 @@ class _FileListItemState extends State<FileListItem> {
   }
 
   Future<void> _checkFileStates() async {
+    final check = ++_fileStateCheck;
+    final item = widget.item;
     // Run both async tasks concurrently for optimal performance
-    final stateResults = await Future.wait([
-      widget.item.isFolder
-          ? Future.value(false)
-          : fileExistsLocally(widget.item),
-      widget.item.isFolder
-          ? Future.value(false)
-          : fileUploadedToCloud(widget.item),
-      widget.item.isFolder ? requiresBookmark(widget.item) : Future.value(false)
+    final stateResults = await Future.wait<bool?>([
+      item.isFolder ? Future.value(false) : fileExistsLocally(item),
+      item.isFolder ? Future.value(false) : fileUploadedToCloud(item),
+      item.isFolder ? requiresBookmark(item) : Future.value(false)
     ]);
 
     // Always check if the widget is still in the tree before calling setState
-    if (!mounted) return;
+    if (!mounted || check != _fileStateCheck) return;
 
     setState(() {
       _isLocal = stateResults[0];
       _isUploaded = stateResults[1];
-      _requiresBookmark = stateResults[2];
+      _requiresBookmark = stateResults[2] ?? false;
     });
   }
 

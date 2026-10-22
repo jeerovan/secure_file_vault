@@ -406,6 +406,21 @@ class ModelItem {
     return _repository.get(id);
   }
 
+  /// The navigation root is local structure, not encrypted vault content.
+  /// Recreate only a missing row; never replace existing items or queue a sync.
+  static Future<ModelItem> ensureVaultRoot() =>
+      StorageSqlite.instance.runInTransaction(() async {
+        final existing = await get('fife');
+        if (existing != null) return existing;
+        final root = await fromMap({
+          'id': 'fife',
+          'name': 'FiFe',
+          'is_folder': 1,
+        });
+        await StorageSqlite.instance.insert(Tables.items.string, root.toMap());
+        return root;
+      });
+
   static Future<bool> wouldCreateCycle(
       String itemId, String newParentId) async {
     if (itemId == newParentId) return true;

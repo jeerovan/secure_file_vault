@@ -47,14 +47,14 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Notificação de sincronização rápida';
+      'Notificação de sincronização automática';
 
   @override
   String get autoSyncInterval => 'Intervalo de sincronização automática';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Sincronize automaticamente enquanto a notificação de sincronização rápida estiver ativada.';
+      'Sincronize automaticamente enquanto a notificação de sincronização automática estiver ativada.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -73,7 +73,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Intervalo salvo. Desative e reative a notificação de sincronização rápida para aplicá-lo.';
+      'Intervalo salvo. Desative e reative a notificação de sincronização automática para aplicá-lo.';
 
   @override
   String get quickSyncNotificationTitle =>
@@ -814,11 +814,19 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Seu novo cofre ficará bloqueado até que a exclusão na nuvem seja verificada. Isso pode levar 24 horas ou mais. Você pode fechar o FiFe e continuar depois.';
+      'Seu novo cofre ficará bloqueado até que a exclusão na nuvem seja verificada. Isso pode levar 15 minutos ou mais. Você pode fechar o FiFe e continuar depois.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Você continuará conectado neste dispositivo. Após a verificação da exclusão, gere e salve uma nova frase de recuperação de 24 palavras.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'A redefinição do cofre está temporariamente indisponível. Tente novamente mais tarde.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Entre novamente para verificar sua sessão antes de redefinir o cofre.';
 
   @override
   String get recoveryResetContinue => 'Continuar redefinição';

@@ -91,6 +91,30 @@ test(
 			const [managedRls] = await database.db
 				.$client`SELECT relrowsecurity FROM pg_class WHERE relname = 'vault_upload'`;
 			assert.equal(managedRls.relrowsecurity, true);
+			// Emulate the released envelope columns before applying the widening migration.
+			await database.db.$client.unsafe(
+				'ALTER TABLE "user" ALTER COLUMN "6" SET NOT NULL, ALTER COLUMN "7" SET NOT NULL'
+			);
+			await database.db.$client.unsafe('ALTER TABLE "user" DROP CONSTRAINT user_key_envelope_pair');
+			const deferred = await readFile(
+				new URL('../migrations/0006_deferred_vault_keys.sql', import.meta.url),
+				'utf8'
+			);
+			await applyRecoveryMigration(database.db.$client, deferred, '0006_deferred_vault_keys');
+			await applyRecoveryMigration(database.db.$client, deferred, '0006_deferred_vault_keys');
+			assert.deepEqual((await database.db.select().from(user))[0], original);
+			const columns = await database.db
+				.$client`SELECT is_nullable FROM information_schema.columns WHERE table_name='user' AND column_name IN ('6','7')`;
+			assert.equal(columns.length, 2);
+			assert.ok(columns.every((column) => column.is_nullable === 'YES'));
+			await assert.rejects(
+				database.db.$client.unsafe('UPDATE "user" SET "6"=NULL WHERE "4"=\'fixture-user\''),
+				/user_key_envelope_pair/
+			);
+			await database.db.$client.unsafe(
+				'UPDATE "user" SET "6"=NULL, "7"=NULL WHERE "4"=\'fixture-user\''
+			);
+			assert.equal((await database.db.select().from(user))[0][UserKeys.CIPHER], null);
 			await assert.rejects(
 				applyRecoveryMigration(
 					database.db.$client,

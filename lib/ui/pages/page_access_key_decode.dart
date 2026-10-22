@@ -16,7 +16,6 @@ import '../../utils/utils_crypto.dart';
 import '../../utils/enums.dart';
 import '../../services/service_session_work.dart';
 import '../../services/service_recovery_reset.dart';
-import '../../models/model_setting.dart';
 import 'page_lost_recovery.dart';
 
 class PageAccessKeyDecode extends StatefulWidget {
@@ -400,10 +399,7 @@ class _PageAccessKeyDecodeState extends State<PageAccessKeyDecode> {
                     style: const TextStyle(fontSize: 16.0),
                   ),
                 ),
-                if (!simulateTesting() &&
-                    !localTesting() &&
-                    ModelSetting.get(AppString.recoveryResetAvailable.string) ==
-                        'yes') ...[
+                if (!simulateTesting()) ...[
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: processing ? null : _lostPhrase,

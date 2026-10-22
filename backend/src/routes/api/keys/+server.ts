@@ -6,6 +6,10 @@ import { recoveryAvailable } from '$lib/server/recoveryAvailability';
 import { ErrorCode, UserKeys } from '$lib/server/db/keys';
 import { addUser, getUser } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
+import { supportsVaultSession } from '$lib/server/requestSession';
+import { withBootstrapWrite } from '$lib/server/vaultBootstrap';
+import { user as accounts } from '$lib/server/db/schema';
+import { eq } from 'drizzle-orm';
 
 export const GET: RequestHandler = async ({ request, platform }) => {
 	const db = getDb(platform);
@@ -21,6 +25,9 @@ export const GET: RequestHandler = async ({ request, platform }) => {
 	if (!user) {
 		return json({ success: 0, message: ErrorCode.NO_USER });
 	}
+	const missingKeys = user[UserKeys.CIPHER] === null && user[UserKeys.NONCE] === null;
+	if (missingKeys && request.headers.get('x-fife-recovery-protocol') !== '2')
+		return json({ success: 0, message: 18, reason: 'client_update_required' });
 
 	return json(
 		{
@@ -28,11 +35,12 @@ export const GET: RequestHandler = async ({ request, platform }) => {
 			data: {
 				cipher: user[UserKeys.CIPHER],
 				nonce: user[UserKeys.NONCE],
+				key_state: missingKeys ? 'missing' : 'present',
 				vault_generation: authUser.vaultGeneration ?? 'legacy',
 				recovery_reset_available:
 					(await recoveryAvailable(db, env, authUser.email)) &&
-					request.headers.get('service') === 'neon' &&
-					!authUser.localTesting
+					supportsVaultSession(authUser, request) &&
+					request.headers.get('x-fife-recovery-protocol') === '2'
 			}
 		},
 		{ headers: { 'Cache-Control': 'no-store' } }
@@ -46,27 +54,49 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	if (!authUser.authorized && authUser.message !== ErrorCode.NO_USER) {
 		return json({ success: 0, message: authUser.message, reason: authUser.reason });
 	}
-	let body: { cipher?: string; nonce?: string };
+	let body: { cipher?: string; nonce?: string; expectedGeneration?: string };
 	try {
 		body = await request.json();
 	} catch {
 		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	}
 
+	if (!body || typeof body !== 'object' || Array.isArray(body))
+		return json({ success: 0, message: ErrorCode.INVALID_JSON });
 	const { cipher, nonce } = body;
 
-	if (!cipher || !nonce) {
+	if (typeof cipher !== 'string' || !cipher || typeof nonce !== 'string' || !nonce) {
 		return json({ success: 0, message: ErrorCode.MISSING_FIELDS });
 	}
 	if (authUser.authorized) {
-		const existingUser = authUser.userId ? await getUser(db, authUser.userId) : undefined;
-		if (existingUser?.[UserKeys.CIPHER] === cipher && existingUser[UserKeys.NONCE] === nonce) {
-			return json({ success: 1 });
-		}
-		return json({ success: 0, message: ErrorCode.INVALID_DATA });
+		return withBootstrapWrite(db, authUser, async (tx) => {
+			const existingUser = await getUser(tx, authUser.userId!);
+			if (existingUser?.[UserKeys.CIPHER] === cipher && existingUser[UserKeys.NONCE] === nonce)
+				return json({ success: 1 });
+			if (existingUser?.[UserKeys.CIPHER] === null && existingUser[UserKeys.NONCE] === null) {
+				if (request.headers.get('x-fife-recovery-protocol') !== '2')
+					return json({ success: 0, message: 18, reason: 'client_update_required' });
+				if (body.expectedGeneration !== authUser.vaultGeneration)
+					return json({ success: 0, message: 15, reason: 'key_setup_conflict' });
+				await tx
+					.update(accounts)
+					.set({ [UserKeys.CIPHER]: cipher, [UserKeys.NONCE]: nonce })
+					.where(eq(accounts[UserKeys.ID], authUser.userId!));
+				return json({ success: 1 });
+			}
+			return json({
+				success: 0,
+				message: ErrorCode.INVALID_DATA,
+				...(request.headers.get('x-fife-recovery-protocol') === '2'
+					? { reason: 'key_setup_conflict' }
+					: {})
+			});
+		});
 	}
 
 	const result = await addUser(db, authUser.remoteAuthId!, authUser.email!, cipher, nonce);
+	if (!result)
+		return json({ success: 0, message: ErrorCode.INVALID_DATA, reason: 'key_setup_conflict' });
 
 	return json({ success: 1, data: result });
 };

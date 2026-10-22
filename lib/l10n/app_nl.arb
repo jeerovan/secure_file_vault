@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Snelle synchronisatie-melding",
+  "quickSyncNotificationSettingTitle": "Melding voor automatisch synchroniseren",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Interval voor automatisch synchroniseren",
-  "autoSyncIntervalDescription": "Synchroniseer automatisch zolang de melding voor snel synchroniseren is ingeschakeld.",
+  "autoSyncIntervalDescription": "Synchroniseer automatisch zolang de melding voor automatisch synchroniseren is ingeschakeld.",
   "syncIntervalMinutes": "{minutes, plural, =1{1 minuut} other{{minutes} minuten}}",
   "autoSyncIntervalSaveError": "Het interval kon niet worden opgeslagen. Probeer het opnieuw.",
-  "autoSyncIntervalApplyError": "Interval opgeslagen. Schakel de melding voor snel synchroniseren uit en weer in om het toe te passen.",
+  "autoSyncIntervalApplyError": "Interval opgeslagen. Schakel de melding voor automatisch synchroniseren uit en weer in om het toe te passen.",
   "quickSyncNotificationTitle": "Bestandsynchronisatiedienst",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Alle bestaande apparaatregistraties worden verwijderd.",
   "lostRecoveryLogoutConsequence": "Andere apparaten melden zich af en wissen hun lokale FiFe-gegevens zodra ze online ontdekken dat ze zijn verwijderd.",
   "lostRecoveryKeepConsequence": "Je e-mailaccount, abonnement, cloudopslagverbindingen en inloggegevens van providers blijven behouden. Bestanden in je eigen mappen buiten FiFe blijven ook behouden.",
-  "lostRecoveryWaitConsequence": "Je nieuwe kluis blijft vergrendeld totdat de verwijdering in de cloud is geverifieerd. Dit kan 24 uur of langer duren. Je kunt FiFe sluiten en later verdergaan.",
+  "lostRecoveryWaitConsequence": "Je nieuwe kluis blijft vergrendeld totdat de verwijdering in de cloud is geverifieerd. Dit kan 15 minuten of langer duren. Je kunt FiFe sluiten en later verdergaan.",
   "lostRecoveryNewPhraseConsequence": "Je blijft op dit apparaat ingelogd. Maak en bewaar na bevestiging van de verwijdering een nieuwe herstelzin van 24 woorden.",
+  "recoveryResetUnavailable": "De kluis kan tijdelijk niet worden gereset. Probeer het later opnieuw.",
+  "recoveryResetSigninRequired": "Meld je opnieuw aan om je sessie te verifiëren voordat je de kluis opnieuw instelt.",
   "recoveryResetContinue": "Doorgaan met opnieuw instellen",
   "recoveryResetConfirmTitle": "Je FiFe-kluis permanent verwijderen?",
   "recoveryResetConfirmBody": "Dit kan niet ongedaan worden gemaakt. Je bestaande herstelzin werkt daarna niet meer en al je apparaten worden verwijderd.",

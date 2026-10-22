@@ -46,14 +46,14 @@ class AppLocalizationsHi extends AppLocalizations {
   String get logging => 'लॉगिंग';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'क्विक सिंक नोटिफिकेशन';
+  String get quickSyncNotificationSettingTitle => 'ऑटो सिंक नोटिफिकेशन';
 
   @override
   String get autoSyncInterval => 'अपने आप सिंक करने का अंतराल';
 
   @override
   String get autoSyncIntervalDescription =>
-      'त्वरित सिंक सूचना चालू रहने पर अपने आप सिंक करें।';
+      'ऑटो सिंक नोटिफिकेशन चालू रहने पर अपने आप सिंक करें।';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -66,7 +66,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'अंतराल सेव हो गया। इसे लागू करने के लिए त्वरित सिंक सूचना बंद करके फिर चालू करें।';
+      'अंतराल सेव हो गया। इसे लागू करने के लिए ऑटो सिंक नोटिफिकेशन बंद करके फिर चालू करें।';
 
   @override
   String get quickSyncNotificationTitle => 'फ़ाइल सिंक सेवा';
@@ -794,11 +794,19 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'क्लाउड से डेटा मिटने की पुष्टि होने तक आपकी नई वॉल्ट बंद रहेगी। इसमें 24 घंटे या अधिक लग सकते हैं। आप FiFe बंद करके बाद में जारी रख सकते हैं।';
+      'क्लाउड से डेटा मिटने की पुष्टि होने तक आपकी नई वॉल्ट बंद रहेगी। इसमें 15 मिनट या अधिक लग सकते हैं। आप FiFe बंद करके बाद में जारी रख सकते हैं।';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'इस डिवाइस पर आप साइन इन रहेंगे। डेटा हटने की पुष्टि के बाद, 24 शब्दों का नया रिकवरी वाक्यांश बनाएँ और सहेजें।';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'वॉल्ट रीसेट अभी उपलब्ध नहीं है। बाद में फिर कोशिश करें।';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'वॉल्ट रीसेट करने से पहले अपने सत्र की पुष्टि के लिए फिर से साइन इन करें।';
 
   @override
   String get recoveryResetContinue => 'रीसेट के लिए आगे बढ़ें';

@@ -96,7 +96,9 @@ test(
 			Object.assign(process.env, {
 				RECOVERY_RESET_ENABLED: 'true',
 				RECOVERY_WORKER_READY: 'true',
-				RECOVERY_RESET_EMAILS: 'jeevan@jeero.one'
+				RECOVERY_RESET_EMAILS: 'jeevan@jeero.one',
+				// This newly created fixture has no pre-accounting upload history.
+				RECOVERY_UPLOAD_ACCOUNTING_SINCE: '1970-01-01T00:00:00.000Z'
 			});
 		const vite = await createServer({
 			root: process.cwd(),

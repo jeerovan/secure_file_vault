@@ -198,6 +198,9 @@ Future<void> initializePurchases() async {
         await Purchases.setLogLevel(LogLevel.debug);
       }
       PurchasesConfiguration configuration = PurchasesConfiguration(rcKey);
+      if (!simulateTesting()) {
+        configuration.appUserID = await getSignedInUserId();
+      }
       await Purchases.configure(configuration);
       logger.info("Initialized purchases");
     }
@@ -365,7 +368,7 @@ class AppNavigator extends StatelessWidget {
           case SetupStep.decodeAccessKey:
             return PageAccessKeyDecode(recoveryService: recoveryService);
           case SetupStep.showAccessKey:
-            return const PageAccessKey();
+            return const PageAccessKey(requireAcknowledgment: true);
           case SetupStep.registerDevice:
             return PageRegisterDevice();
           case SetupStep.manageDevices:

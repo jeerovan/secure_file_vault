@@ -47,14 +47,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Notification de synchronisation rapide';
+      'Notification de synchronisation automatique';
 
   @override
   String get autoSyncInterval => 'Intervalle de synchronisation automatique';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Synchronise automatiquement lorsque la notification de synchronisation rapide est activée.';
+      'Synchronise automatiquement lorsque la notification de synchronisation automatique est activée.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -73,7 +73,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Intervalle enregistré. Désactivez puis réactivez la notification de synchronisation rapide pour l’appliquer.';
+      'Intervalle enregistré. Désactivez puis réactivez la notification de synchronisation automatique pour l’appliquer.';
 
   @override
   String get quickSyncNotificationTitle =>
@@ -811,11 +811,19 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Votre nouveau coffre restera verrouillé jusqu’à la vérification de la suppression dans le cloud. Cela peut prendre 24 heures ou plus. Vous pouvez fermer FiFe et reprendre plus tard.';
+      'Votre nouveau coffre restera verrouillé jusqu’à la vérification de la suppression dans le cloud. Cela peut prendre 15 minutes ou plus. Vous pouvez fermer FiFe et reprendre plus tard.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Vous resterez connecté sur cet appareil. Une fois la suppression vérifiée, générez et enregistrez une nouvelle phrase de récupération de 24 mots.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'La réinitialisation du coffre est temporairement indisponible. Réessayez plus tard.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Reconnectez-vous pour vérifier votre session avant de réinitialiser le coffre.';
 
   @override
   String get recoveryResetContinue => 'Poursuivre la réinitialisation';

@@ -95,6 +95,7 @@ enum AppString {
   jwtToken,
   sessionCookie,
   recoveryResetStage,
+  vaultKeySetupStage,
   vaultGeneration,
   recoveryResetAvailable,
   recoveryReauthentication,
@@ -154,6 +155,8 @@ extension AppStringExtension on AppString {
         return "session_cookie";
       case AppString.recoveryResetStage:
         return 'recovery_reset_stage';
+      case AppString.vaultKeySetupStage:
+        return 'vault_key_setup_stage';
       case AppString.vaultGeneration:
         return 'vault_generation';
       case AppString.recoveryResetAvailable:

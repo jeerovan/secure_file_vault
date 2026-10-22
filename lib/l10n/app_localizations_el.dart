@@ -47,14 +47,14 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Ειδοποίηση γρήγορου συγχρονισμού';
+      'Ειδοποίηση αυτόματου συγχρονισμού';
 
   @override
   String get autoSyncInterval => 'Διάστημα αυτόματου συγχρονισμού';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Αυτόματος συγχρονισμός όσο είναι ενεργή η ειδοποίηση γρήγορου συγχρονισμού.';
+      'Αυτόματος συγχρονισμός όσο είναι ενεργή η ειδοποίηση αυτόματου συγχρονισμού.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -73,7 +73,7 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Το διάστημα αποθηκεύτηκε. Απενεργοποιήστε και ενεργοποιήστε ξανά την ειδοποίηση γρήγορου συγχρονισμού για να εφαρμοστεί.';
+      'Το διάστημα αποθηκεύτηκε. Απενεργοποιήστε και ενεργοποιήστε ξανά την ειδοποίηση αυτόματου συγχρονισμού για να εφαρμοστεί.';
 
   @override
   String get quickSyncNotificationTitle => 'Υπηρεσία συγχρονισμού αρχείων';
@@ -813,11 +813,19 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Το νέο θησαυροφυλάκιο θα παραμείνει κλειδωμένο μέχρι να επαληθευτεί η διαγραφή στο cloud. Αυτό μπορεί να διαρκέσει 24 ώρες ή περισσότερο. Μπορείτε να κλείσετε το FiFe και να συνεχίσετε αργότερα.';
+      'Το νέο θησαυροφυλάκιο θα παραμείνει κλειδωμένο μέχρι να επαληθευτεί η διαγραφή στο cloud. Αυτό μπορεί να διαρκέσει 15 λεπτά ή περισσότερο. Μπορείτε να κλείσετε το FiFe και να συνεχίσετε αργότερα.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Θα παραμείνετε συνδεδεμένοι σε αυτή τη συσκευή. Αφού επαληθευτεί η διαγραφή, δημιουργήστε και αποθηκεύστε μια νέα φράση ανάκτησης 24 λέξεων.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Η επαναφορά του θησαυροφυλακίου δεν είναι προσωρινά διαθέσιμη. Δοκιμάστε ξανά αργότερα.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Συνδεθείτε ξανά για να επαληθεύσετε τη συνεδρία σας πριν επαναφέρετε το θησαυροφυλάκιο.';
 
   @override
   String get recoveryResetContinue => 'Συνέχεια στην επαναφορά';

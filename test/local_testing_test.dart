@@ -3,10 +3,93 @@ import 'dart:convert';
 import 'package:file_vault_bb/services/service_backend.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
+import 'package:file_vault_bb/utils/enums.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  String? sessionProof;
+  const secure = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+  setUp(() {
+    sessionProof = null;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(
+            secure,
+            (call) async => call.method == 'read' &&
+                    call.arguments['key'] == AppString.sessionCookie.string
+                ? sessionProof
+                : null);
+  });
+  tearDown(() => TestDefaultBinaryMessengerBinding
+      .instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(secure, null));
+
+  test('local authentication proof follows the production bootstrap routes',
+      () async {
+    sessionProof = 'fife-local.session-proof';
+    final api = BackendApi(
+      httpClient: MockClient((request) async {
+        final bootstrap = [
+          '/api/keys',
+          '/api/devices',
+          '/api/recovery-reset/status'
+        ].contains(request.url.path);
+        expect(request.headers['x-fife-session'],
+            bootstrap ? 'fife-local.session-proof' : isNull);
+        return http.Response('{"success":1}', 200);
+      }),
+      baseUrlOverride: 'http://localhost:5173/api',
+      deviceUuidProvider: () async => '',
+      localTestingProvider: () => true,
+      localTestTokenOverride: 'local-token',
+    );
+    addTearDown(api.close);
+    for (final path in [
+      '/keys',
+      '/devices',
+      '/recovery-reset/status',
+      '/storages'
+    ]) {
+      expect((await api.get(endpoint: path))['success'], 1);
+    }
+  });
+
+  test('real Neon session cookies are never sent to an HTTP backend', () async {
+    sessionProof = 'neon-private-cookie';
+    final api = BackendApi(
+      httpClient: MockClient((request) async {
+        expect(request.headers['x-fife-session'], isNull);
+        return http.Response('{"success":1}', 200);
+      }),
+      baseUrlOverride: 'http://localhost:5173/api',
+      deviceUuidProvider: () async => '',
+      localTestingProvider: () => false,
+      signedEmailIdProvider: () async => 'production@example.test',
+      accessTokenProvider: () async => 'neon-jwt',
+    );
+    addTearDown(api.close);
+    expect((await api.get(endpoint: '/keys'))['success'], 1);
+  });
+
+  test('switching to local auth never forwards a leftover Neon cookie',
+      () async {
+    sessionProof = 'real-neon-private-cookie';
+    final api = BackendApi(
+      httpClient: MockClient((request) async {
+        expect(request.headers['x-fife-session'], isNull);
+        return http.Response('{"success":1}', 200);
+      }),
+      baseUrlOverride: 'http://localhost:5173/api',
+      deviceUuidProvider: () async => '',
+      localTestingProvider: () => true,
+      localTestTokenOverride: 'local-token',
+    );
+    addTearDown(api.close);
+    expect((await api.get(endpoint: '/keys'))['success'], 1);
+  });
+
   test('local API address is selected for each emulator platform', () {
     expect(
       AppEnv.resolveApiBaseUrl(

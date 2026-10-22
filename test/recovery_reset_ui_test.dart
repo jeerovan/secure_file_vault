@@ -3,19 +3,24 @@ import 'dart:convert';
 
 import 'package:file_vault_bb/l10n/app_localizations.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/models/model_profile.dart';
+import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:file_vault_bb/services/service_vault_key_setup.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
+import 'package:file_vault_bb/ui/pages/page_access_key_check.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_display.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_notice.dart';
 import 'package:file_vault_bb/ui/pages/page_lost_recovery.dart';
 import 'package:file_vault_bb/ui/pages/page_recovery_reset.dart';
 import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/utils/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 import 'support/recovery_reset_fixture.dart';
 import 'support/sync_fixture.dart';
@@ -84,6 +89,10 @@ void main() {
           )));
     });
     await tester.pump();
+    if (page is PageLostRecovery && peer.beforeStatus == null) {
+      await ioFrames(tester,
+          () => find.byType(CircularProgressIndicator).evaluate().isEmpty);
+    }
     return setup;
   }
 
@@ -104,17 +113,34 @@ void main() {
         )));
   }
 
+  Finder readinessRetry() => find.ancestor(
+      of: find.text('Try Again'),
+      matching: find.byWidgetPredicate((widget) => widget is OutlinedButton));
+
+  testWidgets('lost phrase explains fifteen minutes and verified deletion',
+      (tester) async {
+    await mount(tester, PageLostRecovery(service: peer.service()));
+    expect(find.textContaining('15 minutes or longer'), findsOneWidget);
+    expect(find.textContaining('until cloud deletion is verified'),
+        findsOneWidget);
+    expect(find.textContaining('24 hours'), findsNothing);
+    expect(peer.requests, ['GET /api/recovery-reset/status']);
+  });
+
   testWidgets(
-      'opening and canceling lost phrase preserves entered words and focus without requests',
+      'opening and canceling lost phrase preserves words with only a readiness read',
       (tester) async {
     await mount(tester, PageAccessKeyDecode(recoveryService: peer.service()));
     await tester.enterText(
         find.byType(TextFormField), 'partially entered recovery words');
     await tester.ensureVisible(find.text('Lost recovery phrase'));
     await tester.tap(find.text('Lost recovery phrase'));
+    await tester.pump();
+    await ioFrames(tester,
+        () => find.byType(CircularProgressIndicator).evaluate().isEmpty);
     await tester.pumpAndSettle();
     expect(find.byType(PageLostRecovery), findsOneWidget);
-    expect(peer.requests, isEmpty);
+    expect(peer.requests, ['GET /api/recovery-reset/status']);
     await tester.ensureVisible(find.text('Continue to reset'));
     await tester.tap(find.text('Continue to reset'));
     await tester.tap(find.text('Continue to reset'));
@@ -128,7 +154,7 @@ void main() {
     expect(input.controller!.text, 'partially entered recovery words');
     expect(tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus,
         isTrue);
-    expect(peer.requests, isEmpty);
+    expect(peer.requests, ['GET /api/recovery-reset/status']);
     expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
     expect(tester.takeException(), isNull);
   });
@@ -138,19 +164,228 @@ void main() {
     AppString.simulateTesting,
     AppString.localTesting
   ]) {
-    testWidgets('reset entry respects ${setting.name} gate', (tester) async {
+    testWidgets('reset entry visibility with ${setting.name}', (tester) async {
       await tester.runAsync(() => ModelSetting.set(setting.string,
           setting == AppString.recoveryResetAvailable ? 'no' : 'yes'));
       await mount(tester, PageAccessKeyDecode(recoveryService: peer.service()));
-      expect(
-          find.text('Lost recovery phrase'),
-          setting == AppString.localTesting && !AppEnv.localTestingBuild
-              ? findsOneWidget
-              : findsNothing);
+      expect(find.text('Lost recovery phrase'),
+          setting == AppString.simulateTesting ? findsNothing : findsOneWidget);
       expect(find.byType(TextFormField), findsOneWidget);
       expect(peer.requests, isEmpty);
     });
   }
+
+  testWidgets('reset entry remains visible when availability is unknown',
+      (tester) async {
+    await tester.runAsync(
+        () => ModelSetting.delete(AppString.recoveryResetAvailable.string));
+    await mount(tester, PageAccessKeyDecode(recoveryService: peer.service()));
+    expect(find.text('Lost recovery phrase'), findsOneWidget);
+    expect(peer.requests, isEmpty);
+  });
+
+  testWidgets(
+      'unavailable reset explains the disabled action and preserves words',
+      (tester) async {
+    peer.available = false;
+    await tester.runAsync(
+        () => ModelSetting.set(AppString.recoveryResetAvailable.string, 'no'));
+    await mount(tester, PageAccessKeyDecode(recoveryService: peer.service()));
+    await tester.enterText(
+        find.byType(TextFormField), 'unfinished recovery words');
+    await tester.ensureVisible(find.text('Lost recovery phrase'));
+    await tester.tap(find.text('Lost recovery phrase'));
+    await tester.pump();
+    await ioFrames(tester,
+        () => find.byType(CircularProgressIndicator).evaluate().isEmpty);
+    await tester.pumpAndSettle();
+    expect(
+        find.text('Vault reset is temporarily unavailable. Try again later.'),
+        findsOneWidget);
+    final continueButton =
+        find.widgetWithText(FilledButton, 'Continue to reset');
+    expect(tester.widget<FilledButton>(continueButton).onPressed, isNull);
+    expect(peer.requests, ['GET /api/recovery-reset/status']);
+    expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .widget<TextFormField>(find.byType(TextFormField))
+            .controller!
+            .text,
+        'unfinished recovery words');
+    expect(tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus,
+        isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('readiness retry enables confirmation without preparing a reset',
+      (tester) async {
+    await tester.runAsync(
+        () => ModelSetting.set(AppString.recoveryResetAvailable.string, 'no'));
+    peer.available = false;
+    await mount(tester, PageLostRecovery(service: peer.service()));
+    peer.available = true;
+    final release = Completer<void>();
+    peer.beforeStatus = () => release.future;
+    addTearDown(() {
+      if (!release.isCompleted) release.complete();
+    });
+    final retry = readinessRetry();
+    await tester.ensureVisible(retry);
+    await tester.tap(retry);
+    await tester.tap(retry);
+    await ioFrames(tester, () => peer.statusCalls == 2);
+    expect(tester.widget<OutlinedButton>(retry).onPressed, isNull);
+    release.complete();
+    final continueButton =
+        find.widgetWithText(FilledButton, 'Continue to reset');
+    await ioFrames(tester,
+        () => tester.widget<FilledButton>(continueButton).onPressed != null);
+    expect(ModelSetting.get(AppString.recoveryResetAvailable.string), 'yes');
+    expect(peer.statusCalls, 2);
+    expect(peer.requests, List.filled(2, 'GET /api/recovery-reset/status'));
+    expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+    expect(find.byType(AlertDialog), findsNothing);
+    await tester.ensureVisible(continueButton);
+    await tester.tap(continueButton);
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(peer.prepareCalls, 0);
+    expect(peer.confirmCalls, 0);
+  });
+
+  for (final available in [true, false]) {
+    testWidgets('entry replaces stale availability with live value $available',
+        (tester) async {
+      await tester.runAsync(() => ModelSetting.set(
+          AppString.recoveryResetAvailable.string, available ? 'no' : 'yes'));
+      peer.available = available;
+      await mount(tester, PageLostRecovery(service: peer.service()));
+      final action = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'Continue to reset'));
+      expect(action.onPressed != null, available);
+      expect(ModelSetting.get(AppString.recoveryResetAvailable.string),
+          available ? 'yes' : 'no');
+      expect(peer.requests, ['GET /api/recovery-reset/status']);
+      expect(peer.prepareCalls, 0);
+      expect(peer.confirmCalls, 0);
+      expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+    });
+  }
+
+  for (final offline in [false, true]) {
+    testWidgets('readiness retry keeps reset disabled when offline=$offline',
+        (tester) async {
+      await tester.runAsync(() =>
+          ModelSetting.set(AppString.recoveryResetAvailable.string, 'no'));
+      peer.available = false;
+      peer.offline = offline;
+      await mount(tester, PageLostRecovery(service: peer.service()));
+      final retry = readinessRetry();
+      await tester.ensureVisible(retry);
+      await tester.tap(retry);
+      await tester.pump();
+      await ioFrames(
+          tester, () => tester.widget<OutlinedButton>(retry).onPressed != null);
+      final continueButton =
+          find.widgetWithText(FilledButton, 'Continue to reset');
+      expect(tester.widget<FilledButton>(continueButton).onPressed, isNull);
+      expect(
+          find.text('Vault reset is temporarily unavailable. Try again later.'),
+          findsOneWidget);
+      expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+      expect(peer.prepareCalls, 0);
+      expect(peer.confirmCalls, 0);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final error in ['sign_in_again', '14', '18']) {
+    testWidgets(
+        'entry checks authentication error $error and offers sign-in, not an outage',
+        (tester) async {
+      await tester.runAsync(() =>
+          ModelSetting.set(AppString.recoveryResetAvailable.string, 'no'));
+      peer.statusError = error;
+      final setup =
+          await mount(tester, PageLostRecovery(service: peer.service()));
+      expect(peer.statusCalls, greaterThan(0));
+      expect(
+          find.text(
+              'Sign in again to verify your session before resetting the vault.'),
+          findsOneWidget);
+      expect(
+          find.text('Vault reset is temporarily unavailable. Try again later.'),
+          findsNothing);
+      final signin = find.widgetWithText(FilledButton, 'Return to sign-in');
+      expect(tester.widget<FilledButton>(signin).onPressed, isNotNull);
+      expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
+      expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+      expect(peer.prepareCalls, 0);
+      expect(peer.confirmCalls, 0);
+      await tester.ensureVisible(signin);
+      await tester.tap(signin);
+      await ioFrames(tester, () => setup.currentStep == SetupStep.signin);
+      expect(fixture.secrets[AppString.sessionCookie.string], isNull);
+      expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+      expect(
+          peer.requests.every((request) => request.startsWith('GET ')), isTrue);
+      expect(peer.prepareCalls, 0);
+      expect(peer.confirmCalls, 0);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+      'missing session at confirmation offers sign-in without staging a reset',
+      (tester) async {
+    fixture.secrets.remove(AppString.sessionCookie.string);
+    await mount(tester, PageLostRecovery(service: peer.service()));
+    await tester.ensureVisible(find.text('Continue to reset'));
+    await tester.tap(find.text('Continue to reset'));
+    await tester.pumpAndSettle();
+    await tester
+        .tap(find.widgetWithText(FilledButton, 'Delete vault and start fresh'));
+    await ioFrames(
+        tester, () => find.text('Return to sign-in').evaluate().isNotEmpty);
+    expect(
+        find.text(
+            'Sign in again to verify your session before resetting the vault.'),
+        findsOneWidget);
+    expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+    expect(peer.requests, ['GET /api/recovery-reset/status']);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('leaving during readiness check ignores its delayed UI result',
+      (tester) async {
+    await tester.runAsync(
+        () => ModelSetting.set(AppString.recoveryResetAvailable.string, 'no'));
+    final release = Completer<void>();
+    peer.beforeStatus = () => release.future;
+    addTearDown(() {
+      if (!release.isCompleted) release.complete();
+    });
+    await mount(tester, PageAccessKeyDecode(recoveryService: peer.service()));
+    await tester.ensureVisible(find.text('Lost recovery phrase'));
+    await tester.tap(find.text('Lost recovery phrase'));
+    await tester.pump();
+    await ioFrames(tester, () => peer.statusCalls == 1);
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    release.complete();
+    await ioFrames(
+        tester,
+        () =>
+            ModelSetting.get(AppString.recoveryResetAvailable.string) == 'yes');
+    expect(find.byType(PageAccessKeyDecode), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+  });
 
   testWidgets('confirmed reset handles double taps as one operation',
       (tester) async {
@@ -179,8 +414,184 @@ void main() {
   });
 
   testWidgets(
+      'fresh generation publishes once and resumes the saved phrase after restart',
+      (tester) async {
+    Map<String, dynamic>? envelope;
+    var posts = 0;
+    final service = VaultKeySetupService.test(
+        apiFactory: () => BackendApi(
+            baseUrlOverride: 'https://api.example.test/api',
+            refreshAuth: () async {},
+            httpClient: MockClient((request) async {
+              if (request.method == 'POST') {
+                posts++;
+                envelope = jsonDecode(request.body);
+                return http.Response('{"success":1}', 200);
+              }
+              return http.Response(
+                  jsonEncode({
+                    'success': 1,
+                    'data': {...?envelope, 'vault_generation': 'legacy'}
+                  }),
+                  200);
+            })));
+    final setup = await mount(tester, PageAccessKeyNotice(service: service));
+    final generate = find.byType(FilledButton);
+    await ioFrames(
+        tester, () => tester.widget<FilledButton>(generate).onPressed != null);
+    expect(fixture.secrets[AppString.vaultKeySetupStage.string], isNull);
+    expect(fixture.secrets[AppString.masterKey.string], isNull);
+    await tester.tap(generate);
+    await ioFrames(tester, () => setup.currentStep == SetupStep.showAccessKey);
+    expect(posts, 1);
+    final candidate =
+        jsonDecode(fixture.secrets[AppString.vaultKeySetupStage.string]!);
+    expect(candidate['phase'], 'phrase');
+    await tester.runAsync(() => setup.recheckStatus());
+    expect(setup.currentStep, SetupStep.generateAccessKey);
+    await tester.pumpWidget(const SizedBox.shrink());
+    final restarted =
+        await mount(tester, PageAccessKeyNotice(service: service));
+    await ioFrames(
+        tester, () => restarted.currentStep == SetupStep.showAccessKey);
+    expect(posts, 1);
+    expect(
+        jsonDecode(fixture.secrets[AppString.vaultKeySetupStage.string]!)[
+            'privateKeys'],
+        candidate['privateKeys']);
+    expect(tester.takeException(), isNull);
+  });
+
+  for (final switchedAccount in [true, false]) {
+    testWidgets(
+        'interrupted key setup returns to sign-in after ${switchedAccount ? 'an account switch' : 'a newer vault reset'}',
+        (tester) async {
+      var offline = true;
+      final service = VaultKeySetupService.test(
+          apiFactory: () => BackendApi(
+              baseUrlOverride: 'https://api.example.test/api',
+              refreshAuth: () async {},
+              httpClient: MockClient((request) async {
+                if (offline) return http.Response('', 503);
+                expect(request.method, 'GET');
+                return http.Response(
+                    jsonEncode({
+                      'success': 1,
+                      'data': {
+                        'cipher': null,
+                        'nonce': null,
+                        'key_state': 'missing',
+                        'vault_generation': RecoveryResetPeer.generation
+                      }
+                    }),
+                    200);
+              })));
+      await tester.runAsync(() async {
+        expect(
+            (await service.generate()).phase, VaultKeySetupPhase.unavailable);
+        expect(fixture.secrets[AppString.vaultKeySetupStage.string], isNotNull);
+        offline = false;
+        if (switchedAccount) {
+          await (await fixture.db).delete('profiles');
+          await (await ModelProfile.fromMap(
+                  {'id': 'other-account', 'email': 'other@example.test'}))
+              .insert();
+        }
+      });
+      final candidate = fixture.secrets[AppString.vaultKeySetupStage.string];
+      final setup = await mount(tester, PageAccessKeyNotice(service: service));
+      await ioFrames(tester, () => setup.currentStep == SetupStep.signin);
+      await tester.runAsync(() async {
+        expect(
+            await ModelSetting.getRaw(AppString.signedIn.string), isNot('yes'));
+        expect(fixture.secrets[AppString.masterKey.string], isNull);
+        expect(fixture.secrets[AppString.vaultKeySetupStage.string],
+            switchedAccount ? candidate : isNull);
+      });
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  for (final state in ['missing', 'present', 'pending', 'malformed']) {
+    testWidgets('key lookup routes the shared $state vault correctly',
+        (tester) async {
+      fixture.secrets[AppString.keyCipher.string] = 'stale-envelope';
+      fixture.secrets[AppString.keyNonce.string] = 'stale-nonce';
+      final api = BackendApi(
+          baseUrlOverride: 'https://api.example.test/api',
+          refreshAuth: () async {},
+          httpClient: MockClient((request) async => http.Response(
+              jsonEncode(state == 'pending'
+                  ? {
+                      'success': 0,
+                      'message': 17,
+                      'reason': 'vault_reset_pending'
+                    }
+                  : {
+                      'success': 1,
+                      'data': {
+                        'vault_generation': RecoveryResetPeer.generation,
+                        'key_state': state,
+                        'cipher': state == 'present' ? 'winner-cipher' : null,
+                        'nonce': state == 'present'
+                            ? 'winner-nonce'
+                            : state == 'malformed'
+                                ? 7
+                                : null
+                      }
+                    }),
+              200)));
+      final setup = await mount(tester, PageAccessKeyCheck(api: api));
+      if (state == 'malformed') {
+        await ioFrames(
+            tester,
+            () => find
+                .widgetWithText(FilledButton, 'Try Again')
+                .evaluate()
+                .isNotEmpty);
+      } else {
+        final expected = state == 'missing'
+            ? SetupStep.generateAccessKey
+            : state == 'present'
+                ? SetupStep.decodeAccessKey
+                : SetupStep.recoveryReset;
+        await ioFrames(tester, () => setup.currentStep == expected);
+        expect(
+            fixture.secrets[AppString.keyCipher.string],
+            state == 'missing'
+                ? isNull
+                : state == 'present'
+                    ? 'winner-cipher'
+                    : 'stale-envelope');
+      }
+      expect(fixture.secrets[AppString.masterKey.string], isNull);
+      expect(peer.confirmCalls, 0);
+      expect(tester.takeException(), isNull);
+      api.close();
+    });
+  }
+
+  testWidgets(
+      'verified shared deletion releases reset context into common setup',
+      (tester) async {
+    await tester.runAsync(() => peer.service().confirm());
+    peer.phase = 'ready';
+    final setup =
+        await mount(tester, PageRecoveryReset(service: peer.service()));
+    await ioFrames(tester, () => setup.currentStep == SetupStep.checkAccessKey);
+    expect(fixture.secrets[AppString.recoveryResetStage.string], isNull);
+    expect(fixture.secrets[AppString.masterKey.string], isNull);
+    expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
+    expect(peer.confirmCalls, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
       'verified deletion shows generation before revealing the fresh phrase',
       (tester) async {
+    peer.deferredKeySetup =
+        false; // Released reset with an existing staged envelope.
+
     await tester.runAsync(() => peer.service().confirm());
     final saved = fixture.secrets[AppString.recoveryResetStage.string];
     final setup =
@@ -235,6 +646,9 @@ void main() {
   for (final locale in [const Locale('en'), const Locale('ar')]) {
     testWidgets('generation stays reachable at large text in $locale',
         (tester) async {
+      peer.deferredKeySetup =
+          false; // Released reset with an existing staged envelope.
+
       tester.view.physicalSize = const Size(360, 640);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -260,6 +674,9 @@ void main() {
   testWidgets(
       'generation waits for resume verification before enabling its action',
       (tester) async {
+    peer.deferredKeySetup =
+        false; // Released reset with an existing staged envelope.
+
     await tester.runAsync(() => peer.service().confirm());
     peer.phase = 'ready';
     await mount(tester, PageRecoveryReset(service: peer.service()));
@@ -399,7 +816,7 @@ void main() {
         expect(tester.takeException(), isNull);
         await tester.tap(find.text(loc.cancel));
         await tester.pumpAndSettle();
-        expect(peer.requests, isEmpty);
+        expect(peer.requests, ['GET /api/recovery-reset/status']);
         await tester.pumpWidget(const SizedBox.shrink());
         fixture.secrets[AppString.accessKey.string] =
             base64Encode(List<int>.generate(32, (i) => i));

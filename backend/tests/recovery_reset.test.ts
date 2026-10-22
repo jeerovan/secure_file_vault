@@ -62,7 +62,7 @@ test(
 				return { cursor: {}, done: true };
 			}
 		};
-		async function seed(adapter = cloud) {
+		async function seed(adapter = cloud, uploadAccountingSince?: number) {
 			await db.delete(tables.user);
 			await db.delete(tables.provider);
 			now = Date.parse('2026-10-19T12:00:00Z');
@@ -207,7 +207,8 @@ test(
 				account[U.ID],
 				session,
 				adapter,
-				() => now
+				() => now,
+				uploadAccountingSince
 			);
 			const operationId = crypto.randomUUID();
 			const preparation = {
@@ -234,6 +235,18 @@ test(
 			return (await db.select().from(tables.user).where(eq(tables.user[U.ID], id)))[0];
 		}
 		try {
+			await t.test(
+				'reset leaves no replacement key envelope before explicit key creation',
+				async () => {
+					const f = await seed(cloud, 0);
+					await f.controller.prepare(f.preparation);
+					const result = await f.controller.confirm(f.confirmation);
+					assert.equal(result.phase, 'cleanup_pending');
+					const account = await currentUser(f.account[U.ID]);
+					assert.equal(account[U.CIPHER], null);
+					assert.equal(account[U.NONCE], null);
+				}
+			);
 			await t.test(
 				'reset retains in-flight uploads and cannot finish until their cleanup is verified',
 				async () => {
@@ -340,7 +353,7 @@ test(
 					const [record] = await db.select().from(tables.vaultUploadCapability);
 					assert.equal(record.generation, 'legacy', 'Use the freshly authorized generation');
 					assert.equal(record.expiresAt, now + 48 * 3600_000);
-					assert.equal(committed.notBefore, record.expiresAt + 60_000);
+					assert.equal(committed.notBefore, record.expiresAt);
 				}
 			);
 			await t.test(
@@ -439,12 +452,107 @@ test(
 					]);
 					await f.controller.prepare(f.preparation);
 					const committed = await f.controller.confirm(f.confirmation);
-					assert.equal(committed.notBefore, expiresAt + 60_000);
+					assert.equal(committed.notBefore, expiresAt);
 					now += 1_000;
 					assert.equal((await f.controller.confirm(f.confirmation)).notBefore, committed.notBefore);
 					assert.equal((await f.controller.status(f.operationId)).notBefore, committed.notBefore);
 				}
 			);
+			await t.test('accounted FiFe and S3 vaults use a fifteen-minute reset window', async () => {
+				for (const seconds of [null, -1, 900]) {
+					const f = await seed(cloud, 0);
+					if (seconds !== null)
+						await db.insert(tables.vaultUploadCapability).values({
+							userId: f.account[U.ID],
+							generation: 'legacy',
+							expiresAt: now + seconds * 1000
+						});
+					await f.controller.prepare(f.preparation);
+					const result = await f.controller.confirm(f.confirmation);
+					assert.equal(result.notBefore, now + 15 * 60_000);
+					assert.equal(result.phase, 'cleanup_pending');
+				}
+			});
+			await t.test('accounted S3-only vaults do not restart the old one-hour wait', async () => {
+				const f = await seed(cloud, 0);
+				await db.delete(tables.storage).where(eq(tables.storage[S.ID], f.allocations[0][S.ID]));
+				await f.controller.prepare(f.preparation);
+				assert.equal((await f.controller.confirm(f.confirmation)).notBefore, now + 15 * 60_000);
+			});
+			await t.test(
+				'a recent accounting cutover drains once instead of restarting at reset',
+				async () => {
+					const cutover = now - 60 * 60_000;
+					const f = await seed(cloud, cutover);
+					await f.controller.prepare(f.preparation);
+					assert.equal(
+						(await f.controller.confirm(f.confirmation)).notBefore,
+						cutover + 24 * 60 * 60_000 + 60_000
+					);
+				}
+			);
+			await t.test(
+				'an accounted native grant still extends the fifteen-minute window',
+				async () => {
+					const f = await seed(cloud, 0);
+					const expiresAt = now + 24 * 60 * 60_000;
+					await db.insert(tables.vaultUploadCapability).values({
+						userId: f.account[U.ID],
+						generation: 'legacy',
+						expiresAt
+					});
+					await f.controller.prepare(f.preparation);
+					const committed = await f.controller.confirm(f.confirmation);
+					assert.equal(committed.notBefore, expiresAt);
+					await db.delete(tables.vaultUploadCapability);
+					now += 1_000;
+					assert.equal((await f.controller.confirm(f.confirmation)).notBefore, committed.notBefore);
+				}
+			);
+			await t.test(
+				'changing rollout policy cannot shorten an already committed reset',
+				async () => {
+					const f = await seed();
+					await f.controller.prepare(f.preparation);
+					const committed = await f.controller.confirm(f.confirmation);
+					assert.equal(committed.notBefore, now + 86400_000 + 60_000);
+					const updated = new core.RecoveryResetService(
+						db,
+						f.account[U.ID],
+						f.session,
+						cloud,
+						() => now,
+						0
+					);
+					assert.equal((await updated.confirm(f.confirmation)).notBefore, committed.notBefore);
+					assert.equal((await updated.status(f.operationId)).notBefore, committed.notBefore);
+				}
+			);
+			await t.test('fifteen minutes never bypasses failed cloud verification', async () => {
+				let failing = true;
+				const adapter: RecoveryStorage = {
+					async probe() {},
+					async step() {
+						if (failing) throw new RecoveryFault('storage_cleanup_blocked');
+						return { cursor: {}, done: true };
+					}
+				};
+				const f = await seed(adapter, 0);
+				await f.controller.prepare(f.preparation);
+				const committed = await f.controller.confirm(f.confirmation);
+				assert.equal(committed.notBefore, now + 15 * 60_000);
+				now += 15 * 60_000 - 1;
+				await cleanup.drainRecoveryCleanup(db, adapter, { now: () => now, limit: 4 });
+				assert.equal((await f.controller.status(f.operationId)).phase, 'cleanup_pending');
+				now += 1;
+				await cleanup.drainRecoveryCleanup(db, adapter, { now: () => now, limit: 4 });
+				assert.equal((await f.controller.status(f.operationId)).phase, 'cleanup_pending');
+				assert.equal((await db.select().from(tables.vaultState))[0].ready, 0);
+				failing = false;
+				now += 2 * 60_000;
+				await cleanup.drainRecoveryCleanup(db, adapter, { now: () => now, limit: 4 });
+				assert.equal((await f.controller.status(f.operationId)).phase, 'ready');
+			});
 			await t.test(
 				'missing or shorter accounting never shortens the conservative rollout floor',
 				async () => {
@@ -583,7 +691,7 @@ test(
 					const result = await f.controller.confirm(f.confirmation);
 					assert.equal(result.phase, 'cleanup_pending');
 					assert.ok(result.notBefore >= now + 24 * 60 * 60_000);
-					assert.equal((await currentUser(f.account[U.ID]))[U.CIPHER], newCipher);
+					assert.equal((await currentUser(f.account[U.ID]))[U.CIPHER], null);
 					assert.equal((await currentUser(f.other[U.ID]))[U.CIPHER], oldCipher);
 					assert.equal((await db.select().from(tables.userDevice)).length, 1);
 					for (const table of [tables.file, tables.part, tables.item])
@@ -983,9 +1091,11 @@ test(
 						);
 						const keys = await call('keys', {
 							'x-fife-vault-protocol': '1',
+							'x-fife-recovery-protocol': '2',
 							'x-fife-session': 'fixture-session'
 						});
-						assert.equal(keys.data.cipher, newCipher);
+						assert.equal(keys.data.cipher, null);
+						assert.equal(keys.data.key_state, 'missing');
 						assert.equal(keys.data.vault_generation, committed.generation);
 					} finally {
 						globalThis.fetch = originalFetch;
@@ -1113,7 +1223,11 @@ test(
 							'sign_in_again'
 						);
 						assert.equal(calls, 0);
-						const proof = { 'x-fife-vault-protocol': '1', 'x-fife-session': 'fixture-session' };
+						const proof = {
+							'x-fife-vault-protocol': '1',
+							'x-fife-recovery-protocol': '2',
+							'x-fife-session': 'fixture-session'
+						};
 						const statusRequest = new Request(
 							`https://api.example.test/api/recovery-reset/status?operation_id=${f.operationId}`,
 							{ headers: { authorization: 'Bearer fixture-token', service: 'neon', ...proof } }

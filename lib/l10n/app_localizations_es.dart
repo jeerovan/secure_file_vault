@@ -47,14 +47,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Notificación de sincronización rápida';
+      'Notificación de sincronización automática';
 
   @override
   String get autoSyncInterval => 'Intervalo de sincronización automática';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Sincroniza automáticamente mientras esté activada la notificación de sincronización rápida.';
+      'Sincroniza automáticamente mientras esté activada la notificación de sincronización automática.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -73,7 +73,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Intervalo guardado. Desactiva y vuelve a activar la notificación de sincronización rápida para aplicarlo.';
+      'Intervalo guardado. Desactiva y vuelve a activar la notificación de sincronización automática para aplicarlo.';
 
   @override
   String get quickSyncNotificationTitle =>
@@ -816,11 +816,19 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Tu nueva bóveda permanecerá bloqueada hasta verificar la eliminación en la nube. Esto puede tardar 24 horas o más. Puedes cerrar FiFe y continuar más tarde.';
+      'Tu nueva bóveda permanecerá bloqueada hasta verificar la eliminación en la nube. Esto puede tardar 15 minutos o más. Puedes cerrar FiFe y continuar más tarde.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Seguirás conectado en este dispositivo. Cuando se verifique la eliminación, genera y guarda una nueva frase de recuperación de 24 palabras.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'El restablecimiento de la bóveda no está disponible temporalmente. Inténtalo más tarde.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Vuelve a iniciar sesión para verificar tu sesión antes de restablecer la bóveda.';
 
   @override
   String get recoveryResetContinue => 'Continuar con el restablecimiento';

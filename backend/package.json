@@ -7,6 +7,7 @@
 		"dev": "vite dev",
 		"dev:local": "vite dev --host 0.0.0.0",
 		"dev:providers": "node --env-file=.env --import tsx scripts/dev_provider_server.ts",
+		"cleanup:local": "node --import tsx scripts/local_cleanup_worker.ts",
 		"build": "vite build",
 		"preview:dev": "vite preview",
 		"preview:prod": "npm run build && wrangler pages dev .svelte-kit/cloudflare",

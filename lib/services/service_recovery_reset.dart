@@ -22,6 +22,7 @@ enum RecoveryResetPhase {
   generation,
   phrase,
   registration,
+  bootstrap,
   signIn,
   missingKeys,
   unavailable
@@ -47,6 +48,11 @@ class _RecoveryFailure implements Exception {
   final String code;
 }
 
+/// The server requires renewed authentication; no cleanup has been requested.
+class RecoveryReauthenticationRequired implements Exception {
+  const RecoveryReauthenticationRequired();
+}
+
 /// Owns reset progress independently of widget and process lifetimes. Private
 /// keys and the challenge stay together in one authenticated secure-store value.
 class RecoveryResetService {
@@ -55,6 +61,7 @@ class RecoveryResetService {
   final BackendApi Function() _apiFactory;
   final SecureStorage _storage = SecureStorage();
   Future<RecoveryResetView>? _running;
+  static const _signInErrors = {'sign_in_again', '14', '18'};
 
   @visibleForTesting
   RecoveryResetService.test({required BackendApi Function() apiFactory})
@@ -150,6 +157,27 @@ class RecoveryResetService {
             if (operationId != null) 'operation_id': operationId
           }));
 
+  /// Read readiness without creating an intent, keys or a reset operation.
+  Future<bool> checkAvailability() => SessionWork.run(() async {
+        if (simulateTesting()) return false;
+        final revision = SessionWork.revision;
+        try {
+          final status = await _status(null);
+          final available =
+              status['available'] == true && status['key_setup_protocol'] == 2;
+          await _check(revision);
+          await ModelSetting.set(AppString.recoveryResetAvailable.string,
+              available ? 'yes' : 'no');
+          return available;
+        } on _RecoveryFailure catch (error) {
+          await _check(revision);
+          if (_signInErrors.contains(error.code)) {
+            throw const RecoveryReauthenticationRequired();
+          }
+          rethrow;
+        }
+      });
+
   Future<RecoveryResetView> _singleFlight(
       Future<RecoveryResetView> Function() action) async {
     if (_running case final running?) return running;
@@ -159,8 +187,7 @@ class RecoveryResetService {
         await SessionCleanup.instance.request();
         return const RecoveryResetView(RecoveryResetPhase.signIn);
       }
-      if (error is _RecoveryFailure &&
-          ['sign_in_again', '14', '18'].contains(error.code)) {
+      if (error is _RecoveryFailure && _signInErrors.contains(error.code)) {
         return const RecoveryResetView(RecoveryResetPhase.signIn);
       }
       if (error is _RecoveryFailure &&
@@ -181,7 +208,7 @@ class RecoveryResetService {
   /// Called only after explicit destructive confirmation. Retries use the same
   /// envelope/challenge until the server definitively expires an uncommitted job.
   Future<RecoveryResetView> confirm() => _singleFlight(() async {
-        if (simulateTesting() || localTesting()) {
+        if (simulateTesting()) {
           throw const _RecoveryFailure('recovery_unavailable');
         }
         await SessionWork.checkpoint();
@@ -332,6 +359,26 @@ class RecoveryResetService {
                   null) {
             return const RecoveryResetView(RecoveryResetPhase.signIn);
           }
+          final status = await _status(null);
+          await _check(revision);
+          if (status['key_setup_protocol'] == 2) {
+            await ModelSetting.set(AppString.vaultGeneration.string,
+                status['generation'] as String);
+            if (status['vault_ready'] == true &&
+                status['pendingConfirmation'] == false) {
+              return const RecoveryResetView(RecoveryResetPhase.bootstrap);
+            }
+            final operation = status['operation'];
+            if (status['vault_ready'] == false &&
+                operation is Map &&
+                operation['phase'] == 'cleanup_pending') {
+              return RecoveryResetView(RecoveryResetPhase.waiting,
+                  email: await getSignedInEmailId(),
+                  notBefore: operation['notBefore'],
+                  error: operation['error']);
+            }
+            return const RecoveryResetView(RecoveryResetPhase.unavailable);
+          }
           return _missingKeys('staging_lost');
         }
         if (!await _sameAccount(stage)) {
@@ -420,6 +467,17 @@ class RecoveryResetService {
         return RecoveryResetView(RecoveryResetPhase.waiting,
             error: operation['error'],
             notBefore: operation['notBefore'],
+            email: stage['email']);
+      }
+      if (operation['keySetupProtocol'] == 2 &&
+          !['activating', 'phrase', 'acknowledged'].contains(stage['phase'])) {
+        // Cleanup is account-wide. Its unused confirmation candidate does not
+        // own the replacement vault; release reset-only context and use the
+        // same first-key setup as a newly signed-in device.
+        await _check(revision);
+        await _storage.delete(key: AppString.recoveryResetStage.string);
+        await ModelSetting.delete(AppString.pendingDeviceUuid.string);
+        return RecoveryResetView(RecoveryResetPhase.bootstrap,
             email: stage['email']);
       }
       await _validateKeys(stage);

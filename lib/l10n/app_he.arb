@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "התראת סנכרון מהיר",
+  "quickSyncNotificationSettingTitle": "התראת סנכרון אוטומטי",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "מרווח סנכרון אוטומטי",
-  "autoSyncIntervalDescription": "סנכרון אוטומטי כל עוד התראת הסנכרון המהיר מופעלת.",
+  "autoSyncIntervalDescription": "סנכרון אוטומטי כל עוד התראת הסנכרון האוטומטי מופעלת.",
   "syncIntervalMinutes": "{minutes, plural, =1{דקה אחת} =2{שתי דקות} other{{minutes} דקות}}",
   "autoSyncIntervalSaveError": "לא ניתן לשמור את המרווח. נסו שוב.",
-  "autoSyncIntervalApplyError": "המרווח נשמר. כבו והפעילו מחדש את התראת הסנכרון המהיר כדי להחיל אותו.",
+  "autoSyncIntervalApplyError": "המרווח נשמר. כבו והפעילו מחדש את התראת הסנכרון האוטומטי כדי להחיל אותו.",
   "quickSyncNotificationTitle": "שירות סנכרון קבצים",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "כל רישומי המכשירים הקיימים יוסרו.",
   "lostRecoveryLogoutConsequence": "המכשירים האחרים יתנתקו וימחקו את נתוני FiFe המקומיים כאשר יגלו שהוסרו בזמן שהם מחוברים לאינטרנט.",
   "lostRecoveryKeepConsequence": "חשבון הדוא״ל, המינוי, חיבורי האחסון בענן ופרטי הגישה לספקים יישמרו. גם קבצים בתיקיות האישיות שלך מחוץ ל-FiFe יישמרו.",
-  "lostRecoveryWaitConsequence": "הכספת החדשה תישאר נעולה עד לאימות המחיקה בענן. התהליך עשוי להימשך 24 שעות או יותר. אפשר לסגור את FiFe ולהמשיך מאוחר יותר.",
+  "lostRecoveryWaitConsequence": "הכספת החדשה תישאר נעולה עד לאימות המחיקה בענן. התהליך עשוי להימשך 15 דקות או יותר. אפשר לסגור את FiFe ולהמשיך מאוחר יותר.",
   "lostRecoveryNewPhraseConsequence": "החשבון יישאר מחובר במכשיר הזה. לאחר אימות המחיקה, יש ליצור ולשמור ביטוי שחזור חדש בן 24 מילים.",
+  "recoveryResetUnavailable": "איפוס הכספת אינו זמין כרגע. נסו שוב מאוחר יותר.",
+  "recoveryResetSigninRequired": "יש להתחבר שוב כדי לאמת את ההפעלה לפני איפוס הכספת.",
   "recoveryResetContinue": "המשך לאיפוס",
   "recoveryResetConfirmTitle": "למחוק לצמיתות את כספת FiFe?",
   "recoveryResetConfirmBody": "לא ניתן לבטל פעולה זו. ביטוי השחזור הקיים יפסיק לפעול וכל המכשירים שלך יוסרו.",

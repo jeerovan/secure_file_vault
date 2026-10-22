@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Notification de synchronisation rapide",
+  "quickSyncNotificationSettingTitle": "Notification de synchronisation automatique",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Intervalle de synchronisation automatique",
-  "autoSyncIntervalDescription": "Synchronise automatiquement lorsque la notification de synchronisation rapide est activée.",
+  "autoSyncIntervalDescription": "Synchronise automatiquement lorsque la notification de synchronisation automatique est activée.",
   "syncIntervalMinutes": "{minutes, plural, =1{1 minute} other{{minutes} minutes}}",
   "autoSyncIntervalSaveError": "Impossible d’enregistrer l’intervalle. Réessayez.",
-  "autoSyncIntervalApplyError": "Intervalle enregistré. Désactivez puis réactivez la notification de synchronisation rapide pour l’appliquer.",
+  "autoSyncIntervalApplyError": "Intervalle enregistré. Désactivez puis réactivez la notification de synchronisation automatique pour l’appliquer.",
   "quickSyncNotificationTitle": "Service de synchronisation des fichiers",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Tous les enregistrements d’appareils existants seront supprimés.",
   "lostRecoveryLogoutConsequence": "Les autres appareils se déconnecteront et effaceront leurs données FiFe locales lorsqu’ils détecteront leur suppression en ligne.",
   "lostRecoveryKeepConsequence": "Votre compte e-mail, votre abonnement, vos connexions au stockage cloud et les identifiants des fournisseurs seront conservés. Les fichiers de vos propres dossiers en dehors de FiFe seront également conservés.",
-  "lostRecoveryWaitConsequence": "Votre nouveau coffre restera verrouillé jusqu’à la vérification de la suppression dans le cloud. Cela peut prendre 24 heures ou plus. Vous pouvez fermer FiFe et reprendre plus tard.",
+  "lostRecoveryWaitConsequence": "Votre nouveau coffre restera verrouillé jusqu’à la vérification de la suppression dans le cloud. Cela peut prendre 15 minutes ou plus. Vous pouvez fermer FiFe et reprendre plus tard.",
   "lostRecoveryNewPhraseConsequence": "Vous resterez connecté sur cet appareil. Une fois la suppression vérifiée, générez et enregistrez une nouvelle phrase de récupération de 24 mots.",
+  "recoveryResetUnavailable": "La réinitialisation du coffre est temporairement indisponible. Réessayez plus tard.",
+  "recoveryResetSigninRequired": "Reconnectez-vous pour vérifier votre session avant de réinitialiser le coffre.",
   "recoveryResetContinue": "Poursuivre la réinitialisation",
   "recoveryResetConfirmTitle": "Supprimer définitivement votre coffre FiFe ?",
   "recoveryResetConfirmBody": "Cette action est irréversible. Votre phrase de récupération actuelle cessera de fonctionner et tous vos appareils seront supprimés.",

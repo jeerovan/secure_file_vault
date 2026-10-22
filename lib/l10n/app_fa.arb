@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "اعلان همگام‌سازی سریع",
+  "quickSyncNotificationSettingTitle": "اعلان همگام‌سازی خودکار",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "فاصلهٔ همگام‌سازی خودکار",
-  "autoSyncIntervalDescription": "تا زمانی که اعلان همگام‌سازی سریع فعال است، همگام‌سازی به‌صورت خودکار انجام می‌شود.",
+  "autoSyncIntervalDescription": "تا زمانی که اعلان همگام‌سازی خودکار فعال است، همگام‌سازی به‌صورت خودکار انجام می‌شود.",
   "syncIntervalMinutes": "{minutes} دقیقه",
   "autoSyncIntervalSaveError": "ذخیرهٔ فاصلهٔ زمانی ممکن نشد. دوباره تلاش کنید.",
-  "autoSyncIntervalApplyError": "فاصلهٔ زمانی ذخیره شد. برای اعمال آن، اعلان همگام‌سازی سریع را خاموش و دوباره روشن کنید.",
+  "autoSyncIntervalApplyError": "فاصلهٔ زمانی ذخیره شد. برای اعمال آن، اعلان همگام‌سازی خودکار را خاموش و دوباره روشن کنید.",
   "quickSyncNotificationTitle": "سرویس همگام‌سازی فایل‌ها",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "ثبت همهٔ دستگاه‌های فعلی حذف خواهد شد.",
   "lostRecoveryLogoutConsequence": "دستگاه‌های دیگر وقتی آنلاین شوند و حذف شدن خود را تشخیص دهند، از حساب خارج شده و داده‌های محلی FiFe را پاک می‌کنند.",
   "lostRecoveryKeepConsequence": "حساب ایمیل، اشتراک، اتصال‌های فضای ذخیره‌سازی ابری و اطلاعات ورود ارائه‌دهندگان حفظ می‌شوند. فایل‌های پوشه‌های شخصی شما خارج از FiFe نیز حفظ خواهند شد.",
-  "lostRecoveryWaitConsequence": "خزانهٔ جدید تا تأیید حذف ابری قفل می‌ماند. این کار ممکن است ۲۴ ساعت یا بیشتر طول بکشد. می‌توانید FiFe را ببندید و بعداً ادامه دهید.",
+  "lostRecoveryWaitConsequence": "خزانهٔ جدید تا تأیید حذف ابری قفل می‌ماند. این کار ممکن است ۱۵ دقیقه یا بیشتر طول بکشد. می‌توانید FiFe را ببندید و بعداً ادامه دهید.",
   "lostRecoveryNewPhraseConsequence": "در این دستگاه وارد حساب می‌مانید. پس از تأیید حذف، یک عبارت بازیابی جدید 24 کلمه‌ای ایجاد و ذخیره کنید.",
+  "recoveryResetUnavailable": "بازنشانی گاوصندوق موقتاً در دسترس نیست. لطفاً بعداً دوباره تلاش کنید.",
+  "recoveryResetSigninRequired": "پیش از بازنشانی صندوق، دوباره وارد شوید تا نشست شما تأیید شود.",
   "recoveryResetContinue": "ادامهٔ بازنشانی",
   "recoveryResetConfirmTitle": "خزانهٔ FiFe برای همیشه حذف شود؟",
   "recoveryResetConfirmBody": "این کار برگشت‌پذیر نیست. عبارت بازیابی فعلی دیگر کار نمی‌کند و همهٔ دستگاه‌هایتان حذف می‌شوند.",

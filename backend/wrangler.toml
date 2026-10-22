@@ -15,6 +15,8 @@ crons = ["*/5 * * * *"]
 RECOVERY_RESET_ENABLED = "false"
 RECOVERY_WORKER_READY = "false"
 RECOVERY_RESET_EMAILS = ""
+# Set only after all issuers use capability accounting; unknown history stays guarded.
+RECOVERY_UPLOAD_ACCOUNTING_SINCE = ""
 
 [assets]
 directory = ".svelte-kit/cloudflare"

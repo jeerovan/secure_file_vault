@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Уведомление о быстрой синхронизации",
+  "quickSyncNotificationSettingTitle": "Уведомление об автоматической синхронизации",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Интервал автосинхронизации",
-  "autoSyncIntervalDescription": "Автоматическая синхронизация, пока включено уведомление быстрой синхронизации.",
+  "autoSyncIntervalDescription": "Автоматическая синхронизация, пока включено уведомление об автоматической синхронизации.",
   "syncIntervalMinutes": "{minutes, plural, one{{minutes} минута} few{{minutes} минуты} many{{minutes} минут} other{{minutes} минуты}}",
   "autoSyncIntervalSaveError": "Не удалось сохранить интервал. Попробуйте ещё раз.",
-  "autoSyncIntervalApplyError": "Интервал сохранён. Отключите и снова включите уведомление быстрой синхронизации, чтобы применить его.",
+  "autoSyncIntervalApplyError": "Интервал сохранён. Отключите и снова включите уведомление об автоматической синхронизации, чтобы применить его.",
   "quickSyncNotificationTitle": "Служба синхронизации файлов",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Регистрации всех существующих устройств будут удалены.",
   "lostRecoveryLogoutConsequence": "Другие устройства выйдут из аккаунта и очистят локальные данные FiFe, когда обнаружат своё удаление при подключении к интернету.",
   "lostRecoveryKeepConsequence": "Ваш почтовый аккаунт, подписка, подключения к облачным хранилищам и учётные данные провайдеров сохранятся. Файлы в ваших собственных папках вне FiFe также сохранятся.",
-  "lostRecoveryWaitConsequence": "Новое хранилище останется заблокированным до подтверждения удаления из облака. Это может занять 24 часа или больше. Можно закрыть FiFe и продолжить позже.",
+  "lostRecoveryWaitConsequence": "Новое хранилище останется заблокированным до подтверждения удаления из облака. Это может занять 15 минут или больше. Можно закрыть FiFe и продолжить позже.",
   "lostRecoveryNewPhraseConsequence": "Вы останетесь в аккаунте на этом устройстве. После подтверждения удаления создайте и сохраните новую фразу восстановления из 24 слов.",
+  "recoveryResetUnavailable": "Сброс хранилища временно недоступен. Повторите попытку позже.",
+  "recoveryResetSigninRequired": "Войдите снова, чтобы подтвердить сеанс перед сбросом хранилища.",
   "recoveryResetContinue": "Продолжить сброс",
   "recoveryResetConfirmTitle": "Удалить хранилище FiFe навсегда?",
   "recoveryResetConfirmBody": "Это действие нельзя отменить. Текущая фраза восстановления перестанет работать, а все ваши устройства будут удалены.",

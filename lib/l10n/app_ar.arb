@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "إشعارات المزامنة السريعة",
+  "quickSyncNotificationSettingTitle": "إشعار المزامنة التلقائية",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "الفاصل الزمني للمزامنة التلقائية",
-  "autoSyncIntervalDescription": "تتم المزامنة تلقائيًا عند تفعيل إشعار المزامنة السريعة.",
+  "autoSyncIntervalDescription": "تتم المزامنة تلقائيًا عند تفعيل إشعار المزامنة التلقائية.",
   "syncIntervalMinutes": "{minutes, plural, =1{دقيقة واحدة} =2{دقيقتان} few{{minutes} دقائق} many{{minutes} دقيقة} other{{minutes} دقيقة}}",
   "autoSyncIntervalSaveError": "تعذّر حفظ الفاصل الزمني. حاول مرة أخرى.",
-  "autoSyncIntervalApplyError": "تم حفظ الفاصل الزمني. أوقف إشعار المزامنة السريعة ثم فعّله لتطبيقه.",
+  "autoSyncIntervalApplyError": "تم حفظ الفاصل الزمني. أوقف إشعار المزامنة التلقائية ثم فعّله لتطبيقه.",
   "quickSyncNotificationTitle": "خدمة مزامنة الملفات",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "ستُزال جميع تسجيلات الأجهزة الحالية.",
   "lostRecoveryLogoutConsequence": "ستسجّل الأجهزة الأخرى الخروج وتمسح بيانات FiFe المحلية عندما تكتشف إزالتها أثناء اتصالها بالإنترنت.",
   "lostRecoveryKeepConsequence": "سيتم الاحتفاظ بحساب بريدك الإلكتروني واشتراكك واتصالات التخزين السحابي وبيانات اعتماد المزوّدين. ستبقى أيضًا الملفات الموجودة في مجلداتك الخاصة خارج FiFe.",
-  "lostRecoveryWaitConsequence": "ستبقى خزنتك الجديدة مقفلة حتى يتم التحقق من الحذف السحابي. قد يستغرق ذلك 24 ساعة أو أكثر. يمكنك إغلاق FiFe والمتابعة لاحقاً.",
+  "lostRecoveryWaitConsequence": "ستبقى خزنتك الجديدة مقفلة حتى يتم التحقق من الحذف السحابي. قد يستغرق ذلك 15 دقيقة أو أكثر. يمكنك إغلاق FiFe والمتابعة لاحقاً.",
   "lostRecoveryNewPhraseConsequence": "ستبقى مسجّل الدخول على هذا الجهاز. بعد التحقق من الحذف، أنشئ واحفظ عبارة استرداد جديدة من 24 كلمة.",
+  "recoveryResetUnavailable": "إعادة تعيين الخزنة غير متاحة مؤقتًا. يُرجى المحاولة مرة أخرى لاحقًا.",
+  "recoveryResetSigninRequired": "سجّل الدخول مرة أخرى للتحقق من جلستك قبل إعادة تعيين الخزنة.",
   "recoveryResetContinue": "متابعة إعادة التعيين",
   "recoveryResetConfirmTitle": "هل تريد حذف خزنة FiFe نهائياً؟",
   "recoveryResetConfirmBody": "لا يمكن التراجع عن ذلك. ستتوقف عبارة الاسترداد الحالية عن العمل وستُزال جميع أجهزتك.",

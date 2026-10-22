@@ -6,7 +6,8 @@ import {
 	text,
 	index,
 	jsonb,
-	primaryKey
+	primaryKey,
+	check
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import {
@@ -40,19 +41,28 @@ export const provider = pgTable('provider', {
 	[ProviderKeys.PRIORITY]: integer(ProviderKeys.PRIORITY).notNull()
 });
 
-export const user = pgTable('user', {
-	[UserKeys.ID]: serial(UserKeys.ID).primaryKey(),
-	[UserKeys.SERVER_CREATED_AT]: bigint(UserKeys.SERVER_CREATED_AT, { mode: 'number' })
-		.notNull()
-		.$defaultFn(() => Date.now()),
-	[UserKeys.SERVER_UPDATED_AT]: bigint(UserKeys.SERVER_UPDATED_AT, { mode: 'number' })
-		.$defaultFn(() => Date.now())
-		.$onUpdate(() => Date.now()),
-	[UserKeys.REMOTE_AUTH_ID]: text(UserKeys.REMOTE_AUTH_ID).notNull().unique(),
-	[UserKeys.EMAIL]: text(UserKeys.EMAIL).notNull().unique(),
-	[UserKeys.CIPHER]: text(UserKeys.CIPHER).notNull(),
-	[UserKeys.NONCE]: text(UserKeys.NONCE).notNull()
-});
+export const user = pgTable(
+	'user',
+	{
+		[UserKeys.ID]: serial(UserKeys.ID).primaryKey(),
+		[UserKeys.SERVER_CREATED_AT]: bigint(UserKeys.SERVER_CREATED_AT, { mode: 'number' })
+			.notNull()
+			.$defaultFn(() => Date.now()),
+		[UserKeys.SERVER_UPDATED_AT]: bigint(UserKeys.SERVER_UPDATED_AT, { mode: 'number' })
+			.$defaultFn(() => Date.now())
+			.$onUpdate(() => Date.now()),
+		[UserKeys.REMOTE_AUTH_ID]: text(UserKeys.REMOTE_AUTH_ID).notNull().unique(),
+		[UserKeys.EMAIL]: text(UserKeys.EMAIL).notNull().unique(),
+		[UserKeys.CIPHER]: text(UserKeys.CIPHER),
+		[UserKeys.NONCE]: text(UserKeys.NONCE)
+	},
+	(table) => [
+		check(
+			'user_key_envelope_pair',
+			sql`(${table[UserKeys.CIPHER]} IS NULL) = (${table[UserKeys.NONCE]} IS NULL)`
+		)
+	]
+);
 
 // Additive reset state: absence means a legacy, generation-zero vault.
 export const vaultState = pgTable('vault_state', {
@@ -66,7 +76,7 @@ export const vaultState = pgTable('vault_state', {
 }).enableRLS();
 
 // Issuance and reset share the account lock. Absence is not evidence that old
-// capabilities have expired: retain the conservative rollout/readiness floor.
+// capabilities have expired: an explicit cutover bounds unaccounted issuances.
 export const vaultUploadCapability = pgTable(
 	'vault_upload_capability',
 	{

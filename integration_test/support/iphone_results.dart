@@ -6,6 +6,7 @@ import 'package:file_vault_bb/utils/common.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'native_test_identity.dart';
 
 enum NativeTestCheckpoint {
   setup,
@@ -32,10 +33,7 @@ void recordIphoneResults(
   if (!Platform.isIOS || runId.isEmpty) return;
   unawaited(binding.allTestsPassed.future.then((passed) async {
     final bundle = (await PackageInfo.fromPlatform()).packageName;
-    if (!const [
-      'com.jeerovan.fife.localtest.recovery',
-      'com.jeerovan.fife.localtest.b2s3'
-    ].contains(bundle)) {
+    if (!isIsolatedNativeTestBundle(bundle)) {
       throw StateError('Native reporting requires an isolated test app');
     }
     final documents = await getApplicationDocumentsDirectory();

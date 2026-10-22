@@ -102,7 +102,49 @@ Local integration mode bypasses only Neon authentication and exercises the real 
 4. Sign in with `jeevan@jeero.one`. iOS Simulator connects through `localhost`; Android Emulator uses `10.0.2.2`.
 5. Create the profile and register the device, then open **Storage**, select **S3 Compatible**, and enter the test storage credentials in the client. This exercises client-side validation and the normal `/api/s3/add-account` API. The S3 endpoint must be a public HTTPS URL in every mode, including local testing.
 
-Local logout deletes the test profile and its S3 object prefix before clearing the client.
+Local logout removes that device registration and clears its app-managed local data. The vault, recovery phrase, provider connections and cloud files remain available when signing in again.
+
+### Running the local cleanup worker manually
+
+The API development server does not run Cloudflare Cron. Keep a cleanup worker running in a second terminal to process retired uploads and confirmed vault resets. It uses the same cleanup cycle as production: one cycle immediately, then every five minutes, with at most two upload jobs and two reset targets per cycle. Slow cycles do not overlap; failed cycles retry on the next interval.
+
+For the disposable provider-test server, leave the existing server running and start:
+
+```bash
+cd backend
+npm run cleanup:local
+```
+
+The command attaches to the running `npm run dev:providers` server through its private `/tmp/fife_b2_s3_server.json` control file. It does not create, reseed or drop the database, and ignores `DATABASE_URL` and `.env`. Provider credentials come from that database. If the server stops or its control file changes, the worker stops at its next cycle; restart the worker after starting the replacement server. Keep the provider-test server running during manual testing: stopping that disposable server drops its test database.
+
+If the provider-test server is not running, configure its local authentication and Backblaze inputs in `backend/.env`, then start it against a dedicated PostgreSQL test cluster on a non-default port. This creates a fresh disposable database:
+
+```bash
+# In backend/, with an existing dedicated test cluster on port 55432
+FIFE_RECOVERY_TEST_DATABASE_URL='postgres://USER@127.0.0.1:55432/postgres' npm run dev:providers
+```
+
+For a regular `npm run dev:local` server, explicitly select the **same initialized local database** for both processes:
+
+```bash
+# Terminal 1, in backend/
+FIFE_LOCAL_DATABASE_URL='postgres://USER@127.0.0.1:5432/fife' npm run dev:local
+
+# Terminal 2, in backend/
+FIFE_LOCAL_DATABASE_URL='postgres://USER@127.0.0.1:5432/fife' npm run cleanup:local
+```
+
+Only loopback PostgreSQL URLs are accepted. Admin/template databases and URL query parameters are rejected. For a single cycle, use `npm run cleanup:local -- --once`; a custom provider-server control file can be selected with `--control-file /path/to/server.json`. Stop the worker with **Ctrl+C**; it waits for an active cycle before closing its database connections.
+
+Each successful cycle prints `Cleanup cycle completed; heartbeat updated.` and updates `recovery_worker_state` (`id = 'cleanup'`, `last_run_at` in Unix milliseconds). A failed cycle does not refresh the heartbeat. Vault reset still requires its normal server gates and a heartbeat less than 15 minutes old. To enable reset for the local test account, add the following to ignored `backend/.env.development.local`:
+
+```dotenv
+RECOVERY_RESET_ENABLED=true
+RECOVERY_WORKER_READY=true
+RECOVERY_RESET_EMAILS=jeevan@jeero.one
+```
+
+Vite reloads development environment changes. These flags only allow entry to the reset flow; deletion still requires explicit confirmation, and new-vault use waits for verified cloud deletion and the existing upload-expiry safety window. Keep production rollout settings in `wrangler.toml` unchanged.
 
 ### Building for iOS
 

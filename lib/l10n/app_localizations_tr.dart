@@ -46,14 +46,14 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logging => 'Günlükleme';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Hızlı eşitleme bildirimi';
+  String get quickSyncNotificationSettingTitle => 'Otomatik eşitleme bildirimi';
 
   @override
   String get autoSyncInterval => 'Otomatik eşitleme aralığı';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Hızlı eşitleme bildirimi açıkken otomatik olarak eşitle.';
+      'Otomatik eşitleme bildirimi açıkken otomatik olarak eşitle.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -66,7 +66,7 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Aralık kaydedildi. Uygulamak için hızlı eşitleme bildirimini kapatıp tekrar açın.';
+      'Aralık kaydedildi. Uygulamak için otomatik eşitleme bildirimini kapatıp tekrar açın.';
 
   @override
   String get quickSyncNotificationTitle => 'Dosya eşitleme servisi';
@@ -797,11 +797,19 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Buluttan silme doğrulanana kadar yeni kasanız kilitli kalacak. Bu işlem 24 saat veya daha uzun sürebilir. FiFe\'ı kapatıp daha sonra devam edebilirsiniz.';
+      'Buluttan silme doğrulanana kadar yeni kasanız kilitli kalacak. Bu işlem 15 dakika veya daha uzun sürebilir. FiFe\'ı kapatıp daha sonra devam edebilirsiniz.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Bu cihazda oturumunuz açık kalacak. Silme işlemi doğrulandıktan sonra 24 kelimelik yeni bir kurtarma ifadesi oluşturup kaydedin.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Kasa sıfırlama geçici olarak kullanılamıyor. Daha sonra tekrar deneyin.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Kasayı sıfırlamadan önce oturumunuzu doğrulamak için yeniden giriş yapın.';
 
   @override
   String get recoveryResetContinue => 'Sıfırlamaya devam et';

@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Сповіщення про швидку синхронізацію",
+  "quickSyncNotificationSettingTitle": "Сповіщення про автоматичну синхронізацію",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Інтервал автосинхронізації",
-  "autoSyncIntervalDescription": "Автоматична синхронізація, доки ввімкнено сповіщення швидкої синхронізації.",
+  "autoSyncIntervalDescription": "Автоматична синхронізація, доки ввімкнено сповіщення про автоматичну синхронізацію.",
   "syncIntervalMinutes": "{minutes, plural, one{{minutes} хвилина} few{{minutes} хвилини} many{{minutes} хвилин} other{{minutes} хвилини}}",
   "autoSyncIntervalSaveError": "Не вдалося зберегти інтервал. Спробуйте ще раз.",
-  "autoSyncIntervalApplyError": "Інтервал збережено. Вимкніть і знову ввімкніть сповіщення швидкої синхронізації, щоб застосувати його.",
+  "autoSyncIntervalApplyError": "Інтервал збережено. Вимкніть і знову ввімкніть сповіщення про автоматичну синхронізацію, щоб застосувати його.",
   "quickSyncNotificationTitle": "Сервіс синхронізації файлів",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Усі наявні реєстрації пристроїв буде видалено.",
   "lostRecoveryLogoutConsequence": "Інші пристрої вийдуть з облікового запису та очистять локальні дані FiFe, коли виявлять своє видалення під час підключення до інтернету.",
   "lostRecoveryKeepConsequence": "Ваш обліковий запис електронної пошти, підписка, підключення до хмарних сховищ і облікові дані постачальників збережуться. Файли у ваших власних папках поза FiFe також збережуться.",
-  "lostRecoveryWaitConsequence": "Нове сховище залишатиметься заблокованим до підтвердження видалення з хмари. Це може тривати 24 години або довше. Можна закрити FiFe та продовжити пізніше.",
+  "lostRecoveryWaitConsequence": "Нове сховище залишатиметься заблокованим до підтвердження видалення з хмари. Це може тривати 15 хвилин або довше. Можна закрити FiFe та продовжити пізніше.",
   "lostRecoveryNewPhraseConsequence": "На цьому пристрої ви залишитеся в обліковому записі. Після підтвердження видалення створіть і збережіть нову фразу відновлення з 24 слів.",
+  "recoveryResetUnavailable": "Скидання сховища тимчасово недоступне. Спробуйте пізніше.",
+  "recoveryResetSigninRequired": "Увійдіть знову, щоб підтвердити сеанс перед скиданням сховища.",
   "recoveryResetContinue": "Продовжити скидання",
   "recoveryResetConfirmTitle": "Видалити сховище FiFe назавжди?",
   "recoveryResetConfirmBody": "Цю дію неможливо скасувати. Поточна фраза відновлення перестане працювати, а всі ваші пристрої буде видалено.",

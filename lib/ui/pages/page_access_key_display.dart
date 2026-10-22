@@ -16,6 +16,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:bip39/bip39.dart' as bip39;
 import '../../utils/common.dart';
 import '../../services/service_session_work.dart';
+import '../../services/service_vault_key_setup.dart';
 import '../../storage/storage_sqlite.dart';
 
 class PageAccessKey extends StatefulWidget {
@@ -150,6 +151,8 @@ class _PageAccessKeyState extends State<PageAccessKey> {
       if (widget.onAcknowledged case final acknowledge?) {
         await acknowledge();
       } else if (mounted) {
+        await VaultKeySetupService.instance.acknowledge();
+        if (!mounted) return;
         await context.read<AppSetupState>().registerDevice();
       }
     } on SessionInvalidated {

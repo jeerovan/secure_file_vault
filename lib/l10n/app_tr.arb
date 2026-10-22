@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Hızlı eşitleme bildirimi",
+  "quickSyncNotificationSettingTitle": "Otomatik eşitleme bildirimi",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Otomatik eşitleme aralığı",
-  "autoSyncIntervalDescription": "Hızlı eşitleme bildirimi açıkken otomatik olarak eşitle.",
+  "autoSyncIntervalDescription": "Otomatik eşitleme bildirimi açıkken otomatik olarak eşitle.",
   "syncIntervalMinutes": "{minutes} dakika",
   "autoSyncIntervalSaveError": "Aralık kaydedilemedi. Tekrar deneyin.",
-  "autoSyncIntervalApplyError": "Aralık kaydedildi. Uygulamak için hızlı eşitleme bildirimini kapatıp tekrar açın.",
+  "autoSyncIntervalApplyError": "Aralık kaydedildi. Uygulamak için otomatik eşitleme bildirimini kapatıp tekrar açın.",
   "quickSyncNotificationTitle": "Dosya eşitleme servisi",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Mevcut tüm cihaz kayıtları kaldırılacak.",
   "lostRecoveryLogoutConsequence": "Diğer cihazlar çevrimiçiyken kaldırıldıklarını fark ettiklerinde oturumu kapatacak ve yerel FiFe verilerini temizleyecek.",
   "lostRecoveryKeepConsequence": "E-posta hesabınız, aboneliğiniz, bulut depolama bağlantılarınız ve sağlayıcı kimlik bilgileriniz korunacak. FiFe dışındaki kendi klasörlerinizde bulunan dosyalar da korunacak.",
-  "lostRecoveryWaitConsequence": "Buluttan silme doğrulanana kadar yeni kasanız kilitli kalacak. Bu işlem 24 saat veya daha uzun sürebilir. FiFe'ı kapatıp daha sonra devam edebilirsiniz.",
+  "lostRecoveryWaitConsequence": "Buluttan silme doğrulanana kadar yeni kasanız kilitli kalacak. Bu işlem 15 dakika veya daha uzun sürebilir. FiFe'ı kapatıp daha sonra devam edebilirsiniz.",
   "lostRecoveryNewPhraseConsequence": "Bu cihazda oturumunuz açık kalacak. Silme işlemi doğrulandıktan sonra 24 kelimelik yeni bir kurtarma ifadesi oluşturup kaydedin.",
+  "recoveryResetUnavailable": "Kasa sıfırlama geçici olarak kullanılamıyor. Daha sonra tekrar deneyin.",
+  "recoveryResetSigninRequired": "Kasayı sıfırlamadan önce oturumunuzu doğrulamak için yeniden giriş yapın.",
   "recoveryResetContinue": "Sıfırlamaya devam et",
   "recoveryResetConfirmTitle": "FiFe kasanız kalıcı olarak silinsin mi?",
   "recoveryResetConfirmBody": "Bu işlem geri alınamaz. Mevcut kurtarma ifadeniz çalışmayı durduracak ve tüm cihazlarınız kaldırılacak.",

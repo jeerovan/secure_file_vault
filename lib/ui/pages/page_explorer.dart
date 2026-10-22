@@ -36,6 +36,7 @@ import 'package:file_picker/file_picker.dart';
 
 import '../../utils/utils_tasks.dart';
 import '../common_widgets.dart';
+import '../item_selection_actions.dart';
 
 class PageExplorer extends StatefulWidget {
   final Function(String?) onThemeChange;
@@ -86,6 +87,8 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   final ValueNotifier<Set<ModelItem>> _selectedItemsNotifier =
       ValueNotifier({});
   final ValueNotifier<bool> _isMultiSelectNotifier = ValueNotifier(false);
+  late final ItemSelectionActions _selectionActions =
+      ItemSelectionActions(_selectedItemsNotifier);
 
   ModelItem? currentItem;
   bool _isLoading = false;
@@ -163,6 +166,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
     EventStream().notifier.removeListener(_handleAppEvents);
     _breadcrumbController.dispose();
     _itemsNotifier.dispose();
+    _selectionActions.dispose();
     _selectedItemsNotifier.dispose();
     _isMultiSelectNotifier.dispose();
     super.dispose();
@@ -214,13 +218,17 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
 
   Future<void> _loadFiles({bool isSilent = false}) async {
     if (currentItem == null) {
-      deviceHash = await getDeviceHash();
-      ModelItem? rootFife = await ModelItem.get("fife");
-      if (rootFife != null) {
-        parentChilds.add(rootFife);
+      final initialDeviceHash = await getDeviceHash();
+      final rootFife = await ModelItem.ensureVaultRoot();
+      final initialDevice = await ModelItem.get(initialDeviceHash);
+      if (!mounted) return;
+      // Startup sync can overlap the initial read. Publish one complete trail
+      // and preserve any navigation that already finished while we awaited I/O.
+      if (currentItem == null) {
+        deviceHash = initialDeviceHash;
+        parentChilds = [rootFife, if (initialDevice != null) initialDevice];
+        currentItem = initialDevice;
       }
-      currentItem = await ModelItem.get(deviceHash!);
-      if (currentItem != null) parentChilds.add(currentItem!);
     }
     if (currentItem == null) {
       return;
@@ -243,6 +251,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
       // timestamps during reconciliation. Always publish the fresh snapshot;
       // comparing IDs alone leaves visible metadata stale until navigation.
       _itemsNotifier.value = items;
+      unawaited(_selectionActions.refresh());
 
       setState(() {
         _isLoading = false;
@@ -364,89 +373,28 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
     _selectedItemsNotifier.value = {};
   }
 
-  Future<void> deleteLocal() async {
-    final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
-    logger.log('Deleting local copy ${selectedItems.length} items');
-    if (!_isLocalPath) {
-      for (ModelItem modelItem in selectedItems) {
-        String localPath = await ModelItem.getPathForItem(modelItem.id);
-        await clearPathContents(localPath);
-      }
-    }
-    _cancelMultiSelect();
-    _loadFiles();
-  }
-
-  Future<void> trashItems() async {
-    final currentItems = List<ModelItem>.from(_itemsNotifier.value);
-    final toRemove = [];
-    final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
-    logger.log('Trashing ${selectedItems.length} items');
-    bool locallyExists = false;
-    if (_isLocalPath) {
-      for (ModelItem modelItem in selectedItems) {
-        bool isFolder = modelItem.isFolder;
-        bool addToRemove = false;
-        String localPath = await ModelItem.getPathForLocalItem(modelItem.id);
-        if (isFolder) {
-          Directory directory = Directory(localPath);
-          if (!directory.existsSync()) {
-            addToRemove = true;
-          } else {
-            locallyExists = true;
-          }
-        } else {
-          if (!File(localPath).existsSync()) {
-            addToRemove = true;
-          } else {
-            locallyExists = true;
-          }
-        }
-        if (addToRemove) {
-          modelItem.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
-          await modelItem.update(["archived_at"]);
-          toRemove.add(modelItem);
-        }
-      }
-    } else {
-      // A recon scan on other devices will automatically reset archive_at
-      for (ModelItem modelItem in selectedItems) {
-        modelItem.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
-        await modelItem.update(["archived_at"]);
-        toRemove.add(modelItem);
-        // Delete local copy
-        String localPath = await ModelItem.getPathForItem(modelItem.id);
-        clearPathContents(localPath);
-      }
-    }
-    currentItems.removeWhere((item) => toRemove.contains(item));
-    _itemsNotifier.value = currentItems;
-    _cancelMultiSelect();
-    if (locallyExists && mounted) {
+  Future<void> _performSelectionAction(ItemSelectionAction action) async {
+    final completed = await _selectionActions.perform(action);
+    if (!mounted) return;
+    if (!completed) {
       displaySnackBar(context,
-          message: AppLocalizations.of(context)!.fewItemsExistLocally,
-          seconds: 2);
+          message: AppLocalizations.of(context)!.pleaseTryAgain, seconds: 3);
+      await _loadFiles(isSilent: true);
+      return;
     }
+    if (action == ItemSelectionAction.download) TaskManager.init();
+    _cancelMultiSelect();
+    await _loadFiles(isSilent: true);
   }
 
-  Future<void> downloadItems() async {
-    final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
-    logger.log('Downloading ${selectedItems.length} items');
-    bool hasTasks = false;
-    for (ModelItem item in selectedItems) {
-      if (item.isFolder) continue;
-      String path = await ModelItem.getPathForItem(item.id);
-      if (!File(path).existsSync()) {
-        logger.info("Will download: $path");
-        await ModelItemTask.addTask(item.id, ItemTask.download.value);
-        hasTasks = true;
-      }
-    }
-    if (hasTasks) {
-      TaskManager.init();
-    }
-    _cancelMultiSelect();
-  }
+  Future<void> deleteLocal() =>
+      _performSelectionAction(ItemSelectionAction.deleteLocal);
+
+  Future<void> trashItems() =>
+      _performSelectionAction(ItemSelectionAction.archive);
+
+  Future<void> downloadItems() =>
+      _performSelectionAction(ItemSelectionAction.download);
 
   Future<void> showInfo() async {
     final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
@@ -505,8 +453,8 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
     return ListenableBuilder(
-      listenable:
-          Listenable.merge([_selectedItemsNotifier, _isMultiSelectNotifier]),
+      listenable: Listenable.merge(
+          [_selectedItemsNotifier, _isMultiSelectNotifier, _selectionActions]),
       builder: (context, _) {
         final isMultiSelectMode = _isMultiSelectNotifier.value;
         final selectedItems = _selectedItemsNotifier.value;
@@ -524,7 +472,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
                   .selectedItemsCount(selectedItems.length),
             ),
             actions: [
-              if (!_isLocalPath)
+              if (_selectionActions.allows(ItemSelectionAction.deleteLocal))
                 IconButton(
                   icon: const Icon(LucideIcons.trash),
                   tooltip: AppLocalizations.of(context)!.delete,
@@ -536,17 +484,19 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
                   tooltip: AppLocalizations.of(context)!.info,
                   onPressed: showInfo,
                 ),
-              if (!simulateTesting())
+              if (!simulateTesting() &&
+                  _selectionActions.allows(ItemSelectionAction.download))
                 IconButton(
                   icon: const Icon(LucideIcons.downloadCloud),
                   tooltip: AppLocalizations.of(context)!.download,
                   onPressed: downloadItems,
                 ),
-              IconButton(
-                icon: const Icon(LucideIcons.archive),
-                tooltip: AppLocalizations.of(context)!.archive,
-                onPressed: trashItems,
-              ),
+              if (_selectionActions.allows(ItemSelectionAction.archive))
+                IconButton(
+                  icon: const Icon(LucideIcons.archive),
+                  tooltip: AppLocalizations.of(context)!.archive,
+                  onPressed: trashItems,
+                ),
             ],
           );
         }
@@ -857,7 +807,10 @@ class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
 
   void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
+      if (!mounted || !_scrollController.hasClients) return;
+      if (MediaQuery.maybeOf(context)?.disableAnimations == true) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      } else {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
           duration: const Duration(milliseconds: 250),
@@ -897,19 +850,31 @@ class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
       final colorScheme = Theme.of(context).colorScheme;
 
       breadcrumbWidgets.add(
-        InkWell(
-          onTap: () => widget.onTap(item),
-          borderRadius: BorderRadius.circular(4),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
-            child: Text(
-              item.name,
-              style: TextStyle(
-                fontSize: Theme.of(context).textTheme.titleMedium?.fontSize,
-                color: isLast
-                    ? colorScheme.onSurface
-                    : colorScheme.onSurface.withValues(alpha: 0.55),
-                fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
+        Semantics(
+          button: true,
+          child: InkWell(
+            onTap: () => widget.onTap(item),
+            borderRadius: BorderRadius.circular(4),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              child: Center(
+                widthFactor: 1,
+                heightFactor: 1,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4.0, vertical: 4.0),
+                  child: Text(
+                    item.name,
+                    style: TextStyle(
+                      fontSize:
+                          Theme.of(context).textTheme.titleMedium?.fontSize,
+                      color: isLast
+                          ? colorScheme.onSurface
+                          : colorScheme.onSurface.withValues(alpha: 0.55),
+                      fontWeight: isLast ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -919,7 +884,9 @@ class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
       if (!isLast) {
         breadcrumbWidgets.add(
           Icon(
-            LucideIcons.chevronRight,
+            Directionality.of(context) == TextDirection.rtl
+                ? LucideIcons.chevronLeft
+                : LucideIcons.chevronRight,
             size: 18,
             color: colorScheme.onSurface.withValues(alpha: 0.40),
           ),
@@ -929,18 +896,25 @@ class _BreadcrumbTrailState extends State<BreadcrumbTrail> {
 
     breadcrumbWidgets.add(const SizedBox(width: 16));
 
-    // Wrapped the Row in an intrinsic height/alignment container to
-    // guarantee vertical centering regardless of the SingleChildScrollView
+    final pinRoot = widget.parentChilds.length > 1 &&
+        widget.parentChilds.first.id == 'fife';
+    final path = SingleChildScrollView(
+      controller: _scrollController,
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: pinRoot ? breadcrumbWidgets.sublist(2) : breadcrumbWidgets,
+      ),
+    );
     return SizedBox(
       height: 64.0,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: breadcrumbWidgets,
-        ),
-      ),
+      child: pinRoot
+          ? Row(children: [
+              breadcrumbWidgets[0],
+              breadcrumbWidgets[1],
+              Expanded(child: path)
+            ])
+          : path,
     );
   }
 }

@@ -45,13 +45,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get logging => 'ログ';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'クイック同期通知';
+  String get quickSyncNotificationSettingTitle => '自動同期通知';
 
   @override
   String get autoSyncInterval => '自動同期の間隔';
 
   @override
-  String get autoSyncIntervalDescription => 'クイック同期通知が有効な間、自動的に同期します。';
+  String get autoSyncIntervalDescription => '自動同期通知が有効な間、自動的に同期します。';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -63,7 +63,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      '間隔を保存しました。適用するには、クイック同期通知をオフにしてから再びオンにしてください。';
+      '間隔を保存しました。適用するには、自動同期通知をオフにしてから再びオンにしてください。';
 
   @override
   String get quickSyncNotificationTitle => 'ファイル同期サービス';
@@ -773,11 +773,19 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'クラウド上の削除が確認されるまで、新しい保管庫はロックされます。24時間以上かかる場合があります。FiFeを閉じて後で再開できます。';
+      'クラウド上の削除が確認されるまで、新しい保管庫はロックされます。15分以上かかる場合があります。FiFeを閉じて後で再開できます。';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'このデバイスではログイン状態を維持します。削除の確認後、新しい24語の復元フレーズを生成して保存してください。';
+
+  @override
+  String get recoveryResetUnavailable =>
+      '現在、保管庫をリセットできません。しばらくしてからもう一度お試しください。';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      '保管庫をリセットする前に、再度サインインしてセッションを確認してください。';
 
   @override
   String get recoveryResetContinue => 'リセットに進む';

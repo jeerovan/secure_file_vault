@@ -47,14 +47,14 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Уведомление о быстрой синхронизации';
+      'Уведомление об автоматической синхронизации';
 
   @override
   String get autoSyncInterval => 'Интервал автосинхронизации';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Автоматическая синхронизация, пока включено уведомление быстрой синхронизации.';
+      'Автоматическая синхронизация, пока включено уведомление об автоматической синхронизации.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -75,7 +75,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Интервал сохранён. Отключите и снова включите уведомление быстрой синхронизации, чтобы применить его.';
+      'Интервал сохранён. Отключите и снова включите уведомление об автоматической синхронизации, чтобы применить его.';
 
   @override
   String get quickSyncNotificationTitle => 'Служба синхронизации файлов';
@@ -807,11 +807,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Новое хранилище останется заблокированным до подтверждения удаления из облака. Это может занять 24 часа или больше. Можно закрыть FiFe и продолжить позже.';
+      'Новое хранилище останется заблокированным до подтверждения удаления из облака. Это может занять 15 минут или больше. Можно закрыть FiFe и продолжить позже.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Вы останетесь в аккаунте на этом устройстве. После подтверждения удаления создайте и сохраните новую фразу восстановления из 24 слов.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Сброс хранилища временно недоступен. Повторите попытку позже.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Войдите снова, чтобы подтвердить сеанс перед сбросом хранилища.';
 
   @override
   String get recoveryResetContinue => 'Продолжить сброс';

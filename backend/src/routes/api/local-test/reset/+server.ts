@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { requireAuth } from '$lib/server/auth';
-import { deleteUser, getUserCredential } from '$lib/server/db/api';
+import { deleteUser, getUserCredential, removeDevice } from '$lib/server/db/api';
 import { getDb } from '$lib/server/db';
 import { CredentialKeys, ErrorCode, StorageProvider } from '$lib/server/db/keys';
 import { deleteLocalTestObjects } from '$lib/server/localTest';
@@ -15,6 +15,15 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	}
 
 	try {
+		// Older local builds call this endpoint for ordinary sign-out. Preserve
+		// that successful response while removing only the requesting device.
+		// Account-wide cleanup is reserved for explicit, isolated test fixtures.
+		if (request.headers.get('x-fife-fixture-reset') !== '1') {
+			if (authUser.deviceUuid) {
+				await removeDevice(db, authUser.userId, authUser.deviceUuid);
+			}
+			return json({ success: 1 });
+		}
 		const credential = await getUserCredential(db, authUser.userId, StorageProvider.S3);
 		if (credential) {
 			await deleteLocalTestObjects(

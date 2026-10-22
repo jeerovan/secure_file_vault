@@ -46,14 +46,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logging => 'Nhật ký';
 
   @override
-  String get quickSyncNotificationSettingTitle => 'Thông báo đồng bộ nhanh';
+  String get quickSyncNotificationSettingTitle => 'Thông báo đồng bộ tự động';
 
   @override
   String get autoSyncInterval => 'Khoảng thời gian tự động đồng bộ';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Tự động đồng bộ khi bật thông báo đồng bộ nhanh.';
+      'Tự động đồng bộ khi bật thông báo đồng bộ tự động.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -66,7 +66,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Đã lưu khoảng thời gian. Tắt rồi bật lại thông báo đồng bộ nhanh để áp dụng.';
+      'Đã lưu khoảng thời gian. Tắt rồi bật lại thông báo đồng bộ tự động để áp dụng.';
 
   @override
   String get quickSyncNotificationTitle => 'Dịch vụ đồng bộ tập tin';
@@ -793,11 +793,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Kho mới sẽ bị khóa cho đến khi việc xóa trên đám mây được xác minh. Quá trình này có thể mất 24 giờ hoặc lâu hơn. Bạn có thể đóng FiFe và tiếp tục sau.';
+      'Kho mới sẽ bị khóa cho đến khi việc xóa trên đám mây được xác minh. Quá trình này có thể mất 15 phút hoặc lâu hơn. Bạn có thể đóng FiFe và tiếp tục sau.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Bạn vẫn đăng nhập trên thiết bị này. Sau khi xác minh việc xóa, hãy tạo và lưu cụm từ khôi phục mới gồm 24 từ.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Tạm thời không thể đặt lại kho lưu trữ. Vui lòng thử lại sau.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Đăng nhập lại để xác minh phiên của bạn trước khi đặt lại kho lưu trữ.';
 
   @override
   String get recoveryResetContinue => 'Tiếp tục đặt lại';

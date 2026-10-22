@@ -13,6 +13,7 @@ import '../../utils/common.dart';
 import '../common_widgets.dart';
 import '../../services/service_session_work.dart';
 import '../../services/service_recovery_reset.dart';
+import '../../services/service_vault_key_setup.dart';
 
 class PageRegisterDevice extends StatefulWidget {
   const PageRegisterDevice({
@@ -68,14 +69,15 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
         throw StateError('Reset phrase acknowledgment is required');
       }
       deviceUuid = pending;
+    } else {
+      deviceUuid =
+          await VaultKeySetupService.instance.registrationUuid() ?? deviceUuid;
     }
     String deviceName = await getDeviceName();
     int deviceType = await getDeviceType();
     bool deviceRegistered = false;
     if (!simulateTesting()) {
-      String? fcmToken = localTesting()
-          ? null
-          : await storage.read(key: AppString.fcmId.string);
+      String? fcmToken = await storage.read(key: AppString.fcmId.string);
       final result = await api.post(endpoint: '/devices', jsonBody: {
         "device_uuid": deviceUuid,
         "title": deviceName,
@@ -102,6 +104,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     }
 
     if (deviceRegistered) {
+      await ModelItem.ensureVaultRoot();
       await ModelSetting.set(AppString.deviceUuid.string, deviceUuid);
       String deviceRoot = await getDeviceHash();
       ModelItem deviceItem = await ModelItem.fromMap({
@@ -112,6 +115,7 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
       });
       await deviceItem.insert();
       await RecoveryResetService.instance.finishRegistration(deviceUuid);
+      await VaultKeySetupService.instance.finishRegistration(deviceUuid);
       if (mounted) {
         await context.read<AppSetupState>().recheckStatus();
       }

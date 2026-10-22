@@ -16,7 +16,8 @@ try {
 		'0002_upload_capability',
 		'0003_managed_upload',
 		'0004_upload_cleanup_cursor',
-		'0005_managed_object_index'
+		'0005_managed_object_index',
+		'0006_deferred_vault_keys'
 	])
 		await applyRecoveryMigration(
 			client,

@@ -10,6 +10,7 @@ import 'package:http/testing.dart';
 /// An isolated protocol peer: real HTTP decoding/key generation remains in the
 /// client. Actual server transaction/authorization behavior has PostgreSQL tests.
 class RecoveryResetPeer {
+  bool deferredKeySetup = true;
   static const generation = '11111111-1111-4111-8111-111111111111';
   Map<String, dynamic>? draft;
   Map<String, dynamic>? envelope;
@@ -25,6 +26,8 @@ class RecoveryResetPeer {
   String? statusError;
   String? operationError;
   bool requiresFreshSignin = false;
+  String? requiredSessionProof;
+  String? requiredAuthService;
   int? expiresAtOverride;
   int prepareCalls = 0;
   int confirmCalls = 0;
@@ -33,7 +36,7 @@ class RecoveryResetPeer {
   Future<void> Function()? beforeStatus;
   final requests = <String>[];
   final notBefore =
-      DateTime.now().add(const Duration(hours: 24)).millisecondsSinceEpoch;
+      DateTime.now().add(const Duration(minutes: 15)).millisecondsSinceEpoch;
 
   RecoveryResetService service() => RecoveryResetService.test(
       apiFactory: () => BackendApi(
@@ -42,6 +45,7 @@ class RecoveryResetPeer {
           refreshAuth: () async {}));
 
   Map<String, dynamic> get operation => {
+        if (deferredKeySetup) 'keySetupProtocol': 2,
         'operationId': draft!['operationId'],
         'phase': phase,
         'generation': generation,
@@ -64,6 +68,12 @@ class RecoveryResetPeer {
       };
 
   Future<http.Response> handle(http.Request request) async {
+    if ((requiredSessionProof != null &&
+            request.headers['x-fife-session'] != requiredSessionProof) ||
+        (requiredAuthService != null &&
+            request.headers['service'] != requiredAuthService)) {
+      throw StateError('Recovery authentication context was not preserved');
+    }
     requests.add('${request.method} ${request.url.path}');
     if (offline) return http.Response('', 503);
     Map<String, dynamic> reply;
@@ -81,6 +91,11 @@ class RecoveryResetPeer {
         reply = {
           'success': 1,
           'data': {
+            if (deferredKeySetup) ...{
+              'key_setup_protocol': 2,
+              'vault_ready': phase != 'cleanup_pending',
+              'key_state': envelope == null ? 'present' : 'missing',
+            },
             'available': available,
             'generation': envelope == null ? currentGeneration : generation,
             'pendingConfirmation':

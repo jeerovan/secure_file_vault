@@ -11,6 +11,10 @@ import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_foreground.dart';
 import 'package:file_vault_bb/services/service_locale.dart';
 import 'package:file_vault_bb/services/service_recovery_reset.dart';
+import 'package:file_vault_bb/services/service_vault_key_setup.dart';
+import 'package:file_vault_bb/services/service_backend.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:file_vault_bb/services/service_session_cleanup.dart';
 import 'package:file_vault_bb/services/service_session_work.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
@@ -89,6 +93,9 @@ void main() {
 
 void registerRecoveryNativeTests({bool reportResults = true}) {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isMacOS) {
+    binding.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
+  }
   if (reportResults) recordIphoneResults(binding, 'recovery');
   final storage = SecureStorage();
 
@@ -98,12 +105,16 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
     await verifyNativeTestInstall();
   });
 
-  Future<void> until(WidgetTester tester, bool Function() ready) async {
-    for (var i = 0; i < 300 && !ready(); i++) {
+  Future<void> until(WidgetTester tester, bool Function() ready,
+      {String Function()? describe}) async {
+    final elapsed = Stopwatch()..start();
+    while (!ready() && elapsed.elapsed < const Duration(seconds: 30)) {
       await Future<void>.delayed(const Duration(milliseconds: 20));
-      await tester.pump();
+      // Queue the frame after the live binding has installed its completion
+      // future. Never timeout a guarded pump: it cannot be canceled safely.
+      await tester.pump(const Duration(milliseconds: 16));
     }
-    expect(ready(), isTrue);
+    expect(ready(), isTrue, reason: describe?.call());
   }
 
   Future<void> fresh() async {
@@ -157,7 +168,7 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
         builder: (_) =>
             const Scaffold(body: Text('Cached native private page')))));
     await tester.pumpAndSettle();
-    ServiceForeground.instance.init();
+    if (Platform.isAndroid) ServiceForeground.instance.init();
     final release = Completer<void>();
     final entered = Completer<void>();
     final stale = expectLater(SessionWork.run(() async {
@@ -215,7 +226,7 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
   });
 
   testWidgets(
-      'native staged reset survives new service instances and phrase acknowledgment gates registration',
+      'native shared reset releases staging and fresh phrase acknowledgment gates registration',
       (tester) async {
     await fresh();
     await (await ModelProfile.fromMap(
@@ -228,24 +239,43 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
         key: AppString.jwtToken.string, value: 'native-fixture-token');
     final peer = RecoveryResetPeer();
     expect((await peer.service().confirm()).phase, RecoveryResetPhase.waiting);
-    final staged = jsonDecode(
-            (await storage.read(key: AppString.recoveryResetStage.string))!)
-        as Map<String, dynamic>;
     expect(await getMasterKey(), isNull);
     expect((await peer.service().refresh()).phase, RecoveryResetPhase.waiting);
     peer.phase = 'ready';
     expect(
-        (await peer.service().refresh()).phase, RecoveryResetPhase.generation);
+        (await peer.service().refresh()).phase, RecoveryResetPhase.bootstrap);
+    expect(
+        await storage.read(key: AppString.recoveryResetStage.string), isNull);
     expect(await getMasterKey(), isNull);
     expect(await storage.read(key: AppString.sessionCookie.string),
         'native-fixture-cookie');
+    Map<String, dynamic>? envelope;
+    VaultKeySetupService setupService() => VaultKeySetupService.test(
+        apiFactory: () => BackendApi(
+            baseUrlOverride: 'https://api.example.test/api',
+            refreshAuth: () async {},
+            httpClient: MockClient((request) async {
+              if (request.method == 'POST') {
+                envelope = jsonDecode(request.body);
+                return http.Response('{"success":1}', 200);
+              }
+              return http.Response(
+                  jsonEncode({
+                    'success': 1,
+                    'data': {
+                      ...?envelope,
+                      'vault_generation': RecoveryResetPeer.generation
+                    }
+                  }),
+                  200);
+            })));
     var generated = false;
     await tester.pumpWidget(MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: PageAccessKeyNotice(onGenerate: () async {
-        expect((await peer.service().generateKeys()).phase,
-            RecoveryResetPhase.phrase);
+        expect(
+            (await setupService().generate()).phase, VaultKeySetupPhase.phrase);
         generated = true;
       }),
     ));
@@ -253,6 +283,10 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
         of: find.byType(PageAccessKeyNotice),
         matching: find.byType(FilledButton)));
     await until(tester, () => generated);
+    final staged = jsonDecode(
+            (await storage.read(key: AppString.vaultKeySetupStage.string))!)
+        as Map<String, dynamic>;
+    expect((await setupService().resume()).phase, VaultKeySetupPhase.phrase);
     expect(await storage.read(key: AppString.masterKey.string),
         staged['privateKeys'][AppString.masterKey.string]);
     var acknowledged = false;
@@ -262,8 +296,9 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
       home: PageAccessKey(
           requireAcknowledgment: true,
           onAcknowledged: () async {
-            expect((await peer.service().acknowledgePhrase()).phase,
-                RecoveryResetPhase.registration);
+            await setupService().acknowledge();
+            expect(
+                await setupService().registrationUuid(), staged['deviceUuid']);
             acknowledged = true;
           }),
     ));
@@ -278,7 +313,7 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
     expect(tester.widget<OutlinedButton>(next).onPressed, isNull);
     await tester.ensureVisible(find.byType(CheckboxListTile));
     await tester.tap(find.byType(CheckboxListTile));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 16));
     await tester.ensureVisible(next);
     await tester.tap(next);
     await until(tester, () => acknowledged);
@@ -288,6 +323,78 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
     await tester.pumpWidget(const SizedBox.shrink());
     await fresh();
   });
+
+  for (final switchedAccount in [true, false]) {
+    testWidgets(
+        'native interrupted key setup recovers after ${switchedAccount ? 'an account switch' : 'a newer vault reset'}',
+        (tester) async {
+      await fresh();
+      await ModelSetting.set(AppString.onboarding.string, 'yes');
+      await ModelSetting.set(AppString.signedIn.string, 'yes');
+      await ModelSetting.set(AppString.localTesting.string, 'yes');
+      await ModelSetting.set(AppString.vaultGeneration.string, 'legacy');
+      await (await ModelProfile.fromMap(
+              {'id': AppEnv.localTestUserId, 'email': localTestEmailId}))
+          .insert();
+      var offline = true;
+      final service = VaultKeySetupService.test(
+          apiFactory: () => BackendApi(
+              baseUrlOverride: 'https://api.example.test/api',
+              refreshAuth: () async {},
+              httpClient: MockClient((request) async {
+                if (offline) return http.Response('', 503);
+                expect(request.method, 'GET');
+                return http.Response(
+                    jsonEncode({
+                      'success': 1,
+                      'data': {
+                        'cipher': null,
+                        'nonce': null,
+                        'key_state': 'missing',
+                        'vault_generation': RecoveryResetPeer.generation
+                      }
+                    }),
+                    200);
+              })));
+      expect((await service.generate()).phase, VaultKeySetupPhase.unavailable);
+      final candidate =
+          await storage.read(key: AppString.vaultKeySetupStage.string);
+      expect(candidate != null, isTrue);
+      offline = false;
+      if (switchedAccount) {
+        await (await StorageSqlite.instance.database).delete('profiles');
+        await (await ModelProfile.fromMap(
+                {'id': 'other-native-account', 'email': 'other@example.test'}))
+            .insert();
+      }
+      final setup = AppSetupState(storage);
+      try {
+        await setup.recheckStatus();
+        await tester.pumpWidget(ChangeNotifierProvider.value(
+            value: setup,
+            child: MaterialApp(
+                locale: const Locale('en'),
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                home: PageAccessKeyNotice(service: service))));
+        await until(tester, () => setup.currentStep == SetupStep.signin,
+            describe: () => 'Interrupted key setup step: '
+                '${setup.currentStep.name}');
+        expect(await getMasterKey(), isNull);
+        expect(
+            await ModelSetting.getRaw(AppString.signedIn.string), isNot('yes'));
+        final retained =
+            await storage.read(key: AppString.vaultKeySetupStage.string);
+        expect(
+            switchedAccount ? retained == candidate : retained == null, isTrue);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        setup.dispose();
+        expect(await SessionCleanup.instance.request(), isTrue);
+      }
+    });
+  }
 
   testWidgets('native cleanup waits for another engine publication',
       (tester) async {
@@ -372,7 +479,7 @@ void registerRecoveryNativeTests({bool reportResults = true}) {
           }
         }
         await Future<void>.delayed(const Duration(milliseconds: 100));
-        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 16));
       }
       expect(await proof.exists(), isTrue);
       expect(jsonDecode(await proof.readAsString()),

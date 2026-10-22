@@ -11,6 +11,9 @@ Future<void> deleteTestDirectory(Directory directory) async {
       }
       return;
     } on FileSystemException catch (error) {
+      // Another asynchronous teardown may finish between exists and delete.
+      // Absence is the required outcome; never hide an error if data remains.
+      if (error.osError?.errorCode == 2 && !await directory.exists()) return;
       if (!{39, 66, 145}.contains(error.osError?.errorCode) || attempt == 7) {
         rethrow;
       }

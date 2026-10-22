@@ -45,13 +45,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logging => '日志';
 
   @override
-  String get quickSyncNotificationSettingTitle => '快速同步通知';
+  String get quickSyncNotificationSettingTitle => '自动同步通知';
 
   @override
   String get autoSyncInterval => '自动同步间隔';
 
   @override
-  String get autoSyncIntervalDescription => '启用快速同步通知时自动同步。';
+  String get autoSyncIntervalDescription => '启用自动同步通知时自动同步。';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -62,7 +62,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autoSyncIntervalSaveError => '无法保存间隔，请重试。';
 
   @override
-  String get autoSyncIntervalApplyError => '间隔已保存。请关闭后重新开启快速同步通知以应用。';
+  String get autoSyncIntervalApplyError => '间隔已保存。请关闭后重新开启自动同步通知以应用。';
 
   @override
   String get quickSyncNotificationTitle => '文件同步服务';
@@ -762,11 +762,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      '在确认云端数据已删除之前，新保险库将保持锁定。这可能需要 24 小时或更长时间。您可以关闭 FiFe，稍后继续。';
+      '在确认云端数据已删除之前，新保险库将保持锁定。这可能需要 15 分钟或更长时间。您可以关闭 FiFe，稍后继续。';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       '您将在此设备上保持登录。删除验证完成后，请生成并保存新的 24 词恢复短语。';
+
+  @override
+  String get recoveryResetUnavailable => '暂时无法重置保险库。请稍后重试。';
+
+  @override
+  String get recoveryResetSigninRequired => '重置保险库之前，请重新登录以验证您的会话。';
 
   @override
   String get recoveryResetContinue => '继续重置';

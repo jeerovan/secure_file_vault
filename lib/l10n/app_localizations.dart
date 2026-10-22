@@ -202,10 +202,10 @@ abstract class AppLocalizations {
   /// **'Logging'**
   String get logging;
 
-  /// Setting to show quick sync notification
+  /// Setting to show the auto sync notification
   ///
   /// In en, this message translates to:
-  /// **'Quick sync notification'**
+  /// **'Auto sync notification'**
   String get quickSyncNotificationSettingTitle;
 
   /// Android foreground service sync interval setting
@@ -217,7 +217,7 @@ abstract class AppLocalizations {
   /// Explains when the selected auto sync interval applies
   ///
   /// In en, this message translates to:
-  /// **'Sync automatically while the quick sync notification is enabled.'**
+  /// **'Sync automatically while the auto sync notification is enabled.'**
   String get autoSyncIntervalDescription;
 
   /// Sync interval duration, including the slider's accessible value
@@ -235,7 +235,7 @@ abstract class AppLocalizations {
   /// Recovery when an interval is saved but the running service could not be updated
   ///
   /// In en, this message translates to:
-  /// **'Interval saved. Turn the quick sync notification off and on to apply it.'**
+  /// **'Interval saved. Turn the auto sync notification off and on to apply it.'**
   String get autoSyncIntervalApplyError;
 
   /// Quick sync notification title
@@ -1531,7 +1531,7 @@ abstract class AppLocalizations {
   /// No description provided for @lostRecoveryWaitConsequence.
   ///
   /// In en, this message translates to:
-  /// **'Your new vault will stay locked until cloud deletion is verified. This may take 24 hours or longer. You can close FiFe and resume later.'**
+  /// **'Your new vault will stay locked until cloud deletion is verified. This may take 15 minutes or longer. You can close FiFe and resume later.'**
   String get lostRecoveryWaitConsequence;
 
   /// No description provided for @lostRecoveryNewPhraseConsequence.
@@ -1539,6 +1539,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You stay signed in on this device. After deletion is verified, generate and save a new 24-word recovery phrase.'**
   String get lostRecoveryNewPhraseConsequence;
+
+  /// No description provided for @recoveryResetUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault reset is temporarily unavailable. Try again later.'**
+  String get recoveryResetUnavailable;
+
+  /// No description provided for @recoveryResetSigninRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to verify your session before resetting the vault.'**
+  String get recoveryResetSigninRequired;
 
   /// No description provided for @recoveryResetContinue.
   ///

@@ -14,6 +14,8 @@ import '../../utils/common.dart';
 import '../../utils/enums.dart';
 import '../../services/service_session_work.dart';
 import '../../services/service_recovery_reset.dart';
+import '../../services/service_vault_key_setup.dart';
+import '../../services/service_backend.dart';
 
 class PageSignin extends StatefulWidget {
   const PageSignin({super.key});
@@ -48,7 +50,8 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> _prefillRecoveryEmail() async {
-    final pending = await RecoveryResetService.instance.pendingEmail();
+    final pending = await RecoveryResetService.instance.pendingEmail() ??
+        await VaultKeySetupService.instance.pendingEmail();
     if (mounted &&
         !otpSent &&
         !processing &&
@@ -101,8 +104,26 @@ class _PageSigninState extends State<PageSignin> {
 
     try {
       if (isLocalTestingEmail(email)) {
+        await ModelSetting.delete(AppString.simulateTesting.string);
         await ModelSetting.set(AppString.localTesting.string, "yes");
-        await _completeSignin(AppEnv.localTestUserId, email);
+        final response = await BackendApi()
+            .post(endpoint: '/local-test/session', jsonBody: {});
+        final token =
+            response['data'] is Map ? response['data']['sessionToken'] : null;
+        final user = response['data'] is Map ? response['data']['user'] : null;
+        if (response['success'] != 1 ||
+            token is! String ||
+            token.isEmpty ||
+            !token.startsWith(AppEnv.localSessionPrefix) ||
+            user is! Map ||
+            user['id'] is! String ||
+            (user['id'] as String).isEmpty ||
+            user['email'] is! String ||
+            (user['email'] as String).isEmpty) {
+          throw StateError('Local authentication failed');
+        }
+        await storage.write(key: AppString.sessionCookie.string, value: token);
+        await _completeSignin(user['id'], user['email']);
         return;
       } else if (email == testEmailId) {
         await Future.delayed(const Duration(seconds: 1));
@@ -195,15 +216,12 @@ class _PageSigninState extends State<PageSignin> {
         await ModelProfile.fromMap({"id": userId, "email": profileEmail});
     await profile.insert();
 
-    final deviceItem = await ModelItem.fromMap({
-      "id": "fife",
-      "name": "FiFe",
-      "is_folder": 1,
-    });
-    await deviceItem.insert();
+    await ModelItem.ensureVaultRoot();
     await ModelSetting.set(AppString.signedIn.string, "yes");
 
-    if (subscriptionsSupported && !simulateTesting()) {
+    if (subscriptionsSupported &&
+        !simulateTesting() &&
+        await Purchases.isConfigured) {
       await Purchases.logIn(userId);
     }
 

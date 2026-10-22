@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:bip39/bip39.dart' as bip39;
 import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/main.dart';
@@ -19,6 +22,7 @@ import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_notice.dart';
 import 'package:file_vault_bb/ui/pages/page_access_key_display.dart';
+import 'package:file_vault_bb/ui/pages/page_access_key_decode.dart';
 import 'package:file_vault_bb/ui/pages/page_settings.dart';
 import 'package:file_vault_bb/ui/pages/page_signin.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +30,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/testing.dart';
+import 'package:http/http.dart' as http;
 import 'package:integration_test/integration_test.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sodium/sodium_sumo.dart';
@@ -35,13 +40,43 @@ import 'package:uuid/uuid.dart';
 
 import 'support/iphone_results.dart';
 import 'support/native_test_install.dart';
+import '../test/support/recovery_reset_fixture.dart';
+import 'package:file_vault_bb/services/service_recovery_reset.dart';
+import 'package:file_vault_bb/services/service_vault_key_setup.dart';
 
 void main() {
   registerRevocationNativeTests();
 }
 
+// A newly installed iPhone fixture needs its OS Local Network permission before
+// the LAN scenarios start. Offline preservation remains tested explicitly below.
+Future<void> _waitForLocalBackend() async {
+  if (!Platform.isIOS) return;
+  final endpoint = Uri.parse(AppEnv.effectiveApiBaseUrl);
+  final deadline = DateTime.now().add(const Duration(seconds: 45));
+  do {
+    try {
+      final socket = await Socket.connect(endpoint.host, endpoint.port,
+          timeout: const Duration(seconds: 2));
+      socket.destroy();
+      return;
+    } on SocketException {
+      // Allow time for the native permission prompt and network policy update.
+    } on TimeoutException {
+      // The fixture fails if its actual LAN backend never becomes reachable.
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 200));
+  } while (DateTime.now().isBefore(deadline));
+  throw StateError(
+      'The iPhone fixture needs Local Network access to its LAN backend');
+}
+
 void registerRevocationNativeTests({bool reportResults = true}) {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isMacOS) {
+    // Desktop routing and cleanup can finish between assertion polls.
+    binding.framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
+  }
   if (reportResults) recordIphoneResults(binding, 'revocation');
 
   testWidgets('LAN revocation preserves offline data then erases on discovery',
@@ -53,6 +88,7 @@ void registerRevocationNativeTests({bool reportResults = true}) {
     expect(AppEnv.effectiveApiBaseUrl, AppEnv.apiBaseUrl);
     await verifyNativeTestInstall();
 
+    await _waitForLocalBackend();
     await addTrustedCertificates();
     final mainUuid = const Uuid().v4();
     final peerUuid = const Uuid().v4();
@@ -140,8 +176,10 @@ void registerRevocationNativeTests({bool reportResults = true}) {
       // No transfer is created by this fixture. Remove only its generated
       // development account so another native platform can run independently.
       expect(
-          (await client(peerUuid)
-              .post(endpoint: '/local-test/reset', jsonBody: {}))['success'],
+          (await client(peerUuid).post(
+              endpoint: '/local-test/reset',
+              jsonBody: {},
+              headers: {'X-FiFe-Fixture-Reset': '1'}))['success'],
           1);
     }
   });
@@ -169,7 +207,7 @@ void registerRevocationNativeTests({bool reportResults = true}) {
       while (DateTime.now().isBefore(deadline)) {
         if (await ready()) return;
         await Future<void>.delayed(const Duration(milliseconds: 50));
-        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 16));
       }
       expect(await ready(), isTrue);
     }
@@ -188,14 +226,14 @@ void registerRevocationNativeTests({bool reportResults = true}) {
         // enterText/receiveAction, so supply the field value in the harness and
         // exercise the actual form validation and submit button below.
         tester.widget<TextFormField>(email).controller!.text = localTestEmailId;
-        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 16));
       } else {
         await tester.enterText(email, localTestEmailId);
       }
       final submit = find.descendant(
           of: find.byType(PageSignin), matching: find.byType(FilledButton));
       await tester.ensureVisible(submit);
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 16));
       await tester.tap(submit);
       await until(
           () async => find.byType(PageAccessKeyNotice).evaluate().isNotEmpty);
@@ -206,13 +244,22 @@ void registerRevocationNativeTests({bool reportResults = true}) {
       expect(
           await SecureStorage()
               .containsKey(key: AppString.sessionCookie.string),
-          isFalse);
+          isTrue);
       markNativeCheckpoint(NativeTestCheckpoint.keys);
-      await tester.tap(find.descendant(
+      final generate = find.descendant(
           of: find.byType(PageAccessKeyNotice),
-          matching: find.byType(FilledButton)));
+          matching: find.byType(FilledButton));
+      await until(() async =>
+          generate.evaluate().isNotEmpty &&
+          tester.widget<FilledButton>(generate).onPressed != null);
+      await tester.tap(generate);
       await until(() async => find.byType(PageAccessKey).evaluate().isNotEmpty);
       final next = find.widgetWithText(OutlinedButton, 'Continue');
+      await until(() async => next.evaluate().isNotEmpty);
+      expect(tester.widget<OutlinedButton>(next).onPressed, isNull);
+      final saved = find.byType(CheckboxListTile);
+      await tester.ensureVisible(saved);
+      await tester.tap(saved);
       await until(() async =>
           next.evaluate().isNotEmpty &&
           tester.widget<OutlinedButton>(next).onPressed != null);
@@ -265,7 +312,7 @@ void registerRevocationNativeTests({bool reportResults = true}) {
       if (Platform.isAndroid) {
         final slider = find.byType(Slider);
         await tester.ensureVisible(slider);
-        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 16));
         expect(tester.widget<Slider>(slider).min, 1);
         expect(tester.widget<Slider>(slider).max, 30);
         expect(tester.widget<Slider>(slider).value, 15);
@@ -284,6 +331,33 @@ void registerRevocationNativeTests({bool reportResults = true}) {
             await ModelSetting.getForegroundSyncIntervalMinutes() == 1 &&
             tester.widget<Slider>(slider).onChanged != null);
         await Future<void>.delayed(const Duration(seconds: 3));
+        if (const bool.fromEnvironment(
+            'FIFE_VERIFY_NATIVE_AUTO_SYNC_INTERVAL')) {
+          // Observe the real native timer crossing the engine boundary. Do
+          // not invoke its callback, fake the clock or synthesize its events.
+          final started = Completer<void>();
+          final finished = Completer<void>();
+          final elapsed = Stopwatch()..start();
+          final events = EventStream().events.listen((event) {
+            if (event.id != 'foregroundSync') return;
+            if (event.key == EventKey.running && !started.isCompleted) {
+              started.complete();
+            } else if (event.key == EventKey.stopped &&
+                started.isCompleted &&
+                !finished.isCompleted) {
+              finished.complete();
+            }
+          });
+          try {
+            await started.future.timeout(const Duration(seconds: 90));
+            await finished.future.timeout(const Duration(seconds: 45));
+            expect(await FlutterForegroundTask.isRunningService, isTrue);
+            debugPrint('Native one-minute auto sync started and finished '
+                'after ${elapsed.elapsedMilliseconds} ms.');
+          } finally {
+            await events.cancel();
+          }
+        }
         final lease =
             await ExclusiveOperationCoordinator.tryAcquire('metadata');
         expect(lease, isNotNull);
@@ -332,8 +406,10 @@ void registerRevocationNativeTests({bool reportResults = true}) {
       final remaining = await cleanupApi.get(endpoint: '/keys');
       if (remaining['success'] == 1) {
         expect(
-            (await cleanupApi
-                .post(endpoint: '/local-test/reset', jsonBody: {}))['success'],
+            (await cleanupApi.post(
+                endpoint: '/local-test/reset',
+                jsonBody: {},
+                headers: {'X-FiFe-Fixture-Reset': '1'}))['success'],
             1);
       } else {
         expect(remaining['message'], 1);
@@ -341,4 +417,232 @@ void registerRevocationNativeTests({bool reportResults = true}) {
       expect(await SessionCleanup.instance.request(), isTrue);
     }
   }, timeout: const Timeout(Duration(minutes: 4)));
+
+  testWidgets('LAN final-device logout retains and recovers the original vault',
+      (tester) async {
+    await verifyNativeTestInstall();
+    await addTrustedCertificates();
+    await StorageSqlite.initialize(ExecutionMode.mainApp);
+    expect(await SessionCleanup.instance.resume(), isTrue);
+    expect(await SessionCleanup.instance.request(), isTrue);
+    if (Platform.isAndroid) ServiceForeground.instance.init();
+    BackendApi client(String uuid) => BackendApi(
+        localTestingProvider: () => true,
+        deviceUuidProvider: () async => uuid,
+        refreshAuth: () async {});
+    expect((await client('').get(endpoint: '/keys'))['message'], 1);
+    final keys =
+        CryptoUtils(await SodiumSumoInit.init()).generateKeys().getResult()!;
+    final serverKeys =
+        keys[AppString.serverKeys.string] as Map<String, dynamic>;
+    final privateKeys =
+        keys[AppString.privateKeys.string] as Map<String, dynamic>;
+    final originalUuid = const Uuid().v4();
+    final peers = [const Uuid().v4(), const Uuid().v4()];
+    final secure = SecureStorage();
+    AppSetupState? setup;
+    final locale = LocaleProvider();
+    Future<void> until(Future<bool> Function() ready) async {
+      final deadline = DateTime.now().add(const Duration(seconds: 45));
+      while (DateTime.now().isBefore(deadline)) {
+        if (await ready()) return;
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(await ready(), isTrue);
+    }
+
+    try {
+      expect(
+          (await client('')
+              .post(endpoint: '/keys', jsonBody: serverKeys))['success'],
+          1);
+      for (final uuid in [originalUuid, ...peers]) {
+        expect(
+            (await client('').post(endpoint: '/devices', jsonBody: {
+              'device_uuid': uuid,
+              'title': 'Disposable logout fixture',
+              'type': 1,
+              'active': 1,
+            }))['success'],
+            1);
+      }
+      for (final uuid in peers) {
+        expect(
+            (await client(originalUuid).delete(
+                endpoint: '/devices',
+                queryParameters: {'device_uuid': uuid}))['success'],
+            1);
+      }
+      await ModelSetting.set(AppString.localTesting.string, 'yes');
+      await ModelSetting.set(AppString.signedIn.string, 'yes');
+      await ModelSetting.set(AppString.deviceUuid.string, originalUuid);
+      await (await ModelProfile.fromMap(
+              {'id': AppEnv.localTestUserId, 'email': localTestEmailId}))
+          .insert();
+      for (final entry in privateKeys.entries) {
+        await secure.write(key: entry.key, value: entry.value as String);
+      }
+      expect(await SyncUtils.signout(), isTrue);
+      expect(await ModelProfile.get(), isNull);
+      expect(await getDeviceUuid(), isEmpty);
+      expect(
+          await secure.containsKey(key: AppString.masterKey.string), isFalse);
+      final retained = await client('').get(endpoint: '/keys');
+      expect(retained['success'], 1);
+      expect(retained['data']['cipher'] == serverKeys['cipher'], isTrue);
+      expect(retained['data']['nonce'] == serverKeys['nonce'], isTrue);
+
+      await ModelSetting.set(AppString.locale.string, 'en');
+      await ModelSetting.set(AppString.onboarding.string, 'yes');
+      final signedOutSetup = AppSetupState(secure);
+      setup = signedOutSetup;
+      await tester.pumpWidget(MultiProvider(providers: [
+        ChangeNotifierProvider.value(value: signedOutSetup),
+        ChangeNotifierProvider.value(value: locale)
+      ], child: const MyApp()));
+      await until(() async => find.byType(PageSignin).evaluate().isNotEmpty);
+      final email = find.byType(TextFormField);
+      if (kProfileMode) {
+        tester.widget<TextFormField>(email).controller!.text = localTestEmailId;
+        await tester.pump(const Duration(milliseconds: 16));
+      } else {
+        await tester.enterText(email, localTestEmailId);
+      }
+      final signIn = find.descendant(
+          of: find.byType(PageSignin), matching: find.byType(FilledButton));
+      await tester.ensureVisible(signIn);
+      await tester.tap(signIn);
+      await until(
+          () async => find.byType(PageAccessKeyDecode).evaluate().isNotEmpty);
+      expect(find.byType(PageAccessKeyNotice), findsNothing);
+      expect(
+          await secure.containsKey(key: AppString.masterKey.string), isFalse);
+
+      final phrase = bip39.entropyToMnemonic(bytesToHex(
+          base64Decode(privateKeys[AppString.accessKey.string] as String)));
+      final words = find.descendant(
+          of: find.byType(PageAccessKeyDecode),
+          matching: find.byType(TextFormField));
+      if (kProfileMode) {
+        tester.widget<TextFormField>(words).controller!.text = phrase;
+        await tester.pump(const Duration(milliseconds: 16));
+      } else {
+        await tester.enterText(words, phrase);
+      }
+      final recover = find.descendant(
+          of: find.byType(PageAccessKeyDecode),
+          matching: find.byType(FilledButton));
+      await tester.ensureVisible(recover);
+      await tester.tap(recover);
+      await until(() async =>
+          (await getDeviceUuid()).isNotEmpty &&
+          ![SetupStep.registerDevice, SetupStep.loading]
+              .contains(signedOutSetup.currentStep));
+      expect(await getDeviceUuid(), isNot(originalUuid));
+      expect(
+          await secure.read(key: AppString.masterKey.string) ==
+              privateKeys[AppString.masterKey.string],
+          isTrue);
+      expect(
+          (await client('').get(endpoint: '/keys'))['data']['cipher'] ==
+              serverKeys['cipher'],
+          isTrue);
+      expect(tester.takeException(), isNull);
+    } finally {
+      await tester.pumpWidget(const SizedBox.shrink());
+      setup?.dispose();
+      locale.dispose();
+      if (Platform.isAndroid) await ServiceForeground.instance.stop();
+      SyncUtils().stopAutoSync();
+      expect(
+          (await client('').post(
+              endpoint: '/local-test/reset',
+              jsonBody: {},
+              headers: {'X-FiFe-Fixture-Reset': '1'}))['success'],
+          1);
+      expect(await SessionCleanup.instance.request(), isTrue);
+    }
+  }, timeout: const Timeout(Duration(minutes: 3)));
+
+  testWidgets('local authentication survives native recovery cleanup',
+      (tester) async {
+    await verifyNativeTestInstall();
+    await StorageSqlite.initialize(ExecutionMode.mainApp);
+    expect(await SessionCleanup.instance.resume(), isTrue);
+    expect(await SessionCleanup.instance.request(), isTrue);
+    await ModelSetting.set(AppString.localTesting.string, 'yes');
+    await ModelSetting.set(AppString.signedIn.string, 'yes');
+    await (await ModelProfile.fromMap(
+            {'id': AppEnv.localTestUserId, 'email': localTestEmailId}))
+        .insert();
+    final secure = SecureStorage();
+    await secure.write(
+        key: AppString.sessionCookie.string,
+        value: 'fife-local.isolated-native-session-proof');
+    final documents = await getApplicationDocumentsDirectory();
+    final owned = File('${documents.path}/FiFe/parity-owned.txt');
+    final original = File('${documents.path}/parity-external-fixture.txt');
+    await owned.parent.create(recursive: true);
+    await owned.writeAsString('app-owned downloaded plaintext');
+    await original.writeAsString('external source fixture');
+    final peer = RecoveryResetPeer()
+      ..requiredSessionProof = 'fife-local.isolated-native-session-proof'
+      ..requiredAuthService = 'local-test';
+    final service = peer.service();
+    try {
+      final result = await service.confirm();
+      expect(result.phase, RecoveryResetPhase.waiting);
+      expect(peer.prepareCalls, 1);
+      expect(peer.confirmCalls, 1);
+      expect(localTesting(), isTrue);
+      expect(await getSignedInUserId(), AppEnv.localTestUserId);
+      expect(await secure.read(key: AppString.sessionCookie.string),
+          'fife-local.isolated-native-session-proof');
+      expect(await getMasterKey(), isNull);
+      expect(await owned.exists(), isFalse);
+      expect(await original.readAsString(), 'external source fixture');
+      expect((await service.generateKeys()).phase, RecoveryResetPhase.waiting);
+      peer.phase = 'ready';
+      expect((await service.refresh()).phase, RecoveryResetPhase.bootstrap);
+      expect(await service.hasPending(), isFalse);
+      expect(await getMasterKey(), isNull);
+      Map<String, dynamic>? envelope;
+      final keys = VaultKeySetupService.test(
+          apiFactory: () => BackendApi(
+              baseUrlOverride: 'https://api.example.test/api',
+              refreshAuth: () async {},
+              httpClient: MockClient((request) async {
+                expect(request.headers['service'], 'local-test');
+                expect(request.headers['x-fife-session'],
+                    'fife-local.isolated-native-session-proof');
+                if (request.method == 'POST') {
+                  envelope = jsonDecode(request.body);
+                  expect(envelope!['expectedGeneration'],
+                      RecoveryResetPeer.generation);
+                  return http.Response('{"success":1}', 200);
+                }
+                return http.Response(
+                    jsonEncode({
+                      'success': 1,
+                      'data': {
+                        ...?envelope,
+                        'vault_generation': RecoveryResetPeer.generation
+                      }
+                    }),
+                    200);
+              })));
+      expect((await keys.resume()).phase, VaultKeySetupPhase.generation);
+      expect((await keys.generate()).phase, VaultKeySetupPhase.phrase);
+      expect(localTesting(), isTrue);
+      expect(await getSignedInUserId(), AppEnv.localTestUserId);
+      expect(await getMasterKey(), isNotNull);
+      await keys.acknowledge();
+      expect(await keys.registrationUuid(), isNotNull);
+      expect(await original.readAsString(), 'external source fixture');
+    } finally {
+      if (await original.exists()) await original.delete();
+      expect(await SessionCleanup.instance.request(), isTrue);
+    }
+  });
 }

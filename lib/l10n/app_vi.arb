@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Thông báo đồng bộ nhanh",
+  "quickSyncNotificationSettingTitle": "Thông báo đồng bộ tự động",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Khoảng thời gian tự động đồng bộ",
-  "autoSyncIntervalDescription": "Tự động đồng bộ khi bật thông báo đồng bộ nhanh.",
+  "autoSyncIntervalDescription": "Tự động đồng bộ khi bật thông báo đồng bộ tự động.",
   "syncIntervalMinutes": "{minutes} phút",
   "autoSyncIntervalSaveError": "Không thể lưu khoảng thời gian. Vui lòng thử lại.",
-  "autoSyncIntervalApplyError": "Đã lưu khoảng thời gian. Tắt rồi bật lại thông báo đồng bộ nhanh để áp dụng.",
+  "autoSyncIntervalApplyError": "Đã lưu khoảng thời gian. Tắt rồi bật lại thông báo đồng bộ tự động để áp dụng.",
   "quickSyncNotificationTitle": "Dịch vụ đồng bộ tập tin",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Tất cả đăng ký thiết bị hiện có sẽ bị xóa.",
   "lostRecoveryLogoutConsequence": "Các thiết bị khác sẽ đăng xuất và xóa dữ liệu FiFe cục bộ khi phát hiện mình đã bị xóa lúc kết nối mạng.",
   "lostRecoveryKeepConsequence": "Tài khoản email, gói đăng ký, kết nối lưu trữ đám mây và thông tin xác thực nhà cung cấp sẽ được giữ lại. Các tệp trong thư mục riêng của bạn bên ngoài FiFe cũng sẽ được giữ lại.",
-  "lostRecoveryWaitConsequence": "Kho mới sẽ bị khóa cho đến khi việc xóa trên đám mây được xác minh. Quá trình này có thể mất 24 giờ hoặc lâu hơn. Bạn có thể đóng FiFe và tiếp tục sau.",
+  "lostRecoveryWaitConsequence": "Kho mới sẽ bị khóa cho đến khi việc xóa trên đám mây được xác minh. Quá trình này có thể mất 15 phút hoặc lâu hơn. Bạn có thể đóng FiFe và tiếp tục sau.",
   "lostRecoveryNewPhraseConsequence": "Bạn vẫn đăng nhập trên thiết bị này. Sau khi xác minh việc xóa, hãy tạo và lưu cụm từ khôi phục mới gồm 24 từ.",
+  "recoveryResetUnavailable": "Tạm thời không thể đặt lại kho lưu trữ. Vui lòng thử lại sau.",
+  "recoveryResetSigninRequired": "Đăng nhập lại để xác minh phiên của bạn trước khi đặt lại kho lưu trữ.",
   "recoveryResetContinue": "Tiếp tục đặt lại",
   "recoveryResetConfirmTitle": "Xóa vĩnh viễn kho FiFe?",
   "recoveryResetConfirmBody": "Không thể hoàn tác thao tác này. Cụm từ khôi phục hiện tại sẽ ngừng hoạt động và tất cả thiết bị của bạn sẽ bị xóa.",

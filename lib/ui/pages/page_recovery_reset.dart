@@ -61,6 +61,10 @@ class _PageRecoveryResetState extends State<PageRecoveryReset>
     try {
       final view = await action();
       if (!mounted) return;
+      if (view.phase == RecoveryResetPhase.bootstrap) {
+        await context.read<AppSetupState>().recheckStatus();
+        return;
+      }
       setState(() => _view = view);
       if (view.phase == RecoveryResetPhase.registration) {
         await context.read<AppSetupState>().registerDevice();

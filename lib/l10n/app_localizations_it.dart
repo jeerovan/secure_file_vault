@@ -47,14 +47,14 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Notifica sincronizzazione rapida';
+      'Notifica di sincronizzazione automatica';
 
   @override
   String get autoSyncInterval => 'Intervallo di sincronizzazione automatica';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Sincronizza automaticamente mentre la notifica di sincronizzazione rapida è attiva.';
+      'Sincronizza automaticamente mentre la notifica di sincronizzazione automatica è attiva.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -73,7 +73,7 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Intervallo salvato. Disattiva e riattiva la notifica di sincronizzazione rapida per applicarlo.';
+      'Intervallo salvato. Disattiva e riattiva la notifica di sincronizzazione automatica per applicarlo.';
 
   @override
   String get quickSyncNotificationTitle => 'Servizio sincronizzazione file';
@@ -811,11 +811,19 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'La nuova cassaforte resterà bloccata finché l’eliminazione nel cloud non sarà verificata. Potrebbero volerci 24 ore o più. Puoi chiudere FiFe e riprendere più tardi.';
+      'La nuova cassaforte resterà bloccata finché l’eliminazione nel cloud non sarà verificata. Potrebbero volerci 15 minuti o più. Puoi chiudere FiFe e riprendere più tardi.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Resterai connesso su questo dispositivo. Dopo la verifica dell\'eliminazione, genera e salva una nuova frase di recupero di 24 parole.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'Il ripristino del vault è temporaneamente non disponibile. Riprova più tardi.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Accedi di nuovo per verificare la sessione prima di reimpostare la cassaforte.';
 
   @override
   String get recoveryResetContinue => 'Continua con il ripristino';

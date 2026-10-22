@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "क्विक सिंक नोटिफिकेशन",
+  "quickSyncNotificationSettingTitle": "ऑटो सिंक नोटिफिकेशन",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "अपने आप सिंक करने का अंतराल",
-  "autoSyncIntervalDescription": "त्वरित सिंक सूचना चालू रहने पर अपने आप सिंक करें।",
+  "autoSyncIntervalDescription": "ऑटो सिंक नोटिफिकेशन चालू रहने पर अपने आप सिंक करें।",
   "syncIntervalMinutes": "{minutes} मिनट",
   "autoSyncIntervalSaveError": "अंतराल सेव नहीं हो सका। फिर से कोशिश करें।",
-  "autoSyncIntervalApplyError": "अंतराल सेव हो गया। इसे लागू करने के लिए त्वरित सिंक सूचना बंद करके फिर चालू करें।",
+  "autoSyncIntervalApplyError": "अंतराल सेव हो गया। इसे लागू करने के लिए ऑटो सिंक नोटिफिकेशन बंद करके फिर चालू करें।",
   "quickSyncNotificationTitle": "फ़ाइल सिंक सेवा",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "सभी मौजूदा डिवाइस पंजीकरण हटा दिए जाएँगे।",
   "lostRecoveryLogoutConsequence": "अन्य डिवाइस ऑनलाइन होने पर अपना पंजीकरण हटना पहचानते ही साइन आउट करेंगे और अपना स्थानीय FiFe डेटा मिटा देंगे।",
   "lostRecoveryKeepConsequence": "आपका ईमेल खाता, सदस्यता, क्लाउड स्टोरेज कनेक्शन और प्रदाता क्रेडेंशियल सुरक्षित रखे जाएँगे। FiFe के बाहर आपके अपने फ़ोल्डरों की फ़ाइलें भी बनी रहेंगी।",
-  "lostRecoveryWaitConsequence": "क्लाउड से डेटा मिटने की पुष्टि होने तक आपकी नई वॉल्ट बंद रहेगी। इसमें 24 घंटे या अधिक लग सकते हैं। आप FiFe बंद करके बाद में जारी रख सकते हैं।",
+  "lostRecoveryWaitConsequence": "क्लाउड से डेटा मिटने की पुष्टि होने तक आपकी नई वॉल्ट बंद रहेगी। इसमें 15 मिनट या अधिक लग सकते हैं। आप FiFe बंद करके बाद में जारी रख सकते हैं।",
   "lostRecoveryNewPhraseConsequence": "इस डिवाइस पर आप साइन इन रहेंगे। डेटा हटने की पुष्टि के बाद, 24 शब्दों का नया रिकवरी वाक्यांश बनाएँ और सहेजें।",
+  "recoveryResetUnavailable": "वॉल्ट रीसेट अभी उपलब्ध नहीं है। बाद में फिर कोशिश करें।",
+  "recoveryResetSigninRequired": "वॉल्ट रीसेट करने से पहले अपने सत्र की पुष्टि के लिए फिर से साइन इन करें।",
   "recoveryResetContinue": "रीसेट के लिए आगे बढ़ें",
   "recoveryResetConfirmTitle": "FiFe वॉल्ट हमेशा के लिए मिटाएँ?",
   "recoveryResetConfirmBody": "इसे वापस नहीं किया जा सकता। आपका मौजूदा रिकवरी वाक्यांश काम करना बंद कर देगा और आपके सभी डिवाइस हटा दिए जाएँगे।",

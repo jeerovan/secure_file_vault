@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Notifica sincronizzazione rapida",
+  "quickSyncNotificationSettingTitle": "Notifica di sincronizzazione automatica",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Intervallo di sincronizzazione automatica",
-  "autoSyncIntervalDescription": "Sincronizza automaticamente mentre la notifica di sincronizzazione rapida è attiva.",
+  "autoSyncIntervalDescription": "Sincronizza automaticamente mentre la notifica di sincronizzazione automatica è attiva.",
   "syncIntervalMinutes": "{minutes, plural, =1{1 minuto} other{{minutes} minuti}}",
   "autoSyncIntervalSaveError": "Impossibile salvare l’intervallo. Riprova.",
-  "autoSyncIntervalApplyError": "Intervallo salvato. Disattiva e riattiva la notifica di sincronizzazione rapida per applicarlo.",
+  "autoSyncIntervalApplyError": "Intervallo salvato. Disattiva e riattiva la notifica di sincronizzazione automatica per applicarlo.",
   "quickSyncNotificationTitle": "Servizio sincronizzazione file",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Tutte le registrazioni dei dispositivi esistenti verranno rimosse.",
   "lostRecoveryLogoutConsequence": "Gli altri dispositivi si disconnetteranno e cancelleranno i dati FiFe locali quando rileveranno la propria rimozione mentre sono online.",
   "lostRecoveryKeepConsequence": "Il tuo account e-mail, l'abbonamento, le connessioni di archiviazione cloud e le credenziali dei provider verranno conservati. Verranno conservati anche i file nelle tue cartelle personali al di fuori di FiFe.",
-  "lostRecoveryWaitConsequence": "La nuova cassaforte resterà bloccata finché l’eliminazione nel cloud non sarà verificata. Potrebbero volerci 24 ore o più. Puoi chiudere FiFe e riprendere più tardi.",
+  "lostRecoveryWaitConsequence": "La nuova cassaforte resterà bloccata finché l’eliminazione nel cloud non sarà verificata. Potrebbero volerci 15 minuti o più. Puoi chiudere FiFe e riprendere più tardi.",
   "lostRecoveryNewPhraseConsequence": "Resterai connesso su questo dispositivo. Dopo la verifica dell'eliminazione, genera e salva una nuova frase di recupero di 24 parole.",
+  "recoveryResetUnavailable": "Il ripristino del vault è temporaneamente non disponibile. Riprova più tardi.",
+  "recoveryResetSigninRequired": "Accedi di nuovo per verificare la sessione prima di reimpostare la cassaforte.",
   "recoveryResetContinue": "Continua con il ripristino",
   "recoveryResetConfirmTitle": "Eliminare definitivamente la cassaforte FiFe?",
   "recoveryResetConfirmBody": "L’operazione è irreversibile. La frase di recupero attuale smetterà di funzionare e tutti i tuoi dispositivi verranno rimossi.",

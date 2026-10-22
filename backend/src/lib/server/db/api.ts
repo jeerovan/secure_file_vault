@@ -96,7 +96,22 @@ export async function addUser(
 				[UserKeys.CIPHER]: cipher,
 				[UserKeys.NONCE]: nonce
 			})
+			.onConflictDoNothing()
 			.returning();
+		if (!newUser) {
+			const [existing] = await tx
+				.select()
+				.from(user)
+				.where(eq(user[UserKeys.REMOTE_AUTH_ID], supabaseId))
+				.for('update');
+			// A lost response may retry the same envelope; a competing device
+			// may never replace the first account/key creation or another identity.
+			return existing?.[UserKeys.EMAIL].toLowerCase() === email.toLowerCase() &&
+				existing[UserKeys.CIPHER] === cipher &&
+				existing[UserKeys.NONCE] === nonce
+				? existing
+				: undefined;
+		}
 
 		await tx.insert(userData).values({
 			[UserDataKeys.USER_ID]: newUser[UserKeys.ID],

@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Quick-Sync-Benachrichtigung",
+  "quickSyncNotificationSettingTitle": "Benachrichtigung zur automatischen Synchronisierung",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Intervall für automatische Synchronisierung",
-  "autoSyncIntervalDescription": "Automatisch synchronisieren, solange die Schnellsynchronisierungsbenachrichtigung aktiviert ist.",
+  "autoSyncIntervalDescription": "Automatisch synchronisieren, solange die Benachrichtigung zur automatischen Synchronisierung aktiviert ist.",
   "syncIntervalMinutes": "{minutes, plural, =1{1 Minute} other{{minutes} Minuten}}",
   "autoSyncIntervalSaveError": "Das Intervall konnte nicht gespeichert werden. Versuche es erneut.",
-  "autoSyncIntervalApplyError": "Intervall gespeichert. Schalte die Schnellsynchronisierungsbenachrichtigung aus und wieder ein, um es anzuwenden.",
+  "autoSyncIntervalApplyError": "Intervall gespeichert. Schalte die Benachrichtigung zur automatischen Synchronisierung aus und wieder ein, um es anzuwenden.",
   "quickSyncNotificationTitle": "Datei-Sync-Dienst",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Alle bisherigen Geräteregistrierungen werden entfernt.",
   "lostRecoveryLogoutConsequence": "Andere Geräte melden sich ab und löschen ihre lokalen FiFe-Daten, sobald sie online bemerken, dass sie entfernt wurden.",
   "lostRecoveryKeepConsequence": "Dein E-Mail-Konto, dein Abonnement, deine Cloud-Speicher-Verbindungen und Anbieter-Zugangsdaten bleiben erhalten. Dateien in deinen eigenen Ordnern außerhalb von FiFe bleiben ebenfalls erhalten.",
-  "lostRecoveryWaitConsequence": "Dein neuer Tresor bleibt gesperrt, bis die Löschung in der Cloud bestätigt ist. Das kann 24 Stunden oder länger dauern. Du kannst FiFe schließen und später fortfahren.",
+  "lostRecoveryWaitConsequence": "Dein neuer Tresor bleibt gesperrt, bis die Löschung in der Cloud bestätigt ist. Das kann 15 Minuten oder länger dauern. Du kannst FiFe schließen und später fortfahren.",
   "lostRecoveryNewPhraseConsequence": "Du bleibst auf diesem Gerät angemeldet. Erstelle und sichere nach bestätigter Löschung eine neue Wiederherstellungsphrase mit 24 Wörtern.",
+  "recoveryResetUnavailable": "Das Zurücksetzen des Tresors ist vorübergehend nicht verfügbar. Versuche es später erneut.",
+  "recoveryResetSigninRequired": "Melde dich erneut an, um deine Sitzung vor dem Zurücksetzen des Tresors zu bestätigen.",
   "recoveryResetContinue": "Mit Zurücksetzen fortfahren",
   "recoveryResetConfirmTitle": "Deinen FiFe-Tresor dauerhaft löschen?",
   "recoveryResetConfirmBody": "Dies lässt sich nicht rückgängig machen. Deine bisherige Wiederherstellungsphrase wird ungültig und alle deine Geräte werden entfernt.",

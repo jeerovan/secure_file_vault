@@ -40,17 +40,25 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
   Future<void> loadFromLocal() async {
     ModelProfile? profile = await ModelProfile.get();
-    if (profile != null) {
-      if (profile.planExpiresAt! > 0) {
-        _isActive = true;
-      }
+    if (profile != null && mounted) {
+      final expiry = profile.planExpiresAt ?? 0;
+      final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+      setState(() {
+        _isActive = expiry > now;
+        _isExpired = expiry > 0 && expiry <= now;
+      });
     }
   }
 
   Future<void> _initializeData() async {
     setState(() => _isLoading = true);
     try {
+      if (!await Purchases.isConfigured) {
+        await loadFromLocal();
+        return;
+      }
       final customerInfo = await Purchases.getCustomerInfo();
+      if (!mounted) return;
       final entitlement = customerInfo.entitlements.all[entitlementId];
       final isEntitled =
           customerInfo.entitlements.all[entitlementId]?.isActive ?? false;
@@ -74,6 +82,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
       if (!_isActive) {
         final offerings = await Purchases.getOfferings();
+        if (!mounted) return;
         if (offerings.current != null && offerings.current!.annual != null) {
           setState(() {
             _proPackage = offerings.current!.annual;
@@ -83,7 +92,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     } catch (e) {
       logger.error("Error initializing purchases", error: e);
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -134,6 +143,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Future<void> _restorePurchases() async {
     setState(() => _isLoading = true);
     try {
+      if (!await Purchases.isConfigured) {
+        throw StateError('Purchases are not configured');
+      }
       CustomerInfo customerInfo = await Purchases.restorePurchases();
       final isEntitled =
           customerInfo.entitlements.all[entitlementId]?.isActive ?? false;

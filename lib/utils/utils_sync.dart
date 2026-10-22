@@ -61,9 +61,8 @@ class SyncUtils {
   static final logger = AppLogger(prefixes: ["Sync"]);
 
   void startAutoSync() {
-    final minutes = isDebugEnabled ? 5 : 15;
     _foregroundSyncTimer?.cancel();
-    _foregroundSyncTimer = Timer.periodic(Duration(minutes: minutes), (timer) {
+    _foregroundSyncTimer = Timer.periodic(const Duration(minutes: 15), (timer) {
       reconFolders(caller: "AutoSync");
     });
   }
@@ -291,30 +290,24 @@ class SyncUtils {
 
   static Future<bool> signout() async {
     bool success = false;
-    bool hasInternet = await InternetConnection().hasInternetAccess;
-    if (!hasInternet) return false;
     String? userId = await getSignedInUserId();
     if (userId != null) {
       String deviceUuid = await getDeviceUuid();
       try {
-        if (localTesting()) {
-          final api = BackendApi();
-          final response =
-              await api.post(endpoint: '/local-test/reset', jsonBody: {});
-          if (response["success"] != 1) return false;
-        } else if (!simulateTesting()) {
+        if (!simulateTesting()) {
           if (deviceUuid.isNotEmpty) {
             final api = BackendApi();
             final response = await api.post(
                 endpoint: '/signout', jsonBody: {"device_uuid": deviceUuid});
-            if (response["success"] == 0) {
+            if (response["success"] != 1) {
               return false;
             }
           }
-          // Neon signout
-          bool success = await NeonAuth().signOut();
-          if (!success) {
-            return false;
+          // Local test sessions have no Neon session. Their vault must survive
+          // sign-out just like a normal account, including the final device.
+          if (!localTesting()) {
+            bool success = await NeonAuth().signOut();
+            if (!success) return false;
           }
         }
         success = await resetDevice();

@@ -47,14 +47,14 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get quickSyncNotificationSettingTitle =>
-      'Snelle synchronisatie-melding';
+      'Melding voor automatisch synchroniseren';
 
   @override
   String get autoSyncInterval => 'Interval voor automatisch synchroniseren';
 
   @override
   String get autoSyncIntervalDescription =>
-      'Synchroniseer automatisch zolang de melding voor snel synchroniseren is ingeschakeld.';
+      'Synchroniseer automatisch zolang de melding voor automatisch synchroniseren is ingeschakeld.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -73,7 +73,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      'Interval opgeslagen. Schakel de melding voor snel synchroniseren uit en weer in om het toe te passen.';
+      'Interval opgeslagen. Schakel de melding voor automatisch synchroniseren uit en weer in om het toe te passen.';
 
   @override
   String get quickSyncNotificationTitle => 'Bestandsynchronisatiedienst';
@@ -808,11 +808,19 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      'Je nieuwe kluis blijft vergrendeld totdat de verwijdering in de cloud is geverifieerd. Dit kan 24 uur of langer duren. Je kunt FiFe sluiten en later verdergaan.';
+      'Je nieuwe kluis blijft vergrendeld totdat de verwijdering in de cloud is geverifieerd. Dit kan 15 minuten of langer duren. Je kunt FiFe sluiten en later verdergaan.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       'Je blijft op dit apparaat ingelogd. Maak en bewaar na bevestiging van de verwijdering een nieuwe herstelzin van 24 woorden.';
+
+  @override
+  String get recoveryResetUnavailable =>
+      'De kluis kan tijdelijk niet worden gereset. Probeer het later opnieuw.';
+
+  @override
+  String get recoveryResetSigninRequired =>
+      'Meld je opnieuw aan om je sessie te verifiëren voordat je de kluis opnieuw instelt.';
 
   @override
   String get recoveryResetContinue => 'Doorgaan met opnieuw instellen';

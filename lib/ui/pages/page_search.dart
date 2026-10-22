@@ -1,16 +1,14 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:open_filex/open_filex.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/model_item_task.dart';
 import '../../services/service_logger.dart';
-import '../../utils/enums.dart';
 import '../../utils/utils_tasks.dart';
 import 'page_file_info.dart';
+import '../item_selection_actions.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -19,7 +17,8 @@ class SearchScreen extends StatefulWidget {
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen> {
+class _SearchScreenState extends State<SearchScreen>
+    with WidgetsBindingObserver {
   AppLogger logger = AppLogger(prefixes: ["Search"]);
   bool processing = false;
   Timer? _debounce;
@@ -30,14 +29,27 @@ class _SearchScreenState extends State<SearchScreen> {
       ValueNotifier({});
   final ValueNotifier<bool> _isMultiSelectNotifier = ValueNotifier(false);
 
+  late final ItemSelectionActions _selectionActions =
+      ItemSelectionActions(_selectedItemsNotifier);
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _searchController = TextEditingController();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_selectionActions.refresh());
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _selectionActions.dispose();
     _debounce?.cancel();
     _searchController.dispose();
     _itemsNotifier.dispose();
@@ -51,6 +63,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     final searchQuery = query.trim();
     if (searchQuery.isEmpty) {
+      _cancelMultiSelect();
       _itemsNotifier.value = [];
       return;
     }
@@ -61,7 +74,9 @@ class _SearchScreenState extends State<SearchScreen> {
       List<ModelItem> searchedItems = await ModelItem.searchItem(searchQuery);
       if (mounted) {
         setState(() {
-          _itemsNotifier.value = searchedItems;
+          _itemsNotifier.value =
+              searchedItems.where((item) => item.archivedAt == 0).toList();
+          unawaited(_selectionActions.refresh());
         });
       }
     } catch (e, s) {
@@ -137,47 +152,28 @@ class _SearchScreenState extends State<SearchScreen> {
     _selectedItemsNotifier.value = {};
   }
 
-  Future<void> trashItems() async {
-    final currentItems = List<ModelItem>.from(_itemsNotifier.value);
-    final toRemove = [];
-    final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
-    logger.log('Trashing ${selectedItems.length} items');
-    for (ModelItem modelItem in selectedItems) {
-      bool addToRemove = true;
-      bool isLocalPath = await ModelItem.isLocalPath(modelItem.id);
-      if (isLocalPath) {
-        String localPath = await ModelItem.getPathForLocalItem(modelItem.id);
-        if (File(localPath).existsSync()) {
-          addToRemove = false;
-        }
-      }
-      if (addToRemove) {
-        modelItem.archivedAt = DateTime.now().toUtc().millisecondsSinceEpoch;
-        await modelItem.update(["archived_at"]);
-        toRemove.add(modelItem);
-      }
+  Future<void> _performSelectionAction(ItemSelectionAction action) async {
+    final completed = await _selectionActions.perform(action);
+    if (!mounted) return;
+    if (!completed) {
+      displaySnackBar(context,
+          message: AppLocalizations.of(context)!.pleaseTryAgain, seconds: 3);
+      await performSearch(_searchController.text);
+      return;
     }
-    currentItems.removeWhere((item) => toRemove.contains(item));
-    _itemsNotifier.value = currentItems;
+    if (action == ItemSelectionAction.download) TaskManager.init();
     _cancelMultiSelect();
+    await performSearch(_searchController.text);
   }
 
-  Future<void> downloadItems() async {
-    final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
-    logger.log('Downloading ${selectedItems.length} items');
-    bool hasTasks = false;
-    for (ModelItem item in selectedItems) {
-      String path = await ModelItem.getPathForItem(item.id);
-      if (!File(path).existsSync()) {
-        await ModelItemTask.addTask(item.id, ItemTask.download.value);
-        hasTasks = true;
-      }
-    }
-    if (hasTasks) {
-      TaskManager.init();
-    }
-    _cancelMultiSelect();
-  }
+  Future<void> trashItems() =>
+      _performSelectionAction(ItemSelectionAction.archive);
+
+  Future<void> deleteLocal() =>
+      _performSelectionAction(ItemSelectionAction.deleteLocal);
+
+  Future<void> downloadItems() =>
+      _performSelectionAction(ItemSelectionAction.download);
 
   Future<void> showInfo() async {
     final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
@@ -195,8 +191,8 @@ class _SearchScreenState extends State<SearchScreen> {
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
 
     return ListenableBuilder(
-      listenable:
-          Listenable.merge([_selectedItemsNotifier, _isMultiSelectNotifier]),
+      listenable: Listenable.merge(
+          [_selectedItemsNotifier, _isMultiSelectNotifier, _selectionActions]),
       builder: (context, _) {
         final isMultiSelectMode = _isMultiSelectNotifier.value;
         final selectedItems = _selectedItemsNotifier.value;
@@ -214,22 +210,30 @@ class _SearchScreenState extends State<SearchScreen> {
                   .selectedItemsCount(selectedItems.length),
             ),
             actions: [
-              if (selectedItems.length == 1)
+              if (_selectionActions.allows(ItemSelectionAction.deleteLocal))
+                IconButton(
+                  icon: const Icon(LucideIcons.trash),
+                  tooltip: AppLocalizations.of(context)!.delete,
+                  onPressed: deleteLocal,
+                ),
+              if (selectedItems.length == 1 && !selectedItems.first.isFolder)
                 IconButton(
                   icon: const Icon(LucideIcons.info),
                   tooltip: AppLocalizations.of(context)!.info,
                   onPressed: showInfo,
                 ),
-              IconButton(
-                icon: const Icon(LucideIcons.downloadCloud),
-                tooltip: AppLocalizations.of(context)!.download,
-                onPressed: downloadItems,
-              ),
-              IconButton(
-                icon: const Icon(LucideIcons.archive),
-                tooltip: AppLocalizations.of(context)!.archive,
-                onPressed: trashItems,
-              ),
+              if (_selectionActions.allows(ItemSelectionAction.download))
+                IconButton(
+                  icon: const Icon(LucideIcons.downloadCloud),
+                  tooltip: AppLocalizations.of(context)!.download,
+                  onPressed: downloadItems,
+                ),
+              if (_selectionActions.allows(ItemSelectionAction.archive))
+                IconButton(
+                  icon: const Icon(LucideIcons.archive),
+                  tooltip: AppLocalizations.of(context)!.archive,
+                  onPressed: trashItems,
+                ),
             ],
           );
         }

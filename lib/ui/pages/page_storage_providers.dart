@@ -56,6 +56,10 @@ class _StorageProvidersScreenState extends State<StorageProvidersScreen> {
 
   Future<void> _initializeData() async {
     try {
+      if (!await Purchases.isConfigured) {
+        await loadFromLocal();
+        return;
+      }
       final customerInfo = await Purchases.getCustomerInfo();
       bool isActive =
           customerInfo.entitlements.all[entitlementId]?.isActive ?? false;

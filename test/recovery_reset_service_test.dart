@@ -5,9 +5,9 @@ import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_recovery_reset.dart';
 import 'package:file_vault_bb/services/service_session_cleanup.dart';
+import 'package:file_vault_bb/services/service_session_work.dart';
 import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
-import 'package:file_vault_bb/utils/utils_crypto.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,23 +32,96 @@ void main() {
   tearDown(() async => fixture.dispose());
   Map<String, dynamic> stage() => jsonDecode(fixture.secrets[stageKey]!);
 
+  for (final available in [true, false]) {
+    test('readiness check is read-only when available=$available', () async {
+      peer.available = available;
+      expect(await peer.service().checkAvailability(), available);
+      expect(ModelSetting.get(AppString.recoveryResetAvailable.string),
+          available ? 'yes' : 'no');
+      expect(peer.requests, ['GET /api/recovery-reset/status']);
+      expect(fixture.secrets[stageKey], isNull);
+      expect(await getMasterKey(), isNull);
+      expect(await getSignedInUserId(), 'fixture-user');
+      expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
+    });
+  }
+
+  test('failed readiness check cannot enable reset or stage new keys',
+      () async {
+    await ModelSetting.set(AppString.recoveryResetAvailable.string, 'no');
+    peer.offline = true;
+    await expectLater(peer.service().checkAvailability(), throwsException);
+    expect(ModelSetting.get(AppString.recoveryResetAvailable.string), 'no');
+    expect(fixture.secrets[stageKey], isNull);
+    expect(await getSignedInUserId(), 'fixture-user');
+    expect(peer.prepareCalls, 0);
+    expect(peer.confirmCalls, 0);
+  });
+
+  for (final error in ['sign_in_again', '14', '18']) {
+    test(
+        'readiness requires explicit reauthentication for $error without cleanup',
+        () async {
+      peer.statusError = error;
+      final originalSecrets = Map.of(fixture.secrets);
+      await expectLater(peer.service().checkAvailability(),
+          throwsA(isA<RecoveryReauthenticationRequired>()));
+      expect(fixture.secrets, originalSecrets);
+      expect(await getSignedInUserId(), 'fixture-user');
+      expect(
+          peer.requests.every((request) => request.startsWith('GET ')), isTrue);
+      expect(peer.prepareCalls, 0);
+      expect(peer.confirmCalls, 0);
+    });
+  }
+
+  test(
+      'temporary session verification failure does not request reauthentication',
+      () async {
+    peer.statusError = 'session_unavailable';
+    final originalSecrets = Map.of(fixture.secrets);
+    await expectLater(peer.service().checkAvailability(),
+        throwsA(isNot(isA<RecoveryReauthenticationRequired>())));
+    expect(fixture.secrets, originalSecrets);
+    expect(await getSignedInUserId(), 'fixture-user');
+    expect(peer.prepareCalls, 0);
+    expect(peer.confirmCalls, 0);
+  });
+
+  test('readiness from a revoked session cannot enable reset', () async {
+    await ModelSetting.set(AppString.recoveryResetAvailable.string, 'no');
+    final entered = Completer<void>();
+    final release = Completer<void>();
+    peer.beforeStatus = () {
+      entered.complete();
+      return release.future;
+    };
+    final check = peer.service().checkAvailability();
+    await entered.future;
+    SessionWork.invalidate('revoked-readiness-session');
+    final rejected = expectLater(check, throwsA(isA<SessionInvalidated>()));
+    release.complete();
+    await rejected;
+    expect(ModelSetting.get(AppString.recoveryResetAvailable.string), 'no');
+    expect(fixture.secrets[stageKey], isNull);
+  });
+
   test(
       'verified deletion returns to generation without signing out or activating keys',
       () async {
     final service = peer.service();
     await service.confirm();
-    final staged = stage()['privateKeys'];
     peer.phase = 'ready';
     final ready = await peer.service().refresh();
-    expect(ready.phase, RecoveryResetPhase.generation);
+    expect(ready.phase, RecoveryResetPhase.bootstrap);
     expect(await getMasterKey(), isNull);
     expect(await getSignedInUserId(), 'fixture-user');
     expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
     expect(await getDeviceUuid(), isEmpty);
     expect(await SyncUtils.canSync(), isFalse);
     expect(
-        (await peer.service().refresh()).phase, RecoveryResetPhase.generation);
-    expect(stage()['privateKeys'], staged);
+        (await peer.service().refresh()).phase, RecoveryResetPhase.bootstrap);
+    expect(fixture.secrets[stageKey], isNull);
     expect(peer.confirmCalls, 1);
   });
 
@@ -65,6 +138,8 @@ void main() {
 
   test('failed durable generation action activates no keys and can be retried',
       () async {
+    peer.deferredKeySetup = false; // Resume a released, already-staged reset.
+
     await peer.service().confirm();
     final before = stage()['privateKeys'];
     peer.phase = 'ready';
@@ -120,41 +195,47 @@ void main() {
     });
     peer.phase = 'ready';
     expect(
-        (await peer.service().refresh()).phase, RecoveryResetPhase.generation);
+        (await peer.service().refresh()).phase, RecoveryResetPhase.bootstrap);
+    expect(fixture.secrets[stageKey], isNull);
     expect(await getMasterKey(), isNull);
-    expect(
-        (await peer.service().generateKeys()).phase, RecoveryResetPhase.phrase);
-    expect(fixture.secrets[AppString.masterKey.string],
-        saved['privateKeys'][AppString.masterKey.string]);
-    final crypto = CryptoUtils(fixture.sodium);
-    expect(
-        crypto
-            .decryptBytes(
-                cipherBytes: base64Decode(peer.envelope!['cipher']),
-                nonce: base64Decode(peer.envelope!['nonce']),
-                key: base64Decode(fixture.secrets[AppString.accessKey.string]!))
-            .isFailure,
-        isFalse);
-    expect(
-        crypto
-            .decryptBytes(
-                cipherBytes: base64Decode(peer.envelope!['cipher']),
-                nonce: base64Decode(peer.envelope!['nonce']),
-                key: Uint8List(32))
-            .isFailure,
-        isTrue);
     expect(await SyncUtils.canSync(), isFalse);
-    expect((await service.acknowledgePhrase()).phase,
-        RecoveryResetPhase.registration);
-    final uuid = await ModelSetting.getRaw(AppString.pendingDeviceUuid.string);
-    expect(uuid, saved['deviceUuid']);
-    expect(uuid, isNot('fixture-device-uuid'));
-    await ModelSetting.set(AppString.deviceUuid.string, uuid);
-    await service.finishRegistration(uuid);
-    expect(await service.hasPending(), isFalse);
-    expect(await SyncUtils.canSync(), isTrue);
     expect(await ModelSetting.getRaw(AppString.vaultGeneration.string),
         RecoveryResetPeer.generation);
+  });
+
+  test('a newly signed-in device observes shared deletion and fresh setup',
+      () async {
+    await peer.service().confirm();
+    fixture.secrets.remove(stageKey); // No initiating-device private state.
+    var view = await peer.service().refresh();
+    expect(view.phase, RecoveryResetPhase.waiting);
+    expect(view.notBefore, peer.notBefore);
+    expect(await getMasterKey(), isNull);
+    peer.phase = 'ready';
+    view = await peer.service().refresh();
+    expect(view.phase, RecoveryResetPhase.bootstrap);
+    expect(await getSignedInUserId(), 'fixture-user');
+    expect(await ModelSetting.getRaw(AppString.vaultGeneration.string),
+        RecoveryResetPeer.generation);
+    expect(peer.confirmCalls, 1);
+  });
+
+  test('shared cleanup failure remains waiting without generating keys',
+      () async {
+    await peer.service().confirm();
+    fixture.secrets.remove(stageKey);
+    peer.operationError = 'storage_unavailable';
+    final view = await peer.service().refresh();
+    expect(view.phase, RecoveryResetPhase.waiting);
+    expect(view.error, 'storage_unavailable');
+    expect(await getMasterKey(), isNull);
+    expect(peer.confirmCalls, 1);
+  });
+
+  test('an older server cannot enable deferred-key reset', () async {
+    peer.deferredKeySetup = false;
+    expect(await peer.service().checkAvailability(), isFalse);
+    expect(fixture.secrets[stageKey], isNull);
   });
 
   test('double confirmation taps create one operation and one key set',
@@ -318,6 +399,8 @@ void main() {
 
   test('partial activation retries the same keys after process restart',
       () async {
+    peer.deferredKeySetup = false; // Resume a released, already-staged reset.
+
     final service = peer.service();
     await service.confirm();
     peer.phase = 'ready';
@@ -343,6 +426,8 @@ void main() {
   test(
       'expired authentication preserves new staging while clearing account/session state',
       () async {
+    peer.deferredKeySetup = false; // Resume a released, already-staged reset.
+
     await peer.service().confirm();
     final before = fixture.secrets[stageKey];
     expect(await SessionCleanup.instance.expiredAuthentication(), isTrue);

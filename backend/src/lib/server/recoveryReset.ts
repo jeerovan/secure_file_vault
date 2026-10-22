@@ -30,6 +30,7 @@ import {
 } from './db/keys';
 import { ensureDefaultFiFeStorage } from './defaultStorage';
 import { backblazeS3Credentials } from './backblazeS3';
+import { resetNotBefore } from './recoveryWait';
 import {
 	RecoveryFault,
 	recoveryHash,
@@ -168,7 +169,8 @@ export class RecoveryResetService {
 		private readonly userId: number,
 		private readonly session: RecoverySession,
 		private readonly cloud: RecoveryStorage,
-		private readonly clock: () => number = Date.now
+		private readonly clock: () => number = Date.now,
+		private readonly uploadAccountingSince?: number
 	) {}
 
 	private async account(tx: Db | Tx, lock = false) {
@@ -199,6 +201,7 @@ export class RecoveryResetService {
 			operationId: operation.id,
 			phase: operation.phase,
 			generation: operation.nextGeneration,
+			keySetupProtocol: 2,
 			expiresAt: operation.expiresAt,
 			expired: operation.phase === 'prepared' && operation.expiresAt <= this.clock(),
 			requiresFreshSignin:
@@ -373,13 +376,6 @@ export class RecoveryResetService {
 			);
 			if (JSON.stringify(targets) !== JSON.stringify(snapshot.targets))
 				throw new RecoveryFault('storage_changed');
-			const lifetime = targets.some((target) =>
-				[StorageProvider.FIFE, StorageProvider.BACKBLAZE].includes(target.providerId)
-			)
-				? 24 * 60 * 60_000
-				: targets.length
-					? 60 * 60_000
-					: 0;
 			const [capability] = await tx
 				.select()
 				.from(vaultUploadCapability)
@@ -390,10 +386,12 @@ export class RecoveryResetService {
 					)
 				);
 			if (capability && !targets.length) throw new RecoveryFault('storage_access_required');
-			// Old deployments may have issued capabilities without accounting.
-			// Never reduce that conservative floor or any committed deadline.
-			const notBefore =
-				Math.max(now + lifetime, capability?.expiresAt ?? 0) + (lifetime ? 60_000 : 0);
+			const notBefore = resetNotBefore({
+				now,
+				providerIds: targets.map((target) => target.providerId),
+				capabilityExpiresAt: capability?.expiresAt,
+				uploadAccountingSince: this.uploadAccountingSince
+			});
 			for (const target of targets)
 				await tx.insert(recoveryCleanupTarget).values({
 					id: crypto.randomUUID(),
@@ -434,7 +432,10 @@ export class RecoveryResetService {
 				.where(eq(userData[UserDataKeys.USER_ID], this.userId));
 			await tx
 				.update(user)
-				.set({ [UserKeys.CIPHER]: input.cipher, [UserKeys.NONCE]: input.nonce })
+				// Confirmation staging binds retries; it must not initialize keys.
+				// Any current authenticated device may claim the fresh envelope only
+				// after cleanup has been verified, through the atomic /keys write.
+				.set({ [UserKeys.CIPHER]: null, [UserKeys.NONCE]: null })
 				.where(eq(user[UserKeys.ID], this.userId));
 			await tx
 				.insert(vaultState)

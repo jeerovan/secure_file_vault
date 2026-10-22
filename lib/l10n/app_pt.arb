@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "Notificação de sincronização rápida",
+  "quickSyncNotificationSettingTitle": "Notificação de sincronização automática",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "Intervalo de sincronização automática",
-  "autoSyncIntervalDescription": "Sincronize automaticamente enquanto a notificação de sincronização rápida estiver ativada.",
+  "autoSyncIntervalDescription": "Sincronize automaticamente enquanto a notificação de sincronização automática estiver ativada.",
   "syncIntervalMinutes": "{minutes, plural, =1{1 minuto} other{{minutes} minutos}}",
   "autoSyncIntervalSaveError": "Não foi possível salvar o intervalo. Tente novamente.",
-  "autoSyncIntervalApplyError": "Intervalo salvo. Desative e reative a notificação de sincronização rápida para aplicá-lo.",
+  "autoSyncIntervalApplyError": "Intervalo salvo. Desative e reative a notificação de sincronização automática para aplicá-lo.",
   "quickSyncNotificationTitle": "Serviço de sincronização de ficheiros",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "Todos os registros de dispositivos existentes serão removidos.",
   "lostRecoveryLogoutConsequence": "Os outros dispositivos sairão da conta e apagarão seus dados locais do FiFe quando detectarem a remoção ao se conectarem à internet.",
   "lostRecoveryKeepConsequence": "Sua conta de e-mail, assinatura, conexões de armazenamento em nuvem e credenciais dos provedores serão mantidas. Os arquivos em suas próprias pastas fora do FiFe também serão mantidos.",
-  "lostRecoveryWaitConsequence": "Seu novo cofre ficará bloqueado até que a exclusão na nuvem seja verificada. Isso pode levar 24 horas ou mais. Você pode fechar o FiFe e continuar depois.",
+  "lostRecoveryWaitConsequence": "Seu novo cofre ficará bloqueado até que a exclusão na nuvem seja verificada. Isso pode levar 15 minutos ou mais. Você pode fechar o FiFe e continuar depois.",
   "lostRecoveryNewPhraseConsequence": "Você continuará conectado neste dispositivo. Após a verificação da exclusão, gere e salve uma nova frase de recuperação de 24 palavras.",
+  "recoveryResetUnavailable": "A redefinição do cofre está temporariamente indisponível. Tente novamente mais tarde.",
+  "recoveryResetSigninRequired": "Entre novamente para verificar sua sessão antes de redefinir o cofre.",
   "recoveryResetContinue": "Continuar redefinição",
   "recoveryResetConfirmTitle": "Excluir permanentemente seu cofre FiFe?",
   "recoveryResetConfirmBody": "Esta ação não pode ser desfeita. Sua frase de recuperação atual deixará de funcionar e todos os seus dispositivos serão removidos.",

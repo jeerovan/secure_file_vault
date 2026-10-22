@@ -43,6 +43,7 @@ class AppEnv {
       String.fromEnvironment('LOCAL_API_BASE_URL', defaultValue: '');
   static const String localTestAuthToken =
       String.fromEnvironment('LOCAL_TEST_AUTH_TOKEN', defaultValue: '');
+  static const String localSessionPrefix = 'fife-local.';
   static const String localTestUserId = String.fromEnvironment(
     'LOCAL_TEST_USER_ID',
     defaultValue: 'local-integration-user',
@@ -90,8 +91,7 @@ bool isLocalTestingEmail(String email) =>
 bool revenueCatSupported =
     Platform.isIOS || Platform.isAndroid || Platform.isMacOS;
 
-bool get subscriptionsSupported =>
-    revenueCatSupported && !AppEnv.localTestingBuild;
+bool get subscriptionsSupported => revenueCatSupported;
 
 bool runningOnMobile = Platform.isAndroid || Platform.isIOS;
 

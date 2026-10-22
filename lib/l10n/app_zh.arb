@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "快速同步通知",
+  "quickSyncNotificationSettingTitle": "自动同步通知",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "自动同步间隔",
-  "autoSyncIntervalDescription": "启用快速同步通知时自动同步。",
+  "autoSyncIntervalDescription": "启用自动同步通知时自动同步。",
   "syncIntervalMinutes": "{minutes}分钟",
   "autoSyncIntervalSaveError": "无法保存间隔，请重试。",
-  "autoSyncIntervalApplyError": "间隔已保存。请关闭后重新开启快速同步通知以应用。",
+  "autoSyncIntervalApplyError": "间隔已保存。请关闭后重新开启自动同步通知以应用。",
   "quickSyncNotificationTitle": "文件同步服务",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "所有现有设备注册都将被移除。",
   "lostRecoveryLogoutConsequence": "其他设备联网后发现自己已被移除时，将自动退出登录并清除本地 FiFe 数据。",
   "lostRecoveryKeepConsequence": "您的电子邮件账户、订阅、云存储连接和提供商凭据将被保留。FiFe 之外您自己文件夹中的文件也会保留。",
-  "lostRecoveryWaitConsequence": "在确认云端数据已删除之前，新保险库将保持锁定。这可能需要 24 小时或更长时间。您可以关闭 FiFe，稍后继续。",
+  "lostRecoveryWaitConsequence": "在确认云端数据已删除之前，新保险库将保持锁定。这可能需要 15 分钟或更长时间。您可以关闭 FiFe，稍后继续。",
   "lostRecoveryNewPhraseConsequence": "您将在此设备上保持登录。删除验证完成后，请生成并保存新的 24 词恢复短语。",
+  "recoveryResetUnavailable": "暂时无法重置保险库。请稍后重试。",
+  "recoveryResetSigninRequired": "重置保险库之前，请重新登录以验证您的会话。",
   "recoveryResetContinue": "继续重置",
   "recoveryResetConfirmTitle": "永久删除您的 FiFe 保险库？",
   "recoveryResetConfirmBody": "此操作无法撤销。现有恢复短语将失效，您的所有设备都将被移除。",

@@ -105,6 +105,7 @@ class BackendApi {
     final h = <String, String>{
       'Content-Type': 'application/json',
       'X-FiFe-Vault-Protocol': '1',
+      'X-FiFe-Recovery-Protocol': '2',
       'X-FiFe-Managed-Uploads': '1',
       if (withAuth && accessToken != null)
         'Authorization': 'Bearer $accessToken',
@@ -115,9 +116,15 @@ class BackendApi {
     if (generation.isNotEmpty && generation != 'legacy') {
       h['X-FiFe-Vault-Generation'] = generation;
     }
-    if (withAuth && bootstrap && !_isLocalTesting && _base.scheme == 'https') {
+    // Local authentication issues its own session proof. Real Neon cookies
+    // still require HTTPS; both proofs enter the same bootstrap/reset policy.
+    if (withAuth && bootstrap && (_isLocalTesting || _base.scheme == 'https')) {
       final cookie = await _storage.read(key: AppString.sessionCookie.string);
-      if (cookie != null && cookie.isNotEmpty) h['X-FiFe-Session'] = cookie;
+      if (cookie != null &&
+          cookie.isNotEmpty &&
+          (!_isLocalTesting || cookie.startsWith(AppEnv.localSessionPrefix))) {
+        h['X-FiFe-Session'] = cookie;
+      }
     }
     final deviceUuid = await (_deviceUuidProvider?.call() ?? getDeviceUuid());
     if (deviceUuid.isNotEmpty) {

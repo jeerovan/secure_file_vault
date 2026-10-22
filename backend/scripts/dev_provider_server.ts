@@ -19,6 +19,10 @@ const database = await createRecoveryDatabase();
 // Ignore the production migration DATABASE_URL loaded from backend/.env.
 process.env.DATABASE_URL = database.url;
 process.env.FIFE_LOCAL_DATABASE_URL = database.url;
+// This database is created here, and every exposed issuer records its expiry.
+// There are no capabilities from a deployment predating that accounting.
+// Use the same rollout policy as production with a fully drained history.
+process.env.RECOVERY_UPLOAD_ACCOUNTING_SINCE = '1970-01-01T00:00:00.000Z';
 const remoteId = `fife-provider-local-${randomUUID()}`;
 process.env.LOCAL_TEST_USER_ID = remoteId;
 const vite = await createServer({

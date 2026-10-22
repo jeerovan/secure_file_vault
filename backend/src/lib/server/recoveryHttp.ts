@@ -1,6 +1,5 @@
 import { json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { NEON_JWKS } from '$env/static/private';
 import { and, eq, gt, desc } from 'drizzle-orm';
 import { requireAuth } from './auth';
 import { getDb } from './db';
@@ -8,12 +7,10 @@ import { recoveryReset, vaultState, user } from './db/schema';
 import { UserKeys } from './db/keys';
 import { RecoveryResetService } from './recoveryReset';
 import { ProviderRecoveryStorage } from './recoveryStorage';
-import {
-	RecoveryFault,
-	verifyRecoverySession,
-	requireCurrentVaultSession
-} from './recoverySession';
+import { RecoveryFault, requireCurrentVaultSession } from './recoverySession';
 import { recoveryAvailable } from './recoveryAvailability';
+import { supportsVaultSession, verifyRequestSession } from './requestSession';
+import { uploadAccountingSince } from './recoveryWait';
 
 const reply = (data: Record<string, unknown>) =>
 	json(data, { headers: { 'Cache-Control': 'no-store' } });
@@ -26,36 +23,33 @@ export async function recoveryRequest(
 	try {
 		const db = getDb(platform);
 		const auth = await requireAuth(db, request, platform?.env.FIFE_AUTH_CACHE);
-		if (
-			!auth.authorized ||
-			!auth.userId ||
-			auth.localTesting ||
-			request.headers.get('service') !== 'neon'
-		) {
+		if (!auth.authorized || !auth.userId || !supportsVaultSession(auth, request)) {
 			return reply({ success: 0, message: 14 });
 		}
 		if (request.headers.get('x-fife-vault-protocol') !== '1')
 			throw new RecoveryFault('client_update_required');
-		const session = await verifyRecoverySession({
-			jwks: NEON_JWKS,
-			cookie: request.headers.get('x-fife-session'),
-			userId: auth.remoteAuthId!,
-			email: auth.email!
-		});
+		const session = await verifyRequestSession(auth, request);
 		const service = new RecoveryResetService(
 			db,
 			auth.userId,
 			session,
-			new ProviderRecoveryStorage()
+			new ProviderRecoveryStorage(),
+			Date.now,
+			uploadAccountingSince(env.RECOVERY_UPLOAD_ACCOUNTING_SINCE)
 		);
 		if (action === 'status') {
 			const userId = auth.userId;
 			return await db.transaction(async (tx) => {
-				await tx
-					.select({ id: user[UserKeys.ID] })
+				const [account] = await tx
+					.select({
+						id: user[UserKeys.ID],
+						cipher: user[UserKeys.CIPHER],
+						nonce: user[UserKeys.NONCE]
+					})
 					.from(user)
 					.where(eq(user[UserKeys.ID], userId))
 					.for('share');
+				if (!account) throw new RecoveryFault('sign_in_again');
 				const scopedService = new RecoveryResetService(
 					tx,
 					userId,
@@ -101,6 +95,9 @@ export async function recoveryRequest(
 					data: {
 						available: await recoveryAvailable(tx, env, auth.email),
 						generation: state?.generation ?? 'legacy',
+						key_setup_protocol: 2,
+						vault_ready: state?.ready !== 0,
+						key_state: account.cipher === null && account.nonce === null ? 'missing' : 'present',
 						pendingConfirmation: !!preparation,
 						confirmationExpiresAt: preparation?.expiresAt ?? null,
 						operation
@@ -116,6 +113,8 @@ export async function recoveryRequest(
 		}
 		if (!body || typeof body !== 'object' || Array.isArray(body))
 			throw new RecoveryFault('invalid_reset_request');
+		if (action === 'prepare' && request.headers.get('x-fife-recovery-protocol') !== '2')
+			throw new RecoveryFault('client_update_required');
 		const available = await recoveryAvailable(db, env, auth.email);
 		if (
 			!available &&

@@ -14,7 +14,9 @@ import '../../services/service_session_work.dart';
 class PageAccessKeyCheck extends StatefulWidget {
   const PageAccessKeyCheck({
     super.key,
+    this.api,
   });
+  final BackendApi? api;
 
   @override
   State<PageAccessKeyCheck> createState() => _PageAccessKeyCheckState();
@@ -24,7 +26,7 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
   final logger = AppLogger(prefixes: ["KeyCheck"]);
   bool _isLoading = true;
   String? _errorMessage;
-  final api = BackendApi();
+  late final api = widget.api ?? BackendApi();
   SecureStorage storage = SecureStorage();
 
   @override
@@ -38,6 +40,14 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
       await SessionWork.run(_checkKeys);
     } on SessionInvalidated {
       if (mounted) await context.read<AppSetupState>().recheckStatus();
+    } catch (error, stack) {
+      logger.error('Key check failed', error: error, stackTrace: stack);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = AppLocalizations.of(context)!.pleaseTryAgain;
+        });
+      }
     }
   }
 
@@ -79,6 +89,19 @@ class _PageAccessKeyCheckState extends State<PageAccessKeyCheck> {
                   : 'legacy');
           await ModelSetting.set(AppString.recoveryResetAvailable.string,
               data['recovery_reset_available'] == true ? 'yes' : 'no');
+          if (data['key_state'] == 'missing' &&
+              data['cipher'] == null &&
+              data['nonce'] == null) {
+            await storage.delete(key: AppString.keyCipher.string);
+            await storage.delete(key: AppString.keyNonce.string);
+            if (mounted) {
+              await context.read<AppSetupState>().generateAccessKey();
+            }
+            return;
+          }
+          if (data['cipher'] is! String || data['nonce'] is! String) {
+            throw StateError('Incomplete vault key envelope');
+          }
           await storage.write(
             key: AppString.keyCipher.string,
             value: data["cipher"],

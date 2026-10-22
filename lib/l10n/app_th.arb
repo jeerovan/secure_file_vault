@@ -44,15 +44,15 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
-  "quickSyncNotificationSettingTitle": "การแจ้งเตือนการซิงก์ด่วน",
+  "quickSyncNotificationSettingTitle": "การแจ้งเตือนการซิงก์อัตโนมัติ",
   "@quickSyncNotificationSettingTitle": {
-    "description": "Setting to show quick sync notification"
+    "description": "Setting to show the auto sync notification"
   },
   "autoSyncInterval": "ช่วงเวลาซิงค์อัตโนมัติ",
-  "autoSyncIntervalDescription": "ซิงค์อัตโนมัติขณะเปิดใช้การแจ้งเตือนซิงค์ด่วน",
+  "autoSyncIntervalDescription": "ซิงค์อัตโนมัติขณะเปิดใช้การแจ้งเตือนการซิงก์อัตโนมัติ",
   "syncIntervalMinutes": "{minutes} นาที",
   "autoSyncIntervalSaveError": "บันทึกช่วงเวลาไม่ได้ โปรดลองอีกครั้ง",
-  "autoSyncIntervalApplyError": "บันทึกช่วงเวลาแล้ว ปิดแล้วเปิดการแจ้งเตือนซิงค์ด่วนอีกครั้งเพื่อใช้ค่าใหม่",
+  "autoSyncIntervalApplyError": "บันทึกช่วงเวลาแล้ว ปิดแล้วเปิดการแจ้งเตือนการซิงก์อัตโนมัติอีกครั้งเพื่อใช้ค่าใหม่",
   "quickSyncNotificationTitle": "บริการซิงก์ไฟล์",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
@@ -991,8 +991,10 @@
   "lostRecoveryDevicesConsequence": "การลงทะเบียนอุปกรณ์ที่มีอยู่ทั้งหมดจะถูกลบ",
   "lostRecoveryLogoutConsequence": "อุปกรณ์อื่นจะออกจากระบบและล้างข้อมูล FiFe ในเครื่อง เมื่อเชื่อมต่ออินเทอร์เน็ตและตรวจพบว่าถูกนำออกแล้ว",
   "lostRecoveryKeepConsequence": "บัญชีอีเมล การสมัครสมาชิก การเชื่อมต่อที่เก็บข้อมูลบนคลาวด์ และข้อมูลรับรองของผู้ให้บริการจะยังคงอยู่ ไฟล์ในโฟลเดอร์ส่วนตัวของคุณนอก FiFe จะยังคงอยู่ด้วย",
-  "lostRecoveryWaitConsequence": "ห้องนิรภัยใหม่จะยังถูกล็อกจนกว่าจะยืนยันการลบบนคลาวด์ได้ ซึ่งอาจใช้เวลา 24 ชั่วโมงขึ้นไป คุณสามารถปิด FiFe แล้วกลับมาทำต่อภายหลังได้",
+  "lostRecoveryWaitConsequence": "ห้องนิรภัยใหม่จะยังถูกล็อกจนกว่าจะยืนยันการลบบนคลาวด์ได้ ซึ่งอาจใช้เวลา 15 นาทีขึ้นไป คุณสามารถปิด FiFe แล้วกลับมาทำต่อภายหลังได้",
   "lostRecoveryNewPhraseConsequence": "คุณจะยังคงลงชื่อเข้าใช้บนอุปกรณ์นี้ หลังจากยืนยันการลบแล้ว ให้สร้างและบันทึกวลีกู้คืนใหม่ 24 คำ",
+  "recoveryResetUnavailable": "ไม่สามารถรีเซ็ตห้องนิรภัยได้ชั่วคราว โปรดลองอีกครั้งในภายหลัง",
+  "recoveryResetSigninRequired": "ลงชื่อเข้าใช้อีกครั้งเพื่อยืนยันเซสชันของคุณก่อนรีเซ็ตคลังข้อมูล",
   "recoveryResetContinue": "ดำเนินการรีเซ็ตต่อ",
   "recoveryResetConfirmTitle": "ลบห้องนิรภัย FiFe อย่างถาวรหรือไม่",
   "recoveryResetConfirmBody": "การดำเนินการนี้ไม่สามารถย้อนกลับได้ วลีการกู้คืนปัจจุบันจะใช้งานไม่ได้ และอุปกรณ์ทั้งหมดของคุณจะถูกนำออก",

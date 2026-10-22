@@ -45,13 +45,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get logging => '로그';
 
   @override
-  String get quickSyncNotificationSettingTitle => '빠른 동기화 알림';
+  String get quickSyncNotificationSettingTitle => '자동 동기화 알림';
 
   @override
   String get autoSyncInterval => '자동 동기화 간격';
 
   @override
-  String get autoSyncIntervalDescription => '빠른 동기화 알림이 켜져 있는 동안 자동으로 동기화합니다.';
+  String get autoSyncIntervalDescription => '자동 동기화 알림이 켜져 있는 동안 자동으로 동기화합니다.';
 
   @override
   String syncIntervalMinutes(int minutes) {
@@ -63,7 +63,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get autoSyncIntervalApplyError =>
-      '간격이 저장되었습니다. 적용하려면 빠른 동기화 알림을 껐다가 다시 켜세요.';
+      '간격이 저장되었습니다. 적용하려면 자동 동기화 알림을 껐다가 다시 켜세요.';
 
   @override
   String get quickSyncNotificationTitle => '파일 동기화 서비스';
@@ -775,11 +775,17 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get lostRecoveryWaitConsequence =>
-      '클라우드 삭제가 확인될 때까지 새 보관함은 잠겨 있습니다. 24시간 이상 걸릴 수 있습니다. FiFe를 닫고 나중에 계속할 수 있습니다.';
+      '클라우드 삭제가 확인될 때까지 새 보관함은 잠겨 있습니다. 15분 이상 걸릴 수 있습니다. FiFe를 닫고 나중에 계속할 수 있습니다.';
 
   @override
   String get lostRecoveryNewPhraseConsequence =>
       '이 기기에서는 로그인 상태가 유지됩니다. 삭제가 확인되면 새로운 24단어 복구 문구를 생성하고 저장하세요.';
+
+  @override
+  String get recoveryResetUnavailable => '현재 보관함을 초기화할 수 없습니다. 나중에 다시 시도해 주세요.';
+
+  @override
+  String get recoveryResetSigninRequired => '보관함을 초기화하기 전에 다시 로그인하여 세션을 확인하세요.';
 
   @override
   String get recoveryResetContinue => '재설정 계속하기';
