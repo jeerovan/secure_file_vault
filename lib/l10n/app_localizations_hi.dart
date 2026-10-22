@@ -111,6 +111,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'अंतराल सेव हो गया। इसे लागू करने के लिए ऑटो सिंक नोटिफिकेशन बंद करके फिर चालू करें।';
 
   @override
+  String get sync => 'सिंक करें';
+
+  @override
   String get quickSyncNotificationTitle => 'फ़ाइल सिंक सेवा';
 
   @override

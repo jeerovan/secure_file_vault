@@ -105,6 +105,9 @@ class AppLocalizationsJa extends AppLocalizations {
       '間隔を保存しました。適用するには、自動同期通知をオフにしてから再びオンにしてください。';
 
   @override
+  String get sync => '同期';
+
+  @override
   String get quickSyncNotificationTitle => 'ファイル同期サービス';
 
   @override

@@ -105,6 +105,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '간격이 저장되었습니다. 적용하려면 자동 동기화 알림을 껐다가 다시 켜세요.';
 
   @override
+  String get sync => '동기화';
+
+  @override
   String get quickSyncNotificationTitle => '파일 동기화 서비스';
 
   @override

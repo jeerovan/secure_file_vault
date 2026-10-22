@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes, plural, =1{دقيقة واحدة} =2{دقيقتان} few{{minutes} دقائق} many{{minutes} دقيقة} other{{minutes} دقيقة}}",
   "autoSyncIntervalSaveError": "تعذّر حفظ الفاصل الزمني. حاول مرة أخرى.",
   "autoSyncIntervalApplyError": "تم حفظ الفاصل الزمني. أوقف إشعار المزامنة التلقائية ثم فعّله لتطبيقه.",
+  "sync": "مزامنة",
   "quickSyncNotificationTitle": "خدمة مزامنة الملفات",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

@@ -119,6 +119,9 @@ class AppLocalizationsFr extends AppLocalizations {
       'Intervalle enregistré. Désactivez puis réactivez la notification de synchronisation automatique pour l’appliquer.';
 
   @override
+  String get sync => 'Synchroniser';
+
+  @override
   String get quickSyncNotificationTitle =>
       'Service de synchronisation des fichiers';
 

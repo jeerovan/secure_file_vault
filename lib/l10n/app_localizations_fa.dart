@@ -111,6 +111,9 @@ class AppLocalizationsFa extends AppLocalizations {
       'فاصلهٔ زمانی ذخیره شد. برای اعمال آن، اعلان همگام‌سازی خودکار را خاموش و دوباره روشن کنید.';
 
   @override
+  String get sync => 'همگام‌سازی';
+
+  @override
   String get quickSyncNotificationTitle => 'سرویس همگام‌سازی فایل‌ها';
 
   @override

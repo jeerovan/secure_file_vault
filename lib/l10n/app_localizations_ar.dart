@@ -118,6 +118,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'تم حفظ الفاصل الزمني. أوقف إشعار المزامنة التلقائية ثم فعّله لتطبيقه.';
 
   @override
+  String get sync => 'مزامنة';
+
+  @override
   String get quickSyncNotificationTitle => 'خدمة مزامنة الملفات';
 
   @override

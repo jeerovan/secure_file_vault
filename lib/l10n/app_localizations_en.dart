@@ -117,6 +117,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Interval saved. Turn the auto sync notification off and on to apply it.';
 
   @override
+  String get sync => 'Sync';
+
+  @override
   String get quickSyncNotificationTitle => 'File sync service';
 
   @override

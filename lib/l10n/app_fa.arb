@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes} دقیقه",
   "autoSyncIntervalSaveError": "ذخیرهٔ فاصلهٔ زمانی ممکن نشد. دوباره تلاش کنید.",
   "autoSyncIntervalApplyError": "فاصلهٔ زمانی ذخیره شد. برای اعمال آن، اعلان همگام‌سازی خودکار را خاموش و دوباره روشن کنید.",
+  "sync": "همگام‌سازی",
   "quickSyncNotificationTitle": "سرویس همگام‌سازی فایل‌ها",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

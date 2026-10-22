@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes} menit",
   "autoSyncIntervalSaveError": "Tidak dapat menyimpan interval. Coba lagi.",
   "autoSyncIntervalApplyError": "Interval disimpan. Nonaktifkan lalu aktifkan kembali notifikasi sinkronisasi otomatis untuk menerapkannya.",
+  "sync": "Sinkronkan",
   "quickSyncNotificationTitle": "Layanan sinkronisasi file",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

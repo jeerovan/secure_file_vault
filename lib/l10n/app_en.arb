@@ -92,6 +92,10 @@
   "@autoSyncIntervalApplyError": {
     "description": "Recovery when an interval is saved but the running service could not be updated"
   },
+  "sync": "Sync",
+  "@sync": {
+    "description": "Action to manually sync files from the explorer menu"
+  },
   "quickSyncNotificationTitle": "File sync service",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

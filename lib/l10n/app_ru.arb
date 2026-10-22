@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes, plural, one{{minutes} минута} few{{minutes} минуты} many{{minutes} минут} other{{minutes} минуты}}",
   "autoSyncIntervalSaveError": "Не удалось сохранить интервал. Попробуйте ещё раз.",
   "autoSyncIntervalApplyError": "Интервал сохранён. Отключите и снова включите уведомление об автоматической синхронизации, чтобы применить его.",
+  "sync": "Синхронизировать",
   "quickSyncNotificationTitle": "Служба синхронизации файлов",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

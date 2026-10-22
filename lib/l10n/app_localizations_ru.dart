@@ -121,6 +121,9 @@ class AppLocalizationsRu extends AppLocalizations {
       'Интервал сохранён. Отключите и снова включите уведомление об автоматической синхронизации, чтобы применить его.';
 
   @override
+  String get sync => 'Синхронизировать';
+
+  @override
   String get quickSyncNotificationTitle => 'Служба синхронизации файлов';
 
   @override

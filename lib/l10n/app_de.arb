@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes, plural, =1{1 Minute} other{{minutes} Minuten}}",
   "autoSyncIntervalSaveError": "Das Intervall konnte nicht gespeichert werden. Versuche es erneut.",
   "autoSyncIntervalApplyError": "Intervall gespeichert. Schalte die Benachrichtigung zur automatischen Synchronisierung aus und wieder ein, um es anzuwenden.",
+  "sync": "Synchronisieren",
   "quickSyncNotificationTitle": "Datei-Sync-Dienst",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

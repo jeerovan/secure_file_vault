@@ -118,6 +118,9 @@ class AppLocalizationsPt extends AppLocalizations {
       'Intervalo salvo. Desative e reative a notificação de sincronização automática para aplicá-lo.';
 
   @override
+  String get sync => 'Sincronizar';
+
+  @override
   String get quickSyncNotificationTitle =>
       'Serviço de sincronização de ficheiros';
 

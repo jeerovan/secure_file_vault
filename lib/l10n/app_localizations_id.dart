@@ -112,6 +112,9 @@ class AppLocalizationsId extends AppLocalizations {
       'Interval disimpan. Nonaktifkan lalu aktifkan kembali notifikasi sinkronisasi otomatis untuk menerapkannya.';
 
   @override
+  String get sync => 'Sinkronkan';
+
+  @override
   String get quickSyncNotificationTitle => 'Layanan sinkronisasi file';
 
   @override

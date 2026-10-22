@@ -118,6 +118,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Intervalo guardado. Desactiva y vuelve a activar la notificación de sincronización automática para aplicarlo.';
 
   @override
+  String get sync => 'Sincronizar';
+
+  @override
   String get quickSyncNotificationTitle =>
       'Servicio de sincronización de archivos';
 

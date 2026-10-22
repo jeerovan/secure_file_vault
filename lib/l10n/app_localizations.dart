@@ -310,6 +310,12 @@ abstract class AppLocalizations {
   /// **'Interval saved. Turn the auto sync notification off and on to apply it.'**
   String get autoSyncIntervalApplyError;
 
+  /// Action to manually sync files from the explorer menu
+  ///
+  /// In en, this message translates to:
+  /// **'Sync'**
+  String get sync;
+
   /// Quick sync notification title
   ///
   /// In en, this message translates to:

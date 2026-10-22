@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes} मिनट",
   "autoSyncIntervalSaveError": "अंतराल सेव नहीं हो सका। फिर से कोशिश करें।",
   "autoSyncIntervalApplyError": "अंतराल सेव हो गया। इसे लागू करने के लिए ऑटो सिंक नोटिफिकेशन बंद करके फिर चालू करें।",
+  "sync": "सिंक करें",
   "quickSyncNotificationTitle": "फ़ाइल सिंक सेवा",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

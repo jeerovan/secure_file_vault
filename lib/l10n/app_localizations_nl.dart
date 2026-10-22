@@ -119,6 +119,9 @@ class AppLocalizationsNl extends AppLocalizations {
       'Interval opgeslagen. Schakel de melding voor automatisch synchroniseren uit en weer in om het toe te passen.';
 
   @override
+  String get sync => 'Synchroniseren';
+
+  @override
   String get quickSyncNotificationTitle => 'Bestandsynchronisatiedienst';
 
   @override

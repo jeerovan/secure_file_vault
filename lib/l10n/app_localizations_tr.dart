@@ -112,6 +112,9 @@ class AppLocalizationsTr extends AppLocalizations {
       'Aralık kaydedildi. Uygulamak için otomatik eşitleme bildirimini kapatıp tekrar açın.';
 
   @override
+  String get sync => 'Eşitle';
+
+  @override
   String get quickSyncNotificationTitle => 'Dosya eşitleme servisi';
 
   @override

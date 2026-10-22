@@ -111,6 +111,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã lưu khoảng thời gian. Tắt rồi bật lại thông báo đồng bộ tự động để áp dụng.';
 
   @override
+  String get sync => 'Đồng bộ';
+
+  @override
   String get quickSyncNotificationTitle => 'Dịch vụ đồng bộ tập tin';
 
   @override

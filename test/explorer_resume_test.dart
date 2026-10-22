@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:file_vault_bb/l10n/app_localizations.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/services/service_events.dart';
+import 'package:file_vault_bb/services/service_locale.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_explorer.dart';
@@ -11,8 +13,146 @@ import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 void main() {
+  test('Sync has a translated label in every supported locale', () async {
+    for (final locale in L10n.all) {
+      final strings = await AppLocalizations.delegate.load(locale);
+      expect(strings.sync.trim(), isNotEmpty, reason: locale.toString());
+      expect(strings.sync, locale.languageCode == 'en' ? 'Sync' : isNot('Sync'),
+          reason: locale.toString());
+    }
+    final english =
+        await AppLocalizations.delegate.load(const Locale('en', 'US'));
+    expect(english.sync, 'Sync');
+  });
+
+  testWidgets('manual sync is the last menu action and refreshes local files',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      await fixture.mount(() async {}, locale: const Locale('en', 'US'));
+      await tester.tap(find.text('nested'));
+      await fixture.waitFor(find.byKey(const ValueKey('file')));
+      expect(find.byType(AnimatedSyncButton), findsNothing);
+      expect(find.text('Sync'), findsNothing);
+
+      final file = (await ModelItem.get('file'))!;
+      file.size = 75;
+      await file.update(['size']);
+      expect(fixture.file.item.size, 50);
+
+      await tester.tap(find.byType(PopupMenuButton<int>));
+      await fixture.waitFor(find.text('Sync'));
+      final items = tester
+          .widgetList<PopupMenuItem<int>>(find.byType(PopupMenuItem<int>));
+      expect(
+          find.descendant(
+              of: find.byWidget(items.last), matching: find.text('Sync')),
+          findsOneWidget);
+      expect(items.last.enabled, isTrue);
+      await tester.ensureVisible(find.text('Sync'));
+      await fixture.pumpMenu();
+      await tester.tap(find.text('Sync'));
+      for (var i = 0; i < 30 && fixture.file.item.size != 75; i++) {
+        await fixture.pump();
+      }
+      expect(fixture.file.item.size, 75);
+      expect(fixture.scans, 1);
+
+      fixture.file.onLongPress();
+      await fixture.pump();
+      expect(find.byType(PopupMenuButton<int>), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('sync menu is disabled while syncing and available afterward',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      final startup = fixture.gate();
+      await fixture.mount(() => startup.future);
+      EventStream().publish(AppEvent(
+          type: EventType.system, id: 'fixture', key: EventKey.running));
+      await fixture.pump();
+      await tester.tap(find.byType(PopupMenuButton<int>));
+      await fixture.waitFor(find.text('Sync'));
+      final item = tester.widget<PopupMenuItem<int>>(find.ancestor(
+          of: find.text('Sync'), matching: find.byType(PopupMenuItem<int>)));
+      expect(item.enabled, isFalse);
+      await fixture.pumpMenu();
+      await fixture.dismissMenu();
+
+      EventStream().publish(AppEvent(
+          type: EventType.system, id: 'fixture', key: EventKey.stopped));
+      await fixture.waitFor(find.byIcon(LucideIcons.plus));
+      await tester.tap(find.byType(PopupMenuButton<int>));
+      await fixture.waitFor(find.text('Sync'));
+      final ready = tester.widget<PopupMenuItem<int>>(find.ancestor(
+          of: find.text('Sync'), matching: find.byType(PopupMenuItem<int>)));
+      expect(ready.enabled, isTrue);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('Sync is last and refreshes both vault root and remote folders',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      final db = await StorageSqlite.instance.database;
+      await ModelItem.ensureVaultRoot();
+      await db.update('items', {'parent_id': 'fife'},
+          where: 'id = ?', whereArgs: ['device']);
+      await db.insert('items', {
+        'id': 'remote',
+        'parent_id': 'fife',
+        'name': 'Other device',
+        'is_folder': 1,
+        'archived_at': 0,
+      });
+      await db.insert('items', {
+        'id': 'remote-child',
+        'parent_id': 'remote',
+        'root_id': 'remote-child',
+        'name': 'Remote folder',
+        'is_folder': 1,
+        'archived_at': 0,
+      });
+      await fixture.mount(() async {});
+      await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+      await fixture.waitFor(find.byKey(const ValueKey('remote')));
+
+      for (final id in ['remote', 'remote-child']) {
+        if (id == 'remote-child') {
+          await tester.tap(find.byKey(const ValueKey('remote')));
+          await fixture.waitFor(find.byKey(const ValueKey('remote-child')));
+          expect(find.byKey(const ValueKey('remote')), findsNothing);
+        }
+        final item = (await ModelItem.get(id))!;
+        final updatedName = '${item.name} updated';
+        item.name = updatedName;
+        await item.update(['name']);
+        expect(find.text(updatedName), findsNothing);
+
+        await tester.tap(find.byType(PopupMenuButton<int>));
+        await fixture.waitFor(find.text('Sync'));
+        final entries = tester
+            .widgetList<PopupMenuItem<int>>(find.byType(PopupMenuItem<int>));
+        expect(
+            find.descendant(
+                of: find.byWidget(entries.last), matching: find.text('Sync')),
+            findsOneWidget);
+        expect(entries.last.enabled, isTrue);
+        await tester.ensureVisible(find.text('Sync'));
+        await fixture.pumpMenu();
+        await tester.tap(find.text('Sync'));
+        await fixture.waitFor(find.text(updatedName));
+        await fixture.pumpMenu();
+      }
+      expect(fixture.scans, 1);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   testWidgets('startup sync runs once; resume refreshes stored metadata only',
       (tester) async {
     await withExplorer(tester, (fixture) async {
@@ -170,7 +310,22 @@ class ExplorerFixture {
 
   Future<void> pump() async {
     await Future<void>.delayed(const Duration(milliseconds: 40));
-    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 40));
+  }
+
+  Future<void> pumpMenu() async {
+    await pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await pump();
+  }
+
+  Future<void> dismissMenu() async {
+    await tester.binding.handlePopRoute();
+    final entries = find.byType(PopupMenuItem<int>);
+    for (var i = 0; i < 30 && entries.evaluate().isNotEmpty; i++) {
+      await pump();
+    }
+    expect(entries, findsNothing);
   }
 
   Future<void> waitFor(Finder finder) async {
@@ -180,8 +335,9 @@ class ExplorerFixture {
     expect(finder, findsWidgets);
   }
 
-  Future<void> mount(Future<void> Function() scan) async {
+  Future<void> mount(Future<void> Function() scan, {Locale? locale}) async {
     await tester.pumpWidget(MaterialApp(
+      locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(

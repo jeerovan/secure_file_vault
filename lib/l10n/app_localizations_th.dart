@@ -112,6 +112,9 @@ class AppLocalizationsTh extends AppLocalizations {
       'บันทึกช่วงเวลาแล้ว ปิดแล้วเปิดการแจ้งเตือนการซิงก์อัตโนมัติอีกครั้งเพื่อใช้ค่าใหม่';
 
   @override
+  String get sync => 'ซิงค์';
+
+  @override
   String get quickSyncNotificationTitle => 'บริการซิงก์ไฟล์';
 
   @override

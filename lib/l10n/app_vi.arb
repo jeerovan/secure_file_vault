@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes} phút",
   "autoSyncIntervalSaveError": "Không thể lưu khoảng thời gian. Vui lòng thử lại.",
   "autoSyncIntervalApplyError": "Đã lưu khoảng thời gian. Tắt rồi bật lại thông báo đồng bộ tự động để áp dụng.",
+  "sync": "Đồng bộ",
   "quickSyncNotificationTitle": "Dịch vụ đồng bộ tập tin",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

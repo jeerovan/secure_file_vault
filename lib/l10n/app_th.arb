@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes} นาที",
   "autoSyncIntervalSaveError": "บันทึกช่วงเวลาไม่ได้ โปรดลองอีกครั้ง",
   "autoSyncIntervalApplyError": "บันทึกช่วงเวลาแล้ว ปิดแล้วเปิดการแจ้งเตือนการซิงก์อัตโนมัติอีกครั้งเพื่อใช้ค่าใหม่",
+  "sync": "ซิงค์",
   "quickSyncNotificationTitle": "บริการซิงก์ไฟล์",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

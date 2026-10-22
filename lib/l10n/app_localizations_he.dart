@@ -115,6 +115,9 @@ class AppLocalizationsHe extends AppLocalizations {
       'המרווח נשמר. כבו והפעילו מחדש את התראת הסנכרון האוטומטי כדי להחיל אותו.';
 
   @override
+  String get sync => 'סנכרון';
+
+  @override
   String get quickSyncNotificationTitle => 'שירות סנכרון קבצים';
 
   @override

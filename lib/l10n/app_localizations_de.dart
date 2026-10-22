@@ -119,6 +119,9 @@ class AppLocalizationsDe extends AppLocalizations {
       'Intervall gespeichert. Schalte die Benachrichtigung zur automatischen Synchronisierung aus und wieder ein, um es anzuwenden.';
 
   @override
+  String get sync => 'Synchronisieren';
+
+  @override
   String get quickSyncNotificationTitle => 'Datei-Sync-Dienst';
 
   @override

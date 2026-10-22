@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes}分钟",
   "autoSyncIntervalSaveError": "无法保存间隔，请重试。",
   "autoSyncIntervalApplyError": "间隔已保存。请关闭后重新开启自动同步通知以应用。",
+  "sync": "同步",
   "quickSyncNotificationTitle": "文件同步服务",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

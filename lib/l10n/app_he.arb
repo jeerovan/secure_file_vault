@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes, plural, =1{דקה אחת} =2{שתי דקות} other{{minutes} דקות}}",
   "autoSyncIntervalSaveError": "לא ניתן לשמור את המרווח. נסו שוב.",
   "autoSyncIntervalApplyError": "המרווח נשמר. כבו והפעילו מחדש את התראת הסנכרון האוטומטי כדי להחיל אותו.",
+  "sync": "סנכרון",
   "quickSyncNotificationTitle": "שירות סנכרון קבצים",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

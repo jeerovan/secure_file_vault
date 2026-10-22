@@ -92,7 +92,6 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
 
   ModelItem? currentItem;
   bool _isLoading = false;
-  bool _isLocalPath = false;
   bool _isDeviceRoot = false;
   bool _syncInProgress = false;
   bool _checkingFolderAccess = false;
@@ -240,10 +239,8 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
 
     final directory = currentItem!;
     final items = await ModelItem.getDisplayItems(directory);
-    final isLocalPath = await ModelItem.isLocalPath(directory.id);
     String deviceRootHash = await getDeviceHash();
     if (!mounted || currentItem?.id != directory.id) return;
-    _isLocalPath = isLocalPath;
     _isDeviceRoot = directory.id == deviceRootHash;
 
     if (mounted) {
@@ -517,9 +514,6 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
             if (_isDeviceRoot && !_syncInProgress)
               IconButton(
                   icon: const Icon(LucideIcons.plus), onPressed: addSyncFolder),
-            if (_isLocalPath)
-              AnimatedSyncButton(
-                  isSyncing: _syncInProgress, onPressed: _syncRootFolders),
             PopupMenuButton<int>(
               icon: Stack(
                 children: [
@@ -548,6 +542,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
                 if (value == 6) showLogsScreen();
                 if (value == 7) showSubscriptionScreen();
                 if (value == 8) showDatabase();
+                if (value == 9) _syncRootFolders();
               },
               itemBuilder: (context) => [
                 PopupMenuItem<int>(
@@ -637,6 +632,17 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
                       ],
                     ),
                   ),
+                PopupMenuItem<int>(
+                  value: 9,
+                  enabled: !_syncInProgress,
+                  child: Row(
+                    children: [
+                      Icon(LucideIcons.refreshCw, color: Colors.grey),
+                      SizedBox(width: 16),
+                      Text(AppLocalizations.of(context)!.sync)
+                    ],
+                  ),
+                ),
               ],
             ),
           ],

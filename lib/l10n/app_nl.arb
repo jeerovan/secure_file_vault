@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes, plural, =1{1 minuut} other{{minutes} minuten}}",
   "autoSyncIntervalSaveError": "Het interval kon niet worden opgeslagen. Probeer het opnieuw.",
   "autoSyncIntervalApplyError": "Interval opgeslagen. Schakel de melding voor automatisch synchroniseren uit en weer in om het toe te passen.",
+  "sync": "Synchroniseren",
   "quickSyncNotificationTitle": "Bestandsynchronisatiedienst",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

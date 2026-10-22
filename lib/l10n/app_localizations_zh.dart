@@ -101,6 +101,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get autoSyncIntervalApplyError => '间隔已保存。请关闭后重新开启自动同步通知以应用。';
 
   @override
+  String get sync => '同步';
+
+  @override
   String get quickSyncNotificationTitle => '文件同步服务';
 
   @override

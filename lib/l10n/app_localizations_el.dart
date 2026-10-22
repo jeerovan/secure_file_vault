@@ -119,6 +119,9 @@ class AppLocalizationsEl extends AppLocalizations {
       'Το διάστημα αποθηκεύτηκε. Απενεργοποιήστε και ενεργοποιήστε ξανά την ειδοποίηση αυτόματου συγχρονισμού για να εφαρμοστεί.';
 
   @override
+  String get sync => 'Συγχρονισμός';
+
+  @override
   String get quickSyncNotificationTitle => 'Υπηρεσία συγχρονισμού αρχείων';
 
   @override

@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes}分",
   "autoSyncIntervalSaveError": "間隔を保存できませんでした。もう一度お試しください。",
   "autoSyncIntervalApplyError": "間隔を保存しました。適用するには、自動同期通知をオフにしてから再びオンにしてください。",
+  "sync": "同期",
   "quickSyncNotificationTitle": "ファイル同期サービス",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"

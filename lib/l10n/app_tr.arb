@@ -65,6 +65,7 @@
   "syncIntervalMinutes": "{minutes} dakika",
   "autoSyncIntervalSaveError": "Aralık kaydedilemedi. Tekrar deneyin.",
   "autoSyncIntervalApplyError": "Aralık kaydedildi. Uygulamak için otomatik eşitleme bildirimini kapatıp tekrar açın.",
+  "sync": "Eşitle",
   "quickSyncNotificationTitle": "Dosya eşitleme servisi",
   "@quickSyncNotificationTitle": {
     "description": "Quick sync notification title"
