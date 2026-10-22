@@ -46,6 +46,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logging => 'Logging';
 
   @override
+  String get appLockTitle => 'App lock';
+
+  @override
+  String get appLockDescription =>
+      'Use your device’s fingerprint, face or PIN to protect FiFe.';
+
+  @override
+  String get appLockTimeout => 'Lock timeout';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Require authentication after this much time away from FiFe. App restarts always require authentication.';
+
+  @override
+  String get appLockAuthenticate => 'Authenticate to unlock FiFe.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Authenticate to change App lock settings.';
+
+  @override
+  String get appLockAuthHint => 'Verify your identity';
+
+  @override
+  String get appLocked => 'FiFe is locked';
+
+  @override
+  String get appLockUnlock => 'Unlock';
+
+  @override
+  String get appLockUnavailable =>
+      'Device authentication is unavailable. Set up a device PIN, passcode or biometrics in your device settings, then try again.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'Authentication was not completed. Try again.';
+
+  @override
+  String get appLockStorageError =>
+      'App lock settings could not be read or saved. Retry to keep your vault protected.';
+
+  @override
   String get quickSyncNotificationSettingTitle => 'Auto sync notification';
 
   @override

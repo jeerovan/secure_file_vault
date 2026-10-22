@@ -46,6 +46,48 @@ class AppLocalizationsId extends AppLocalizations {
   String get logging => 'Log';
 
   @override
+  String get appLockTitle => 'Kunci aplikasi';
+
+  @override
+  String get appLockDescription =>
+      'Lindungi FiFe dengan sidik jari, wajah, atau PIN perangkat Anda.';
+
+  @override
+  String get appLockTimeout => 'Waktu penguncian';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Minta autentikasi setelah berada di luar FiFe selama waktu ini. Memulai ulang aplikasi selalu memerlukan autentikasi.';
+
+  @override
+  String get appLockAuthenticate => 'Autentikasi untuk membuka FiFe.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Autentikasi untuk mengubah pengaturan kunci aplikasi.';
+
+  @override
+  String get appLockAuthHint => 'Verifikasi identitas Anda';
+
+  @override
+  String get appLocked => 'FiFe terkunci';
+
+  @override
+  String get appLockUnlock => 'Buka kunci';
+
+  @override
+  String get appLockUnavailable =>
+      'Autentikasi perangkat tidak tersedia. Siapkan PIN, kode sandi, atau biometrik di pengaturan perangkat, lalu coba lagi.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'Autentikasi belum selesai. Coba lagi.';
+
+  @override
+  String get appLockStorageError =>
+      'Pengaturan kunci aplikasi tidak dapat dibaca atau disimpan. Coba lagi agar brankas tetap terlindungi.';
+
+  @override
   String get quickSyncNotificationSettingTitle =>
       'Notifikasi sinkronisasi otomatis';
 

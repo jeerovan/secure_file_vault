@@ -88,6 +88,10 @@ enum AppString {
   theme,
   locale,
 
+  // Device-local UI protection; never used to gate background sync.
+  appLockEnabled,
+  appLockTimeoutMinutes,
+
   //sign-in
   signedIn,
   otpSentTo,
@@ -147,6 +151,10 @@ enum AppString {
 extension AppStringExtension on AppString {
   String get string {
     switch (this) {
+      case AppString.appLockEnabled:
+        return 'app_lock_enabled';
+      case AppString.appLockTimeoutMinutes:
+        return 'app_lock_timeout_minutes';
       case AppString.locale:
         return "locale";
       case AppString.storageFull:

@@ -46,6 +46,49 @@ class AppLocalizationsEl extends AppLocalizations {
   String get logging => 'Καταγραφή';
 
   @override
+  String get appLockTitle => 'Κλείδωμα εφαρμογής';
+
+  @override
+  String get appLockDescription =>
+      'Προστατέψτε το FiFe με το δακτυλικό αποτύπωμα, το πρόσωπο ή το PIN της συσκευής σας.';
+
+  @override
+  String get appLockTimeout => 'Χρόνος κλειδώματος';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Απαιτείται έλεγχος ταυτότητας μετά από αυτό το διάστημα εκτός FiFe. Κάθε επανεκκίνηση της εφαρμογής απαιτεί πάντα έλεγχο ταυτότητας.';
+
+  @override
+  String get appLockAuthenticate =>
+      'Επαληθεύστε την ταυτότητά σας για να ξεκλειδώσετε το FiFe.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Επαληθεύστε την ταυτότητά σας για να αλλάξετε το κλείδωμα εφαρμογής.';
+
+  @override
+  String get appLockAuthHint => 'Επαλήθευση ταυτότητας';
+
+  @override
+  String get appLocked => 'Το FiFe είναι κλειδωμένο';
+
+  @override
+  String get appLockUnlock => 'Ξεκλείδωμα';
+
+  @override
+  String get appLockUnavailable =>
+      'Ο έλεγχος ταυτότητας συσκευής δεν είναι διαθέσιμος. Ορίστε PIN, κωδικό ή βιομετρικά στις ρυθμίσεις της συσκευής και δοκιμάστε ξανά.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'Ο έλεγχος ταυτότητας δεν ολοκληρώθηκε. Δοκιμάστε ξανά.';
+
+  @override
+  String get appLockStorageError =>
+      'Δεν ήταν δυνατή η ανάγνωση ή αποθήκευση των ρυθμίσεων κλειδώματος. Δοκιμάστε ξανά για να διατηρήσετε το θησαυροφυλάκιό σας προστατευμένο.';
+
+  @override
   String get quickSyncNotificationSettingTitle =>
       'Ειδοποίηση αυτόματου συγχρονισμού';
 

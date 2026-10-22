@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "App-Sperre",
+  "appLockDescription": "Schütze FiFe mit dem Fingerabdruck, der Gesichtserkennung oder der PIN deines Geräts.",
+  "appLockTimeout": "Sperrzeit",
+  "appLockTimeoutDescription": "Nach dieser Zeit außerhalb von FiFe ist eine Authentifizierung erforderlich. Bei jedem App-Neustart ist sie immer erforderlich.",
+  "appLockAuthenticate": "Authentifiziere dich, um FiFe zu entsperren.",
+  "appLockChangeSettings": "Authentifiziere dich, um die App-Sperre zu ändern.",
+  "appLockAuthHint": "Identität bestätigen",
+  "appLocked": "FiFe ist gesperrt",
+  "appLockUnlock": "Entsperren",
+  "appLockUnavailable": "Die Geräteauthentifizierung ist nicht verfügbar. Richte in den Geräteeinstellungen eine PIN, einen Code oder Biometrie ein und versuche es erneut.",
+  "appLockAuthenticationFailed": "Die Authentifizierung wurde nicht abgeschlossen. Versuche es erneut.",
+  "appLockStorageError": "Die Einstellungen der App-Sperre konnten nicht gelesen oder gespeichert werden. Versuche es erneut, damit dein Tresor geschützt bleibt.",
   "quickSyncNotificationSettingTitle": "Benachrichtigung zur automatischen Synchronisierung",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

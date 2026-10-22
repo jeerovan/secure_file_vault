@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "Blocco app",
+  "appLockDescription": "Proteggi FiFe con l’impronta, il volto o il PIN del dispositivo.",
+  "appLockTimeout": "Tempo di blocco",
+  "appLockTimeoutDescription": "Richiedi l’autenticazione dopo questo tempo fuori da FiFe. A ogni riavvio dell’app è sempre richiesta.",
+  "appLockAuthenticate": "Autenticati per sbloccare FiFe.",
+  "appLockChangeSettings": "Autenticati per modificare le impostazioni del blocco app.",
+  "appLockAuthHint": "Verifica la tua identità",
+  "appLocked": "FiFe è bloccato",
+  "appLockUnlock": "Sblocca",
+  "appLockUnavailable": "L’autenticazione del dispositivo non è disponibile. Configura un PIN, un codice o la biometria nelle impostazioni del dispositivo, poi riprova.",
+  "appLockAuthenticationFailed": "L’autenticazione non è stata completata. Riprova.",
+  "appLockStorageError": "Impossibile leggere o salvare le impostazioni di blocco. Riprova per proteggere la tua cassaforte.",
   "quickSyncNotificationSettingTitle": "Notifica di sincronizzazione automatica",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

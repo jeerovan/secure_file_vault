@@ -20,6 +20,8 @@ import '../storage/storage_sqlite.dart';
 import '../ui/common_widgets.dart';
 import 'l10n/app_localizations.dart';
 import 'services/service_locale.dart';
+import 'services/service_app_lock.dart';
+import 'ui/app_lock.dart';
 import 'services/service_events.dart';
 import 'services/service_session_cleanup.dart';
 import 'services/service_session_work.dart';
@@ -210,8 +212,9 @@ Future<void> initializePurchases() async {
 // --- Main Application Widget ---
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, this.recoveryService});
+  const MyApp({super.key, this.recoveryService, this.appLock});
   final RecoveryResetService? recoveryService;
+  final AppLockController? appLock;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -221,6 +224,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   GlobalKey<NavigatorState> _navigationKey = GlobalKey<NavigatorState>();
   StreamSubscription<AppEvent>? _sessionEvents;
   bool _checkingSession = false;
+  late final AppLockController _appLock;
+  late AppLockNavigatorObserver _appLockNavigation;
   final ValueNotifier<ThemeMode> themeNotifier =
       ValueNotifier(ThemeMode.system);
 
@@ -229,10 +234,22 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _appLock = widget.appLock ?? AppLockController();
+    _appLockNavigation = AppLockNavigatorObserver(_appLock);
+    unawaited(_appLock.load());
     _sessionEvents = EventStream().events.listen((event) {
       if (event.key == EventKey.sessionInvalidated && mounted) {
+        _appLock.invalidateSession();
+        _appLockNavigation.dispose();
+        _appLockNavigation = AppLockNavigatorObserver(_appLock);
         // Discard protected routes and dialogs as well as the home page.
         setState(() => _navigationKey = GlobalKey<NavigatorState>());
+      } else if (event.key == EventKey.signout && mounted) {
+        // External cleanup can announce completion immediately before it
+        // publishes the active revision. Read policy after that stack unwinds.
+        unawaited(Future<void>.microtask(() async {
+          if (mounted) await _appLock.load();
+        }));
       }
     });
     // Load the theme from saved preferences
@@ -256,6 +273,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     unawaited(_sessionEvents?.cancel());
     WidgetsBinding.instance.removeObserver(this);
     themeNotifier.dispose();
+    _appLockNavigation.dispose();
+    if (widget.appLock == null) _appLock.dispose();
     AppHttpClients.closeAll();
     super.dispose();
   }
@@ -308,31 +327,41 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final localeProvider = Provider.of<LocaleProvider>(context);
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeNotifier,
-      builder: (context, ThemeMode currentMode, child) {
-        return MaterialApp(
-          navigatorKey: _navigationKey,
-          locale: localeProvider.locale,
-          supportedLocales: L10n.all,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          theme: AppThemes.lightTheme,
-          darkTheme: AppThemes.darkTheme,
-          themeMode: currentMode,
-          // Uses system theme by default
-          home: AppNavigator(
-            onThemeChange: _onThemeChange,
-            recoveryService: widget.recoveryService,
-          ),
-          debugShowCheckedModeBanner: false,
-        );
-      },
-    );
+    return ChangeNotifierProvider.value(
+        value: _appLock,
+        child: ValueListenableBuilder<ThemeMode>(
+          valueListenable: themeNotifier,
+          builder: (context, ThemeMode currentMode, child) {
+            return MaterialApp(
+              builder: (context, child) => AppLockGate(
+                  controller: _appLock,
+                  cleanup: context.watch<AppSetupState>().currentStep ==
+                          SetupStep.sessionCleanup
+                      ? const PageSessionCleanup()
+                      : null,
+                  child: child ?? const SizedBox.shrink()),
+              navigatorKey: _navigationKey,
+              navigatorObservers: [_appLockNavigation],
+              locale: localeProvider.locale,
+              supportedLocales: L10n.all,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              theme: AppThemes.lightTheme,
+              darkTheme: AppThemes.darkTheme,
+              themeMode: currentMode,
+              // Uses system theme by default
+              home: AppNavigator(
+                onThemeChange: _onThemeChange,
+                recoveryService: widget.recoveryService,
+              ),
+              debugShowCheckedModeBanner: false,
+            );
+          },
+        ));
   }
 }
 

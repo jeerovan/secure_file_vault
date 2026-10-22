@@ -46,6 +46,49 @@ class AppLocalizationsUk extends AppLocalizations {
   String get logging => 'Журналювання';
 
   @override
+  String get appLockTitle => 'Блокування застосунку';
+
+  @override
+  String get appLockDescription =>
+      'Захистіть FiFe за допомогою відбитка пальця, розпізнавання обличчя або PIN-коду пристрою.';
+
+  @override
+  String get appLockTimeout => 'Час до блокування';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Запитувати автентифікацію після цього часу поза FiFe. Перезапуск застосунку завжди потребує автентифікації.';
+
+  @override
+  String get appLockAuthenticate =>
+      'Пройдіть автентифікацію, щоб розблокувати FiFe.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Пройдіть автентифікацію, щоб змінити налаштування блокування.';
+
+  @override
+  String get appLockAuthHint => 'Підтвердьте особу';
+
+  @override
+  String get appLocked => 'FiFe заблоковано';
+
+  @override
+  String get appLockUnlock => 'Розблокувати';
+
+  @override
+  String get appLockUnavailable =>
+      'Автентифікація пристрою недоступна. Налаштуйте PIN-код, пароль або біометрію в налаштуваннях пристрою й повторіть спробу.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'Автентифікацію не завершено. Повторіть спробу.';
+
+  @override
+  String get appLockStorageError =>
+      'Не вдалося прочитати або зберегти налаштування блокування. Повторіть спробу, щоб захистити сховище.';
+
+  @override
   String get quickSyncNotificationSettingTitle =>
       'Сповіщення про автоматичну синхронізацію';
 

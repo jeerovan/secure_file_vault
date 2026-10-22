@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "Блокування застосунку",
+  "appLockDescription": "Захистіть FiFe за допомогою відбитка пальця, розпізнавання обличчя або PIN-коду пристрою.",
+  "appLockTimeout": "Час до блокування",
+  "appLockTimeoutDescription": "Запитувати автентифікацію після цього часу поза FiFe. Перезапуск застосунку завжди потребує автентифікації.",
+  "appLockAuthenticate": "Пройдіть автентифікацію, щоб розблокувати FiFe.",
+  "appLockChangeSettings": "Пройдіть автентифікацію, щоб змінити налаштування блокування.",
+  "appLockAuthHint": "Підтвердьте особу",
+  "appLocked": "FiFe заблоковано",
+  "appLockUnlock": "Розблокувати",
+  "appLockUnavailable": "Автентифікація пристрою недоступна. Налаштуйте PIN-код, пароль або біометрію в налаштуваннях пристрою й повторіть спробу.",
+  "appLockAuthenticationFailed": "Автентифікацію не завершено. Повторіть спробу.",
+  "appLockStorageError": "Не вдалося прочитати або зберегти налаштування блокування. Повторіть спробу, щоб захистити сховище.",
   "quickSyncNotificationSettingTitle": "Сповіщення про автоматичну синхронізацію",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

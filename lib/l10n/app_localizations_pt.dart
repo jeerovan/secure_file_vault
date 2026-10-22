@@ -46,6 +46,48 @@ class AppLocalizationsPt extends AppLocalizations {
   String get logging => 'Registos';
 
   @override
+  String get appLockTitle => 'Bloqueio da aplicação';
+
+  @override
+  String get appLockDescription =>
+      'Proteja o FiFe com a impressão digital, o rosto ou o PIN do dispositivo.';
+
+  @override
+  String get appLockTimeout => 'Tempo de bloqueio';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Pedir autenticação após este tempo fora do FiFe. Reiniciar a aplicação exige sempre autenticação.';
+
+  @override
+  String get appLockAuthenticate => 'Autentique-se para desbloquear o FiFe.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Autentique-se para alterar as definições de bloqueio.';
+
+  @override
+  String get appLockAuthHint => 'Verifique a sua identidade';
+
+  @override
+  String get appLocked => 'O FiFe está bloqueado';
+
+  @override
+  String get appLockUnlock => 'Desbloquear';
+
+  @override
+  String get appLockUnavailable =>
+      'A autenticação do dispositivo não está disponível. Configure um PIN, código de acesso ou biometria nas definições do dispositivo e tente novamente.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'A autenticação não foi concluída. Tente novamente.';
+
+  @override
+  String get appLockStorageError =>
+      'Não foi possível ler ou guardar as definições de bloqueio. Tente novamente para proteger o seu cofre.';
+
+  @override
   String get quickSyncNotificationSettingTitle =>
       'Notificação de sincronização automática';
 

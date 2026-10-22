@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "Verrouillage de l’app",
+  "appLockDescription": "Protégez FiFe avec l’empreinte, le visage ou le code PIN de votre appareil.",
+  "appLockTimeout": "Délai de verrouillage",
+  "appLockTimeoutDescription": "Exiger une authentification après ce temps passé hors de FiFe. Chaque redémarrage de l’app exige une authentification.",
+  "appLockAuthenticate": "Authentifiez-vous pour déverrouiller FiFe.",
+  "appLockChangeSettings": "Authentifiez-vous pour modifier le verrouillage de l’app.",
+  "appLockAuthHint": "Vérifiez votre identité",
+  "appLocked": "FiFe est verrouillé",
+  "appLockUnlock": "Déverrouiller",
+  "appLockUnavailable": "L’authentification de l’appareil est indisponible. Configurez un code PIN, un code d’accès ou la biométrie dans les réglages de l’appareil, puis réessayez.",
+  "appLockAuthenticationFailed": "L’authentification n’a pas été effectuée. Réessayez.",
+  "appLockStorageError": "Impossible de lire ou d’enregistrer les réglages de verrouillage. Réessayez pour protéger votre coffre.",
   "quickSyncNotificationSettingTitle": "Notification de synchronisation automatique",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

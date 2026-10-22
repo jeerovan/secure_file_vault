@@ -45,6 +45,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logging => '日志';
 
   @override
+  String get appLockTitle => '应用锁';
+
+  @override
+  String get appLockDescription => '使用设备的指纹、面容或PIN码保护FiFe。';
+
+  @override
+  String get appLockTimeout => '锁定超时';
+
+  @override
+  String get appLockTimeoutDescription => '离开FiFe达到此时长后要求身份验证。每次重新启动应用时始终需要验证。';
+
+  @override
+  String get appLockAuthenticate => '请验证身份以解锁FiFe。';
+
+  @override
+  String get appLockChangeSettings => '请验证身份以更改应用锁设置。';
+
+  @override
+  String get appLockAuthHint => '验证您的身份';
+
+  @override
+  String get appLocked => 'FiFe已锁定';
+
+  @override
+  String get appLockUnlock => '解锁';
+
+  @override
+  String get appLockUnavailable => '设备身份验证不可用。请在设备设置中设置PIN码、密码或生物识别，然后重试。';
+
+  @override
+  String get appLockAuthenticationFailed => '身份验证未完成，请重试。';
+
+  @override
+  String get appLockStorageError => '无法读取或保存应用锁设置。请重试以保护您的保管库。';
+
+  @override
   String get quickSyncNotificationSettingTitle => '自动同步通知';
 
   @override

@@ -202,6 +202,78 @@ abstract class AppLocalizations {
   /// **'Logging'**
   String get logging;
 
+  /// No description provided for @appLockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock'**
+  String get appLockTitle;
+
+  /// No description provided for @appLockDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your device’s fingerprint, face or PIN to protect FiFe.'**
+  String get appLockDescription;
+
+  /// No description provided for @appLockTimeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Lock timeout'**
+  String get appLockTimeout;
+
+  /// No description provided for @appLockTimeoutDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Require authentication after this much time away from FiFe. App restarts always require authentication.'**
+  String get appLockTimeoutDescription;
+
+  /// No description provided for @appLockAuthenticate.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to unlock FiFe.'**
+  String get appLockAuthenticate;
+
+  /// No description provided for @appLockChangeSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to change App lock settings.'**
+  String get appLockChangeSettings;
+
+  /// No description provided for @appLockAuthHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your identity'**
+  String get appLockAuthHint;
+
+  /// No description provided for @appLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'FiFe is locked'**
+  String get appLocked;
+
+  /// No description provided for @appLockUnlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get appLockUnlock;
+
+  /// No description provided for @appLockUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Device authentication is unavailable. Set up a device PIN, passcode or biometrics in your device settings, then try again.'**
+  String get appLockUnavailable;
+
+  /// No description provided for @appLockAuthenticationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication was not completed. Try again.'**
+  String get appLockAuthenticationFailed;
+
+  /// No description provided for @appLockStorageError.
+  ///
+  /// In en, this message translates to:
+  /// **'App lock settings could not be read or saved. Retry to keep your vault protected.'**
+  String get appLockStorageError;
+
   /// Setting to show the auto sync notification
   ///
   /// In en, this message translates to:

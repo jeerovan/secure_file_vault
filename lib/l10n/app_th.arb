@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "ล็อกแอป",
+  "appLockDescription": "ปกป้อง FiFe ด้วยลายนิ้วมือ ใบหน้า หรือ PIN ของอุปกรณ์",
+  "appLockTimeout": "ระยะเวลาก่อนล็อก",
+  "appLockTimeoutDescription": "ขอให้ยืนยันตัวตนเมื่อออกจาก FiFe ครบระยะเวลานี้ การเริ่มแอปใหม่ต้องยืนยันตัวตนเสมอ",
+  "appLockAuthenticate": "ยืนยันตัวตนเพื่อปลดล็อก FiFe",
+  "appLockChangeSettings": "ยืนยันตัวตนเพื่อเปลี่ยนการตั้งค่าล็อกแอป",
+  "appLockAuthHint": "ยืนยันตัวตนของคุณ",
+  "appLocked": "FiFe ถูกล็อก",
+  "appLockUnlock": "ปลดล็อก",
+  "appLockUnavailable": "ไม่สามารถใช้การยืนยันตัวตนของอุปกรณ์ได้ ตั้งค่า PIN รหัสผ่าน หรือข้อมูลชีวมิติในการตั้งค่าอุปกรณ์ แล้วลองอีกครั้ง",
+  "appLockAuthenticationFailed": "การยืนยันตัวตนยังไม่เสร็จสมบูรณ์ โปรดลองอีกครั้ง",
+  "appLockStorageError": "ไม่สามารถอ่านหรือบันทึกการตั้งค่าล็อกแอปได้ ลองอีกครั้งเพื่อปกป้องคลังส่วนตัวของคุณ",
   "quickSyncNotificationSettingTitle": "การแจ้งเตือนการซิงก์อัตโนมัติ",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

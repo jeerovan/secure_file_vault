@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "قفل التطبيق",
+  "appLockDescription": "استخدم بصمة الإصبع أو الوجه أو رمز PIN لجهازك لحماية FiFe.",
+  "appLockTimeout": "مهلة القفل",
+  "appLockTimeoutDescription": "اطلب المصادقة بعد هذه المدة بعيدًا عن FiFe. تتطلب إعادة تشغيل التطبيق المصادقة دائمًا.",
+  "appLockAuthenticate": "صادِق لفتح FiFe.",
+  "appLockChangeSettings": "صادِق لتغيير إعدادات قفل التطبيق.",
+  "appLockAuthHint": "تحقق من هويتك",
+  "appLocked": "FiFe مقفل",
+  "appLockUnlock": "فتح القفل",
+  "appLockUnavailable": "مصادقة الجهاز غير متاحة. أعدّ رمز PIN أو رمز دخول أو بيانات حيوية في إعدادات جهازك، ثم حاول مرة أخرى.",
+  "appLockAuthenticationFailed": "لم تكتمل المصادقة. حاول مرة أخرى.",
+  "appLockStorageError": "تعذّرت قراءة إعدادات قفل التطبيق أو حفظها. أعد المحاولة للحفاظ على حماية خزنتك.",
   "quickSyncNotificationSettingTitle": "إشعار المزامنة التلقائية",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

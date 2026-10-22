@@ -17,6 +17,62 @@ import BackgroundTasks
       GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
       SecureStorageManager.register(with: engineBridge.applicationRegistrar.messenger())
       IosBackgroundSync.shared.registerScheduler(with: engineBridge.applicationRegistrar.messenger())
+      AppLockPrivacy.shared.register(with: engineBridge.applicationRegistrar.messenger())
+    }
+}
+
+/// Cover native scene snapshots before UIKit captures the app switcher image.
+/// Removal waits for Dart's first safe resumed frame, including a locked frame.
+final class AppLockPrivacy {
+    static let shared = AppLockPrivacy()
+    private var enabled = UserDefaults.standard.bool(forKey: "fife.appLock.privacy")
+    private var covers: [UIView] = []
+
+    private init() {
+        NotificationCenter.default.addObserver(self, selector: #selector(conceal),
+            name: UIScene.willDeactivateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(conceal),
+            name: UIScene.didEnterBackgroundNotification, object: nil)
+    }
+
+    func register(with messenger: FlutterBinaryMessenger) {
+        let channel = FlutterMethodChannel(name: "com.jeerovan.fife/app_lock_privacy",
+            binaryMessenger: messenger)
+        channel.setMethodCallHandler { [weak self] call, result in
+            guard let self = self else { result(nil); return }
+            switch call.method {
+            case "setEnabled":
+                self.enabled = call.arguments as? Bool == true
+                UserDefaults.standard.set(self.enabled, forKey: "fife.appLock.privacy")
+                if !self.enabled { self.removeCovers() }
+                result(nil)
+            case "frameReady":
+                if UIApplication.shared.applicationState == .active { self.removeCovers() }
+                result(nil)
+            default: result(FlutterMethodNotImplemented)
+            }
+        }
+    }
+
+    @objc private func conceal() {
+        guard enabled else { return }
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            for window in windowScene.windows where !window.isHidden {
+                if covers.contains(where: { $0.superview === window }) { continue }
+                let cover = UIView(frame: window.bounds)
+                cover.backgroundColor = .systemBackground
+                cover.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                cover.isUserInteractionEnabled = true
+                window.addSubview(cover)
+                covers.append(cover)
+            }
+        }
+    }
+
+    private func removeCovers() {
+        covers.forEach { $0.removeFromSuperview() }
+        covers.removeAll()
     }
 }
 

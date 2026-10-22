@@ -46,6 +46,49 @@ class AppLocalizationsFr extends AppLocalizations {
   String get logging => 'Journaux';
 
   @override
+  String get appLockTitle => 'Verrouillage de l’app';
+
+  @override
+  String get appLockDescription =>
+      'Protégez FiFe avec l’empreinte, le visage ou le code PIN de votre appareil.';
+
+  @override
+  String get appLockTimeout => 'Délai de verrouillage';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Exiger une authentification après ce temps passé hors de FiFe. Chaque redémarrage de l’app exige une authentification.';
+
+  @override
+  String get appLockAuthenticate =>
+      'Authentifiez-vous pour déverrouiller FiFe.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Authentifiez-vous pour modifier le verrouillage de l’app.';
+
+  @override
+  String get appLockAuthHint => 'Vérifiez votre identité';
+
+  @override
+  String get appLocked => 'FiFe est verrouillé';
+
+  @override
+  String get appLockUnlock => 'Déverrouiller';
+
+  @override
+  String get appLockUnavailable =>
+      'L’authentification de l’appareil est indisponible. Configurez un code PIN, un code d’accès ou la biométrie dans les réglages de l’appareil, puis réessayez.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'L’authentification n’a pas été effectuée. Réessayez.';
+
+  @override
+  String get appLockStorageError =>
+      'Impossible de lire ou d’enregistrer les réglages de verrouillage. Réessayez pour protéger votre coffre.';
+
+  @override
   String get quickSyncNotificationSettingTitle =>
       'Notification de synchronisation automatique';
 

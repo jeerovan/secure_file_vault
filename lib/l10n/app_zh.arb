@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "应用锁",
+  "appLockDescription": "使用设备的指纹、面容或PIN码保护FiFe。",
+  "appLockTimeout": "锁定超时",
+  "appLockTimeoutDescription": "离开FiFe达到此时长后要求身份验证。每次重新启动应用时始终需要验证。",
+  "appLockAuthenticate": "请验证身份以解锁FiFe。",
+  "appLockChangeSettings": "请验证身份以更改应用锁设置。",
+  "appLockAuthHint": "验证您的身份",
+  "appLocked": "FiFe已锁定",
+  "appLockUnlock": "解锁",
+  "appLockUnavailable": "设备身份验证不可用。请在设备设置中设置PIN码、密码或生物识别，然后重试。",
+  "appLockAuthenticationFailed": "身份验证未完成，请重试。",
+  "appLockStorageError": "无法读取或保存应用锁设置。请重试以保护您的保管库。",
   "quickSyncNotificationSettingTitle": "自动同步通知",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

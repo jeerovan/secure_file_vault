@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "アプリロック",
+  "appLockDescription": "端末の指紋認証、顔認証、またはPINでFiFeを保護します。",
+  "appLockTimeout": "ロックまでの時間",
+  "appLockTimeoutDescription": "FiFeから離れてこの時間が経過すると認証を求めます。アプリの再起動時には常に認証が必要です。",
+  "appLockAuthenticate": "認証してFiFeのロックを解除してください。",
+  "appLockChangeSettings": "認証してアプリロックの設定を変更してください。",
+  "appLockAuthHint": "本人確認をしてください",
+  "appLocked": "FiFeはロックされています",
+  "appLockUnlock": "ロック解除",
+  "appLockUnavailable": "端末認証を利用できません。端末の設定でPIN、パスコード、または生体認証を設定し、もう一度お試しください。",
+  "appLockAuthenticationFailed": "認証が完了しませんでした。もう一度お試しください。",
+  "appLockStorageError": "アプリロックの設定を読み取りまたは保存できませんでした。保管庫を保護するため、もう一度お試しください。",
   "quickSyncNotificationSettingTitle": "自動同期通知",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

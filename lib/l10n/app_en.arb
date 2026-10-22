@@ -53,6 +53,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "App lock",
+  "appLockDescription": "Use your device’s fingerprint, face or PIN to protect FiFe.",
+  "appLockTimeout": "Lock timeout",
+  "appLockTimeoutDescription": "Require authentication after this much time away from FiFe. App restarts always require authentication.",
+  "appLockAuthenticate": "Authenticate to unlock FiFe.",
+  "appLockChangeSettings": "Authenticate to change App lock settings.",
+  "appLockAuthHint": "Verify your identity",
+  "appLocked": "FiFe is locked",
+  "appLockUnlock": "Unlock",
+  "appLockUnavailable": "Device authentication is unavailable. Set up a device PIN, passcode or biometrics in your device settings, then try again.",
+  "appLockAuthenticationFailed": "Authentication was not completed. Try again.",
+  "appLockStorageError": "App lock settings could not be read or saved. Retry to keep your vault protected.",
   "quickSyncNotificationSettingTitle": "Auto sync notification",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

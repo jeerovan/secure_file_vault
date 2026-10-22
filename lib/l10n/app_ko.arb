@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "앱 잠금",
+  "appLockDescription": "기기의 지문, 얼굴 또는 PIN으로 FiFe를 보호하세요.",
+  "appLockTimeout": "잠금 대기 시간",
+  "appLockTimeoutDescription": "FiFe를 떠난 후 이 시간이 지나면 인증을 요청합니다. 앱을 다시 시작할 때는 항상 인증이 필요합니다.",
+  "appLockAuthenticate": "FiFe 잠금을 해제하려면 인증하세요.",
+  "appLockChangeSettings": "앱 잠금 설정을 변경하려면 인증하세요.",
+  "appLockAuthHint": "본인 확인",
+  "appLocked": "FiFe가 잠겨 있습니다",
+  "appLockUnlock": "잠금 해제",
+  "appLockUnavailable": "기기 인증을 사용할 수 없습니다. 기기 설정에서 PIN, 암호 또는 생체 인증을 설정한 후 다시 시도하세요.",
+  "appLockAuthenticationFailed": "인증이 완료되지 않았습니다. 다시 시도하세요.",
+  "appLockStorageError": "앱 잠금 설정을 읽거나 저장하지 못했습니다. 보관함을 보호하려면 다시 시도하세요.",
   "quickSyncNotificationSettingTitle": "자동 동기화 알림",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "Kunci aplikasi",
+  "appLockDescription": "Lindungi FiFe dengan sidik jari, wajah, atau PIN perangkat Anda.",
+  "appLockTimeout": "Waktu penguncian",
+  "appLockTimeoutDescription": "Minta autentikasi setelah berada di luar FiFe selama waktu ini. Memulai ulang aplikasi selalu memerlukan autentikasi.",
+  "appLockAuthenticate": "Autentikasi untuk membuka FiFe.",
+  "appLockChangeSettings": "Autentikasi untuk mengubah pengaturan kunci aplikasi.",
+  "appLockAuthHint": "Verifikasi identitas Anda",
+  "appLocked": "FiFe terkunci",
+  "appLockUnlock": "Buka kunci",
+  "appLockUnavailable": "Autentikasi perangkat tidak tersedia. Siapkan PIN, kode sandi, atau biometrik di pengaturan perangkat, lalu coba lagi.",
+  "appLockAuthenticationFailed": "Autentikasi belum selesai. Coba lagi.",
+  "appLockStorageError": "Pengaturan kunci aplikasi tidak dapat dibaca atau disimpan. Coba lagi agar brankas tetap terlindungi.",
   "quickSyncNotificationSettingTitle": "Notifikasi sinkronisasi otomatis",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

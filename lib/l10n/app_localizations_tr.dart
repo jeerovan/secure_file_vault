@@ -46,6 +46,49 @@ class AppLocalizationsTr extends AppLocalizations {
   String get logging => 'Günlükleme';
 
   @override
+  String get appLockTitle => 'Uygulama kilidi';
+
+  @override
+  String get appLockDescription =>
+      'FiFe’yi cihazınızın parmak izi, yüz tanıma veya PIN özelliğiyle koruyun.';
+
+  @override
+  String get appLockTimeout => 'Kilit zaman aşımı';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'FiFe’den bu süre boyunca uzak kalındığında kimlik doğrulama iste. Uygulama yeniden başlatıldığında her zaman kimlik doğrulama gerekir.';
+
+  @override
+  String get appLockAuthenticate =>
+      'FiFe’nin kilidini açmak için kimliğinizi doğrulayın.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Uygulama kilidi ayarlarını değiştirmek için kimliğinizi doğrulayın.';
+
+  @override
+  String get appLockAuthHint => 'Kimliğinizi doğrulayın';
+
+  @override
+  String get appLocked => 'FiFe kilitli';
+
+  @override
+  String get appLockUnlock => 'Kilidi aç';
+
+  @override
+  String get appLockUnavailable =>
+      'Cihaz kimlik doğrulaması kullanılamıyor. Cihaz ayarlarında PIN, parola veya biyometri ayarlayıp tekrar deneyin.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'Kimlik doğrulama tamamlanmadı. Tekrar deneyin.';
+
+  @override
+  String get appLockStorageError =>
+      'Uygulama kilidi ayarları okunamadı veya kaydedilemedi. Kasanızı korumak için tekrar deneyin.';
+
+  @override
   String get quickSyncNotificationSettingTitle => 'Otomatik eşitleme bildirimi';
 
   @override

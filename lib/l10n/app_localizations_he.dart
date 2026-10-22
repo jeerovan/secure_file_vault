@@ -45,6 +45,47 @@ class AppLocalizationsHe extends AppLocalizations {
   String get logging => 'יומנים';
 
   @override
+  String get appLockTitle => 'נעילת האפליקציה';
+
+  @override
+  String get appLockDescription =>
+      'הגנו על FiFe באמצעות טביעת אצבע, זיהוי פנים או קוד ה-PIN של המכשיר.';
+
+  @override
+  String get appLockTimeout => 'זמן עד לנעילה';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'יידרש אימות לאחר פרק זמן זה מחוץ ל-FiFe. הפעלה מחדש של האפליקציה תמיד מחייבת אימות.';
+
+  @override
+  String get appLockAuthenticate => 'יש לאמת את זהותך כדי לפתוח את FiFe.';
+
+  @override
+  String get appLockChangeSettings =>
+      'יש לאמת את זהותך כדי לשנות את הגדרות נעילת האפליקציה.';
+
+  @override
+  String get appLockAuthHint => 'אימות זהות';
+
+  @override
+  String get appLocked => 'FiFe נעולה';
+
+  @override
+  String get appLockUnlock => 'ביטול נעילה';
+
+  @override
+  String get appLockUnavailable =>
+      'אימות המכשיר אינו זמין. הגדירו PIN, קוד גישה או זיהוי ביומטרי בהגדרות המכשיר ונסו שוב.';
+
+  @override
+  String get appLockAuthenticationFailed => 'האימות לא הושלם. נסו שוב.';
+
+  @override
+  String get appLockStorageError =>
+      'לא ניתן לקרוא או לשמור את הגדרות הנעילה. נסו שוב כדי לשמור על הכספת מוגנת.';
+
+  @override
   String get quickSyncNotificationSettingTitle => 'התראת סנכרון אוטומטי';
 
   @override

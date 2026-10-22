@@ -46,6 +46,48 @@ class AppLocalizationsVi extends AppLocalizations {
   String get logging => 'Nhật ký';
 
   @override
+  String get appLockTitle => 'Khóa ứng dụng';
+
+  @override
+  String get appLockDescription =>
+      'Bảo vệ FiFe bằng vân tay, khuôn mặt hoặc mã PIN của thiết bị.';
+
+  @override
+  String get appLockTimeout => 'Thời gian chờ khóa';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Yêu cầu xác thực sau khoảng thời gian này ở ngoài FiFe. Luôn yêu cầu xác thực khi khởi động lại ứng dụng.';
+
+  @override
+  String get appLockAuthenticate => 'Xác thực để mở khóa FiFe.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Xác thực để thay đổi cài đặt khóa ứng dụng.';
+
+  @override
+  String get appLockAuthHint => 'Xác minh danh tính';
+
+  @override
+  String get appLocked => 'FiFe đã khóa';
+
+  @override
+  String get appLockUnlock => 'Mở khóa';
+
+  @override
+  String get appLockUnavailable =>
+      'Không thể xác thực thiết bị. Hãy thiết lập mã PIN, mật mã hoặc sinh trắc học trong cài đặt thiết bị rồi thử lại.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'Chưa hoàn tất xác thực. Vui lòng thử lại.';
+
+  @override
+  String get appLockStorageError =>
+      'Không thể đọc hoặc lưu cài đặt khóa ứng dụng. Hãy thử lại để bảo vệ kho dữ liệu của bạn.';
+
+  @override
   String get quickSyncNotificationSettingTitle => 'Thông báo đồng bộ tự động';
 
   @override

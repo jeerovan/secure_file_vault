@@ -46,6 +46,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get logging => 'سجل النظام';
 
   @override
+  String get appLockTitle => 'قفل التطبيق';
+
+  @override
+  String get appLockDescription =>
+      'استخدم بصمة الإصبع أو الوجه أو رمز PIN لجهازك لحماية FiFe.';
+
+  @override
+  String get appLockTimeout => 'مهلة القفل';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'اطلب المصادقة بعد هذه المدة بعيدًا عن FiFe. تتطلب إعادة تشغيل التطبيق المصادقة دائمًا.';
+
+  @override
+  String get appLockAuthenticate => 'صادِق لفتح FiFe.';
+
+  @override
+  String get appLockChangeSettings => 'صادِق لتغيير إعدادات قفل التطبيق.';
+
+  @override
+  String get appLockAuthHint => 'تحقق من هويتك';
+
+  @override
+  String get appLocked => 'FiFe مقفل';
+
+  @override
+  String get appLockUnlock => 'فتح القفل';
+
+  @override
+  String get appLockUnavailable =>
+      'مصادقة الجهاز غير متاحة. أعدّ رمز PIN أو رمز دخول أو بيانات حيوية في إعدادات جهازك، ثم حاول مرة أخرى.';
+
+  @override
+  String get appLockAuthenticationFailed => 'لم تكتمل المصادقة. حاول مرة أخرى.';
+
+  @override
+  String get appLockStorageError =>
+      'تعذّرت قراءة إعدادات قفل التطبيق أو حفظها. أعد المحاولة للحفاظ على حماية خزنتك.';
+
+  @override
   String get quickSyncNotificationSettingTitle => 'إشعار المزامنة التلقائية';
 
   @override

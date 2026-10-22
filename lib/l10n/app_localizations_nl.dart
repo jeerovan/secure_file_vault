@@ -46,6 +46,49 @@ class AppLocalizationsNl extends AppLocalizations {
   String get logging => 'Logboek';
 
   @override
+  String get appLockTitle => 'App-vergrendeling';
+
+  @override
+  String get appLockDescription =>
+      'Bescherm FiFe met de vingerafdruk, gezichtsherkenning of pincode van je apparaat.';
+
+  @override
+  String get appLockTimeout => 'Vergrendeltijd';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Vraag om verificatie na deze tijd buiten FiFe. Bij het opnieuw starten van de app is verificatie altijd vereist.';
+
+  @override
+  String get appLockAuthenticate =>
+      'Verifieer je identiteit om FiFe te ontgrendelen.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Verifieer je identiteit om de app-vergrendeling te wijzigen.';
+
+  @override
+  String get appLockAuthHint => 'Verifieer je identiteit';
+
+  @override
+  String get appLocked => 'FiFe is vergrendeld';
+
+  @override
+  String get appLockUnlock => 'Ontgrendelen';
+
+  @override
+  String get appLockUnavailable =>
+      'Apparaatverificatie is niet beschikbaar. Stel een pincode, toegangscode of biometrie in via de apparaatinstellingen en probeer het opnieuw.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'De verificatie is niet voltooid. Probeer het opnieuw.';
+
+  @override
+  String get appLockStorageError =>
+      'De vergrendelinstellingen konden niet worden gelezen of opgeslagen. Probeer het opnieuw om je kluis te beschermen.';
+
+  @override
   String get quickSyncNotificationSettingTitle =>
       'Melding voor automatisch synchroniseren';
 

@@ -7,6 +7,7 @@ import 'package:file_vault_bb/l10n/app_localizations.dart';
 import 'package:file_vault_bb/main.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_locale.dart';
+import 'package:file_vault_bb/services/service_app_lock.dart';
 import 'package:file_vault_bb/services/service_session_cleanup.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
@@ -47,10 +48,15 @@ void main() {
       setup.dispose();
       locale.dispose();
     });
-    await tester.pumpWidget(MultiProvider(providers: [
-      ChangeNotifierProvider.value(value: setup),
-      ChangeNotifierProvider.value(value: locale),
-    ], child: const MyApp()));
+    await tester.runAsync(() => tester.pumpWidget(MultiProvider(providers: [
+          ChangeNotifierProvider.value(value: setup),
+          ChangeNotifierProvider.value(value: locale),
+        ], child: const MyApp())));
+    // App lock reads its durable policy before exposing any foreground route.
+    final appLock = Provider.of<AppLockController>(
+        tester.element(find.byType(MaterialApp)),
+        listen: false);
+    await tester.runAsync(() => until(() => appLock.ready));
     await tester.pumpAndSettle();
     return setup;
   }

@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "App-vergrendeling",
+  "appLockDescription": "Bescherm FiFe met de vingerafdruk, gezichtsherkenning of pincode van je apparaat.",
+  "appLockTimeout": "Vergrendeltijd",
+  "appLockTimeoutDescription": "Vraag om verificatie na deze tijd buiten FiFe. Bij het opnieuw starten van de app is verificatie altijd vereist.",
+  "appLockAuthenticate": "Verifieer je identiteit om FiFe te ontgrendelen.",
+  "appLockChangeSettings": "Verifieer je identiteit om de app-vergrendeling te wijzigen.",
+  "appLockAuthHint": "Verifieer je identiteit",
+  "appLocked": "FiFe is vergrendeld",
+  "appLockUnlock": "Ontgrendelen",
+  "appLockUnavailable": "Apparaatverificatie is niet beschikbaar. Stel een pincode, toegangscode of biometrie in via de apparaatinstellingen en probeer het opnieuw.",
+  "appLockAuthenticationFailed": "De verificatie is niet voltooid. Probeer het opnieuw.",
+  "appLockStorageError": "De vergrendelinstellingen konden niet worden gelezen of opgeslagen. Probeer het opnieuw om je kluis te beschermen.",
   "quickSyncNotificationSettingTitle": "Melding voor automatisch synchroniseren",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

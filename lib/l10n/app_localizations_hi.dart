@@ -46,6 +46,48 @@ class AppLocalizationsHi extends AppLocalizations {
   String get logging => 'लॉगिंग';
 
   @override
+  String get appLockTitle => 'ऐप लॉक';
+
+  @override
+  String get appLockDescription =>
+      'FiFe की सुरक्षा के लिए अपने डिवाइस के फ़िंगरप्रिंट, चेहरे या PIN का उपयोग करें।';
+
+  @override
+  String get appLockTimeout => 'लॉक होने का समय';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'FiFe से इतने समय तक बाहर रहने के बाद प्रमाणीकरण माँगें। ऐप दोबारा शुरू करने पर हमेशा प्रमाणीकरण ज़रूरी है।';
+
+  @override
+  String get appLockAuthenticate => 'FiFe अनलॉक करने के लिए प्रमाणीकरण करें।';
+
+  @override
+  String get appLockChangeSettings =>
+      'ऐप लॉक सेटिंग बदलने के लिए प्रमाणीकरण करें।';
+
+  @override
+  String get appLockAuthHint => 'अपनी पहचान सत्यापित करें';
+
+  @override
+  String get appLocked => 'FiFe लॉक है';
+
+  @override
+  String get appLockUnlock => 'अनलॉक करें';
+
+  @override
+  String get appLockUnavailable =>
+      'डिवाइस प्रमाणीकरण उपलब्ध नहीं है। डिवाइस की सेटिंग में PIN, पासकोड या बायोमेट्रिक्स सेट करें, फिर कोशिश करें।';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'प्रमाणीकरण पूरा नहीं हुआ। फिर से कोशिश करें।';
+
+  @override
+  String get appLockStorageError =>
+      'ऐप लॉक सेटिंग पढ़ी या सेव नहीं की जा सकीं। अपने वॉल्ट की सुरक्षा के लिए फिर कोशिश करें।';
+
+  @override
   String get quickSyncNotificationSettingTitle => 'ऑटो सिंक नोटिफिकेशन';
 
   @override

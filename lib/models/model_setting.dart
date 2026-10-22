@@ -6,6 +6,16 @@ import '../services/service_session_work.dart';
 class ModelSetting {
   static Map<String, String> settingJson = {};
 
+  static const appLockTimeoutChoices = [1, 5, 10, 15, 20, 25, 30];
+  static const defaultAppLockTimeoutMinutes = 5;
+
+  static int parseAppLockTimeoutMinutes(String value) {
+    final minutes = int.tryParse(value);
+    return appLockTimeoutChoices.contains(minutes)
+        ? minutes!
+        : defaultAppLockTimeoutMinutes;
+  }
+
   static const minForegroundSyncIntervalMinutes = 1;
   static const maxForegroundSyncIntervalMinutes = 30;
   static const defaultForegroundSyncIntervalMinutes = 15;

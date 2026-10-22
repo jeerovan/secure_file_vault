@@ -45,6 +45,45 @@ class AppLocalizationsKo extends AppLocalizations {
   String get logging => '로그';
 
   @override
+  String get appLockTitle => '앱 잠금';
+
+  @override
+  String get appLockDescription => '기기의 지문, 얼굴 또는 PIN으로 FiFe를 보호하세요.';
+
+  @override
+  String get appLockTimeout => '잠금 대기 시간';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'FiFe를 떠난 후 이 시간이 지나면 인증을 요청합니다. 앱을 다시 시작할 때는 항상 인증이 필요합니다.';
+
+  @override
+  String get appLockAuthenticate => 'FiFe 잠금을 해제하려면 인증하세요.';
+
+  @override
+  String get appLockChangeSettings => '앱 잠금 설정을 변경하려면 인증하세요.';
+
+  @override
+  String get appLockAuthHint => '본인 확인';
+
+  @override
+  String get appLocked => 'FiFe가 잠겨 있습니다';
+
+  @override
+  String get appLockUnlock => '잠금 해제';
+
+  @override
+  String get appLockUnavailable =>
+      '기기 인증을 사용할 수 없습니다. 기기 설정에서 PIN, 암호 또는 생체 인증을 설정한 후 다시 시도하세요.';
+
+  @override
+  String get appLockAuthenticationFailed => '인증이 완료되지 않았습니다. 다시 시도하세요.';
+
+  @override
+  String get appLockStorageError =>
+      '앱 잠금 설정을 읽거나 저장하지 못했습니다. 보관함을 보호하려면 다시 시도하세요.';
+
+  @override
   String get quickSyncNotificationSettingTitle => '자동 동기화 알림';
 
   @override

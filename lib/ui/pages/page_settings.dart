@@ -12,12 +12,14 @@ import 'package:share_plus/share_plus.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_locale.dart';
+import '../../services/service_app_lock.dart';
 import '../../services/service_logger.dart';
 import '../../services/service_foreground.dart';
 import '../../services/service_session_work.dart';
 import '../../utils/common.dart';
 import '../../utils/enums.dart';
 import '../common_widgets.dart';
+import '../app_lock.dart';
 
 class SettingsPage extends StatefulWidget {
   final Function(String?) onThemeChange;
@@ -33,8 +35,6 @@ class SettingsPage extends StatefulWidget {
 
 class SettingsPageState extends State<SettingsPage> {
   final logger = AppLogger(prefixes: ["Settings"]);
-  bool isAuthSupported = false;
-  bool isAuthEnabled = false;
   bool loggingEnabled =
       ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
           "yes";
@@ -444,6 +444,9 @@ class SettingsPageState extends State<SettingsPage> {
                     onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
                   ),
                 ),
+                if (Platform.isAndroid || Platform.isIOS)
+                  AppLockSettings(
+                      controller: context.read<AppLockController>()),
                 if (Platform.isAndroid)
                   Column(
                     children: [

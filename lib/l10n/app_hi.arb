@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "ऐप लॉक",
+  "appLockDescription": "FiFe की सुरक्षा के लिए अपने डिवाइस के फ़िंगरप्रिंट, चेहरे या PIN का उपयोग करें।",
+  "appLockTimeout": "लॉक होने का समय",
+  "appLockTimeoutDescription": "FiFe से इतने समय तक बाहर रहने के बाद प्रमाणीकरण माँगें। ऐप दोबारा शुरू करने पर हमेशा प्रमाणीकरण ज़रूरी है।",
+  "appLockAuthenticate": "FiFe अनलॉक करने के लिए प्रमाणीकरण करें।",
+  "appLockChangeSettings": "ऐप लॉक सेटिंग बदलने के लिए प्रमाणीकरण करें।",
+  "appLockAuthHint": "अपनी पहचान सत्यापित करें",
+  "appLocked": "FiFe लॉक है",
+  "appLockUnlock": "अनलॉक करें",
+  "appLockUnavailable": "डिवाइस प्रमाणीकरण उपलब्ध नहीं है। डिवाइस की सेटिंग में PIN, पासकोड या बायोमेट्रिक्स सेट करें, फिर कोशिश करें।",
+  "appLockAuthenticationFailed": "प्रमाणीकरण पूरा नहीं हुआ। फिर से कोशिश करें।",
+  "appLockStorageError": "ऐप लॉक सेटिंग पढ़ी या सेव नहीं की जा सकीं। अपने वॉल्ट की सुरक्षा के लिए फिर कोशिश करें।",
   "quickSyncNotificationSettingTitle": "ऑटो सिंक नोटिफिकेशन",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "נעילת האפליקציה",
+  "appLockDescription": "הגנו על FiFe באמצעות טביעת אצבע, זיהוי פנים או קוד ה-PIN של המכשיר.",
+  "appLockTimeout": "זמן עד לנעילה",
+  "appLockTimeoutDescription": "יידרש אימות לאחר פרק זמן זה מחוץ ל-FiFe. הפעלה מחדש של האפליקציה תמיד מחייבת אימות.",
+  "appLockAuthenticate": "יש לאמת את זהותך כדי לפתוח את FiFe.",
+  "appLockChangeSettings": "יש לאמת את זהותך כדי לשנות את הגדרות נעילת האפליקציה.",
+  "appLockAuthHint": "אימות זהות",
+  "appLocked": "FiFe נעולה",
+  "appLockUnlock": "ביטול נעילה",
+  "appLockUnavailable": "אימות המכשיר אינו זמין. הגדירו PIN, קוד גישה או זיהוי ביומטרי בהגדרות המכשיר ונסו שוב.",
+  "appLockAuthenticationFailed": "האימות לא הושלם. נסו שוב.",
+  "appLockStorageError": "לא ניתן לקרוא או לשמור את הגדרות הנעילה. נסו שוב כדי לשמור על הכספת מוגנת.",
   "quickSyncNotificationSettingTitle": "התראת סנכרון אוטומטי",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

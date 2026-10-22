@@ -46,6 +46,48 @@ class AppLocalizationsTh extends AppLocalizations {
   String get logging => 'บันทึกระบบ';
 
   @override
+  String get appLockTitle => 'ล็อกแอป';
+
+  @override
+  String get appLockDescription =>
+      'ปกป้อง FiFe ด้วยลายนิ้วมือ ใบหน้า หรือ PIN ของอุปกรณ์';
+
+  @override
+  String get appLockTimeout => 'ระยะเวลาก่อนล็อก';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'ขอให้ยืนยันตัวตนเมื่อออกจาก FiFe ครบระยะเวลานี้ การเริ่มแอปใหม่ต้องยืนยันตัวตนเสมอ';
+
+  @override
+  String get appLockAuthenticate => 'ยืนยันตัวตนเพื่อปลดล็อก FiFe';
+
+  @override
+  String get appLockChangeSettings =>
+      'ยืนยันตัวตนเพื่อเปลี่ยนการตั้งค่าล็อกแอป';
+
+  @override
+  String get appLockAuthHint => 'ยืนยันตัวตนของคุณ';
+
+  @override
+  String get appLocked => 'FiFe ถูกล็อก';
+
+  @override
+  String get appLockUnlock => 'ปลดล็อก';
+
+  @override
+  String get appLockUnavailable =>
+      'ไม่สามารถใช้การยืนยันตัวตนของอุปกรณ์ได้ ตั้งค่า PIN รหัสผ่าน หรือข้อมูลชีวมิติในการตั้งค่าอุปกรณ์ แล้วลองอีกครั้ง';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'การยืนยันตัวตนยังไม่เสร็จสมบูรณ์ โปรดลองอีกครั้ง';
+
+  @override
+  String get appLockStorageError =>
+      'ไม่สามารถอ่านหรือบันทึกการตั้งค่าล็อกแอปได้ ลองอีกครั้งเพื่อปกป้องคลังส่วนตัวของคุณ';
+
+  @override
   String get quickSyncNotificationSettingTitle =>
       'การแจ้งเตือนการซิงก์อัตโนมัติ';
 

@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "قفل برنامه",
+  "appLockDescription": "برای محافظت از FiFe از اثر انگشت، چهره یا پین دستگاه خود استفاده کنید.",
+  "appLockTimeout": "زمان قفل شدن",
+  "appLockTimeoutDescription": "پس از این مدت دور بودن از FiFe، احراز هویت لازم است. راه‌اندازی مجدد برنامه همیشه به احراز هویت نیاز دارد.",
+  "appLockAuthenticate": "برای باز کردن FiFe احراز هویت کنید.",
+  "appLockChangeSettings": "برای تغییر تنظیمات قفل برنامه احراز هویت کنید.",
+  "appLockAuthHint": "هویت خود را تأیید کنید",
+  "appLocked": "FiFe قفل است",
+  "appLockUnlock": "باز کردن قفل",
+  "appLockUnavailable": "احراز هویت دستگاه در دسترس نیست. در تنظیمات دستگاه پین، رمز عبور یا اطلاعات زیست‌سنجی تنظیم کنید و دوباره تلاش کنید.",
+  "appLockAuthenticationFailed": "احراز هویت کامل نشد. دوباره تلاش کنید.",
+  "appLockStorageError": "خواندن یا ذخیرهٔ تنظیمات قفل برنامه ممکن نشد. برای حفظ امنیت گاوصندوق دوباره تلاش کنید.",
   "quickSyncNotificationSettingTitle": "اعلان همگام‌سازی خودکار",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

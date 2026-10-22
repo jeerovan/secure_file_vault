@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "Khóa ứng dụng",
+  "appLockDescription": "Bảo vệ FiFe bằng vân tay, khuôn mặt hoặc mã PIN của thiết bị.",
+  "appLockTimeout": "Thời gian chờ khóa",
+  "appLockTimeoutDescription": "Yêu cầu xác thực sau khoảng thời gian này ở ngoài FiFe. Luôn yêu cầu xác thực khi khởi động lại ứng dụng.",
+  "appLockAuthenticate": "Xác thực để mở khóa FiFe.",
+  "appLockChangeSettings": "Xác thực để thay đổi cài đặt khóa ứng dụng.",
+  "appLockAuthHint": "Xác minh danh tính",
+  "appLocked": "FiFe đã khóa",
+  "appLockUnlock": "Mở khóa",
+  "appLockUnavailable": "Không thể xác thực thiết bị. Hãy thiết lập mã PIN, mật mã hoặc sinh trắc học trong cài đặt thiết bị rồi thử lại.",
+  "appLockAuthenticationFailed": "Chưa hoàn tất xác thực. Vui lòng thử lại.",
+  "appLockStorageError": "Không thể đọc hoặc lưu cài đặt khóa ứng dụng. Hãy thử lại để bảo vệ kho dữ liệu của bạn.",
   "quickSyncNotificationSettingTitle": "Thông báo đồng bộ tự động",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"

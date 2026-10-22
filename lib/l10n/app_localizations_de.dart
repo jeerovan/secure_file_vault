@@ -46,6 +46,49 @@ class AppLocalizationsDe extends AppLocalizations {
   String get logging => 'Protokollierung';
 
   @override
+  String get appLockTitle => 'App-Sperre';
+
+  @override
+  String get appLockDescription =>
+      'Schütze FiFe mit dem Fingerabdruck, der Gesichtserkennung oder der PIN deines Geräts.';
+
+  @override
+  String get appLockTimeout => 'Sperrzeit';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'Nach dieser Zeit außerhalb von FiFe ist eine Authentifizierung erforderlich. Bei jedem App-Neustart ist sie immer erforderlich.';
+
+  @override
+  String get appLockAuthenticate =>
+      'Authentifiziere dich, um FiFe zu entsperren.';
+
+  @override
+  String get appLockChangeSettings =>
+      'Authentifiziere dich, um die App-Sperre zu ändern.';
+
+  @override
+  String get appLockAuthHint => 'Identität bestätigen';
+
+  @override
+  String get appLocked => 'FiFe ist gesperrt';
+
+  @override
+  String get appLockUnlock => 'Entsperren';
+
+  @override
+  String get appLockUnavailable =>
+      'Die Geräteauthentifizierung ist nicht verfügbar. Richte in den Geräteeinstellungen eine PIN, einen Code oder Biometrie ein und versuche es erneut.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'Die Authentifizierung wurde nicht abgeschlossen. Versuche es erneut.';
+
+  @override
+  String get appLockStorageError =>
+      'Die Einstellungen der App-Sperre konnten nicht gelesen oder gespeichert werden. Versuche es erneut, damit dein Tresor geschützt bleibt.';
+
+  @override
   String get quickSyncNotificationSettingTitle =>
       'Benachrichtigung zur automatischen Synchronisierung';
 

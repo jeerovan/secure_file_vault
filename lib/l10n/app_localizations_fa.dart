@@ -46,6 +46,48 @@ class AppLocalizationsFa extends AppLocalizations {
   String get logging => 'گزارش‌ها';
 
   @override
+  String get appLockTitle => 'قفل برنامه';
+
+  @override
+  String get appLockDescription =>
+      'برای محافظت از FiFe از اثر انگشت، چهره یا پین دستگاه خود استفاده کنید.';
+
+  @override
+  String get appLockTimeout => 'زمان قفل شدن';
+
+  @override
+  String get appLockTimeoutDescription =>
+      'پس از این مدت دور بودن از FiFe، احراز هویت لازم است. راه‌اندازی مجدد برنامه همیشه به احراز هویت نیاز دارد.';
+
+  @override
+  String get appLockAuthenticate => 'برای باز کردن FiFe احراز هویت کنید.';
+
+  @override
+  String get appLockChangeSettings =>
+      'برای تغییر تنظیمات قفل برنامه احراز هویت کنید.';
+
+  @override
+  String get appLockAuthHint => 'هویت خود را تأیید کنید';
+
+  @override
+  String get appLocked => 'FiFe قفل است';
+
+  @override
+  String get appLockUnlock => 'باز کردن قفل';
+
+  @override
+  String get appLockUnavailable =>
+      'احراز هویت دستگاه در دسترس نیست. در تنظیمات دستگاه پین، رمز عبور یا اطلاعات زیست‌سنجی تنظیم کنید و دوباره تلاش کنید.';
+
+  @override
+  String get appLockAuthenticationFailed =>
+      'احراز هویت کامل نشد. دوباره تلاش کنید.';
+
+  @override
+  String get appLockStorageError =>
+      'خواندن یا ذخیرهٔ تنظیمات قفل برنامه ممکن نشد. برای حفظ امنیت گاوصندوق دوباره تلاش کنید.';
+
+  @override
   String get quickSyncNotificationSettingTitle => 'اعلان همگام‌سازی خودکار';
 
   @override

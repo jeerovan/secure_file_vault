@@ -44,6 +44,18 @@
   "@logging": {
     "description": "The label for the system logging configuration"
   },
+  "appLockTitle": "Uygulama kilidi",
+  "appLockDescription": "FiFe’yi cihazınızın parmak izi, yüz tanıma veya PIN özelliğiyle koruyun.",
+  "appLockTimeout": "Kilit zaman aşımı",
+  "appLockTimeoutDescription": "FiFe’den bu süre boyunca uzak kalındığında kimlik doğrulama iste. Uygulama yeniden başlatıldığında her zaman kimlik doğrulama gerekir.",
+  "appLockAuthenticate": "FiFe’nin kilidini açmak için kimliğinizi doğrulayın.",
+  "appLockChangeSettings": "Uygulama kilidi ayarlarını değiştirmek için kimliğinizi doğrulayın.",
+  "appLockAuthHint": "Kimliğinizi doğrulayın",
+  "appLocked": "FiFe kilitli",
+  "appLockUnlock": "Kilidi aç",
+  "appLockUnavailable": "Cihaz kimlik doğrulaması kullanılamıyor. Cihaz ayarlarında PIN, parola veya biyometri ayarlayıp tekrar deneyin.",
+  "appLockAuthenticationFailed": "Kimlik doğrulama tamamlanmadı. Tekrar deneyin.",
+  "appLockStorageError": "Uygulama kilidi ayarları okunamadı veya kaydedilemedi. Kasanızı korumak için tekrar deneyin.",
   "quickSyncNotificationSettingTitle": "Otomatik eşitleme bildirimi",
   "@quickSyncNotificationSettingTitle": {
     "description": "Setting to show the auto sync notification"
