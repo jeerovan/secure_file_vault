@@ -6,11 +6,31 @@ import 'package:flutter/services.dart';
 import 'dart:ui';
 
 import '../models/model_setting.dart';
+import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
 import 'service_foreground.dart';
 import 'service_logger.dart';
+import 'service_session_work.dart';
 
 const String iosBackgroundTaskIdentifier = 'com.jeerovan.fife.data_sync';
+
+/// Scheduling and delivered workers use durable session state, never the old
+/// background_sync opt-in or a possibly stale foreground settings cache.
+Future<bool> isIosBackgroundSyncReady() => SessionWork.run(() async {
+      if (await ModelSetting.getRaw(AppString.onboarding.string) != 'yes' ||
+          await ModelSetting.getRaw(AppString.signedIn.string) != 'yes' ||
+          (await ModelSetting.getRaw(AppString.deviceUuid.string)).isEmpty) {
+        return false;
+      }
+      final storage = SecureStorage();
+      if (await storage.containsKey(key: AppString.recoveryResetStage.string) ||
+          await storage.containsKey(key: AppString.vaultKeySetupStage.string)) {
+        return false;
+      }
+      final key = await storage.read(key: AppString.masterKey.string);
+      await SessionWork.checkpoint();
+      return key?.isNotEmpty == true;
+    });
 
 abstract interface class IosBackgroundScheduler {
   Future<void> initialize(Function callbackDispatcher);
@@ -99,19 +119,17 @@ class BackgroundExecutionService {
   BackgroundExecutionService._()
       : _kindResolver = _platformKind,
         _iosScheduler = NativeIosBackgroundScheduler(),
-        _backgroundSyncEnabled = _storedBackgroundSyncEnabled,
-        _signedIn = _storedSignedIn;
+        _iosSessionReady = isIosBackgroundSyncReady;
 
   @visibleForTesting
   BackgroundExecutionService.test({
     required BackgroundExecutionKind kind,
     required IosBackgroundScheduler iosScheduler,
-    bool backgroundSyncEnabled = false,
     bool signedIn = false,
+    Future<bool> Function()? iosSessionReady,
   })  : _kindResolver = (() => kind),
         _iosScheduler = iosScheduler,
-        _backgroundSyncEnabled = (() => backgroundSyncEnabled),
-        _signedIn = (() => signedIn);
+        _iosSessionReady = iosSessionReady ?? (() async => signedIn);
 
   static final BackgroundExecutionService instance =
       BackgroundExecutionService._();
@@ -119,9 +137,12 @@ class BackgroundExecutionService {
   final AppLogger _logger = AppLogger(prefixes: ['Background Execution']);
   final BackgroundExecutionKind Function() _kindResolver;
   final IosBackgroundScheduler _iosScheduler;
-  final bool Function() _backgroundSyncEnabled;
-  final bool Function() _signedIn;
+  final Future<bool> Function() _iosSessionReady;
   bool _iosInitialized = false;
+  bool _iosWantsScheduling = true;
+  int _iosRequest = 0;
+  Future<bool>? _iosInitializing;
+  Future<void> _iosWork = Future.value();
 
   BackgroundExecutionKind get kind => _kindResolver();
 
@@ -131,15 +152,16 @@ class BackgroundExecutionService {
         ServiceForeground.instance.init();
         return true;
       case BackgroundExecutionKind.iosRefresh:
-        _iosInitialized = await _runIosAction(
-          'initialize',
-          () => _iosScheduler.initialize(iosCallbackDispatcher),
-        );
-        if (!_iosInitialized) return false;
-        if (_backgroundSyncEnabled() && _signedIn()) {
-          return _scheduleIosWork();
+        final initializing = _iosInitializing ??= _runIosAction('initialize',
+                () => _iosScheduler.initialize(iosCallbackDispatcher))
+            .then((ready) => _iosInitialized = ready);
+        final initialized = await initializing;
+        if (identical(_iosInitializing, initializing)) _iosInitializing = null;
+        if (!initialized) {
+          await _reconcileIosWork();
+          return false;
         }
-        return _cancelIosWork();
+        return _reconcileIosWork();
       case BackgroundExecutionKind.desktopTimer:
       case BackgroundExecutionKind.none:
         return true;
@@ -156,15 +178,8 @@ class BackgroundExecutionService {
         }
         return true;
       case BackgroundExecutionKind.iosRefresh:
-        if (!_iosInitialized) {
-          _logger.warning(
-              'Ignored iOS background sync change because its scheduler is unavailable');
-          return false;
-        }
-        if (enabled && _signedIn()) {
-          return _scheduleIosWork();
-        }
-        return _cancelIosWork();
+        _iosWantsScheduling = enabled;
+        return _reconcileIosWork();
       case BackgroundExecutionKind.desktopTimer:
       case BackgroundExecutionKind.none:
         return true;
@@ -172,10 +187,40 @@ class BackgroundExecutionService {
   }
 
   Future<bool> cancelIosWork() async {
-    if (kind == BackgroundExecutionKind.iosRefresh && _iosInitialized) {
-      return _cancelIosWork();
+    if (kind == BackgroundExecutionKind.iosRefresh) {
+      _iosWantsScheduling = false;
+      return _reconcileIosWork();
     }
     return true;
+  }
+
+  Future<bool> _reconcileIosWork() {
+    final request = ++_iosRequest;
+    final work = _iosWork.then((_) async {
+      if (_iosInitializing case final initializing?) await initializing;
+      if (request != _iosRequest) return false;
+      // Native cancellation needs no Dart callback registration. Cleanup on a
+      // cold start must also cancel requests left by an earlier app process.
+      if (!_iosWantsScheduling) return _cancelIosWork();
+      if (!_iosInitialized) {
+        await _cancelIosWork();
+        return false;
+      }
+      var ready = false;
+      final readable = await _runIosAction('check session', () async {
+        ready = await _iosSessionReady();
+      });
+      if (request != _iosRequest) return false;
+      if (!readable) {
+        await _cancelIosWork();
+        return false;
+      }
+      return ready ? _scheduleIosWork() : _cancelIosWork();
+    });
+    // Serialize native requests: cancellation queued during an in-flight
+    // submission runs after it, so that submission cannot resurrect work.
+    _iosWork = work.then<void>((_) {});
+    return work;
   }
 
   Future<bool> _scheduleIosWork() async {
@@ -219,18 +264,4 @@ class BackgroundExecutionService {
         isIOS: Platform.isIOS,
         isDesktop: Platform.isWindows || Platform.isMacOS || Platform.isLinux,
       );
-
-  static bool _storedBackgroundSyncEnabled() =>
-      ModelSetting.get(
-        AppString.backgroundSync.string,
-        defaultValue: 'no',
-      ) ==
-      'yes';
-
-  static bool _storedSignedIn() =>
-      ModelSetting.get(
-        AppString.signedIn.string,
-        defaultValue: 'no',
-      ) ==
-      'yes';
 }

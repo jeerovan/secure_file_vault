@@ -165,14 +165,8 @@ class AppSetupState extends ChangeNotifier {
     }
 
     if (Platform.isIOS) {
-      final backgroundSyncRequired = ModelSetting.get(
-              AppString.backgroundSync.string,
-              defaultValue: "no") ==
-          "yes";
-      if (backgroundSyncRequired) {
-        if (_disposed || checkId != _checkId) return;
-        await BackgroundExecutionService.instance.setEnabled(true);
-      }
+      if (_disposed || checkId != _checkId) return;
+      await BackgroundExecutionService.instance.setEnabled(true);
     }
 
     // All setup complete

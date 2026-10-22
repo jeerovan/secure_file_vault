@@ -80,14 +80,7 @@ void backgroundTaskDispatcher() async {
             SyncBudget.check();
             await StorageSqlite.initialize(ExecutionMode.backgroundWorker);
             if (!await SessionCleanup.instance.resume()) return false;
-            if (await ModelSetting.getRaw(AppString.signedIn.string,
-                        defaultValue: 'no') !=
-                    'yes' ||
-                await ModelSetting.getRaw(AppString.backgroundSync.string,
-                        defaultValue: 'no') !=
-                    'yes') {
-              return true;
-            }
+            if (!await isIosBackgroundSyncReady()) return true;
             await initializeDependencies(ExecutionMode.backgroundWorker);
             SyncBudget.check();
             return SyncUtils().reconFolders(caller: 'BackgroundRefresh');
@@ -160,7 +153,7 @@ Future<void> initializeInParallel() async {
     initializePurchases(),
   ];
   if (Platform.isIOS) {
-    // iOS background execution is optional and must never delay foreground UI.
+    // iOS refresh is automatic, but availability must never delay foreground UI.
     unawaited(initializeBackgroundExecution());
   } else {
     startupTasks.add(initializeBackgroundExecution());

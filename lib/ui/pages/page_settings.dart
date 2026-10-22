@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:file_vault_bb/services/service_events.dart';
@@ -20,6 +19,7 @@ import '../../utils/common.dart';
 import '../../utils/enums.dart';
 import '../common_widgets.dart';
 import '../app_lock.dart';
+import '../thumb_reach_list.dart';
 
 class SettingsPage extends StatefulWidget {
   final Function(String?) onThemeChange;
@@ -34,6 +34,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class SettingsPageState extends State<SettingsPage> {
+  final _reachController = ThumbReachScrollController();
   final logger = AppLogger(prefixes: ["Settings"]);
   bool loggingEnabled =
       ModelSetting.get(AppString.loggingEnabled.string, defaultValue: "no") ==
@@ -42,9 +43,6 @@ class SettingsPageState extends State<SettingsPage> {
           AppString.syncWithNotification.string,
           defaultValue: "yes") ==
       "yes";
-  bool backgroundSyncEnabled =
-      ModelSetting.get(AppString.backgroundSync.string, defaultValue: "no") ==
-          "yes";
   int _autoSyncIntervalMinutes = ModelSetting.foregroundSyncIntervalMinutes;
   bool _savingAutoSyncInterval = false;
   late bool isDarkMode;
@@ -57,6 +55,12 @@ class SettingsPageState extends State<SettingsPage> {
         : ModelSetting.get(AppString.theme.string) == "dark";
     super.initState();
     _initializeData();
+  }
+
+  @override
+  void dispose() {
+    _reachController.dispose();
+    super.dispose();
   }
 
   Future<void> _initializeData() async {
@@ -113,17 +117,6 @@ class SettingsPageState extends State<SettingsPage> {
     if (mounted) {
       setState(() {
         quickSyncEnabled = enable;
-      });
-    }
-  }
-
-  Future<void> setIosBackgroundSync(bool enable) async {
-    await ModelSetting.set(
-        AppString.backgroundSync.string, enable ? "yes" : "no");
-    await BackgroundExecutionService.instance.setEnabled(enable);
-    if (mounted) {
-      setState(() {
-        backgroundSyncEnabled = enable;
       });
     }
   }
@@ -403,218 +396,199 @@ class SettingsPageState extends State<SettingsPage> {
     final loc = AppLocalizations.of(
         context)!; // Extract localizations once for cleaner code
     final surfaceColor = Theme.of(context).colorScheme.surfaceContainerHighest;
+    final platform = Theme.of(context).platform;
+    final isMobile =
+        platform == TargetPlatform.android || platform == TargetPlatform.iOS;
 
-    return CrossPlatformBackHandler(
+    final settingsItems = <Widget>[
+      ListTile(
+        leading: const Icon(LucideIcons.user, color: Colors.grey),
+        title: Text(emailId != null ? emailId! : ""),
+        horizontalTitleGap: 24.0,
+        trailing: OutlinedButton(
+          onPressed: () {
+            signout();
+          },
+          style: OutlinedButton.styleFrom(
+            side: const BorderSide(color: Color(0xFFBDBDBD)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            minimumSize: const Size(0, 40),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: Text(loc.signOut), // Changed from "Sign out"
+        ),
+      ),
+      FutureBuilder<PackageInfo>(
+        future: PackageInfo.fromPlatform(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            final version = snapshot.data?.version ?? '';
+            return ListTile(
+              leading: const Icon(LucideIcons.info, color: Colors.grey),
+              horizontalTitleGap: 24.0,
+              title: Text(
+                  "${loc.versionLabel}$version"), // Changed from "Version: $version"
+              onTap: null,
+            );
+          } else {
+            return ListTile(
+              leading: Icon(LucideIcons.info, color: Colors.grey),
+              title: Text(loc.loading), // Changed from "Loading..."
+              horizontalTitleGap: 24.0,
+            );
+          }
+        },
+      ),
+      ListTile(
+        leading: const Icon(LucideIcons.share2, color: Colors.grey),
+        title: Text(loc.share), // Changed from "Share"
+        horizontalTitleGap: 24.0,
+        onTap: () {
+          _share();
+        },
+      ),
+      ListTile(
+        leading: const Icon(LucideIcons.star, color: Colors.grey),
+        title: Text(loc.leaveReview), // Changed from "Leave a review"
+        horizontalTitleGap: 24.0,
+        onTap: () => _redirectToFeedback(),
+      ),
+      if (isMobile)
+        ListTile(
+          leading: const Icon(LucideIcons.monitor, color: Colors.grey),
+          title: Text(loc.desktopApp), // Changed from "Desktop App"
+          horizontalTitleGap: 24.0,
+          onTap: () => _redirectToOtherApps(),
+        ),
+      if (!isMobile)
+        ListTile(
+          leading: const Icon(LucideIcons.smartphone, color: Colors.grey),
+          title: Text(loc.mobileApp), // Changed from "Mobile App"
+          horizontalTitleGap: 24.0,
+          onTap: () => _redirectToOtherApps(),
+        ),
+      ListTile(
+        leading: const Icon(LucideIcons.github, color: Colors.grey),
+        title: Text(loc.sourceCode), // Changed from "Source Code"
+        horizontalTitleGap: 24.0,
+        onTap: () => _redirectToGithub(),
+      ),
+      ListTile(
+        leading: const Icon(LucideIcons.bug, color: Colors.grey),
+        trailing: const Icon(LucideIcons.chevronRight, color: Colors.grey),
+        title: Text(loc.reportIssue), // Changed from "Report Issue"
+        horizontalTitleGap: 24.0,
+        onTap: () => _redirectToIssues(),
+      ),
+      ListTile(
+        leading: const Icon(LucideIcons.languages, color: Colors.grey),
+        title: Text(loc.language),
+        horizontalTitleGap: 24.0,
+        subtitle: Text(
+          _selectedLanguageOption()?.nativeName ?? loc.tapToSelect,
+        ),
+        onTap: () => _showLanguagePicker(context),
+        trailing: _selectedLanguageOption() != null
+            ? IconButton(
+                onPressed: () {
+                  clearLocale();
+                },
+                icon: const Icon(LucideIcons.rotateCcw))
+            : null,
+      ),
+      ListTile(
+        leading: const Icon(LucideIcons.sunMoon, color: Colors.grey),
+        title: Text(loc.theme), // Changed from "Theme"
+        horizontalTitleGap: 24.0,
+        onTap: () => setTheme(isDarkMode ? 'light' : 'dark'),
+        trailing: IconButton(
+          tooltip: loc.themeTooltip, // Changed from "Day/night theme"
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 500),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: RotationTransition(
+                  turns:
+                      Tween<double>(begin: 0.75, end: 1.0).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: Icon(
+              isDarkMode ? Icons.light_mode : Icons.dark_mode,
+              key: ValueKey(isDarkMode ? 'dark' : 'light'),
+              color: isDarkMode ? Colors.orange : Colors.black,
+            ),
+          ),
+          onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
+        ),
+      ),
+      ListTile(
+        leading: const Icon(LucideIcons.list, color: Colors.grey),
+        title: Text(loc.logging), // Changed from "Logging"
+        horizontalTitleGap: 24.0,
+        trailing: Transform.scale(
+          scale: 0.7,
+          child: Switch(
+            value: loggingEnabled,
+            onChanged: _setLogging,
+          ),
+        ),
+      ),
+      if (platform == TargetPlatform.android)
+        Column(
+          children: [
+            ListTile(
+              leading: const Icon(LucideIcons.refreshCcw, color: Colors.grey),
+              title: Text(loc.quickSyncNotificationSettingTitle),
+              horizontalTitleGap: 24.0,
+              trailing: Transform.scale(
+                scale: 0.7,
+                child: Switch(
+                  value: quickSyncEnabled,
+                  onChanged: setQuickSyncWithNotification,
+                ),
+              ),
+            ),
+            AnimatedSize(
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 180),
+              alignment: Alignment.topCenter,
+              child: quickSyncEnabled
+                  ? AutoSyncIntervalSetting(
+                      minutes: _autoSyncIntervalMinutes,
+                      onChanged: _savingAutoSyncInterval
+                          ? null
+                          : (value) => setState(
+                              () => _autoSyncIntervalMinutes = value.round()),
+                      onChangeEnd: _saveAutoSyncInterval,
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
+        ),
+      if (isMobile)
+        AppLockSettings(controller: context.read<AppLockController>()),
+    ];
+
+    final screen = CrossPlatformBackHandler(
       canPop: true,
       onManualBack: _navigateBack,
       child: Scaffold(
           body: Column(
         children: [
           Expanded(
-            child: ListView(
-              reverse: true,
+            child: ThumbReachListView(
+              controller: _reachController,
+              reverse: !isMobile,
               padding: const EdgeInsets.all(8.0),
-              children: <Widget>[
-                ListTile(
-                  leading: const Icon(LucideIcons.sunMoon, color: Colors.grey),
-                  title: Text(loc.theme), // Changed from "Theme"
-                  horizontalTitleGap: 24.0,
-                  onTap: () => setTheme(isDarkMode ? 'light' : 'dark'),
-                  trailing: IconButton(
-                    tooltip: loc.themeTooltip, // Changed from "Day/night theme"
-                    icon: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 500),
-                      transitionBuilder:
-                          (Widget child, Animation<double> animation) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: RotationTransition(
-                            turns: Tween<double>(begin: 0.75, end: 1.0)
-                                .animate(animation),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: Icon(
-                        isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                        key: ValueKey(isDarkMode ? 'dark' : 'light'),
-                        color: isDarkMode ? Colors.orange : Colors.black,
-                      ),
-                    ),
-                    onPressed: () => setTheme(isDarkMode ? 'light' : 'dark'),
-                  ),
-                ),
-                if (Platform.isAndroid || Platform.isIOS)
-                  AppLockSettings(
-                      controller: context.read<AppLockController>()),
-                if (Platform.isAndroid)
-                  Column(
-                    children: [
-                      ListTile(
-                        leading: const Icon(LucideIcons.refreshCcw,
-                            color: Colors.grey),
-                        title: Text(loc.quickSyncNotificationSettingTitle),
-                        horizontalTitleGap: 24.0,
-                        trailing: Transform.scale(
-                          scale: 0.7,
-                          child: Switch(
-                            value: quickSyncEnabled,
-                            onChanged: setQuickSyncWithNotification,
-                          ),
-                        ),
-                      ),
-                      AnimatedSize(
-                        duration: MediaQuery.disableAnimationsOf(context)
-                            ? Duration.zero
-                            : const Duration(milliseconds: 180),
-                        alignment: Alignment.topCenter,
-                        child: quickSyncEnabled
-                            ? AutoSyncIntervalSetting(
-                                minutes: _autoSyncIntervalMinutes,
-                                onChanged: _savingAutoSyncInterval
-                                    ? null
-                                    : (value) => setState(() =>
-                                        _autoSyncIntervalMinutes =
-                                            value.round()),
-                                onChangeEnd: _saveAutoSyncInterval,
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
-                  ),
-                if (Platform.isIOS)
-                  ListTile(
-                    leading:
-                        const Icon(LucideIcons.refreshCcw, color: Colors.grey),
-                    title: const Text('Background sync'),
-                    subtitle: const Text(
-                        'iOS schedules sync opportunistically and requires Background App Refresh.'),
-                    horizontalTitleGap: 24.0,
-                    trailing: Transform.scale(
-                      scale: 0.7,
-                      child: Switch(
-                        value: backgroundSyncEnabled,
-                        onChanged: setIosBackgroundSync,
-                      ),
-                    ),
-                  ),
-                ListTile(
-                  leading: const Icon(LucideIcons.list, color: Colors.grey),
-                  title: Text(loc.logging), // Changed from "Logging"
-                  horizontalTitleGap: 24.0,
-                  trailing: Transform.scale(
-                    scale: 0.7,
-                    child: Switch(
-                      value: loggingEnabled,
-                      onChanged: _setLogging,
-                    ),
-                  ),
-                ),
-                ListTile(
-                  leading:
-                      const Icon(LucideIcons.languages, color: Colors.grey),
-                  title: Text(loc.language),
-                  horizontalTitleGap: 24.0,
-                  subtitle: Text(
-                    _selectedLanguageOption()?.nativeName ?? loc.tapToSelect,
-                  ),
-                  onTap: () => _showLanguagePicker(context),
-                  trailing: _selectedLanguageOption() != null
-                      ? IconButton(
-                          onPressed: () {
-                            clearLocale();
-                          },
-                          icon: const Icon(LucideIcons.rotateCcw))
-                      : null,
-                ),
-                ListTile(
-                  leading: const Icon(LucideIcons.bug, color: Colors.grey),
-                  trailing:
-                      const Icon(LucideIcons.chevronRight, color: Colors.grey),
-                  title: Text(loc.reportIssue), // Changed from "Report Issue"
-                  horizontalTitleGap: 24.0,
-                  onTap: () => _redirectToIssues(),
-                ),
-                ListTile(
-                  leading: const Icon(LucideIcons.github, color: Colors.grey),
-                  title: Text(loc.sourceCode), // Changed from "Source Code"
-                  horizontalTitleGap: 24.0,
-                  onTap: () => _redirectToGithub(),
-                ),
-                if (Platform.isAndroid || Platform.isIOS)
-                  ListTile(
-                    leading:
-                        const Icon(LucideIcons.monitor, color: Colors.grey),
-                    title: Text(loc.desktopApp), // Changed from "Desktop App"
-                    horizontalTitleGap: 24.0,
-                    onTap: () => _redirectToOtherApps(),
-                  ),
-                if (Platform.isLinux || Platform.isWindows || Platform.isMacOS)
-                  ListTile(
-                    leading:
-                        const Icon(LucideIcons.smartphone, color: Colors.grey),
-                    title: Text(loc.mobileApp), // Changed from "Mobile App"
-                    horizontalTitleGap: 24.0,
-                    onTap: () => _redirectToOtherApps(),
-                  ),
-                ListTile(
-                  leading: const Icon(LucideIcons.star, color: Colors.grey),
-                  title: Text(loc.leaveReview), // Changed from "Leave a review"
-                  horizontalTitleGap: 24.0,
-                  onTap: () => _redirectToFeedback(),
-                ),
-                ListTile(
-                  leading: const Icon(LucideIcons.share2, color: Colors.grey),
-                  title: Text(loc.share), // Changed from "Share"
-                  horizontalTitleGap: 24.0,
-                  onTap: () {
-                    _share();
-                  },
-                ),
-                FutureBuilder<PackageInfo>(
-                  future: PackageInfo.fromPlatform(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      final version = snapshot.data?.version ?? '';
-                      return ListTile(
-                        leading:
-                            const Icon(LucideIcons.info, color: Colors.grey),
-                        horizontalTitleGap: 24.0,
-                        title: Text(
-                            "${loc.versionLabel}$version"), // Changed from "Version: $version"
-                        onTap: null,
-                      );
-                    } else {
-                      return ListTile(
-                        leading: Icon(LucideIcons.info, color: Colors.grey),
-                        title: Text(loc.loading), // Changed from "Loading..."
-                        horizontalTitleGap: 24.0,
-                      );
-                    }
-                  },
-                ),
-                ListTile(
-                  leading: const Icon(LucideIcons.user, color: Colors.grey),
-                  title: Text(emailId != null ? emailId! : ""),
-                  horizontalTitleGap: 24.0,
-                  trailing: OutlinedButton(
-                    onPressed: () {
-                      signout();
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFBDBDBD)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
-                      minimumSize: const Size(0, 40),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(loc.signOut), // Changed from "Sign out"
-                  ),
-                )
-              ],
+              children:
+                  isMobile ? settingsItems : settingsItems.reversed.toList(),
             ),
           ),
           buildBottomAppBar(
@@ -628,6 +602,7 @@ class SettingsPageState extends State<SettingsPage> {
         ],
       )),
     );
+    return PrimaryScrollController(controller: _reachController, child: screen);
   }
 
   void _redirectToGithub() {
