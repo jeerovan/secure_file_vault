@@ -6,6 +6,7 @@ the caller through a private --dart-define-from-file file, never copied here.
 
 from pathlib import Path
 import os
+import plistlib
 import shutil
 import tempfile
 import uuid
@@ -38,6 +39,11 @@ def prepare() -> Path:
     ios.write_text(settings.replace(original, f"PRODUCT_BUNDLE_IDENTIFIER = {bundle};"))
     plist = destination / "ios/Runner/Info.plist"
     plist.write_text(plist.read_text().replace("<string>FiFe</string>", "<string>FiFe Native Test</string>"))
+    info = plistlib.loads(plist.read_bytes())
+    info["NSLocalNetworkUsageDescription"] = (
+        "Connect to the local FiFe test backend for the authorized device rehearsal."
+    )
+    plist.write_bytes(plistlib.dumps(info))
 
     app = destination / "macos/Runner/Configs/AppInfo.xcconfig"
     app.write_text(

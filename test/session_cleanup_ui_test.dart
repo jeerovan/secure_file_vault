@@ -9,6 +9,7 @@ import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_locale.dart';
 import 'package:file_vault_bb/services/service_app_lock.dart';
 import 'package:file_vault_bb/services/service_session_cleanup.dart';
+import 'package:file_vault_bb/services/service_session_work.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_session_cleanup.dart';
@@ -82,6 +83,30 @@ void main() {
     expect(find.text('Cached private page'), findsNothing);
     expect(find.text('Private dialog'), findsNothing);
     expect(navigator.mounted, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+      'expiry discards cached private routes but retains the locked vault',
+      (tester) async {
+    final setup = await mountApp(tester);
+    final navigator = Navigator.of(tester.element(find.byType(PageSignin)));
+    unawaited(navigator.push(MaterialPageRoute<void>(
+        builder: (_) => const Scaffold(body: Text('Retained private page')))));
+    await tester.pumpAndSettle();
+    final master = fixture.secrets[AppString.masterKey.string];
+    await tester.runAsync(() async {
+      expect(await SessionCleanup.instance.expiredAuthentication(), isTrue);
+      await until(() => setup.currentStep == SetupStep.signin);
+    });
+    await tester.pumpAndSettle();
+    expect(find.byType(PageSignin), findsOneWidget);
+    expect(find.text('Retained private page'), findsNothing);
+    expect(navigator.mounted, isFalse);
+    expect(SessionWork.authenticationRequired, isTrue);
+    expect(fixture.secrets[AppString.masterKey.string], master);
+    final loc = AppLocalizations.of(tester.element(find.byType(PageSignin)))!;
+    expect(find.text(loc.sessionExpiredRetained), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Terug naar aanmelden",
   "recoveryResetDiscardBody": "Hiermee wis je de onvoltooide herstelconfiguratie op dit apparaat. Na het aanmelden heb je de nieuwe herstelzin nodig of moet je de kluis opnieuw instellen.",
   "recoveryPhraseSaved": "Ik heb mijn nieuwe herstelzin opgeslagen.",
-  "recoveryResetStarting": "Opnieuw instellen wordt gestart…"
+  "recoveryResetStarting": "Opnieuw instellen wordt gestart…",
+  "sessionExpiredRetained": "Je sessie is verlopen. Meld je opnieuw aan om je kluis te ontgrendelen. Je lokale gegevens blijven bewaard.",
+  "signinVerifiedContinue": "Je e-mailadres is geverifieerd. Ga verder om het aanmelden te voltooien."
 }

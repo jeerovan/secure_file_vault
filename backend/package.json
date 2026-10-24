@@ -45,7 +45,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.14.0",
 		"globals": "^17.3.0",
-		"miniflare": "4.20260421.0",
+		"miniflare": "4.20260426.0",
 		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.4.1",
 		"prettier-plugin-tailwindcss": "^0.7.2",
@@ -68,6 +68,6 @@
 		"jose": "^6.2.2",
 		"lucide-svelte": "^1.0.1",
 		"postgres": "^3.4.9",
-		"wrangler": "4.84.1"
+		"wrangler": "4.86.0"
 	}
 }

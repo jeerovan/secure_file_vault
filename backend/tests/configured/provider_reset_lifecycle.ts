@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { and, eq, ne } from 'drizzle-orm';
 import type { ViteDevServer } from 'vite';
 import {
@@ -26,7 +27,8 @@ import {
 	type RecoveryTarget
 } from '../../src/lib/server/recoveryStorage';
 
-/** Real provider I/O; only Neon proof and the reset-worker clock are fixtures. */
+/** Real provider I/O; Neon proof is a fixture. The optional real-time run uses
+ * the actual local cleanup launcher and its unmodified five-minute cadence. */
 export async function checkProviderResetLifecycle(input: {
 	db: Db;
 	vite: ViteDevServer;
@@ -39,6 +41,7 @@ export async function checkProviderResetLifecycle(input: {
 }) {
 	assert.equal(process.env.FIFE_RUN_PROVIDER_WRITE_CHECKS, '1');
 	assert.equal(process.env.FIFE_RUN_PROVIDER_RESET_CHECKS, '1');
+	const realTime = process.env.FIFE_RUN_PROVIDER_REAL_TIME_RESET_CHECKS === '1';
 	const databaseUrl = new URL(input.databaseUrl);
 	assert.equal(databaseUrl.hostname, '127.0.0.1');
 	assert.ok(databaseUrl.port && databaseUrl.port !== '5432');
@@ -121,6 +124,8 @@ export async function checkProviderResetLifecycle(input: {
 	};
 	let stage = 'initial-upload';
 	let failure: Error | undefined;
+	let worker: ChildProcess | undefined;
+	let workerLog = '';
 	const oldHeaders = { device_uuid: 'retired-fixture-device' };
 	const bootstrap = {
 		'x-fife-vault-protocol': '1',
@@ -269,13 +274,36 @@ export async function checkProviderResetLifecycle(input: {
 		assert.fail('Preserve unresolved upload cleanup records');
 	}
 	try {
-		await db
-			.insert(tables.recoveryWorkerState)
-			.values({ id: 'cleanup', lastRunAt: Date.now() })
-			.onConflictDoUpdate({
-				target: tables.recoveryWorkerState.id,
-				set: { lastRunAt: Date.now() }
+		if (realTime) {
+			worker = spawn(process.execPath, ['--import', 'tsx', 'scripts/local_cleanup_worker.ts'], {
+				env: { ...process.env, FIFE_LOCAL_DATABASE_URL: input.databaseUrl },
+				stdio: ['ignore', 'pipe', 'pipe']
 			});
+			worker.stdout!.on('data', (data) => {
+				workerLog += String(data);
+			});
+			worker.stderr!.on('data', (data) => {
+				workerLog += String(data);
+			});
+			for (let attempt = 0; attempt < 100; attempt++) {
+				const [heartbeat] = await db.select().from(tables.recoveryWorkerState);
+				if (heartbeat && workerLog.includes('Cleanup cycle completed')) break;
+				assert.equal(worker.exitCode, null, 'The actual local cleanup launcher must stay running');
+				await delay(100);
+			}
+			assert.ok(
+				workerLog.includes('Cleanup cycle completed'),
+				'Observe an actual startup heartbeat'
+			);
+		} else {
+			await db
+				.insert(tables.recoveryWorkerState)
+				.values({ id: 'cleanup', lastRunAt: Date.now() })
+				.onConflictDoUpdate({
+					target: tables.recoveryWorkerState.id,
+					set: { lastRunAt: Date.now() }
+				});
+		}
 		const bytes = randomBytes(131_073);
 		const old = await upload(bytes, oldHeaders, 'old-vault');
 		const unfinished = await upload(randomBytes(32_769), oldHeaders, 'unfinished', false);
@@ -377,50 +405,91 @@ export async function checkProviderResetLifecycle(input: {
 			'Older clients receive authoritative own-device removal'
 		);
 		stage = 'old-vault-cleanup';
-		let sweeps = 0;
-		const observeCloud = {
-			probe: cloud.probe.bind(cloud),
-			step: async (...args: Parameters<typeof cloud.step>) => {
-				sweeps++;
-				return cloud.step(...args);
-			}
-		};
-		await resets.drainRecoveryCleanup(db, observeCloud, { limit: 8 });
-		assert.equal(sweeps, 0, 'Unresolved uploads must fence the broad prefix sweep');
-		await drainRetired();
-		await resets.drainRecoveryCleanup(db, observeCloud, { limit: 8 });
-		assert.equal(
-			(await call(statusPath, undefined, bootstrap)).body.data.operation.phase,
-			'cleanup_pending',
-			'An empty provider must not bypass the deadline'
-		);
-		await independentlyEmpty(target.prefix);
-		// Advance only the injected cleanup-worker clock; no deadline or runtime clock is changed.
-		let workerNow = deadline + 1;
-		let failOnce = true;
-		const transientCloud = {
-			probe: cloud.probe.bind(cloud),
-			step: async (...args: Parameters<typeof cloud.step>) => {
-				if (failOnce) {
-					failOnce = false;
-					throw new Error('fixture provider unavailable');
+		let workerNow: number;
+		if (realTime) {
+			const started = Date.now();
+			let lastMinute = -1;
+			while (true) {
+				assert.equal(worker!.exitCode, null, 'The local scheduler must remain running');
+				const state = (await call(statusPath, undefined, bootstrap)).body.data.operation;
+				if (state.phase === 'ready') break;
+				assert.equal(state.phase, 'cleanup_pending');
+				assert.equal((await call('keys', undefined, bootstrap)).body.reason, 'vault_reset_pending');
+				const minute = Math.floor((Date.now() - started) / 60_000);
+				if (minute !== lastMinute) {
+					lastMinute = minute;
+					input.diagnostic(
+						`Real-time reset minute ${minute}: cleanup pending; natural worker cycles ${(workerLog.match(/Cleanup cycle completed/g) ?? []).length}`
+					);
 				}
-				return cloud.step(...args);
+				assert.ok(
+					Date.now() - started < 40 * 60_000,
+					'Real-time reset must finish within the bounded provider verification window'
+				);
+				await delay(5_000);
 			}
-		};
-		await resets.drainRecoveryCleanup(db, transientCloud, { now: () => workerNow, limit: 1 });
-		assert.equal(
-			(await call(statusPath, undefined, bootstrap)).body.data.operation.phase,
-			'cleanup_pending',
-			'Provider verification failure must block readiness after the deadline'
-		);
-		workerNow += 60_001;
-		for (let pass = 0; pass < 30; pass++) {
-			await resets.drainRecoveryCleanup(db, cloud, { now: () => workerNow++, limit: 8 });
-			if ((await call(statusPath, undefined, bootstrap)).body.data.operation.phase === 'ready')
-				break;
+			assert.ok(
+				Date.now() >= deadline,
+				'An empty cloud cannot bypass the actual fifteen-minute wait'
+			);
+			assert.ok(Date.now() - committedReset.committedAt! >= 15 * 60_000);
+			assert.ok(
+				(workerLog.match(/Cleanup cycle completed/g) ?? []).length >= 4,
+				'Observe startup plus at least three natural five-minute cleanup cycles'
+			);
+			input.diagnostic(
+				`Real-time reset ready after ${Math.round((Date.now() - committedReset.committedAt!) / 1_000)} seconds; no clock or persisted deadline was advanced.`
+			);
+			workerNow = Date.now();
+		} else {
+			let sweeps = 0;
+			const observeCloud = {
+				probe: cloud.probe.bind(cloud),
+				step: async (...args: Parameters<typeof cloud.step>) => {
+					sweeps++;
+					return cloud.step(...args);
+				}
+			};
+			await resets.drainRecoveryCleanup(db, observeCloud, { limit: 8 });
+			assert.equal(sweeps, 0, 'Unresolved uploads must fence the broad prefix sweep');
+			await drainRetired();
+			await resets.drainRecoveryCleanup(db, observeCloud, { limit: 8 });
+			assert.equal(
+				(await call(statusPath, undefined, bootstrap)).body.data.operation.phase,
+				'cleanup_pending',
+				'An empty provider must not bypass the deadline'
+			);
+			await independentlyEmpty(target.prefix);
+			// Advance only the injected cleanup-worker clock; no deadline or runtime clock is changed.
+			workerNow = deadline + 1;
+			let failOnce = true;
+			const transientCloud = {
+				probe: cloud.probe.bind(cloud),
+				step: async (...args: Parameters<typeof cloud.step>) => {
+					if (failOnce) {
+						failOnce = false;
+						throw new Error('fixture provider unavailable');
+					}
+					return cloud.step(...args);
+				}
+			};
+			await resets.drainRecoveryCleanup(db, transientCloud, { now: () => workerNow, limit: 1 });
+			assert.equal(
+				(await call(statusPath, undefined, bootstrap)).body.data.operation.phase,
+				'cleanup_pending',
+				'Provider verification failure must block readiness after the deadline'
+			);
+			workerNow += 60_001;
+			for (let pass = 0; pass < 30; pass++) {
+				await resets.drainRecoveryCleanup(db, cloud, { now: () => workerNow++, limit: 8 });
+				if ((await call(statusPath, undefined, bootstrap)).body.data.operation.phase === 'ready')
+					break;
+			}
+			assert.equal(
+				(await call(statusPath, undefined, bootstrap)).body.data.operation.phase,
+				'ready'
+			);
 		}
-		assert.equal((await call(statusPath, undefined, bootstrap)).body.data.operation.phase, 'ready');
 		await independentlyEmpty(target.prefix);
 		stage = 'new-vault-bootstrap';
 		const keys = await call('keys', undefined, bootstrap);
@@ -569,6 +638,11 @@ export async function checkProviderResetLifecycle(input: {
 			`Reset lifecycle failed at ${stage}${location ? ` (line ${location})` : ''}: ${detail}`
 		);
 	} finally {
+		if (worker && worker.exitCode === null) {
+			worker.kill('SIGTERM');
+			await Promise.race([new Promise((resolve) => worker!.once('exit', resolve)), delay(10_000)]);
+			if (worker.exitCode === null) worker.kill('SIGKILL');
+		}
 		globalThis.fetch = originalFetch;
 		try {
 			await db

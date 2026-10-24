@@ -923,4 +923,12 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Memulai pengaturan ulang…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Sesi masuk Anda telah berakhir. Masuk kembali untuk membuka brankas. Data lokal Anda tetap disimpan.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Email Anda telah diverifikasi. Lanjutkan untuk menyelesaikan proses masuk.';
 }

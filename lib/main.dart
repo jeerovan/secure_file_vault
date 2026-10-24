@@ -80,6 +80,7 @@ void backgroundTaskDispatcher() async {
             SyncBudget.check();
             await StorageSqlite.initialize(ExecutionMode.backgroundWorker);
             if (!await SessionCleanup.instance.resume()) return false;
+            if (SessionWork.authenticationRequired) return false;
             if (!await isIosBackgroundSyncReady()) return true;
             await initializeDependencies(ExecutionMode.backgroundWorker);
             SyncBudget.check();
@@ -117,8 +118,15 @@ Future<void> main() async {
   await StorageSqlite.initialize(ExecutionMode.mainApp);
   try {
     if (await SessionCleanup.instance.resume()) {
-      await initializeInParallel();
+      if (SessionWork.authenticationRequired) {
+        await SessionWork.authenticate(() async {
+          await Future.wait([addTrustedCertificates(), initializePackages()]);
+        });
+      } else {
+        await initializeInParallel();
+      }
       if (AppEnv.effectiveApiBaseUrl.isNotEmpty &&
+          !SessionWork.authenticationRequired &&
           !await RecoveryResetService.instance.hasPending() &&
           await ModelSetting.getRaw(AppString.signedIn.string) == 'yes' &&
           (await getDeviceUuid()).isNotEmpty) {
@@ -163,10 +171,12 @@ Future<void> initializeInParallel() async {
 
 Future<void> initializeBackgroundExecution() async {
   try {
+    await SessionWork.checkpoint();
     if (await RecoveryResetService.instance.hasPending()) return;
     await BackgroundExecutionService.instance.initialize(
       iosCallbackDispatcher: backgroundTaskDispatcher,
     );
+    await SessionWork.checkpoint();
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       SyncUtils().startAutoSync();
       logger.info("initialized autosync");
@@ -243,6 +253,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         unawaited(Future<void>.microtask(() async {
           if (mounted) await _appLock.load();
         }));
+      } else if (event.key == EventKey.authenticated && mounted) {
+        if (!_appLock.ready || _appLock.busy) unawaited(_appLock.load());
+        // Expiry stopped scheduling, and a held cold start intentionally skips
+        // it. Resume the normal platform scheduler only after activation.
+        unawaited(SessionWork.run(initializeBackgroundExecution)
+            .onError<SessionInvalidated>((error, stack) {}));
       }
     });
     // Load the theme from saved preferences
@@ -282,6 +298,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _checkingSession = true;
     try {
       if (!await SessionCleanup.instance.resume()) {
+        if (mounted) await context.read<AppSetupState>().recheckStatus();
+        return;
+      }
+      if (SessionWork.authenticationRequired) {
         if (mounted) await context.read<AppSetupState>().recheckStatus();
         return;
       }

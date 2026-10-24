@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "返回登录",
   "recoveryResetDiscardBody": "这将清除此设备上未完成的恢复设置。登录后，您需要使用新的恢复短语或再次重置保险库。",
   "recoveryPhraseSaved": "我已保存新的恢复短语。",
-  "recoveryResetStarting": "正在开始重置…"
+  "recoveryResetStarting": "正在开始重置…",
+  "sessionExpiredRetained": "登录会话已过期。请重新登录以解锁保险库。本地数据将保留。",
+  "signinVerifiedContinue": "电子邮箱已验证。请继续完成登录。"
 }

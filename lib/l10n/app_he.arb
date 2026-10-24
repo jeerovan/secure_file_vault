@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "חזרה להתחברות",
   "recoveryResetDiscardBody": "הפעולה מנקה את הגדרת השחזור שלא הושלמה במכשיר הזה. לאחר ההתחברות יידרש ביטוי השחזור החדש או איפוס נוסף של הכספת.",
   "recoveryPhraseSaved": "שמרתי את ביטוי השחזור החדש שלי.",
-  "recoveryResetStarting": "מתחילים באיפוס…"
+  "recoveryResetStarting": "מתחילים באיפוס…",
+  "sessionExpiredRetained": "תוקף ההתחברות פג. יש להתחבר שוב כדי לפתוח את הכספת. הנתונים המקומיים נשמרים.",
+  "signinVerifiedContinue": "כתובת הדוא״ל אומתה. אפשר להמשיך להשלמת ההתחברות."
 }

@@ -81,7 +81,9 @@
   "@syncIntervalMinutes": {
     "description": "Sync interval duration, including the slider's accessible value",
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "autoSyncIntervalSaveError": "Could not save the interval. Try again.",
@@ -104,7 +106,9 @@
   "@quickSyncNotificationText": {
     "description": "Idle foreground service notification showing its configured sync interval",
     "placeholders": {
-      "minutes": { "type": "int" }
+      "minutes": {
+        "type": "int"
+      }
     }
   },
   "quickSyncNotificationInProgress": "In progress...",
@@ -1071,5 +1075,13 @@
   "recoveryResetDiscard": "Return to sign-in",
   "recoveryResetDiscardBody": "This clears the unfinished recovery setup on this device. You will need the new recovery phrase or another vault reset after signing in.",
   "recoveryPhraseSaved": "I have saved my new recovery phrase.",
-  "recoveryResetStarting": "Starting reset…"
+  "recoveryResetStarting": "Starting reset…",
+  "sessionExpiredRetained": "Your sign-in session expired. Sign in again to unlock your vault. Your local data is kept.",
+  "signinVerifiedContinue": "Your email is verified. Continue to finish signing in.",
+  "@sessionExpiredRetained": {
+    "description": "Normal expired-session guidance; the local vault is retained and locked until authentication."
+  },
+  "@signinVerifiedContinue": {
+    "description": "A verified sign-in can continue after backend validation or cleanup was interrupted."
+  }
 }

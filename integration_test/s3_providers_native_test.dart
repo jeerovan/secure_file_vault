@@ -33,6 +33,7 @@ import 'support/observed_transfers.dart';
 import 'support/apple_bookmark.dart';
 import 'support/iphone_results.dart';
 import 'support/native_test_install.dart';
+import 'support/provider_test_inputs.dart';
 
 void main() {
   registerProviderNativeTests();
@@ -44,18 +45,25 @@ void registerProviderNativeTests({
   Duration suiteTimeout = const Duration(minutes: 20),
 }) {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  const expectManagedUploads =
+      bool.fromEnvironment('FIFE_NATIVE_MANAGED_UPLOADS', defaultValue: true);
   if (reportResults) recordIphoneResults(binding, 's3-providers');
   testWidgets(
       'LAN S3 providers preserve modified multipart bytes across retries',
       (tester) async {
     expect(Platform.isAndroid || Platform.isIOS || Platform.isMacOS, isTrue);
     await verifyNativeTestInstall();
+    var storageInitialized = false;
+    addTearDown(() async {
+      if (storageInitialized) {
+        expect(await SessionCleanup.instance.request(), isTrue);
+      }
+    });
     expect(AppEnv.localTestingBuild, isTrue);
     expect(AppEnv.localTestUserId.startsWith('fife-provider-local-'), isTrue);
     expect(AppEnv.effectiveApiBaseUrl, AppEnv.apiBaseUrl);
-    final inputs =
-        jsonDecode(const String.fromEnvironment('FIFE_NATIVE_PROVIDER_INPUTS'))
-            as List;
+    await addTrustedCertificates();
+    final inputs = await readNativeProviderInputs();
     // Each registration has higher priority than the preceding storage. The
     // application's normal allocation path must select that provider.
     expect(inputs.map((input) => input['id']).toList(),
@@ -63,8 +71,13 @@ void registerProviderNativeTests({
     await tester.pumpWidget(const MaterialApp(
         home: Scaffold(
             body: Center(child: Text('Testing local provider transfers')))));
-    await addTrustedCertificates();
+    await waitForIphoneProviderNetworkAccess(
+        Uri.parse(AppEnv.effectiveApiBaseUrl));
+    final protocol = await http
+        .post(Uri.parse('${AppEnv.effectiveApiBaseUrl}/api/uploads/protocol'));
+    expect(protocol.statusCode, expectManagedUploads ? 200 : 404);
     await StorageSqlite.initialize(ExecutionMode.mainApp);
+    storageInitialized = true;
     expect(await SessionCleanup.instance.resume(), isTrue);
     expect(await SessionCleanup.instance.request(), isTrue);
     await ModelSetting.set(AppString.localTesting.string, 'yes');
@@ -270,7 +283,7 @@ void registerProviderNativeTests({
                     .checkInitUpload((await ModelItemTask.get(edited.id))!);
                 expect(observed.uploads, attempts,
                     reason:
-                        'Managed completion must recover the accepted part without uploading it again');
+                        'Accepted part recovery must not upload the same ciphertext again');
               }
               expect(
                   (await ModelPart.get('${edited.fileHash}_1'))?.uploaded, 1);
@@ -283,7 +296,8 @@ void registerProviderNativeTests({
                 artifactHash.toString());
             expect(await artifact.exists(), isFalse);
             expect(observed.rejectedInvariant, isNull);
-            expect(observed.managedUploads, observed.uploads);
+            expect(observed.managedUploads,
+                expectManagedUploads ? observed.uploads : 0);
             expect(observed.uploads, greaterThanOrEqualTo(4));
             phase = 'download';
             await File('${directory.path}/edited.bin').delete();

@@ -22,6 +22,7 @@ enum EventKey {
   logging,
   signout,
   sessionInvalidated,
+  authenticated,
   storageFull,
 }
 

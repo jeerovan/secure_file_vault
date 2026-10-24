@@ -928,4 +928,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Starting reset…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Your sign-in session expired. Sign in again to unlock your vault. Your local data is kept.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Your email is verified. Continue to finish signing in.';
 }

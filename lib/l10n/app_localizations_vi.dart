@@ -918,4 +918,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Đang bắt đầu đặt lại…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Phiên đăng nhập đã hết hạn. Đăng nhập lại để mở khóa kho lưu trữ. Dữ liệu cục bộ của bạn vẫn được giữ lại.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Email của bạn đã được xác minh. Tiếp tục để hoàn tất đăng nhập.';
 }

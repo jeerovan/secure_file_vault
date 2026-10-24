@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Revenir à la connexion",
   "recoveryResetDiscardBody": "Cela efface la configuration de récupération inachevée sur cet appareil. Après connexion, il vous faudra la nouvelle phrase de récupération ou réinitialiser à nouveau le coffre.",
   "recoveryPhraseSaved": "J’ai enregistré ma nouvelle phrase de récupération.",
-  "recoveryResetStarting": "Démarrage de la réinitialisation…"
+  "recoveryResetStarting": "Démarrage de la réinitialisation…",
+  "sessionExpiredRetained": "Votre session a expiré. Reconnectez-vous pour déverrouiller votre coffre. Vos données locales sont conservées.",
+  "signinVerifiedContinue": "Votre adresse e-mail est vérifiée. Continuez pour terminer la connexion."
 }

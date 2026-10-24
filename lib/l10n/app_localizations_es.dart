@@ -944,4 +944,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Iniciando restablecimiento…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Tu sesión ha caducado. Vuelve a iniciar sesión para desbloquear tu bóveda. Tus datos locales se conservan.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Tu correo electrónico está verificado. Continúa para completar el inicio de sesión.';
 }

@@ -943,4 +943,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Zurücksetzen wird gestartet…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Deine Sitzung ist abgelaufen. Melde dich erneut an, um deinen Tresor zu entsperren. Deine lokalen Daten bleiben erhalten.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Deine E-Mail-Adresse wurde bestätigt. Fahre fort, um die Anmeldung abzuschließen.';
 }

@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Voltar para entrar",
   "recoveryResetDiscardBody": "Isso apaga a configuração de recuperação incompleta neste dispositivo. Após entrar, você precisará da nova frase de recuperação ou de outra redefinição do cofre.",
   "recoveryPhraseSaved": "Salvei minha nova frase de recuperação.",
-  "recoveryResetStarting": "Iniciando redefinição…"
+  "recoveryResetStarting": "Iniciando redefinição…",
+  "sessionExpiredRetained": "Sua sessão expirou. Entre novamente para desbloquear seu cofre. Seus dados locais são mantidos.",
+  "signinVerifiedContinue": "Seu e-mail foi verificado. Continue para concluir o login."
 }

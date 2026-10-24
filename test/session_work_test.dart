@@ -7,6 +7,47 @@ void main() {
   setUp(SessionWork.resetForTesting);
   tearDown(SessionWork.resetForTesting);
 
+  test('authentication hold allows only authentication work', () async {
+    SessionWork.complete('held', authenticationRequired: true);
+    expect(SessionWork.active, isFalse);
+    await expectLater(SessionWork.run(() async => fail('private work ran')),
+        throwsA(isA<SessionInvalidated>()));
+    expect(await SessionWork.authenticate(() async => 'signin'), 'signin');
+    SessionWork.invalidate('pending');
+    await expectLater(SessionWork.authenticate(() async {}),
+        throwsA(isA<SessionInvalidated>()));
+  });
+
+  test('old authentication cannot join a newer activated account', () async {
+    SessionWork.complete('held', authenticationRequired: true);
+    final gate = Completer<void>();
+    final entered = Completer<void>();
+    final old = SessionWork.authenticate(() async {
+      entered.complete();
+      await gate.future;
+      await SessionWork.authenticate(SessionWork.checkpoint);
+    });
+    await entered.future;
+    SessionWork.complete('new');
+    final rejected = expectLater(old, throwsA(isA<SessionInvalidated>()));
+    gate.complete();
+    await rejected;
+    expect(SessionWork.revision, 'new');
+  });
+
+  test('delayed probe cannot remove a newly applied authentication hold',
+      () async {
+    SessionWork.complete('same');
+    final gate = Completer<SessionRevision>();
+    SessionWork.readRevision = () => gate.future;
+    final old = SessionWork.run(() async => fail('vault reopened'));
+    SessionWork.complete('same', authenticationRequired: true);
+    final rejected = expectLater(old, throwsA(isA<SessionInvalidated>()));
+    gate.complete(const SessionRevision('same'));
+    await rejected;
+    expect(SessionWork.authenticationRequired, isTrue);
+  });
+
   test('a delayed revision read cannot reopen an invalidated session',
       () async {
     SessionWork.complete('old');

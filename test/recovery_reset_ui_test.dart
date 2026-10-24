@@ -361,6 +361,92 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  for (final error in ['sign_in_again', '14', '18']) {
+    testWidgets('confirmation authentication error $error offers fresh sign-in',
+        (tester) async {
+      final setup =
+          await mount(tester, PageLostRecovery(service: peer.service()));
+      peer.prepareError = error;
+      await tester.ensureVisible(find.text('Continue to reset'));
+      await tester.tap(find.text('Continue to reset'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+          find.widgetWithText(FilledButton, 'Delete vault and start fresh'));
+      await ioFrames(
+          tester, () => find.text('Return to sign-in').evaluate().isNotEmpty);
+      expect(
+          find.text(
+              'Sign in again to verify your session before resetting the vault.'),
+          findsOneWidget);
+      expect(find.text('Try Again'), findsNothing);
+      expect(find.text('Continue to reset'), findsNothing);
+      expect(setup.currentStep, isNot(SetupStep.recoveryReset));
+      final staged = fixture.secrets[AppString.recoveryResetStage.string];
+      expect(staged, isNotNull);
+      expect(peer.confirmCalls, 0);
+      expect(peer.envelope, isNull);
+
+      final signin = find.widgetWithText(FilledButton, 'Return to sign-in');
+      await tester.ensureVisible(signin);
+      await tester.tap(signin);
+      await ioFrames(tester, () => setup.currentStep == SetupStep.signin);
+      expect(fixture.secrets[AppString.sessionCookie.string], isNull);
+      expect(fixture.secrets[AppString.recoveryResetStage.string], staged);
+      expect(peer.confirmCalls, 0);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
+  testWidgets(
+      'reopened reset remembers rejected preparation and offers sign-in',
+      (tester) async {
+    peer.prepareError = 'sign_in_again';
+    await tester.runAsync(() => peer.service().confirm());
+    final staged = fixture.secrets[AppString.recoveryResetStage.string];
+    peer.prepareError = null;
+    final setup =
+        await mount(tester, PageRecoveryReset(service: peer.service()));
+    await ioFrames(
+        tester, () => find.text('Return to sign-in').evaluate().isNotEmpty);
+    expect(find.textContaining('Sign in as'), findsOneWidget);
+    expect(find.text('Continue to reset'), findsNothing);
+    expect(find.text('Try Again'), findsNothing);
+    expect(fixture.secrets[AppString.recoveryResetStage.string], staged);
+    expect(peer.confirmCalls, 0);
+    expect(peer.envelope, isNull);
+    final signin = find.widgetWithText(FilledButton, 'Return to sign-in');
+    await tester.ensureVisible(signin);
+    await tester.tap(signin);
+    await ioFrames(tester, () => setup.currentStep == SetupStep.signin);
+    expect(fixture.secrets[AppString.sessionCookie.string], isNull);
+    expect(fixture.secrets[AppString.recoveryResetStage.string], staged);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('reopened sign-in guidance supports large RTL text',
+      (tester) async {
+    peer.prepareError = 'sign_in_again';
+    await tester.runAsync(() => peer.service().confirm());
+    await mount(tester, PageRecoveryReset(service: peer.service()),
+        locale: const Locale('ar'),
+        brightness: Brightness.dark,
+        largeText: true);
+    final context = tester.element(find.byType(PageRecoveryReset));
+    final loc = AppLocalizations.of(context)!;
+    final signin = find.widgetWithText(FilledButton, loc.recoveryResetDiscard);
+    await ioFrames(tester, () => signin.evaluate().isNotEmpty);
+    expect(
+        find.text(
+            loc.recoveryResetSigninAs('\u2068fixture@example.test\u2069')),
+        findsOneWidget);
+    expect(Directionality.of(context), TextDirection.rtl);
+    expect(find.text(loc.tryAgain), findsNothing);
+    await tester.ensureVisible(signin);
+    expect(tester.widget<FilledButton>(signin).onPressed, isNotNull);
+    expect(peer.confirmCalls, 0);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('leaving during readiness check ignores its delayed UI result',
       (tester) async {
     await tester.runAsync(

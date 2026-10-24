@@ -181,6 +181,7 @@ class RecoveryResetService {
   Future<RecoveryResetView> _singleFlight(
       Future<RecoveryResetView> Function() action) async {
     if (_running case final running?) return running;
+    final revision = SessionWork.revision;
     final operation = Future<RecoveryResetView>.sync(action)
         .onError<Object>((error, stack) async {
       if (error is _RecoveryFailure && error.code == 'vault_changed') {
@@ -188,7 +189,7 @@ class RecoveryResetService {
         return const RecoveryResetView(RecoveryResetPhase.signIn);
       }
       if (error is _RecoveryFailure && _signInErrors.contains(error.code)) {
-        return const RecoveryResetView(RecoveryResetPhase.signIn);
+        return _requireSignin(revision);
       }
       if (error is _RecoveryFailure &&
           ['staging_lost', 'staging_mismatch'].contains(error.code)) {
@@ -203,6 +204,30 @@ class RecoveryResetService {
     } finally {
       if (identical(_running, operation)) _running = null;
     }
+  }
+
+  Future<RecoveryResetView> _requireSignin(String revision) async {
+    Map<String, dynamic>? stage;
+    try {
+      await _check(revision);
+      stage = await _load();
+      if (stage != null && await _sameAccount(stage)) {
+        final cookie = await _storage.read(key: AppString.sessionCookie.string);
+        if (cookie != null && cookie.isNotEmpty) {
+          // A rejected prepare may leave no server operation to explain why
+          // this intent needs fresh authentication after reopening the app.
+          // Bind that requirement to this session, preserving all reset keys.
+          await _save(
+              {...stage, 'signinRequiredForSession': _hash(cookie)}, revision);
+        }
+      }
+    } on SessionInvalidated {
+      return const RecoveryResetView(RecoveryResetPhase.unavailable);
+    } catch (_) {
+      // Storage failure must not hide the authentication error or discard the
+      // original staging. Explicit reauthentication can retry local cleanup.
+    }
+    return RecoveryResetView(RecoveryResetPhase.signIn, email: stage?['email']);
   }
 
   /// Called only after explicit destructive confirmation. Retries use the same
@@ -227,6 +252,10 @@ class RecoveryResetService {
         }
         if (stage != null) {
           if (!await _sameAccount(stage)) {
+            return RecoveryResetView(RecoveryResetPhase.signIn,
+                email: stage['email']);
+          }
+          if (stage['signinRequiredForSession'] == _hash(cookie)) {
             return RecoveryResetView(RecoveryResetPhase.signIn,
                 email: stage['email']);
           }
@@ -317,7 +346,12 @@ class RecoveryResetService {
               'nonce': stage['serverKeys']['nonce'],
             });
         await _check(revision);
-        if (response['success'] != 1) return _inspect(stage, revision);
+        if (response['success'] != 1) {
+          if (_signInErrors.contains(response['message']?.toString())) {
+            _data(response);
+          }
+          return _inspect(stage, revision);
+        }
         return _committed(stage, _data(response), revision);
       });
 
@@ -391,6 +425,14 @@ class RecoveryResetService {
   Future<RecoveryResetView> _inspect(
       Map<String, dynamic> stage, String revision,
       {bool activateKeys = false}) async {
+    final cookie = await _storage.read(key: AppString.sessionCookie.string);
+    await _check(revision);
+    if (cookie == null ||
+        cookie.isEmpty ||
+        stage['signinRequiredForSession'] == _hash(cookie)) {
+      return RecoveryResetView(RecoveryResetPhase.signIn,
+          email: stage['email']);
+    }
     Map<String, dynamic>? operation;
     try {
       operation = (await _status(stage['operationId']))['operation']
@@ -410,9 +452,7 @@ class RecoveryResetService {
     await _check(revision);
     if (operation == null) throw const _RecoveryFailure('please_try_again');
     if (operation['phase'] == 'prepared') {
-      final cookie = await _storage.read(key: AppString.sessionCookie.string);
-      final changedSession =
-          cookie == null || _hash(cookie) != stage['sessionHash'];
+      final changedSession = _hash(cookie) != stage['sessionHash'];
       if (!changedSession && operation['requiresFreshSignin'] == true) {
         return RecoveryResetView(RecoveryResetPhase.signIn,
             email: stage['email']);

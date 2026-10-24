@@ -936,4 +936,12 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Opnieuw instellen wordt gestart…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Je sessie is verlopen. Meld je opnieuw aan om je kluis te ontgrendelen. Je lokale gegevens blijven bewaard.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Je e-mailadres is geverifieerd. Ga verder om het aanmelden te voltooien.';
 }

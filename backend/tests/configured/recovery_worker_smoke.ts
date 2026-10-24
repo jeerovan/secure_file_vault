@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:net';
 import { createServer as createHttpServer } from 'node:http';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { eq } from 'drizzle-orm';
@@ -15,15 +16,29 @@ import {
 	vaultState,
 	recoveryReset,
 	recoveryCleanupTarget,
-	vaultUpload
+	vaultUpload,
+	credential,
+	storage,
+	userDevice,
+	file,
+	part
 } from '../../src/lib/server/db/schema';
-import { ProviderKeys, UserKeys } from '../../src/lib/server/db/keys';
+import {
+	ProviderKeys,
+	UserKeys,
+	CredentialKeys,
+	StorageKeys,
+	UserDeviceKeys,
+	FileKeys,
+	PartKeys
+} from '../../src/lib/server/db/keys';
 
 test(
-	'compiled Worker serves the API and executes scheduled cleanup on an isolated database',
+	'compiled fallback Worker reads managed files, guards deferred keys and continues scheduled cleanup',
 	{ skip: !recoveryTestUrl, timeout: 60_000 },
 	async () => {
 		const database = await createRecoveryDatabase();
+		const workerConfig = process.env.FIFE_RECOVERY_WORKER_TEST_CONFIG ?? 'wrangler.toml';
 		const directory = await mkdtemp(join(tmpdir(), 'fife-recovery-worker-'));
 		const portServer = createServer();
 		await new Promise<void>((resolve) => portServer.listen(0, '127.0.0.1', resolve));
@@ -36,11 +51,22 @@ test(
 		const ownedKey = `${prefix}${'A'.repeat(43)}_1`;
 		const managedKey = `${prefix}${'C'.repeat(43)}_1`;
 		const outsideKey = `outside-user/${'B'.repeat(43)}_1`;
+		const readerRemoteId = `reader-${crypto.randomUUID()}`;
+		const logicalPart = `${'D'.repeat(43)}_1`;
+		const downloadedKey = `${readerRemoteId}/${logicalPart}~${crypto.randomUUID()}`;
+		const downloadedBytes = Buffer.from(
+			'managed bytes remain available while initiation is paused'
+		);
 		let ownedDeleted = false;
 		const cloudActions: string[] = [];
 		const cloudMock = createHttpServer(async (request, response) => {
 			try {
 				const url = new URL(request.url!, 'http://fixture.test');
+				if (request.method === 'GET' && url.pathname === `/fixture-bucket/${downloadedKey}`) {
+					assert.match(url.searchParams.get('X-Amz-Credential') ?? '', /^fixture-access\//);
+					response.end(downloadedBytes);
+					return;
+				}
 				assert.match(
 					request.headers.authorization ?? '',
 					/^AWS4-HMAC-SHA256 Credential=fixture-access\//
@@ -120,36 +146,34 @@ test(
 			.values({ userId: account[UserKeys.ID], generation: 'next-generation', ready: 0 });
 		const operationId = crypto.randomUUID(),
 			now = Date.now();
-		await database.db
-			.insert(vaultUpload)
-			.values({
-				id: crypto.randomUUID(),
-				userId: account[UserKeys.ID],
-				deviceUuid: 'retired-device',
-				generation: 'legacy',
-				storageId: 1,
-				providerId: 6,
-				objectKey: managedKey,
-				partName: `${'C'.repeat(43)}_1`,
-				contentLength: 17,
-				sha1: 'a'.repeat(40),
-				md5: 'AAAAAAAAAAAAAAAAAAAAAA==',
-				receiptHash: 'fixture-receipt',
-				uploadId: 'fixture-upload',
-				phase: 'cleanup',
-				retired: 1,
-				operationId,
-				createdAt: now - 60_000,
-				updatedAt: now - 60_000,
-				credentials: {
-					appId: 'fixture-access',
-					appKey: 'fixture-secret',
-					bucketName: 'fixture-bucket',
-					region: 'fixture-region',
-					endpoint: `http://127.0.0.1:${cloudPort}`,
-					forcePathStyle: true
-				}
-			});
+		await database.db.insert(vaultUpload).values({
+			id: crypto.randomUUID(),
+			userId: account[UserKeys.ID],
+			deviceUuid: 'retired-device',
+			generation: 'legacy',
+			storageId: 1,
+			providerId: 6,
+			objectKey: managedKey,
+			partName: `${'C'.repeat(43)}_1`,
+			contentLength: 17,
+			sha1: 'a'.repeat(40),
+			md5: 'AAAAAAAAAAAAAAAAAAAAAA==',
+			receiptHash: 'fixture-receipt',
+			uploadId: 'fixture-upload',
+			phase: 'cleanup',
+			retired: 1,
+			operationId,
+			createdAt: now - 60_000,
+			updatedAt: now - 60_000,
+			credentials: {
+				appId: 'fixture-access',
+				appKey: 'fixture-secret',
+				bucketName: 'fixture-bucket',
+				region: 'fixture-region',
+				endpoint: `http://127.0.0.1:${cloudPort}`,
+				forcePathStyle: true
+			}
+		});
 		await database.db.insert(recoveryReset).values({
 			id: operationId,
 			userId: account[UserKeys.ID],
@@ -183,31 +207,157 @@ test(
 			[ProviderKeys.FREE_BYTES]: 1024,
 			[ProviderKeys.PRIORITY]: 0
 		});
+		// No real credentials or authentication bypass is added to the Worker.
+		// Only its isolated local KV contains these pre-verified fixture identities.
+		await database.db.insert(provider).values({
+			[ProviderKeys.ID]: 6,
+			[ProviderKeys.TITLE]: 'Fixture S3',
+			[ProviderKeys.FREE_BYTES]: 1024,
+			[ProviderKeys.PRIORITY]: 0
+		});
+		const [reader] = await database.db
+			.insert(user)
+			.values({
+				[UserKeys.REMOTE_AUTH_ID]: readerRemoteId,
+				[UserKeys.EMAIL]: `${readerRemoteId}@example.test`,
+				[UserKeys.CIPHER]: 'existing-cipher',
+				[UserKeys.NONCE]: 'existing-nonce'
+			})
+			.returning();
+		const [deferred] = await database.db
+			.insert(user)
+			.values({
+				[UserKeys.REMOTE_AUTH_ID]: `deferred-${sentinel}`,
+				[UserKeys.EMAIL]: `deferred-${sentinel}@example.test`,
+				[UserKeys.CIPHER]: null,
+				[UserKeys.NONCE]: null
+			})
+			.returning();
+		await database.db.insert(vaultState).values({
+			userId: deferred[UserKeys.ID],
+			generation: 'awaiting-new-keys',
+			ready: 1
+		});
+		await database.db.insert(userDevice).values({
+			[UserDeviceKeys.USER_ID]: reader[UserKeys.ID],
+			[UserDeviceKeys.DEVICE_UUID]: 'released-client',
+			[UserDeviceKeys.TITLE]: 'Released client fixture',
+			[UserDeviceKeys.ACTIVE]: 1
+		});
+		const [readerCredential] = await database.db
+			.insert(credential)
+			.values({
+				[CredentialKeys.USER_ID]: reader[UserKeys.ID],
+				[CredentialKeys.PROVIDER_ID]: 6,
+				[CredentialKeys.CREDENTIALS]: {
+					appId: 'fixture-access',
+					appKey: 'fixture-secret',
+					bucketName: 'fixture-bucket',
+					region: 'fixture-region',
+					endpoint: `http://127.0.0.1:${cloudPort}`,
+					forcePathStyle: true
+				}
+			})
+			.returning();
+		const [readerStorage] = await database.db
+			.insert(storage)
+			.values({
+				[StorageKeys.USER_ID]: reader[UserKeys.ID],
+				[StorageKeys.CREDENTIAL_ID]: readerCredential[CredentialKeys.ID],
+				[StorageKeys.LIMIT_BYTES]: 1024,
+				[StorageKeys.LIMIT_FREE_BYTES]: 1024,
+				[StorageKeys.JSON]: {}
+			})
+			.returning();
+		const [readerFile] = await database.db
+			.insert(file)
+			.values({
+				[FileKeys.USER_ID]: reader[UserKeys.ID],
+				[FileKeys.DEVICE_UUID]: 'released-client',
+				[FileKeys.FILE_HASH]: 'D'.repeat(43),
+				[FileKeys.STORAGE_ID]: readerStorage[StorageKeys.ID],
+				[FileKeys.PROVIDER_ID]: 6
+			})
+			.returning();
+		await database.db.insert(part).values({
+			[PartKeys.USER_ID]: reader[UserKeys.ID],
+			[PartKeys.DEVICE_UUID]: 'released-client',
+			[PartKeys.FILE_ID]: readerFile[FileKeys.ID],
+			[PartKeys.PART_NUMBER]: 1,
+			[PartKeys.UPLOADED]: 1,
+			[PartKeys.JSON]: { managedObjectKey: downloadedKey }
+		});
+		const envFile = join(directory, 'worker.env');
+		await writeFile(
+			envFile,
+			[
+				'MANAGED_UPLOADS_ENABLED=false',
+				'RECOVERY_RESET_ENABLED=false',
+				'RECOVERY_WORKER_READY=false',
+				'RECOVERY_RESET_EMAILS='
+			].join('\n'),
+			{ mode: 0o600 }
+		);
+		const childEnv = {
+			...process.env,
+			WRANGLER_SEND_METRICS: 'false',
+			CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: localUrl.toString()
+		};
+		const tokens = { reader: crypto.randomUUID(), deferred: crypto.randomUUID() };
+		for (const [name, identity] of [
+			['reader', reader],
+			['deferred', deferred]
+		] as const) {
+			const path = join(directory, `${name}-auth.json`);
+			await writeFile(
+				path,
+				JSON.stringify({
+					authorized: true,
+					userId: identity[UserKeys.ID],
+					remoteAuthId: identity[UserKeys.REMOTE_AUTH_ID],
+					email: identity[UserKeys.EMAIL]
+				}),
+				{ mode: 0o600 }
+			);
+			const seeded = spawnSync(
+				process.execPath,
+				[
+					'node_modules/wrangler/bin/wrangler.js',
+					'kv',
+					'key',
+					'put',
+					`auth:${createHash('sha256').update(tokens[name]).digest('hex')}`,
+					'--path',
+					path,
+					'--binding',
+					'FIFE_AUTH_CACHE',
+					'--local',
+					'--config',
+					workerConfig,
+					'--env-file',
+					envFile,
+					'--persist-to',
+					join(directory, 'state')
+				],
+				{ env: childEnv, encoding: 'utf8' }
+			);
+			assert.equal(seeded.status, 0, 'Seed only the isolated local authentication cache');
+		}
 		const child = spawn(
 			process.execPath,
 			[
-				'node_modules/wrangler/bin/wrangler.js',
-				'dev',
-				'--local',
-				'--config',
-				'wrangler.toml',
-				'--test-scheduled',
-				'--ip',
-				'127.0.0.1',
-				'--port',
+				'--import',
+				'tsx',
+				'tests/support/compiledWorkerRunner.ts',
+				workerConfig,
+				envFile,
+				join(directory, 'state'),
 				String(port),
-				'--inspector-port',
-				'0',
-				'--persist-to',
-				join(directory, 'state')
+				join(directory, 'worker-control.json')
 			],
 			{
 				detached: true,
-				env: {
-					...process.env,
-					WRANGLER_SEND_METRICS: 'false',
-					CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE: localUrl.toString()
-				},
+				env: childEnv,
 				stdio: ['ignore', 'pipe', 'pipe']
 			}
 		);
@@ -240,10 +390,64 @@ test(
 				),
 				'Worker must use its isolated fixture database'
 			);
-			const scheduled = await fetch(
-				`${base}/__scheduled?cron=${encodeURIComponent('*/5 * * * *')}`
+			const disabled = await fetch(`${base}/api/uploads/protocol`, { method: 'POST' });
+			assert.equal(disabled.status, 404);
+			assert.equal(disabled.headers.get('cache-control'), 'no-store');
+			const downloaded = await fetch(`${base}/api/s3/get-download-url`, {
+				method: 'POST',
+				headers: {
+					authorization: `Bearer ${tokens.reader}`,
+					device_uuid: 'released-client',
+					'content-type': 'application/json'
+				},
+				body: JSON.stringify({ file_id: logicalPart, storage_id: readerStorage[StorageKeys.ID] })
+			});
+			const descriptor = (await downloaded.json()) as { success: number; data: string };
+			assert.equal(descriptor.success, 1);
+			assert.equal(typeof descriptor.data, 'string', 'Keep the released download URL contract');
+			assert.equal(new URL(descriptor.data).pathname, `/fixture-bucket/${downloadedKey}`);
+			assert.deepEqual(
+				Buffer.from(await (await fetch(descriptor.data)).arrayBuffer()),
+				downloadedBytes
 			);
-			assert.equal(scheduled.status, 200);
+			for (const method of ['GET', 'POST']) {
+				const response = await fetch(`${base}/api/keys`, {
+					method,
+					headers: {
+						authorization: `Bearer ${tokens.deferred}`,
+						'content-type': 'application/json'
+					},
+					...(method === 'POST'
+						? { body: JSON.stringify({ cipher: 'obsolete-client', nonce: 'obsolete-nonce' }) }
+						: {})
+				});
+				assert.deepEqual(await response.json(), {
+					success: 0,
+					message: 18,
+					reason: 'client_update_required'
+				});
+			}
+			const [stillDeferred] = await database.db
+				.select()
+				.from(user)
+				.where(eq(user[UserKeys.ID], deferred[UserKeys.ID]));
+			assert.equal(stillDeferred[UserKeys.CIPHER], null);
+			assert.equal(stillDeferred[UserKeys.NONCE], null);
+			const control = JSON.parse(await readFile(join(directory, 'worker-control.json'), 'utf8'));
+			assert.equal(new URL(control.innerUrl).hostname, '127.0.0.1');
+			assert.equal(new URL(control.innerUrl).protocol, 'http:');
+			// Skip Wrangler's outer fetch proxy and Miniflare's assets proxy.
+			// Dispatch a native event directly to the actual Worker, without
+			// rebundling or adding test middleware to the frozen package.
+			const triggerScheduled = () =>
+				fetch(
+					`${control.innerUrl}/cdn-cgi/handler/scheduled?cron=${encodeURIComponent('*/5 * * * *')}`,
+					{
+						headers: { ...control.headers, 'MF-Route-Override': control.workerName }
+					}
+				);
+			const scheduled = await triggerScheduled();
+			assert.equal(scheduled.status, 200, await scheduled.text());
 			const [checkpoint] = await database.db.select().from(vaultUpload);
 			assert.equal(checkpoint.phase, 'cleanup');
 			assert.equal(
@@ -259,10 +463,7 @@ test(
 					.where(eq(vaultUpload.id, checkpoint.id));
 				const [operation] = await database.db.select().from(recoveryReset);
 				if (operation.phase === 'ready') break;
-				assert.equal(
-					(await fetch(`${base}/__scheduled?cron=${encodeURIComponent('*/5 * * * *')}`)).status,
-					200
-				);
+				assert.equal((await triggerScheduled()).status, 200);
 			}
 			const [operation] = await database.db.select().from(recoveryReset);
 			assert.equal(

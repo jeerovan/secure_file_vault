@@ -284,7 +284,11 @@ export class ManagedUploadService {
 		await updateStorageUsedSize(tx, row.storageId, row.userId, row.contentLength, true);
 		await updateTempStorageSize(tx, row.userId, entry.file[FileKeys.ID], row.contentLength);
 	}
-	async prepare(auth: AuthUser, input: UploadInput): Promise<UploadView> {
+	async prepare(
+		auth: AuthUser,
+		input: UploadInput,
+		options: { allowNew?: boolean } = {}
+	): Promise<UploadView> {
 		if (
 			!input ||
 			typeof input.id !== 'string' ||
@@ -301,7 +305,10 @@ export class ManagedUploadService {
 			throw new UploadFault('invalid_upload_request', true);
 		// Discover old Backblaze rows outside the upload/reset transaction. The
 		// authoritative membership and credential snapshot are re-read below.
-		const initial = await getCredentialByStorageId(this.db, auth.userId!, input.storage_id);
+		const allowNew = options.allowNew !== false;
+		const initial = allowNew
+			? await getCredentialByStorageId(this.db, auth.userId!, input.storage_id)
+			: undefined;
 		if (
 			initial &&
 			[StorageProvider.FIFE, StorageProvider.BACKBLAZE].includes(
@@ -344,6 +351,9 @@ export class ManagedUploadService {
 				}
 				return { row: existing, owner: null };
 			}
+			// Stop new allocations during rollout/fallback without stranding a
+			// durable operation whose client is retrying after a lost response.
+			if (!allowNew) throw new UploadFault('managed_uploads_disabled', true);
 			const credentials = await getCredentialByStorageId(tx, current.userId!, input.storage_id);
 			if (!credentials) throw new UploadFault('upload_storage_unavailable', true);
 			const completed = await this.completedPart(tx, current.userId!, input.file_id);

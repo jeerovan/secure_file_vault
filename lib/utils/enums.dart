@@ -98,6 +98,7 @@ enum AppString {
   otpSentAt,
   jwtToken,
   sessionCookie,
+  authenticationCandidate,
   recoveryResetStage,
   vaultKeySetupStage,
   vaultGeneration,
@@ -161,6 +162,8 @@ extension AppStringExtension on AppString {
         return "storage_full";
       case AppString.sessionCookie:
         return "session_cookie";
+      case AppString.authenticationCandidate:
+        return "authentication_candidate";
       case AppString.recoveryResetStage:
         return 'recovery_reset_stage';
       case AppString.vaultKeySetupStage:

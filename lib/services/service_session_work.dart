@@ -8,10 +8,12 @@ class SessionInvalidated implements Exception {
 }
 
 class SessionRevision {
-  const SessionRevision(this.id, {this.cleanupPending = false});
+  const SessionRevision(this.id,
+      {this.cleanupPending = false, this.authenticationRequired = false});
 
   final String id;
   final bool cleanupPending;
+  final bool authenticationRequired;
 }
 
 /// A work item keeps the revision it started with, including across awaits.
@@ -21,11 +23,13 @@ class SessionWork {
 
   static final _revisionKey = Object();
   static final _maintenanceKey = Object();
+  static final _authenticationKey = Object();
   static SessionRevision _current = const SessionRevision('');
   static final Set<void Function()> _abortActions = {};
   static Future<SessionRevision> Function()? readRevision;
 
   static String get revision => _current.id;
+  static bool get authenticationRequired => _current.authenticationRequired;
 
   static bool get _maintenance => Zone.current[_maintenanceKey] == true;
 
@@ -42,6 +46,8 @@ class SessionWork {
     if (_maintenance) return;
     final started = Zone.current[_revisionKey] as String?;
     if (_current.cleanupPending ||
+        (_current.authenticationRequired &&
+            Zone.current[_authenticationKey] != true) ||
         (started != null && started != _current.id)) {
       throw const SessionInvalidated();
     }
@@ -57,12 +63,14 @@ class SessionWork {
       // Never replace a newer in-memory invalidation/completion with an older
       // snapshot merely because that snapshot's I/O finished last.
       if (_current.id != before.id ||
-          _current.cleanupPending != before.cleanupPending) {
+          _current.cleanupPending != before.cleanupPending ||
+          _current.authenticationRequired != before.authenticationRequired) {
         check();
         return;
       }
       if (next.id != _current.id ||
-          next.cleanupPending != _current.cleanupPending) {
+          next.cleanupPending != _current.cleanupPending ||
+          next.authenticationRequired != _current.authenticationRequired) {
         _abort();
         _current = next;
       }
@@ -107,9 +115,15 @@ class SessionWork {
     return () => _abortActions.remove(abort);
   }
 
-  static void complete(String revision) {
-    _current = SessionRevision(revision);
+  static void complete(String revision, {bool authenticationRequired = false}) {
+    _current = SessionRevision(revision,
+        authenticationRequired: authenticationRequired);
   }
+
+  /// Only authentication/its public settings may run while a retained vault is
+  /// locked. Cleanup and revision changes still invalidate this work normally.
+  static Future<T> authenticate<T>(Future<T> Function() action) =>
+      runZoned(() => run(action), zoneValues: {_authenticationKey: true});
 
   /// Only the cleanup coordinator may mutate storage after invalidation.
   static Future<T> maintain<T>(Future<T> Function() action) =>

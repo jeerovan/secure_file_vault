@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import { requireDeviceAuth } from './auth';
 import { getDb } from './db';
 import { ManagedUploadService, type UploadInput } from './managedUpload';
@@ -32,7 +33,9 @@ export async function managedUploadRequest(
 				return reply({ success: 0, message: auth.message, reason: auth.reason });
 			result =
 				action === 'prepare'
-					? await service.prepare(auth, body as unknown as UploadInput)
+					? await service.prepare(auth, body as unknown as UploadInput, {
+							allowNew: env.MANAGED_UPLOADS_ENABLED === 'true'
+						})
 					: await service.complete(auth, body.id as string, body.receipt as string);
 		}
 		return reply(

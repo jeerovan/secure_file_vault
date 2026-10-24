@@ -921,4 +921,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'रीसेट शुरू हो रहा है…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'आपका साइन-इन सत्र समाप्त हो गया है। वॉल्ट अनलॉक करने के लिए फिर से साइन इन करें। आपका स्थानीय डेटा सुरक्षित रखा गया है।';
+
+  @override
+  String get signinVerifiedContinue =>
+      'आपका ईमेल सत्यापित हो गया है। साइन इन पूरा करने के लिए आगे बढ़ें।';
 }

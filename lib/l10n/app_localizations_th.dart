@@ -918,4 +918,12 @@ class AppLocalizationsTh extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'กำลังเริ่มรีเซ็ต…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'เซสชันการเข้าสู่ระบบหมดอายุแล้ว โปรดเข้าสู่ระบบอีกครั้งเพื่อปลดล็อกคลังข้อมูล ข้อมูลในเครื่องของคุณยังคงอยู่';
+
+  @override
+  String get signinVerifiedContinue =>
+      'ยืนยันอีเมลของคุณแล้ว ดำเนินการต่อเพื่อเข้าสู่ระบบให้เสร็จสมบูรณ์';
 }

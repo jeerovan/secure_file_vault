@@ -158,6 +158,44 @@ void main() {
     });
   }
 
+  test('an activation pause preserves the receipt and resumes after restart',
+      () async {
+    var enabled = false;
+    handle = (endpoint, body) async {
+      if (!enabled) {
+        return {
+          'success': 0,
+          '_httpStatus': 503,
+          'message': 'managed_uploads_disabled'
+        };
+      }
+      return reply(body, endpoint.endsWith('prepare') ? 'upload' : 'complete');
+    };
+    expect((await transfer()).result, isNull);
+    final retained = settings['managed_upload:opaque_1'];
+    expect(retained, isNotNull);
+    expect(sends, 0);
+
+    // Each transfer constructs a fresh client from persisted settings. Once
+    // negotiated, a disabled protocol route cannot permit legacy fallback.
+    capabilityStatus = 404;
+    expect((await transfer()).supported, isTrue);
+    expect(settings['managed_upload:opaque_1'], retained);
+    expect(paths.where((path) => path.endsWith('/protocol')), hasLength(1));
+    expect(sends, 0);
+
+    enabled = true;
+    final result = await transfer();
+    expect(result.result?.succeeded, isTrue);
+    expect(sends, 1);
+    final saved = jsonDecode(retained!) as Map;
+    final attempts = bodies.where((body) => body.containsKey('receipt'));
+    expect(attempts.map((body) => body['id']).toSet(), {saved['id']});
+    expect(attempts.map((body) => body['receipt']).toSet(), {saved['receipt']});
+    await client().forget('opaque_1');
+    expect(settings, isEmpty);
+  });
+
   test(
       'queued deletion survives restart and requires an explicit verified acknowledgement',
       () async {

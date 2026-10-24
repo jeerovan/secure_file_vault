@@ -40,6 +40,7 @@ class ForegroundTaskHandler extends TaskHandler {
     WidgetsFlutterBinding.ensureInitialized();
     await StorageSqlite.initialize(ExecutionMode.foregroundService);
     if (!await SessionCleanup.instance.resume() ||
+        SessionWork.authenticationRequired ||
         await RecoveryResetService.instance.hasPending()) {
       throw const SessionInvalidated();
     }

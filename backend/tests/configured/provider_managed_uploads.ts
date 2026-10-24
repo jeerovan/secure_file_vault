@@ -30,6 +30,7 @@ export async function checkManagedProviderUploads(input: {
 	) => Promise<{ status: number; body: any }>;
 	drain: (now: number) => Promise<unknown>;
 	download: (partName: string) => Promise<{ success: number; data?: unknown }>;
+	setInitiationEnabled?: (enabled: boolean) => Promise<void>;
 	onCleanupVerified?: () => void;
 }) {
 	assert.equal(process.env.FIFE_RUN_PROVIDER_WRITE_CHECKS, '1');
@@ -124,6 +125,15 @@ export async function checkManagedProviderUploads(input: {
 		});
 		assert.equal(uploaded.ok, true, `Managed part upload failed (HTTP ${uploaded.status})`);
 		await uploaded.arrayBuffer();
+		await input.setInitiationEnabled?.(false);
+		if (input.setInitiationEnabled) {
+			const blocked = await input.call('prepare', { ...normal.body, id: randomUUID() });
+			assert.equal(blocked.status, 503);
+			assert.equal(blocked.body.message, 'managed_uploads_disabled');
+			const resumed = await input.call('prepare', normal.body);
+			assert.equal(resumed.status, 200);
+			assert.equal(resumed.body.data?.state, 'upload');
+		}
 		assert.equal(
 			await missing(normal.Key),
 			true,
@@ -158,6 +168,7 @@ export async function checkManagedProviderUploads(input: {
 				.digest('hex'),
 			createHash('sha256').update(normal.bytes).digest('hex')
 		);
+		await input.setInitiationEnabled?.(true);
 		const protectedFile = await input.call('report', normal.body);
 		assert.equal(protectedFile.status, 200);
 		assert.equal(protectedFile.body.data?.state, 'committed');
@@ -235,6 +246,7 @@ export async function checkManagedProviderUploads(input: {
 		);
 		assert.equal(await missing(abandoned.Key), true);
 	} finally {
+		await input.setInitiationEnabled?.(true);
 		try {
 			let cursor: Record<string, unknown> = {};
 			for (let i = 0; i < 100; i++) {

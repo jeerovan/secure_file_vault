@@ -9,6 +9,7 @@ import 'package:file_vault_bb/utils/common.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'service_session_cleanup.dart';
 import 'service_session_work.dart';
+import 'service_session_authentication.dart';
 import 'package:http/http.dart' as http;
 
 class AuthRefreshSingleFlight {
@@ -60,7 +61,10 @@ class NeonAuth {
     return null;
   }
 
-  Future<http.Response> sendOTP(String email) async {
+  Future<http.Response> sendOTP(String email) =>
+      SessionWork.authenticate(() => _sendOTP(email));
+
+  Future<http.Response> _sendOTP(String email) async {
     Uri otpUrl = Uri.parse('$_neonAuthUrl/email-otp/send-verification-otp');
     final response = await _http
         .post(
@@ -73,14 +77,17 @@ class NeonAuth {
           }),
         )
         .timeout(timeout);
+    await SessionWork.checkpoint();
     return response;
   }
 
   Future<String?> verifyOTP(String email, String otp) async {
-    return SessionWork.run(() => _verifyOTP(email, otp));
+    return SessionWork.authenticate(() => _verifyOTP(email, otp));
   }
 
   Future<String?> _verifyOTP(String email, String otp) async {
+    final sessions = SessionAuthentication.instance;
+    final nonce = await sessions.beginAttempt();
     final url = Uri.parse('$_neonAuthUrl/sign-in/email-otp');
     final response = await _http
         .post(
@@ -93,29 +100,86 @@ class NeonAuth {
           }),
         )
         .timeout(timeout);
-    String? userId;
-    if (response.statusCode == 200) {
-      // Extract the full cookie string from the header
-      final rawCookie = _getHeader(response.headers, 'set-cookie');
-      if (rawCookie != null) {
-        // Parse out the __Secure-neon-auth.session_token
-        final cookieMatch = RegExp(r'__Secure-neon-auth\.session_token=([^;]+)')
-            .firstMatch(rawCookie);
-        if (cookieMatch != null) {
-          final sessionCookie = cookieMatch.group(1)!;
-          await _storage.write(
-              key: AppString.sessionCookie.string, value: sessionCookie);
-
-          // create profile before fetch jwtToken
-          final data = jsonDecode(response.body);
-          userId = data['user']['id'];
-          // Immediately fetch the JWT
-          await refreshSessionAndGetJWT();
-        }
-      }
+    await SessionWork.checkpoint();
+    if (response.statusCode != 200) {
+      await sessions.discardAttempt(nonce);
+      return null;
     }
-    return userId;
+    final rawCookie = _getHeader(response.headers, 'set-cookie');
+    final match = rawCookie == null
+        ? null
+        : RegExp(r'__Secure-neon-auth\.session_token=([^;]+)')
+            .firstMatch(rawCookie);
+    final data = jsonDecode(response.body);
+    final user = data is Map ? data['user'] : null;
+    if (match == null ||
+        user is! Map ||
+        user['id'] is! String ||
+        (user['id'] as String).isEmpty ||
+        user['email'] is! String ||
+        (user['email'] as String).trim().toLowerCase() !=
+            email.trim().toLowerCase()) {
+      await sessions.discardAttempt(nonce);
+      return null;
+    }
+    await sessions.stageVerified(
+        nonce,
+        AuthenticatedAccount(
+            id: user['id'],
+            email: user['email'],
+            service: 'neon',
+            cookie: match.group(1)!));
+    return user['id'];
   }
+
+  static bool _noSession(http.Response response) {
+    try {
+      final value = jsonDecode(response.body);
+      return value == null ||
+          value is Map &&
+              value.containsKey('session') &&
+              value.containsKey('user') &&
+              value['session'] == null &&
+              value['user'] == null;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// A new sign-in must use its own cookie, never an older still-valid JWT.
+  Future<String> refreshForSignin(AuthenticatedAccount account) =>
+      SessionWork.authenticate(() async {
+        final response =
+            await _http.get(Uri.parse('$_neonAuthUrl/get-session'), headers: {
+          'Cookie': '__Secure-neon-auth.session_token=${account.cookie};',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }).timeout(timeout);
+        await SessionWork.checkpoint();
+        if (response.statusCode == 401 ||
+            response.statusCode == 403 ||
+            response.statusCode == 200 && _noSession(response)) {
+          throw const VerifiedSigninExpired();
+        }
+        final jwt = _getHeader(response.headers, 'set-auth-jwt');
+        if (response.statusCode != 200 || jwt == null || jwt.isEmpty) {
+          throw StateError('Fresh authentication token is unavailable');
+        }
+        final pieces = jwt.split('.');
+        if (pieces.length != 3) {
+          throw StateError('Authentication token is incomplete');
+        }
+        final claims = jsonDecode(
+            utf8.decode(base64Url.decode(base64Url.normalize(pieces[1]))));
+        if (claims is! Map ||
+            claims['sub'] != account.id ||
+            claims['email'] is! String ||
+            (claims['email'] as String).trim().toLowerCase() !=
+                account.email.trim().toLowerCase()) {
+          throw const VerifiedSigninExpired();
+        }
+        return jwt;
+      });
 
   bool _isTokenExpiringSoon(String token, Duration buffer) {
     try {
@@ -175,7 +239,7 @@ class NeonAuth {
 
       final sessionCookie =
           await _storage.read(key: AppString.sessionCookie.string);
-      if (sessionCookie == null) {
+      if (sessionCookie == null || sessionCookie.isEmpty) {
         logger.error("Session cookie not found while refreshing JWT.");
         await SessionCleanup.instance.expiredAuthentication();
         return;
@@ -191,6 +255,10 @@ class NeonAuth {
       ).timeout(timeout);
 
       if (response.statusCode == 200) {
+        if (_noSession(response)) {
+          await SessionCleanup.instance.expiredAuthentication();
+          return;
+        }
         final jwt = _getHeader(response.headers, 'set-auth-jwt');
         if (jwt != null && jwt.isNotEmpty) {
           await _storage.write(key: AppString.jwtToken.string, value: jwt);
@@ -205,7 +273,7 @@ class NeonAuth {
       // Legit situations to sign out: Session is definitively invalid or expired
       else if (response.statusCode == 401 || response.statusCode == 403) {
         logger.warning(
-            "Session invalid or expired (Status: ${response.statusCode}). Forcing sign-out.");
+            "Authentication expired (Status: ${response.statusCode}); requiring sign-in.");
         await SessionCleanup.instance.expiredAuthentication();
       }
       // 5xx (Server Errors), 429 (Rate Limit), etc. Do NOT sign out.
@@ -213,6 +281,8 @@ class NeonAuth {
         logger.error(
             "Failed to refresh session. Server returned status: ${response.statusCode}. Retrying later.");
       }
+    } on SessionInvalidated {
+      rethrow;
     } on SocketException catch (e) {
       // Standard exception for no internet connection or DNS lookup failure
       logger.warning("No internet connection while refreshing JWT: $e");

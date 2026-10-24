@@ -102,7 +102,7 @@ void main() {
         elapsed.elapsed < const Duration(seconds: 10)) {
       await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 10)));
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 20));
     }
     expect(await tester.runAsync(ready), isTrue);
   }
@@ -190,6 +190,22 @@ void main() {
           });
         },
             () => MockClient((request) async {
+                  if (request.url.path == '/api/keys') {
+                    expect(request.headers['x-fife-session'],
+                        'fife-local.server-session-proof');
+                    expect(request.headers['device_uuid'], isNull);
+                    return http.Response(
+                        jsonEncode({
+                          'success': 1,
+                          'data': {
+                            'cipher': null,
+                            'nonce': null,
+                            'key_state': 'missing',
+                            'vault_generation': 'legacy'
+                          }
+                        }),
+                        200);
+                  }
                   expect(request.url.path, '/api/local-test/session');
                   authentications++;
                   return http.Response(

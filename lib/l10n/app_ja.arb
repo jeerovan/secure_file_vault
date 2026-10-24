@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "ログインに戻る",
   "recoveryResetDiscardBody": "この端末の未完了の復元設定を消去します。ログイン後、新しい復元フレーズを入力するか、保管庫を再度リセットする必要があります。",
   "recoveryPhraseSaved": "新しい復元フレーズを保存しました。",
-  "recoveryResetStarting": "リセットを開始しています…"
+  "recoveryResetStarting": "リセットを開始しています…",
+  "sessionExpiredRetained": "ログインセッションの有効期限が切れました。保管庫を解除するには、もう一度ログインしてください。ローカルデータは保持されます。",
+  "signinVerifiedContinue": "メールアドレスが確認されました。続行してログインを完了してください。"
 }

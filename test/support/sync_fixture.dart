@@ -38,7 +38,9 @@ class SyncFixture {
   final List<String> accessCalls = [];
   bool accessAllowed = true;
   Future<void> Function(String key)? beforeRead;
+  Future<void> Function(String key, String? value)? afterRead;
   Future<void> Function(String key, String value)? beforeWrite;
+  Future<void> Function(String key)? beforeDelete;
 
   SyncFixture._(this.directory, this.source, this.sodium);
 
@@ -58,7 +60,9 @@ class SyncFixture {
       final key = call.arguments?['key'] as String?;
       if (call.method == 'read') {
         await fixture.beforeRead?.call(key!);
-        return fixture.secrets[key];
+        final value = fixture.secrets[key];
+        await fixture.afterRead?.call(key!, value);
+        return value;
       }
       if (call.method == 'readAll') {
         return Map<String, String>.of(fixture.secrets);
@@ -68,6 +72,7 @@ class SyncFixture {
             ?.call(key!, call.arguments['value'] as String);
         fixture.secrets[key!] = call.arguments['value'] as String;
       } else if (call.method == 'delete') {
+        await fixture.beforeDelete?.call(key!);
         fixture.secrets.remove(key);
       } else if (call.method == 'deleteAll') {
         fixture.secrets.clear();

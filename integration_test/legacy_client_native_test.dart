@@ -26,20 +26,19 @@ import 'package:integration_test/integration_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sodium/sodium_sumo.dart';
+import 'support/provider_test_inputs.dart';
 
 /// Run this fixture in a private checkout of the baseline commit, preserving
 /// every lib/ source byte. Add only the integration-test SDK dependency and an
 /// isolated Android application ID. It intentionally rejects modern headers.
-/// Credentials and the separate disposable backend arrive through private
-/// --dart-define-from-file input; never copy the owner's .env into that checkout.
+/// The separate disposable backend arrives through private build definitions;
+/// provider credentials arrive through app-private runtime input.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   late SodiumSumo sodium;
   Directory? source;
   var isolatedInstallVerified = false;
-  final inputs =
-      jsonDecode(const String.fromEnvironment('FIFE_NATIVE_PROVIDER_INPUTS'))
-          as List;
+  late List<dynamic> inputs;
   const timeout = Duration(minutes: 5);
 
   setUpAll(() async {
@@ -47,17 +46,26 @@ void main() {
     expect(const String.fromEnvironment('FIFE_LEGACY_BASE_COMMIT'),
         '297c9a6f613395ad774d59444b0fc26de5a2289e');
     expect(Platform.isAndroid, isTrue);
-    expect((await DeviceInfoPlugin().androidInfo).isPhysicalDevice, isFalse);
+    final device = await DeviceInfoPlugin().androidInfo;
+    if (device.isPhysicalDevice) {
+      expect(const bool.fromEnvironment('FIFE_ALLOW_PHYSICAL_ANDROID_TESTS'),
+          isTrue);
+      expect(device.model, 'SM-A305F');
+    }
     expect((await PackageInfo.fromPlatform()).packageName,
         'com.jeerovan.fife.legacytest');
     expect(AppEnv.localTestingBuild, isTrue);
-    expect(AppEnv.localTestUserId.startsWith('fife-legacy-client-'), isTrue);
+    expect(
+        AppEnv.localTestUserId.startsWith('fife-legacy-client-') ||
+            AppEnv.localTestUserId.startsWith('fife-provider-local-'),
+        isTrue);
     expect(AppEnv.effectiveApiBaseUrl, AppEnv.apiBaseUrl);
     expect(Uri.parse(AppEnv.effectiveApiBaseUrl).port, isNot(5173),
         reason: 'Do not use the owner’s normal local test server');
-    expect(inputs.map((input) => input['id']), orderedEquals([2, 3, 4, 5, 6]));
     isolatedInstallVerified = true;
     await addTrustedCertificates();
+    inputs = await readNativeProviderInputs();
+    expect(inputs.map((input) => input['id']), orderedEquals([2, 3, 4, 5, 6]));
     await StorageSqlite.initialize(ExecutionMode.mainApp);
     await StorageSqlite.instance.clearDb();
     ModelSetting.clear();
@@ -100,12 +108,18 @@ void main() {
         .create();
   });
 
-  for (final raw in inputs) {
-    final input = Map<String, dynamic>.from(raw as Map);
-    final name = input['name'] as String;
-    final providerId = input['id'] as int;
+  for (final provider in const [
+    ('b2', 2),
+    ('r2', 3),
+    ('oci', 4),
+    ('e2', 5),
+    ('s3', 6)
+  ]) {
+    final (name, providerId) = provider;
     testWidgets('baseline client: $name modified multipart sync and deletion',
         (tester) async {
+      final input = Map<String, dynamic>.from(
+          inputs.singleWhere((input) => input['id'] == providerId) as Map);
       await tester.pumpWidget(const MaterialApp(
           home: Scaffold(body: Center(child: Text('Legacy client checks')))));
       AppHttpClients.closeAll();

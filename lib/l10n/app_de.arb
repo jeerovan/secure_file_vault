@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Zurück zur Anmeldung",
   "recoveryResetDiscardBody": "Dadurch wird die unvollständige Wiederherstellung auf diesem Gerät gelöscht. Nach der Anmeldung brauchst du die neue Wiederherstellungsphrase oder musst den Tresor erneut zurücksetzen.",
   "recoveryPhraseSaved": "Ich habe meine neue Wiederherstellungsphrase gespeichert.",
-  "recoveryResetStarting": "Zurücksetzen wird gestartet…"
+  "recoveryResetStarting": "Zurücksetzen wird gestartet…",
+  "sessionExpiredRetained": "Deine Sitzung ist abgelaufen. Melde dich erneut an, um deinen Tresor zu entsperren. Deine lokalen Daten bleiben erhalten.",
+  "signinVerifiedContinue": "Deine E-Mail-Adresse wurde bestätigt. Fahre fort, um die Anmeldung abzuschließen."
 }

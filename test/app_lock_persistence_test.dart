@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -6,6 +7,7 @@ import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_app_lock.dart';
 import 'package:file_vault_bb/services/service_events.dart';
 import 'package:file_vault_bb/services/service_locale.dart';
+import 'package:file_vault_bb/services/service_session_cleanup.dart';
 import 'package:file_vault_bb/services/service_session_work.dart';
 import 'package:file_vault_bb/storage/storage_secure.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
@@ -13,6 +15,7 @@ import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_signin.dart';
 import 'package:file_vault_bb/ui/pages/page_session_cleanup.dart';
 import 'package:file_vault_bb/utils/enums.dart';
+import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -69,6 +72,66 @@ void main() {
     await expectLater(store.setTimeout(30), throwsA(isA<SessionInvalidated>()));
     SessionWork.complete('revoked');
     expect((await store.read()).enabled, isFalse);
+  });
+
+  testWidgets(
+      'reauthentication during biometric proof cannot leave App lock busy',
+      (tester) async {
+    final auth = FakeAppLockAuthenticator()..result = false;
+    final lock = AppLockController(
+        store: MemoryAppLockStore()..enabled = true, authenticator: auth);
+    final locale = LocaleProvider();
+    final setup = (await tester.runAsync(() async {
+      await ModelSetting.set(AppString.onboarding.string, 'yes');
+      await ModelSetting.set(AppString.signedIn.string, 'no');
+      expect(await SessionCleanup.instance.expiredAuthentication(), isTrue);
+      final state = AppSetupState(SecureStorage());
+      await state.recheckStatus();
+      return state;
+    }))!;
+    addTearDown(() async {
+      await tester.pumpWidget(const SizedBox.shrink());
+      SyncUtils().stopAutoSync();
+      setup.dispose();
+      locale.dispose();
+      lock.dispose();
+    });
+    await tester.pumpWidget(MultiProvider(providers: [
+      ChangeNotifierProvider.value(value: setup),
+      ChangeNotifierProvider.value(value: locale)
+    ], child: MyApp(appLock: lock)));
+    await tester.pumpAndSettle();
+    expect(lock.ready, isTrue);
+    final response = Completer<bool>();
+    var oldRequested = false;
+    auth.onAuthenticate = (_) {
+      if (oldRequested) return Future.value(false);
+      oldRequested = true;
+      return response.future;
+    };
+    final old = lock.unlock(testAppLockPrompt);
+    await tester.pump();
+    expect(lock.busy, isTrue);
+    await tester.runAsync(() => SessionCleanup.instance.activateAuthentication(
+        expectedRevision: SessionWork.revision, writeCredentials: () async {}));
+    EventStream().publish(AppEvent(
+        type: EventType.system,
+        id: 'authentication',
+        key: EventKey.authenticated));
+    await tester.pump();
+    response.complete(true);
+    expect(await old, isFalse);
+    await tester.pump();
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+    await tester.pump();
+    expect(lock.ready, isTrue);
+    expect(lock.busy, isFalse);
+    expect(lock.locked, isTrue);
+    expect(auth.cancellations, 1);
+    auth.onAuthenticate = null;
+    auth.result = true;
+    expect(await lock.unlock(testAppLockPrompt), isTrue);
   });
 
   testWidgets(

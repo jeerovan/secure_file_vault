@@ -123,7 +123,13 @@ class _PageLostRecoveryState extends State<PageLostRecovery> {
     try {
       final result = await _service.confirm();
       if (!mounted) return;
-      if (await _service.hasPending()) {
+      if (result.phase == RecoveryResetPhase.signIn) {
+        setState(() {
+          _started = false;
+          _available = false;
+          _signinRequired = true;
+        });
+      } else if (await _service.hasPending()) {
         if (!mounted) return;
         await context.read<AppSetupState>().showRecoveryReset();
         if (mounted && Navigator.of(context).canPop()) {
@@ -133,12 +139,7 @@ class _PageLostRecoveryState extends State<PageLostRecovery> {
         if (mounted) {
           setState(() {
             _started = false;
-            if (result.phase == RecoveryResetPhase.signIn) {
-              _available = false;
-              _signinRequired = true;
-            } else {
-              _failed = true;
-            }
+            _failed = true;
           });
         }
       }

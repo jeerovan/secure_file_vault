@@ -933,4 +933,12 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Запуск сброса…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Срок действия сеанса истёк. Войдите снова, чтобы разблокировать хранилище. Локальные данные сохранены.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Адрес электронной почты подтверждён. Продолжите, чтобы завершить вход.';
 }

@@ -922,4 +922,12 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'מתחילים באיפוס…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'תוקף ההתחברות פג. יש להתחבר שוב כדי לפתוח את הכספת. הנתונים המקומיים נשמרים.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'כתובת הדוא״ל אומתה. אפשר להמשיך להשלמת ההתחברות.';
 }

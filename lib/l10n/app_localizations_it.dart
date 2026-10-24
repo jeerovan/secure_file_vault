@@ -939,4 +939,12 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Avvio del ripristino…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'La sessione è scaduta. Accedi di nuovo per sbloccare il tuo archivio. I dati locali vengono conservati.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'La tua email è verificata. Continua per completare l’accesso.';
 }

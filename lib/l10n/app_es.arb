@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Volver al inicio de sesión",
   "recoveryResetDiscardBody": "Esto borra la configuración de recuperación incompleta de este dispositivo. Tras iniciar sesión necesitarás la nueva frase de recuperación o restablecer la bóveda otra vez.",
   "recoveryPhraseSaved": "He guardado mi nueva frase de recuperación.",
-  "recoveryResetStarting": "Iniciando restablecimiento…"
+  "recoveryResetStarting": "Iniciando restablecimiento…",
+  "sessionExpiredRetained": "Tu sesión ha caducado. Vuelve a iniciar sesión para desbloquear tu bóveda. Tus datos locales se conservan.",
+  "signinVerifiedContinue": "Tu correo electrónico está verificado. Continúa para completar el inicio de sesión."
 }

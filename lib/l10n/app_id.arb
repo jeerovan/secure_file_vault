@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Kembali ke halaman masuk",
   "recoveryResetDiscardBody": "Ini menghapus pengaturan pemulihan yang belum selesai di perangkat ini. Setelah masuk, Anda memerlukan frasa pemulihan baru atau harus mengatur ulang brankas lagi.",
   "recoveryPhraseSaved": "Saya telah menyimpan frasa pemulihan baru.",
-  "recoveryResetStarting": "Memulai pengaturan ulang…"
+  "recoveryResetStarting": "Memulai pengaturan ulang…",
+  "sessionExpiredRetained": "Sesi masuk Anda telah berakhir. Masuk kembali untuk membuka brankas. Data lokal Anda tetap disimpan.",
+  "signinVerifiedContinue": "Email Anda telah diverifikasi. Lanjutkan untuk menyelesaikan proses masuk."
 }

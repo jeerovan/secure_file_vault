@@ -1737,6 +1737,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Starting reset…'**
   String get recoveryResetStarting;
+
+  /// Normal expired-session guidance; the local vault is retained and locked until authentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Your sign-in session expired. Sign in again to unlock your vault. Your local data is kept.'**
+  String get sessionExpiredRetained;
+
+  /// A verified sign-in can continue after backend validation or cleanup was interrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your email is verified. Continue to finish signing in.'**
+  String get signinVerifiedContinue;
 }
 
 class _AppLocalizationsDelegate

@@ -895,4 +895,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => '재설정 시작 중…';
+
+  @override
+  String get sessionExpiredRetained =>
+      '로그인 세션이 만료되었습니다. 보관함을 잠금 해제하려면 다시 로그인하세요. 로컬 데이터는 유지됩니다.';
+
+  @override
+  String get signinVerifiedContinue => '이메일이 확인되었습니다. 계속하여 로그인을 완료하세요.';
 }

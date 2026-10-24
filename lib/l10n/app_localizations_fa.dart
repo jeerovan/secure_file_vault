@@ -919,4 +919,12 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'در حال شروع بازنشانی…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'نشست ورود شما منقضی شده است. برای باز کردن گاوصندوق دوباره وارد شوید. داده‌های محلی شما حفظ می‌شوند.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'ایمیل شما تأیید شده است. برای تکمیل ورود ادامه دهید.';
 }

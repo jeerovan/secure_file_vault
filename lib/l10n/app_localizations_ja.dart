@@ -895,4 +895,11 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'リセットを開始しています…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'ログインセッションの有効期限が切れました。保管庫を解除するには、もう一度ログインしてください。ローカルデータは保持されます。';
+
+  @override
+  String get signinVerifiedContinue => 'メールアドレスが確認されました。続行してログインを完了してください。';
 }

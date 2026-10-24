@@ -942,4 +942,12 @@ class AppLocalizationsEl extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Έναρξη επαναφοράς…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Η συνεδρία σας έληξε. Συνδεθείτε ξανά για να ξεκλειδώσετε το θησαυροφυλάκιό σας. Τα τοπικά δεδομένα σας διατηρούνται.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Το email σας επαληθεύτηκε. Συνεχίστε για να ολοκληρώσετε τη σύνδεση.';
 }

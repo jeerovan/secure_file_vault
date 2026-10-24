@@ -15,10 +15,19 @@ import {
 
 const identity = getLocalTestIdentity(process.env);
 if (!identity) throw new Error('Explicit local-test authentication must be enabled');
+const port = Number(process.env.FIFE_PROVIDER_TEST_PORT ?? '5173');
+if (!Number.isInteger(port) || port < 1024 || port > 65535)
+	throw new Error('FIFE_PROVIDER_TEST_PORT must be a non-privileged TCP port');
+const controlFile = process.env.FIFE_PROVIDER_TEST_CONTROL_FILE ?? '/tmp/fife_b2_s3_server.json';
+const managedUploads = process.env.FIFE_PROVIDER_TEST_MANAGED_UPLOADS_ENABLED ?? 'true';
+if (!['true', 'false'].includes(managedUploads))
+	throw new Error('FIFE_PROVIDER_TEST_MANAGED_UPLOADS_ENABLED must be true or false');
 const database = await createRecoveryDatabase();
 // Ignore the production migration DATABASE_URL loaded from backend/.env.
 process.env.DATABASE_URL = database.url;
 process.env.FIFE_LOCAL_DATABASE_URL = database.url;
+// Default to the new protocol; explicitly opt out to verify rollout fallback.
+process.env.MANAGED_UPLOADS_ENABLED = managedUploads;
 // This database is created here, and every exposed issuer records its expiry.
 // There are no capabilities from a deployment predating that accounting.
 // Use the same rollout policy as production with a fully drained history.
@@ -28,7 +37,7 @@ process.env.LOCAL_TEST_USER_ID = remoteId;
 const vite = await createServer({
 	root: process.cwd(),
 	logLevel: 'warn',
-	server: { host: '0.0.0.0', port: 5173, strictPort: true }
+	server: { host: '0.0.0.0', port, strictPort: true }
 });
 let closing = false;
 let wroteControl = false;
@@ -39,7 +48,7 @@ const close = async () => {
 	await module?.getDb(undefined, true).$client.end();
 	await vite.close();
 	await database.close();
-	if (wroteControl) await unlink('/tmp/fife_b2_s3_server.json');
+	if (wroteControl) await unlink(controlFile);
 };
 for (const signal of ['SIGTERM', 'SIGINT'] as const)
 	process.on(signal, () => {
@@ -80,13 +89,13 @@ try {
 	});
 	await vite.listen();
 	await writeFile(
-		'/tmp/fife_b2_s3_server.json',
-		JSON.stringify({ remoteId, databaseUrl: database.url, port: 5173, processId: process.pid }),
+		controlFile,
+		JSON.stringify({ remoteId, databaseUrl: database.url, port, processId: process.pid }),
 		{ mode: 0o600 }
 	);
 	wroteControl = true;
 	console.info(
-		'Local provider server ready on 0.0.0.0:5173; disposable SQL and isolated test identity enabled'
+		`Local provider server ready on 0.0.0.0:${port}; disposable SQL and isolated test identity enabled`
 	);
 } catch {
 	await close();

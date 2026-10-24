@@ -1,10 +1,10 @@
 import 'package:file_vault_bb/services/service_auth.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../l10n/app_localizations.dart';
-import '../../models/model_item.dart';
 import '../../models/model_profile.dart';
 import '../../models/model_setting.dart';
 import '../../services/service_logger.dart';
@@ -16,9 +16,12 @@ import '../../services/service_session_work.dart';
 import '../../services/service_recovery_reset.dart';
 import '../../services/service_vault_key_setup.dart';
 import '../../services/service_backend.dart';
+import '../../services/service_session_authentication.dart';
 
 class PageSignin extends StatefulWidget {
-  const PageSignin({super.key});
+  const PageSignin({super.key, this.auth, this.sessions});
+  final NeonAuth? auth;
+  final SessionAuthentication? sessions;
 
   @override
   State<PageSignin> createState() => _PageSigninState();
@@ -39,6 +42,11 @@ class _PageSigninState extends State<PageSignin> {
   bool errorSendingOtp = false;
   bool errorVerifyingOtp = false;
   bool signedIn = false;
+  bool verifiedPending = false;
+  bool completingFailed = false;
+  SessionAuthentication get _sessions =>
+      widget.sessions ?? SessionAuthentication.instance;
+  NeonAuth get _auth => widget.auth ?? NeonAuth();
   String email = ModelSetting.get(AppString.otpSentTo.string);
   String neonAuthUrl = AppEnv.neonAuthUrl;
 
@@ -50,20 +58,39 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> _prefillRecoveryEmail() async {
-    final pending = await RecoveryResetService.instance.pendingEmail() ??
-        await VaultKeySetupService.instance.pendingEmail();
-    if (mounted &&
-        !otpSent &&
-        !processing &&
-        emailController.text.isEmpty &&
-        pending != null) {
-      emailController.text = pending;
+    try {
+      final account = await _sessions.pendingAccount();
+      final retained = SessionWork.authenticationRequired
+          ? await SessionWork.authenticate(ModelProfile.get)
+          : null;
+      final pending = account?.email ??
+          retained?.email ??
+          await RecoveryResetService.instance.pendingEmail() ??
+          await VaultKeySetupService.instance.pendingEmail();
+      if (mounted &&
+          !otpSent &&
+          !processing &&
+          emailController.text.isEmpty &&
+          pending != null) {
+        emailController.text = pending;
+      }
+      if (mounted && account != null && !processing) {
+        setState(() {
+          verifiedPending = true;
+          email = account.email;
+        });
+      }
+    } on SessionInvalidated {
+      /* Cleanup owns navigation. */
+    } catch (_) {
+      /* A failed optional hint must not prevent a fresh sign-in. */
     }
   }
 
   void _checkInitialAuthState() {
-    if (ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
-        "no") {
+    if (SessionWork.authenticationRequired ||
+        ModelSetting.get(AppString.signedIn.string, defaultValue: "no") ==
+            "no") {
       logger.info("Not signed in");
       int sentOtpAt = int.parse(
         ModelSetting.get(AppString.otpSentAt.string, defaultValue: "0"),
@@ -89,7 +116,7 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> sendOtp(String text) async {
-    return SessionWork.run(() => _sendOtp(text));
+    return _sendOtp(text);
   }
 
   Future<void> _sendOtp(String text) async {
@@ -104,10 +131,17 @@ class _PageSigninState extends State<PageSignin> {
 
     try {
       if (isLocalTestingEmail(email)) {
-        await ModelSetting.delete(AppString.simulateTesting.string);
-        await ModelSetting.set(AppString.localTesting.string, "yes");
-        final response = await BackendApi()
-            .post(endpoint: '/local-test/session', jsonBody: {});
+        final attempt = await _sessions.beginAttempt();
+        final api = BackendApi(
+            localTestingProvider: () => true,
+            accessTokenProvider: () async => AppEnv.localTestAuthToken,
+            signedEmailIdProvider: () async => email,
+            deviceUuidProvider: () async => '',
+            vaultGenerationOverride: '',
+            sessionCookieProvider: () async => null);
+        final response = await SessionWork.authenticate(
+            () => api.post(endpoint: '/local-test/session', jsonBody: {}));
+        api.close();
         final token =
             response['data'] is Map ? response['data']['sessionToken'] : null;
         final user = response['data'] is Map ? response['data']['user'] : null;
@@ -119,25 +153,33 @@ class _PageSigninState extends State<PageSignin> {
             user['id'] is! String ||
             (user['id'] as String).isEmpty ||
             user['email'] is! String ||
-            (user['email'] as String).isEmpty) {
+            (user['email'] as String).trim().toLowerCase() !=
+                email.toLowerCase()) {
           throw StateError('Local authentication failed');
         }
-        await storage.write(key: AppString.sessionCookie.string, value: token);
+        await _sessions.stageVerified(
+            attempt,
+            AuthenticatedAccount(
+                id: user['id'],
+                email: user['email'],
+                service: 'local-test',
+                cookie: token));
         await _completeSignin(user['id'], user['email']);
         return;
-      } else if (email == testEmailId) {
+      } else if (email.toLowerCase() == testEmailId.toLowerCase()) {
         await Future.delayed(const Duration(seconds: 1));
-        await ModelSetting.set(AppString.simulateTesting.string, "yes");
       } else {
-        final response = await NeonAuth().sendOTP(email);
+        final response = await _auth.sendOTP(email);
         if (response.statusCode != 200) {
           throw Exception('Failed to send OTP: ${response.body}');
         }
       }
 
       int nowUtc = DateTime.now().toUtc().millisecondsSinceEpoch;
-      await ModelSetting.set(AppString.otpSentTo.string, email);
-      await ModelSetting.set(AppString.otpSentAt.string, nowUtc.toString());
+      await SessionWork.authenticate(() async {
+        await ModelSetting.set(AppString.otpSentTo.string, email);
+        await ModelSetting.set(AppString.otpSentAt.string, nowUtc.toString());
+      });
 
       if (!mounted) return;
       setState(() {
@@ -145,6 +187,18 @@ class _PageSigninState extends State<PageSignin> {
       });
     } catch (e, s) {
       logger.error("sendOTP", error: e, stackTrace: s);
+      if (!mounted) return;
+      try {
+        if (await _sessions.pendingAccount() != null) {
+          await _authenticationFailed(e);
+          return;
+        }
+      } on SessionInvalidated {
+        if (mounted) await context.read<AppSetupState>().recheckStatus();
+        return;
+      } catch (_) {
+        // A transient key-store/database failure must remain a retryable UI.
+      }
       if (!mounted) return;
       setState(() {
         errorSendingOtp = true;
@@ -164,14 +218,14 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> verifyOtp(String text) async {
-    return SessionWork.run(() => _verifyOtp(text));
+    return _verifyOtp(text);
   }
 
   Future<void> _verifyOtp(String text) async {
     if (processing) return;
     final otp = text.trim();
-    final String savedEmail =
-        await ModelSetting.getRaw(AppString.otpSentTo.string);
+    final String savedEmail = await SessionWork.authenticate(
+        () => ModelSetting.getRaw(AppString.otpSentTo.string));
 
     if (savedEmail.isEmpty || otp.isEmpty) return;
 
@@ -181,11 +235,16 @@ class _PageSigninState extends State<PageSignin> {
     });
     try {
       String? userId;
-      if (simulateTesting()) {
+      if (savedEmail.toLowerCase() == testEmailId.toLowerCase()) {
         await Future.delayed(const Duration(seconds: 1));
         userId = 'fife';
+        final attempt = await _sessions.beginAttempt();
+        await _sessions.stageVerified(
+            attempt,
+            AuthenticatedAccount(
+                id: userId, email: savedEmail, service: 'simulation'));
       } else {
-        String? authId = await NeonAuth().verifyOTP(email, otp);
+        String? authId = await _auth.verifyOTP(savedEmail, otp);
         if (authId == null) {
           throw Exception("OTP verification failed");
         } else {
@@ -193,15 +252,12 @@ class _PageSigninState extends State<PageSignin> {
         }
       }
 
-      await ModelSetting.delete(AppString.otpSentTo.string);
-      await ModelSetting.delete(AppString.otpSentAt.string);
-
       logger.info("Login Successful");
 
-      await _completeSignin(userId, email);
+      await _completeSignin(userId, savedEmail);
     } catch (e, s) {
       logger.error("verifyOtp", error: e, stackTrace: s);
-      _showOtpVerifyError();
+      await _authenticationFailed(e);
     } finally {
       if (mounted) {
         setState(() {
@@ -212,21 +268,100 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> _completeSignin(String userId, String profileEmail) async {
-    final profile =
-        await ModelProfile.fromMap({"id": userId, "email": profileEmail});
-    await profile.insert();
+    AuthenticatedAccount? account;
+    try {
+      account = await _sessions.pendingAccount();
+    } on SessionInvalidated {
+      if (mounted) await context.read<AppSetupState>().recheckStatus();
+      return;
+    }
+    if (account?.id != userId ||
+        account?.email.trim().toLowerCase() !=
+            profileEmail.trim().toLowerCase()) {
+      throw const SessionInvalidated();
+    }
+    await _sessions.completeSignin(
+        refreshNeon: (value) => _auth.refreshForSignin(value));
 
-    await ModelItem.ensureVaultRoot();
-    await ModelSetting.set(AppString.signedIn.string, "yes");
-
-    if (subscriptionsSupported &&
-        !simulateTesting() &&
-        await Purchases.isConfigured) {
-      await Purchases.logIn(userId);
+    if (subscriptionsSupported && !simulateTesting()) {
+      try {
+        if (await Purchases.isConfigured) {
+          await Purchases.logIn(userId);
+        } else {
+          final key = defaultTargetPlatform == TargetPlatform.android
+              ? AppEnv.rcAndroidKey
+              : AppEnv.rcIosKey;
+          if (key.isNotEmpty) {
+            await Purchases.configure(
+                PurchasesConfiguration(key)..appUserID = userId);
+          }
+        }
+      } catch (_) {/* Billing retries independently of vault authentication. */}
     }
 
     if (!mounted) return;
     await context.read<AppSetupState>().completeSignin();
+  }
+
+  Future<void> _authenticationFailed(Object error) async {
+    if (!mounted) return;
+    if (error is SessionInvalidated) {
+      await context.read<AppSetupState>().recheckStatus();
+      return;
+    }
+    AuthenticatedAccount? account;
+    try {
+      account = await _sessions.pendingAccount();
+    } on SessionInvalidated {
+      if (mounted) await context.read<AppSetupState>().recheckStatus();
+      return;
+    } catch (_) {
+      if (mounted) {
+        setState(() => completingFailed = true);
+        displaySnackBar(context,
+            message: AppLocalizations.of(context)!.pleaseTryAgain, seconds: 3);
+      }
+      return;
+    }
+    if (!mounted) return;
+    if (error is VerifiedSigninExpired) {
+      await SessionWork.authenticate(() async {
+        await ModelSetting.delete(AppString.otpSentTo.string);
+        await ModelSetting.delete(AppString.otpSentAt.string);
+      });
+      if (mounted) {
+        setState(() {
+          verifiedPending = false;
+          otpSent = false;
+        });
+      }
+    } else if (account != null) {
+      final verifiedEmail = account.email;
+      setState(() {
+        verifiedPending = true;
+        completingFailed = true;
+        email = verifiedEmail;
+      });
+    } else {
+      _showOtpVerifyError();
+    }
+  }
+
+  Future<void> _resumeSignin() async {
+    if (processing) return;
+    setState(() {
+      processing = true;
+      completingFailed = false;
+    });
+    try {
+      final account = await _sessions.pendingAccount();
+      if (account == null) throw const VerifiedSigninExpired();
+      await _completeSignin(account.id, account.email);
+    } catch (error) {
+      await _authenticationFailed(error);
+    } finally {
+      if (mounted) setState(() => processing = false);
+    }
   }
 
   void _showOtpVerifyError() {
@@ -243,12 +378,26 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Future<void> changeEmail() async {
-    await ModelSetting.delete(AppString.otpSentTo.string);
-    await ModelSetting.delete(AppString.otpSentAt.string);
-    setState(() {
-      otpSent = false;
-      otpController.clear();
-    });
+    if (processing) return;
+    setState(() => processing = true);
+    try {
+      await _sessions.discardCandidate();
+      await SessionWork.authenticate(() async {
+        await ModelSetting.delete(AppString.otpSentTo.string);
+        await ModelSetting.delete(AppString.otpSentAt.string);
+      });
+      if (!mounted) return;
+      setState(() {
+        otpSent = false;
+        verifiedPending = false;
+        completingFailed = false;
+        otpController.clear();
+      });
+    } catch (error) {
+      await _authenticationFailed(error);
+    } finally {
+      if (mounted) setState(() => processing = false);
+    }
   }
 
   Future<void> signout() async {
@@ -295,7 +444,32 @@ class _PageSigninState extends State<PageSignin> {
   }
 
   Widget _buildCurrentStep() {
-    if (signedIn) {
+    if (verifiedPending) {
+      return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Icon(Icons.mark_email_read_outlined, size: 48),
+            const SizedBox(height: 24),
+            Semantics(
+                liveRegion: true,
+                child: Text(
+                    AppLocalizations.of(context)!.signinVerifiedContinue,
+                    textAlign: TextAlign.center)),
+            if (completingFailed) ...[
+              const SizedBox(height: 16),
+              Text(AppLocalizations.of(context)!.pleaseTryAgain,
+                  textAlign: TextAlign.center),
+            ],
+            const SizedBox(height: 24),
+            _buildActionButton(
+                label: AppLocalizations.of(context)!.continueLabel,
+                onPressed: _resumeSignin),
+            TextButton(
+                onPressed: processing ? null : changeEmail,
+                child: Text(AppLocalizations.of(context)!.useDifferentEmail)),
+          ]);
+    } else if (signedIn) {
       return _buildSignedInView();
     } else if (otpSent) {
       return _buildOtpView();
@@ -370,8 +544,10 @@ class _PageSigninState extends State<PageSignin> {
         ),
         const SizedBox(height: 8),
         Text(
-          AppLocalizations.of(context)!
-              .signInToContinue(AppString.appName.string),
+          SessionWork.authenticationRequired
+              ? AppLocalizations.of(context)!.sessionExpiredRetained
+              : AppLocalizations.of(context)!
+                  .signInToContinue(AppString.appName.string),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,

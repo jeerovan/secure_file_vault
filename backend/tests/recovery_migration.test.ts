@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
+import postgres from 'postgres';
 import { createRecoveryDatabase, recoveryTestUrl } from './support/recoveryDatabase';
 import { applyRecoveryMigration } from '../scripts/recoveryMigration';
 import {
@@ -11,6 +12,153 @@ import {
 	vaultUpload
 } from '../src/lib/server/db/schema';
 import { UserKeys } from '../src/lib/server/db/keys';
+
+function migrationText(id: string) {
+	return readFile(new URL(`../migrations/${id}.sql`, import.meta.url), 'utf8');
+}
+
+test(
+	'a failed migration rolls back its file and retries without losing earlier migrations',
+	{ skip: !recoveryTestUrl },
+	async () => {
+		const database = await createRecoveryDatabase({ legacy: true });
+		try {
+			const first = await migrationText('0001_recovery_reset');
+			const second = await migrationText('0002_upload_capability');
+			await applyRecoveryMigration(database.db.$client, first);
+			await assert.rejects(
+				applyRecoveryMigration(
+					database.db.$client,
+					`${second}\nSELECT 1 / 0;`,
+					'0002_upload_capability'
+				),
+				{ code: '22012' }
+			);
+			assert.deepEqual(
+				(await database.db.$client`SELECT id FROM fife_schema_migration ORDER BY id`).map(
+					(row) => row.id
+				),
+				['0001_recovery_reset']
+			);
+			const [rolledBack] = await database.db
+				.$client`SELECT to_regclass('public.vault_upload_capability')::text AS name`;
+			assert.equal(rolledBack.name, null, 'DDL from the failed file must roll back');
+			await applyRecoveryMigration(database.db.$client, first);
+			await applyRecoveryMigration(database.db.$client, second, '0002_upload_capability');
+			assert.deepEqual(await database.db.select().from(vaultUploadCapability), []);
+			assert.deepEqual(
+				(await database.db.$client`SELECT id FROM fife_schema_migration ORDER BY id`).map(
+					(row) => row.id
+				),
+				['0001_recovery_reset', '0002_upload_capability']
+			);
+		} finally {
+			await database.close();
+		}
+	}
+);
+
+test(
+	'concurrent migration runners serialize and record each file exactly once',
+	{ skip: !recoveryTestUrl },
+	async () => {
+		const database = await createRecoveryDatabase({ legacy: true });
+		const clients = Array.from({ length: 4 }, () => postgres(database.url, { max: 1 }));
+		try {
+			const migrations = await Promise.all(
+				['0001_recovery_reset', '0002_upload_capability'].map(async (id) => ({
+					id,
+					text: await migrationText(id)
+				}))
+			);
+			await Promise.all(
+				clients.map(async (client) => {
+					for (const migration of migrations)
+						await applyRecoveryMigration(client, migration.text, migration.id);
+				})
+			);
+			assert.deepEqual(
+				(await database.db.$client`SELECT id FROM fife_schema_migration ORDER BY id`).map(
+					(row) => row.id
+				),
+				migrations.map((migration) => migration.id)
+			);
+			assert.deepEqual(await database.db.select().from(vaultState), []);
+			assert.deepEqual(await database.db.select().from(vaultUploadCapability), []);
+			await assert.rejects(
+				applyRecoveryMigration(clients[0], `${migrations[0].text}\n-- conflicting runner`),
+				/checksum differs/
+			);
+		} finally {
+			await Promise.all(clients.map((client) => client.end()));
+			await database.close();
+		}
+	}
+);
+
+test(
+	'an index blocked by live table activity times out safely and succeeds on retry',
+	{ skip: !recoveryTestUrl, timeout: 20_000 },
+	async () => {
+		const database = await createRecoveryDatabase({ legacy: true });
+		const blocker = postgres(database.url, { max: 1 });
+		let release!: () => void;
+		let locked!: () => void;
+		const released = new Promise<void>((resolve) => (release = resolve));
+		const acquired = new Promise<void>((resolve) => (locked = resolve));
+		let blocking: Promise<unknown> | undefined;
+		try {
+			for (const id of [
+				'0001_recovery_reset',
+				'0002_upload_capability',
+				'0003_managed_upload',
+				'0004_upload_cleanup_cursor'
+			])
+				await applyRecoveryMigration(database.db.$client, await migrationText(id), id);
+			// The shared fixture generates current non-recovery models, including
+			// this index. Recreate the pre-0005 state before testing its DDL lock.
+			await database.db.$client.unsafe('DROP INDEX part_managed_object');
+			blocking = blocker.begin(async (tx) => {
+				await tx.unsafe('LOCK TABLE "part" IN ACCESS EXCLUSIVE MODE');
+				locked();
+				await released;
+			});
+			await Promise.race([
+				acquired,
+				blocking.then(() => {
+					throw new Error('Table lock was not held');
+				})
+			]);
+			const index = await migrationText('0005_managed_object_index');
+			await assert.rejects(
+				applyRecoveryMigration(database.db.$client, index, '0005_managed_object_index'),
+				{ code: '55P03' }
+			);
+			const [absent] = await database.db
+				.$client`SELECT to_regclass('public.part_managed_object')::text AS name`;
+			assert.equal(absent.name, null);
+			assert.equal(
+				(
+					await database.db
+						.$client`SELECT id FROM fife_schema_migration WHERE id = '0005_managed_object_index'`
+				).length,
+				0
+			);
+			release();
+			await blocking;
+			await applyRecoveryMigration(database.db.$client, index, '0005_managed_object_index');
+			const [created] = await database.db
+				.$client`SELECT indisvalid, indisready FROM pg_index WHERE indexrelid = 'public.part_managed_object'::regclass`;
+			assert.equal(created.indisvalid, true);
+			assert.equal(created.indisready, true);
+		} finally {
+			release();
+			await blocking;
+			await blocker.end();
+			await database.close();
+		}
+	}
+);
 
 test(
 	'additive recovery migration preserves existing rows and is safely repeatable',
@@ -80,6 +228,7 @@ test(
 				new URL('../migrations/0005_managed_object_index.sql', import.meta.url),
 				'utf8'
 			);
+			await database.db.$client.unsafe('DROP INDEX part_managed_object');
 			await applyRecoveryMigration(database.db.$client, index, '0005_managed_object_index');
 			await applyRecoveryMigration(database.db.$client, index, '0005_managed_object_index');
 			const indexes = await database.db

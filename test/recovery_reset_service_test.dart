@@ -258,6 +258,189 @@ void main() {
     expect(peer.confirmCalls, 1);
   });
 
+  for (final step in ['prepare', 'confirm']) {
+    for (final error in ['sign_in_again', '14', '18']) {
+      test('$step authentication error $error survives reset restart',
+          () async {
+        if (step == 'prepare') {
+          peer.prepareError = error;
+        } else {
+          peer.confirmError = error;
+        }
+        expect(
+            (await peer.service().confirm()).phase, RecoveryResetPhase.signIn);
+        final original = stage();
+        final requests = List.of(peer.requests);
+
+        // Status alone does not report the rejected preparation's session age.
+        // A new service represents reopening the app with its durable intent.
+        peer.prepareError = null;
+        peer.confirmError = null;
+        final resumed = peer.service();
+        final view = await resumed.refresh();
+        expect(view.phase, RecoveryResetPhase.signIn);
+        expect(view.email, 'fixture@example.test');
+        expect((await resumed.confirm()).phase, RecoveryResetPhase.signIn);
+        expect(peer.requests, requests);
+        expect(stage(), original);
+        expect(peer.envelope, isNull);
+        expect(await getMasterKey(), isNull);
+        expect(await getSignedInUserId(), 'fixture-user');
+        expect(
+            fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
+      });
+    }
+  }
+
+  test('changed durable revision cannot mark the previous session for sign-in',
+      () async {
+    final previousRevision = SessionWork.revision;
+    final readRevision = SessionWork.readRevision;
+    SessionWork.readRevision =
+        () async => const SessionRevision('cold-start-recovery-fixture');
+    peer.prepareError = 'sign_in_again';
+    try {
+      expect((await peer.service().confirm()).phase,
+          RecoveryResetPhase.unavailable);
+      expect(stage().containsKey('signinRequiredForSession'), isFalse);
+      expect((await peer.service().confirm()).phase, RecoveryResetPhase.signIn);
+      expect((await peer.service().refresh()).phase, RecoveryResetPhase.signIn);
+      expect(peer.confirmCalls, 0);
+      expect(peer.envelope, isNull);
+    } finally {
+      SessionWork.readRevision = readRevision;
+      SessionWork.complete(previousRevision);
+    }
+  });
+
+  test('fresh sign-in resumes a rejected reset without replacing staged keys',
+      () async {
+    peer.prepareError = 'sign_in_again';
+    final service = peer.service();
+    expect((await service.confirm()).phase, RecoveryResetPhase.signIn);
+    final original = stage();
+    await service.prepareSignin();
+    expect(stage(), original);
+    await (await ModelProfile.fromMap(
+            {'id': 'fixture-user', 'email': 'fixture@example.test'}))
+        .insert();
+    await ModelSetting.set(AppString.signedIn.string, 'yes');
+    fixture.secrets[AppString.sessionCookie.string] = 'fresh-fixture-cookie';
+    peer.prepareError = null;
+
+    expect((await peer.service().refresh()).phase,
+        RecoveryResetPhase.confirmation);
+    expect(peer.envelope, isNull);
+    expect(peer.confirmCalls, 0);
+    expect((await peer.service().confirm()).phase, RecoveryResetPhase.waiting);
+    final resumed = stage();
+    for (final key in [
+      'operationId',
+      'privateKeys',
+      'serverKeys',
+      'challenge',
+      'deviceUuid'
+    ]) {
+      expect(resumed[key], original[key], reason: key);
+    }
+    expect(peer.confirmCalls, 1);
+  });
+
+  test('late authentication rejection cannot mark an invalidated session',
+      () async {
+    final entered = Completer<void>();
+    final release = Completer<void>();
+    peer.prepareError = 'sign_in_again';
+    peer.beforePrepare = () async {
+      entered.complete();
+      await release.future;
+    };
+    final confirmation = peer.service().confirm();
+    await entered.future;
+    final original = stage();
+    SessionWork.invalidate('replaced-authentication-session');
+    release.complete();
+    expect((await confirmation).phase, RecoveryResetPhase.unavailable);
+    expect(stage(), original);
+    expect(peer.envelope, isNull);
+    expect(peer.confirmCalls, 0);
+  });
+
+  test('unmarked existing reset staging requests sign-in on rejected retry',
+      () async {
+    peer.prepareError = 'recovery_unavailable';
+    expect(
+        (await peer.service().confirm()).phase, RecoveryResetPhase.unavailable);
+    final original = stage();
+    expect(original.containsKey('signinRequiredForSession'), isFalse);
+    peer.prepareError = 'sign_in_again';
+
+    expect((await peer.service().confirm()).phase, RecoveryResetPhase.signIn);
+    expect((await peer.service().refresh()).phase, RecoveryResetPhase.signIn);
+    for (final key in [
+      'operationId',
+      'privateKeys',
+      'serverKeys',
+      'challenge'
+    ]) {
+      expect(stage()[key], original[key], reason: key);
+    }
+    expect(peer.confirmCalls, 0);
+    expect(peer.envelope, isNull);
+  });
+
+  test(
+      'failed reauthentication marker write retains staging and requests sign-in',
+      () async {
+    peer.prepareError = 'sign_in_again';
+    fixture.beforeWrite = (key, value) async {
+      if (key == stageKey &&
+          jsonDecode(value)['signinRequiredForSession'] != null) {
+        throw PlatformException(code: 'LOCKED');
+      }
+    };
+
+    expect((await peer.service().confirm()).phase, RecoveryResetPhase.signIn);
+    expect(stage()['phase'], 'intent');
+    expect(stage()['privateKeys'], isNotEmpty);
+    expect(stage()['serverKeys'], isNotEmpty);
+    expect(stage().containsKey('signinRequiredForSession'), isFalse);
+    expect(await getSignedInUserId(), 'fixture-user');
+    expect(fixture.secrets[AppString.sessionCookie.string], 'fixture-cookie');
+    expect(peer.envelope, isNull);
+    expect(peer.confirmCalls, 0);
+  });
+
+  test('committed reset survives reauthentication without another confirmation',
+      () async {
+    expect((await peer.service().confirm()).phase, RecoveryResetPhase.waiting);
+    final original = stage();
+    peer.statusError = 'sign_in_again';
+    expect((await peer.service().refresh()).phase, RecoveryResetPhase.signIn);
+    peer.statusError = null;
+    expect((await peer.service().refresh()).phase, RecoveryResetPhase.signIn);
+    await peer.service().prepareSignin();
+    await (await ModelProfile.fromMap(
+            {'id': 'fixture-user', 'email': 'fixture@example.test'}))
+        .insert();
+    await ModelSetting.set(AppString.signedIn.string, 'yes');
+    await ModelSetting.delete(AppString.recoveryReauthentication.string);
+    fixture.secrets[AppString.sessionCookie.string] = 'fresh-fixture-cookie';
+
+    expect((await peer.service().refresh()).phase, RecoveryResetPhase.waiting);
+    for (final key in [
+      'operationId',
+      'privateKeys',
+      'serverKeys',
+      'generation'
+    ]) {
+      expect(stage()[key], original[key], reason: key);
+    }
+    expect(peer.prepareCalls, 1);
+    expect(peer.confirmCalls, 1);
+    expect(await getMasterKey(), isNull);
+  });
+
   test('fresh sign-in resumes an intent that never reached server preparation',
       () async {
     peer.offline = true;

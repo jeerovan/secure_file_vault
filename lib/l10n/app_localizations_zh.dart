@@ -874,4 +874,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => '正在开始重置…';
+
+  @override
+  String get sessionExpiredRetained => '登录会话已过期。请重新登录以解锁保险库。本地数据将保留。';
+
+  @override
+  String get signinVerifiedContinue => '电子邮箱已验证。请继续完成登录。';
 }

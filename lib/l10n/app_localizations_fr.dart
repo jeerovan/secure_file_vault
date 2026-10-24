@@ -940,4 +940,12 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Démarrage de la réinitialisation…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Votre session a expiré. Reconnectez-vous pour déverrouiller votre coffre. Vos données locales sont conservées.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Votre adresse e-mail est vérifiée. Continuez pour terminer la connexion.';
 }

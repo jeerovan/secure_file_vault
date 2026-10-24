@@ -80,6 +80,11 @@ test(
 		const database = await createRecoveryDatabase();
 		Object.assign(process.env, {
 			DATABASE_URL: database.url,
+			MANAGED_UPLOADS_ENABLED:
+				process.env.FIFE_RUN_PROVIDER_MANAGED_CHECKS === '1' ||
+				process.env.FIFE_RUN_PROVIDER_RESET_CHECKS === '1'
+					? 'true'
+					: 'false',
 			FIFE_LOCAL_DATABASE_URL: database.url,
 			SUPABASE_URL: 'https://auth.example.test',
 			SUPABASE_KEY: 'fixture-key',
@@ -250,6 +255,14 @@ test(
 									async () => {
 										managedCleanupPending.add(provider.name);
 										await checkManagedProviderUploads({
+											setInitiationEnabled: async (enabled) => {
+												const bindings = (await vite.ssrLoadModule('$env/dynamic/private')).env;
+												bindings.MANAGED_UPLOADS_ENABLED = String(enabled);
+												const route = await vite.ssrLoadModule(
+													'/src/routes/api/uploads/protocol/+server.ts'
+												);
+												assert.equal(route.POST().status, enabled ? 200 : 404);
+											},
 											onCleanupVerified: () => {
 												managedCleanupPending.delete(provider.name);
 											},

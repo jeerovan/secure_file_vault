@@ -926,4 +926,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'جارٍ بدء إعادة التعيين…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'انتهت جلسة تسجيل الدخول. سجّل الدخول مجددًا لفتح خزنتك. يتم الاحتفاظ ببياناتك المحلية.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'تم التحقق من بريدك الإلكتروني. تابع لإكمال تسجيل الدخول.';
 }

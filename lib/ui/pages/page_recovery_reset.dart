@@ -223,10 +223,11 @@ class _PageRecoveryResetState extends State<PageRecoveryReset>
                       onPressed: _busy ? null : _discard,
                       child: Text(loc.recoveryResetDiscard)),
                 const SizedBox(height: 8),
-                OutlinedButton.icon(
-                    onPressed: _busy ? null : _refresh,
-                    icon: const Icon(Icons.refresh),
-                    label: Text(loc.tryAgain)),
+                if (phase != RecoveryResetPhase.signIn)
+                  OutlinedButton.icon(
+                      onPressed: _busy ? null : _refresh,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(loc.tryAgain)),
               ],
             )),
       ))),

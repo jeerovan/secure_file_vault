@@ -3,6 +3,7 @@ compatibility_date = "2024-04-22"
 compatibility_flags = [ "nodejs_compat" ]
 
 main = "worker.ts"
+workers_dev = true
 preview_urls = false
 
 [alias]
@@ -12,11 +13,13 @@ preview_urls = false
 crons = ["*/5 * * * *"]
 
 [vars]
-RECOVERY_RESET_ENABLED = "false"
-RECOVERY_WORKER_READY = "false"
-RECOVERY_RESET_EMAILS = ""
-# Set only after all issuers use capability accounting; unknown history stays guarded.
-RECOVERY_UPLOAD_ACCOUNTING_SINCE = ""
+# Production activation; accepted uploads and cleanup continue if new entry is disabled.
+MANAGED_UPLOADS_ENABLED = "true"
+RECOVERY_RESET_ENABLED = "true"
+RECOVERY_WORKER_READY = "true"
+RECOVERY_RESET_EMAILS = "*"
+# Recorded once after issuer accounting and rehearsal isolation; preserve this cutover.
+RECOVERY_UPLOAD_ACCOUNTING_SINCE = "2026-10-23T11:06:30.458Z"
 
 [assets]
 directory = ".svelte-kit/cloudflare"

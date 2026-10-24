@@ -41,7 +41,8 @@ class AppSetupState extends ChangeNotifier {
       if (event.key == EventKey.sessionInvalidated) {
         _checkId++;
         _setStep(SetupStep.sessionCleanup);
-      } else if (event.key == EventKey.signout) {
+      } else if (event.key == EventKey.signout ||
+          event.key == EventKey.authenticated) {
         unawaited(recheckStatus());
       }
     });
@@ -89,6 +90,11 @@ class AppSetupState extends ChangeNotifier {
       return;
     }
     if (_disposed || checkId != _checkId) return;
+
+    if (SessionWork.authenticationRequired) {
+      _setStep(SetupStep.signin, checkId);
+      return;
+    }
 
     bool onboarded = await ModelSetting.getRaw(AppString.onboarding.string,
             defaultValue: "no") ==
@@ -186,13 +192,11 @@ class AppSetupState extends ChangeNotifier {
     if (_disposed || checkId != _checkId) return;
     await ModelSetting.delete(AppString.recoveryReauthentication.string);
     SessionWork.check();
-    _setStep(
-        pending
-            ? SetupStep.recoveryReset
-            : await _prefs.containsKey(key: AppString.vaultKeySetupStage.string)
-                ? SetupStep.generateAccessKey
-                : SetupStep.checkAccessKey,
-        checkId);
+    if (pending) {
+      _setStep(SetupStep.recoveryReset, checkId);
+    } else {
+      await recheckStatus();
+    }
   }
 
   Future<void> showRecoveryReset() async {

@@ -13,6 +13,10 @@ import 'service_sync_budget.dart';
 import 'service_session_work.dart';
 import 'service_session_cleanup.dart';
 
+class BackendAuthenticationExpired implements Exception {
+  const BackendAuthenticationExpired();
+}
+
 class BackendApi {
   final SecureStorage _storage;
   final http.Client _http;
@@ -25,6 +29,10 @@ class BackendApi {
   final Future<void> Function() _refreshAuth;
   final bool Function()? _localTestingProvider;
   final String? _localTestTokenOverride;
+  final Future<String?> Function()? _sessionCookieProvider;
+  final String? _vaultGenerationOverride;
+  final bool _enforceDeviceRevocation;
+  final bool _requireFreshAuthentication;
   final logger = AppLogger(prefixes: ["BackendAPI"]);
 
   BackendApi({
@@ -37,6 +45,10 @@ class BackendApi {
     Future<void> Function()? refreshAuth,
     bool Function()? localTestingProvider,
     String? localTestTokenOverride,
+    Future<String?> Function()? sessionCookieProvider,
+    String? vaultGenerationOverride,
+    bool enforceDeviceRevocation = true,
+    bool requireFreshAuthentication = false,
     this.timeout = const Duration(seconds: 30),
   })  : _storage = storage ?? SecureStorage(),
         _http = httpClient ?? AppHttpClients.backend,
@@ -47,6 +59,10 @@ class BackendApi {
         _refreshAuth = refreshAuth ?? refreshNeonAuth,
         _localTestingProvider = localTestingProvider,
         _localTestTokenOverride = localTestTokenOverride,
+        _sessionCookieProvider = sessionCookieProvider,
+        _vaultGenerationOverride = vaultGenerationOverride,
+        _enforceDeviceRevocation = enforceDeviceRevocation,
+        _requireFreshAuthentication = requireFreshAuthentication,
         _base = Uri.parse(_normalizeBaseUrl(
             baseUrlOverride ?? '${AppEnv.effectiveApiBaseUrl}/api')) {
     final raw = (baseUrlOverride ?? '${AppEnv.effectiveApiBaseUrl}/api').trim();
@@ -112,14 +128,16 @@ class BackendApi {
       'Service': _isLocalTesting ? 'local-test' : 'neon'
     };
     if (extra != null) h.addAll(extra);
-    final generation = ModelSetting.get(AppString.vaultGeneration.string);
+    final generation = _vaultGenerationOverride ??
+        ModelSetting.get(AppString.vaultGeneration.string);
     if (generation.isNotEmpty && generation != 'legacy') {
       h['X-FiFe-Vault-Generation'] = generation;
     }
     // Local authentication issues its own session proof. Real Neon cookies
     // still require HTTPS; both proofs enter the same bootstrap/reset policy.
     if (withAuth && bootstrap && (_isLocalTesting || _base.scheme == 'https')) {
-      final cookie = await _storage.read(key: AppString.sessionCookie.string);
+      final cookie = await (_sessionCookieProvider?.call() ??
+          _storage.read(key: AppString.sessionCookie.string));
       if (cookie != null &&
           cookie.isNotEmpty &&
           (!_isLocalTesting || cookie.startsWith(AppEnv.localSessionPrefix))) {
@@ -225,13 +243,17 @@ class BackendApi {
 
   Future<Map<String, dynamic>> _processResponse(
       http.Response res, bool withAuth) async {
+    if (_requireFreshAuthentication && withAuth && _isUnauthorized(res)) {
+      throw const BackendAuthenticationExpired();
+    }
     final response = _formatResponse(res);
     final revoked = (response['reason'] == 'device_revoked' ||
             response['reason'] == 'vault_replaced') &&
         response['message'].toString() == '8';
     final removed = response['reason'] == 'account_removed' &&
         response['message'].toString() == '1';
-    if (withAuth &&
+    if (_enforceDeviceRevocation &&
+        withAuth &&
         res.statusCode >= 200 &&
         res.statusCode < 300 &&
         response['success'] == 0 &&
@@ -327,6 +349,8 @@ class BackendApi {
         ),
       );
       return await _processResponse(res, withAuth);
+    } on BackendAuthenticationExpired {
+      rethrow;
     } on SessionInvalidated {
       rethrow;
     } catch (e) {

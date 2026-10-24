@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Oturum açmaya dön",
   "recoveryResetDiscardBody": "Bu işlem, bu cihazdaki tamamlanmamış kurtarma kurulumunu temizler. Oturum açtıktan sonra yeni kurtarma ifadesine veya kasayı yeniden sıfırlamaya ihtiyacınız olacak.",
   "recoveryPhraseSaved": "Yeni kurtarma ifademi kaydettim.",
-  "recoveryResetStarting": "Sıfırlama başlatılıyor…"
+  "recoveryResetStarting": "Sıfırlama başlatılıyor…",
+  "sessionExpiredRetained": "Oturumunuzun süresi doldu. Kasanızın kilidini açmak için yeniden oturum açın. Yerel verileriniz korunur.",
+  "signinVerifiedContinue": "E-posta adresiniz doğrulandı. Oturum açmayı tamamlamak için devam edin."
 }

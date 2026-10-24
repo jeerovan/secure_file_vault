@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "로그인으로 돌아가기",
   "recoveryResetDiscardBody": "이 기기의 미완료 복구 설정을 지웁니다. 로그인 후 새 복구 문구를 입력하거나 보관함을 다시 재설정해야 합니다.",
   "recoveryPhraseSaved": "새 복구 문구를 저장했습니다.",
-  "recoveryResetStarting": "재설정 시작 중…"
+  "recoveryResetStarting": "재설정 시작 중…",
+  "sessionExpiredRetained": "로그인 세션이 만료되었습니다. 보관함을 잠금 해제하려면 다시 로그인하세요. 로컬 데이터는 유지됩니다.",
+  "signinVerifiedContinue": "이메일이 확인되었습니다. 계속하여 로그인을 완료하세요."
 }

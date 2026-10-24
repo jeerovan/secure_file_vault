@@ -941,4 +941,12 @@ class AppLocalizationsUk extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Початок скидання…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Термін дії сеансу минув. Увійдіть знову, щоб розблокувати сховище. Локальні дані збережено.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Електронну адресу підтверджено. Продовжте, щоб завершити вхід.';
 }

@@ -232,6 +232,7 @@ class SyncUtils {
 
   // to sync, one must have masterKey with
   static Future<bool> canSync() async {
+    if (SessionWork.authenticationRequired || !SessionWork.active) return false;
     if (await SecureStorage()
         .containsKey(key: AppString.recoveryResetStage.string)) {
       return false;

@@ -288,7 +288,7 @@ void main() {
       await tester.tap(find.text(loc.sendOtp));
       await waitForUi(
           tester, () => find.text(loc.verifyOtp).evaluate().isNotEmpty);
-      expect(simulateTesting(), isTrue);
+      expect(simulateTesting(), isFalse);
       await tester.enterText(find.byType(TextFormField), '123456');
       await tester.ensureVisible(find.text(loc.verifyOtp));
       await tester.tap(find.text(loc.verifyOtp));
@@ -296,6 +296,7 @@ void main() {
           tester, () => setup.currentStep == SetupStep.checkAccessKey);
       expect(await ModelSetting.getRaw(AppString.signedIn.string), 'yes');
       expect((await ModelProfile.get())?.email, testEmailId);
+      expect(simulateTesting(), isTrue);
       expect(await ModelItem.get('fife'), isNotNull);
       expect(await ModelSetting.getRaw(AppString.otpSentTo.string), '');
     });

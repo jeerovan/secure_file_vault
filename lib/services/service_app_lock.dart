@@ -24,14 +24,17 @@ abstract interface class AppLockStore {
 class ModelAppLockStore implements AppLockStore {
   @override
   Future<AppLockPolicy> read() async {
-    final enabled = await ModelSetting.getRaw(AppString.appLockEnabled.string);
-    final minutes =
-        await ModelSetting.getRaw(AppString.appLockTimeoutMinutes.string);
-    // An unrecognized saved policy must not silently disable protection.
-    return AppLockPolicy(
-      enabled: enabled.isNotEmpty && enabled != 'no',
-      minutes: ModelSetting.parseAppLockTimeoutMinutes(minutes),
-    );
+    return SessionWork.authenticate(() async {
+      final enabled =
+          await ModelSetting.getRaw(AppString.appLockEnabled.string);
+      final minutes =
+          await ModelSetting.getRaw(AppString.appLockTimeoutMinutes.string);
+      // An unrecognized saved policy must not silently disable protection.
+      return AppLockPolicy(
+        enabled: enabled.isNotEmpty && enabled != 'no',
+        minutes: ModelSetting.parseAppLockTimeoutMinutes(minutes),
+      );
+    });
   }
 
   @override
@@ -141,7 +144,7 @@ class AppLockController extends ChangeNotifier {
       !_disposed &&
       epoch == _epoch &&
       revision == SessionWork.revision &&
-      SessionWork.active;
+      (SessionWork.active || SessionWork.authenticationRequired);
   void _notify() {
     if (!_disposed) notifyListeners();
   }

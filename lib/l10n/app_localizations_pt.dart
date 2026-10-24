@@ -941,4 +941,12 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Iniciando redefinição…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Sua sessão expirou. Entre novamente para desbloquear seu cofre. Seus dados locais são mantidos.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'Seu e-mail foi verificado. Continue para concluir o login.';
 }

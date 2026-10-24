@@ -170,6 +170,136 @@ test(
 			return { auth, input, service, row, account };
 		}
 		try {
+			await t.test(
+				'HTTP activation controls new preparation while preserving completion and reporting',
+				async () => {
+					const f = await seed();
+					const bindings = (await vite.ssrLoadModule('$env/dynamic/private')).env;
+					const originalFlag = bindings.MANAGED_UPLOADS_ENABLED;
+					const storageModule = await vite.ssrLoadModule('/src/lib/server/managedUploadStorage.ts');
+					const prototype = storageModule.ProviderManagedUploadStorage.prototype;
+					const originalMethods = Object.fromEntries(
+						Object.keys(cloud).map((key) => [key, prototype[key]])
+					);
+					Object.assign(prototype, cloud);
+					try {
+						const handler = await vite.ssrLoadModule('/src/lib/server/managedUploadHttp.ts');
+						const protocol = await vite.ssrLoadModule(
+							'/src/routes/api/uploads/protocol/+server.ts'
+						);
+						const platform = {
+							env: {
+								HYPERDRIVE: { connectionString: database.url },
+								FIFE_AUTH_CACHE: {
+									get: async () => ({
+										authorized: true,
+										userId: f.account[U.ID],
+										remoteAuthId: f.account[U.REMOTE_AUTH_ID],
+										email: f.account[U.EMAIL]
+									}),
+									put: async () => {}
+								}
+							}
+						};
+						const call = async (action: string, body: unknown) => {
+							const response = await handler.managedUploadRequest(
+								new Request(`https://fixture.test/api/uploads/${action}`, {
+									method: 'POST',
+									headers: {
+										service: 'neon',
+										authorization: 'Bearer fixture',
+										device_uuid: 'device',
+										'content-type': 'application/json'
+									},
+									body: JSON.stringify(body)
+								}),
+								platform,
+								action
+							);
+							return { status: response.status, body: await response.json() };
+						};
+						bindings.MANAGED_UPLOADS_ENABLED = 'false';
+						assert.equal(protocol.POST().status, 404);
+						assert.deepEqual(await call('prepare', f.input), {
+							status: 503,
+							body: { success: 0, message: 'managed_uploads_disabled' }
+						});
+						assert.equal(starts, 0);
+						assert.deepEqual(await db.select().from(tables.vaultUpload), []);
+						bindings.MANAGED_UPLOADS_ENABLED = 'true';
+						assert.equal(protocol.POST().status, 200);
+						assert.equal((await call('prepare', f.input)).body.data.state, 'upload');
+						bindings.MANAGED_UPLOADS_ENABLED = 'false';
+						assert.equal(protocol.POST().status, 404);
+						assert.equal((await call('prepare', f.input)).body.data.state, 'upload');
+						assert.equal(
+							(await call('prepare', { ...f.input, id: crypto.randomUUID() })).status,
+							503
+						);
+						const complete = await call('complete', { id: f.input.id, receipt: f.input.receipt });
+						assert.equal(complete.status, 200);
+						assert.equal(complete.body.data.state, 'complete');
+						const report = await call('report', { id: f.input.id, receipt: f.input.receipt });
+						assert.equal(report.status, 200);
+						assert.equal(report.body.data.state, 'committed');
+						assert.equal(starts, 1);
+						assert.equal(completes, 1);
+					} finally {
+						bindings.MANAGED_UPLOADS_ENABLED = originalFlag;
+						Object.assign(prototype, originalMethods);
+					}
+				}
+			);
+			await t.test(
+				'activation pause prevents new records without abandoning accepted uploads',
+				async () => {
+					const f = await seed();
+					await assert.rejects(
+						f.service().prepare(f.auth, f.input, { allowNew: false }),
+						/managed_uploads_disabled/
+					);
+					assert.equal(starts, 0);
+					assert.deepEqual(await db.select().from(tables.vaultUpload), []);
+					assert.deepEqual(await db.select().from(tables.part), []);
+					assert.equal((await f.service().prepare(f.auth, f.input)).state, 'upload');
+					assert.equal(
+						(await f.service().prepare(f.auth, f.input, { allowNew: false })).state,
+						'upload'
+					);
+					assert.equal(
+						starts,
+						1,
+						'resuming an accepted operation must not initiate another upload'
+					);
+					assert.equal(
+						(await f.service().complete(f.auth, f.input.id, f.input.receipt)).state,
+						'complete'
+					);
+					assert.equal(completes, 1);
+					assert.equal(
+						(await f.service().prepare(f.auth, f.input, { allowNew: false })).state,
+						'complete'
+					);
+				}
+			);
+			await t.test(
+				'activation pause leaves receipt cleanup and its durable queue operational',
+				async () => {
+					const f = await seed();
+					await f.service().prepare(f.auth, f.input);
+					assert.equal(
+						(await f.service().report(f.input.id, f.input.receipt)).state,
+						'cleanup_pending'
+					);
+					assert.equal(
+						(await f.service().prepare(f.auth, f.input, { allowNew: false })).state,
+						'cleanup_pending'
+					);
+					await core.drainManagedUploads(db, cloud, { now: () => now });
+					assert.equal(deletes, 1);
+					assert.equal((await f.service().report(f.input.id, f.input.receipt)).state, 'deleted');
+				}
+			);
 			await t.test('missing encryption metadata never allocates a provider upload', async () => {
 				const f = await seed();
 				for (const part_metadata of [

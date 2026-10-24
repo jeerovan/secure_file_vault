@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Torna all’accesso",
   "recoveryResetDiscardBody": "Questa operazione cancella la configurazione di recupero incompleta su questo dispositivo. Dopo l’accesso servirà la nuova frase di recupero o un altro ripristino della cassaforte.",
   "recoveryPhraseSaved": "Ho salvato la nuova frase di recupero.",
-  "recoveryResetStarting": "Avvio del ripristino…"
+  "recoveryResetStarting": "Avvio del ripristino…",
+  "sessionExpiredRetained": "La sessione è scaduta. Accedi di nuovo per sbloccare il tuo archivio. I dati locali vengono conservati.",
+  "signinVerifiedContinue": "La tua email è verificata. Continua per completare l’accesso."
 }

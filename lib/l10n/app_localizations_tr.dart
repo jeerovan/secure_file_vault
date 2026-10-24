@@ -925,4 +925,12 @@ class AppLocalizationsTr extends AppLocalizations {
 
   @override
   String get recoveryResetStarting => 'Sıfırlama başlatılıyor…';
+
+  @override
+  String get sessionExpiredRetained =>
+      'Oturumunuzun süresi doldu. Kasanızın kilidini açmak için yeniden oturum açın. Yerel verileriniz korunur.';
+
+  @override
+  String get signinVerifiedContinue =>
+      'E-posta adresiniz doğrulandı. Oturum açmayı tamamlamak için devam edin.';
 }

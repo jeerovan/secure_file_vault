@@ -1025,5 +1025,7 @@
   "recoveryResetDiscard": "Quay lại đăng nhập",
   "recoveryResetDiscardBody": "Thao tác này xóa thiết lập khôi phục chưa hoàn tất trên thiết bị này. Sau khi đăng nhập, bạn sẽ cần cụm từ khôi phục mới hoặc phải đặt lại kho lần nữa.",
   "recoveryPhraseSaved": "Tôi đã lưu cụm từ khôi phục mới.",
-  "recoveryResetStarting": "Đang bắt đầu đặt lại…"
+  "recoveryResetStarting": "Đang bắt đầu đặt lại…",
+  "sessionExpiredRetained": "Phiên đăng nhập đã hết hạn. Đăng nhập lại để mở khóa kho lưu trữ. Dữ liệu cục bộ của bạn vẫn được giữ lại.",
+  "signinVerifiedContinue": "Email của bạn đã được xác minh. Tiếp tục để hoàn tất đăng nhập."
 }
