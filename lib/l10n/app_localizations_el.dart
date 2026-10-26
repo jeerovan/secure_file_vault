@@ -966,4 +966,23 @@ class AppLocalizationsEl extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'Αυτό το αρχείο δεν είναι διαθέσιμο στη συσκευή ή σε ολοκληρωμένο αντίγραφο ασφαλείας.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Λήψη φράσης ανάκτησης';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Επαληθεύστε την ταυτότητά σας για προβολή, αντιγραφή ή αποθήκευση της φράσης ανάκτησης.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Επαληθεύστε την ταυτότητά σας για να δείτε τη φράση ανάκτησης';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Όποιος έχει αυτές τις λέξεις μπορεί να ξεκλειδώσει το θησαυροφυλάκιό σας. Φυλάξτε το αντίγραφό σας ιδιωτικά, εκτός του FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Δεν ήταν δυνατή η φόρτωση της φράσης ανάκτησης. Δοκιμάστε ξανά ή χρησιμοποιήστε το αποθηκευμένο αντίγραφό σας ή άλλη συνδεδεμένη συσκευή.';
 }

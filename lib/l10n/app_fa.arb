@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "این فایل در این دستگاه یا در یک نسخهٔ پشتیبان کامل‌شده موجود نیست.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "دانلود عبارت بازیابی",
+  "recoveryPhraseExportHint": "برای مشاهده، کپی یا ذخیرهٔ عبارت بازیابی، هویت خود را تأیید کنید.",
+  "recoveryPhraseExportAuth": "برای مشاهدهٔ عبارت بازیابی، هویت خود را تأیید کنید",
+  "recoveryPhraseExportWarning": "هر کسی این کلمات را داشته باشد می‌تواند خزانهٔ شما را باز کند. نسخهٔ خود را خصوصی و خارج از FiFe نگه دارید.",
+  "recoveryPhraseUnavailable": "عبارت بازیابی بارگیری نشد. دوباره تلاش کنید یا از نسخهٔ پشتیبان ذخیره‌شده یا دستگاه دیگری که در آن وارد شده‌اید استفاده کنید."
 }

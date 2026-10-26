@@ -25,6 +25,7 @@ import 'ui/app_lock.dart';
 import 'ui/sync_activity_overlay.dart';
 import 'services/service_events.dart';
 import 'services/service_session_cleanup.dart';
+import 'services/service_recovery_phrase.dart';
 import 'services/service_session_work.dart';
 import 'services/service_recovery_reset.dart';
 import 'ui/pages/page_recovery_reset.dart';
@@ -115,6 +116,12 @@ void backgroundTaskDispatcher() async {
 final logger = AppLogger(prefixes: ["Main"]);
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await RecoveryPhraseExportFiles.clear();
+  } catch (_) {
+    // Exports retry this cleanup before allowing another save; never log data.
+    logger.warning('Recovery export cleanup will retry');
+  }
   await AppLogger.clearLegacyLogsOnce();
   await StorageSqlite.initialize(ExecutionMode.mainApp);
   try {

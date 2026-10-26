@@ -915,4 +915,21 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get fileNotAvailable => 'このファイルは、このデバイスにも完了したバックアップにもありません。';
+
+  @override
+  String get downloadRecoveryPhrase => 'リカバリーフレーズをダウンロード';
+
+  @override
+  String get recoveryPhraseExportHint => 'リカバリーフレーズの表示、コピー、保存には認証が必要です。';
+
+  @override
+  String get recoveryPhraseExportAuth => 'リカバリーフレーズを表示するには認証してください';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'これらの単語を知っている人は、あなたの保管庫を解除できます。コピーはFiFeの外の安全な場所に保管してください。';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'リカバリーフレーズを読み込めませんでした。もう一度試すか、保存済みのバックアップまたはログイン済みの別の端末を使用してください。';
 }

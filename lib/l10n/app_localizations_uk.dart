@@ -964,4 +964,23 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'Цей файл недоступний на пристрої та в завершеній резервній копії.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Завантажити фразу відновлення';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Підтвердьте особу, щоб переглянути, скопіювати або зберегти фразу відновлення.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Підтвердьте особу для перегляду фрази відновлення';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Будь-хто з цими словами може відкрити ваше сховище. Зберігайте свою копію в приватному місці поза FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Не вдалося завантажити фразу відновлення. Спробуйте ще раз або скористайтеся збереженою копією чи іншим пристроєм, на якому виконано вхід.';
 }

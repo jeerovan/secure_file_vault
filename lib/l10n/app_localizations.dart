@@ -1773,6 +1773,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This file is not available on this device or in a completed backup.'**
   String get fileNotAvailable;
+
+  /// No description provided for @downloadRecoveryPhrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Download recovery phrase'**
+  String get downloadRecoveryPhrase;
+
+  /// No description provided for @recoveryPhraseExportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to view, copy or save your recovery phrase.'**
+  String get recoveryPhraseExportHint;
+
+  /// No description provided for @recoveryPhraseExportAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to view your recovery phrase'**
+  String get recoveryPhraseExportAuth;
+
+  /// No description provided for @recoveryPhraseExportWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone with these words can unlock your vault. Keep your copy private and outside FiFe.'**
+  String get recoveryPhraseExportWarning;
+
+  /// No description provided for @recoveryPhraseUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recovery phrase couldn\'t be loaded. Try again, or use your saved backup or another signed-in device.'**
+  String get recoveryPhraseUnavailable;
 }
 
 class _AppLocalizationsDelegate

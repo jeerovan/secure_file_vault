@@ -948,4 +948,23 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'Bu dosya bu cihazda veya tamamlanmış bir yedekte mevcut değil.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Kurtarma ifadesini indir';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Kurtarma ifadenizi görüntülemek, kopyalamak veya kaydetmek için kimliğinizi doğrulayın.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Kurtarma ifadenizi görüntülemek için kimliğinizi doğrulayın';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Bu kelimelere sahip olan herkes kasanızın kilidini açabilir. Kopyanızı FiFe dışında güvenli bir yerde saklayın.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Kurtarma ifadeniz yüklenemedi. Tekrar deneyin veya kayıtlı yedeğinizi ya da oturum açılmış başka bir cihazı kullanın.';
 }

@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "הקובץ הזה אינו זמין במכשיר הזה או בגיבוי שהושלם.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "הורדת ביטוי השחזור",
+  "recoveryPhraseExportHint": "יש לאמת את זהותך כדי להציג, להעתיק או לשמור את ביטוי השחזור.",
+  "recoveryPhraseExportAuth": "יש לאמת את זהותך כדי להציג את ביטוי השחזור",
+  "recoveryPhraseExportWarning": "כל מי שמחזיק במילים האלה יכול לפתוח את הכספת שלך. יש לשמור עותק פרטי מחוץ ל-FiFe.",
+  "recoveryPhraseUnavailable": "לא ניתן לטעון את ביטוי השחזור. יש לנסות שוב, להשתמש בגיבוי ששמרת או במכשיר אחר שכבר מחובר לחשבון."
 }

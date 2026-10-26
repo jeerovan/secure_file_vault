@@ -956,4 +956,23 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'Этот файл недоступен на устройстве и в завершённой резервной копии.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Скачать фразу восстановления';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Подтвердите личность, чтобы просмотреть, скопировать или сохранить фразу восстановления.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Подтвердите личность для просмотра фразы восстановления';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Любой, у кого есть эти слова, может открыть ваше хранилище. Храните свою копию в безопасном месте вне FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Не удалось загрузить фразу восстановления. Повторите попытку или используйте сохранённую копию либо другое устройство, на котором выполнен вход.';
 }

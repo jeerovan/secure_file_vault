@@ -940,4 +940,22 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'ไม่มีไฟล์นี้ในอุปกรณ์นี้หรือในข้อมูลสำรองที่เสร็จสมบูรณ์';
+
+  @override
+  String get downloadRecoveryPhrase => 'ดาวน์โหลดวลีกู้คืน';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'ยืนยันตัวตนเพื่อดู คัดลอก หรือบันทึกวลีกู้คืนของคุณ';
+
+  @override
+  String get recoveryPhraseExportAuth => 'ยืนยันตัวตนเพื่อดูวลีกู้คืนของคุณ';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'ทุกคนที่มีคำเหล่านี้สามารถปลดล็อกห้องนิรภัยของคุณได้ เก็บสำเนาไว้เป็นส่วนตัวนอก FiFe';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'ไม่สามารถโหลดวลีกู้คืนได้ ลองอีกครั้ง หรือใช้ข้อมูลสำรองที่บันทึกไว้หรืออุปกรณ์อื่นที่เข้าสู่ระบบแล้ว';
 }

@@ -914,4 +914,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get fileNotAvailable => '이 파일은 이 기기나 완료된 백업에 없습니다.';
+
+  @override
+  String get downloadRecoveryPhrase => '복구 구문 다운로드';
+
+  @override
+  String get recoveryPhraseExportHint => '복구 구문을 보거나 복사하거나 저장하려면 인증하세요.';
+
+  @override
+  String get recoveryPhraseExportAuth => '복구 구문을 보려면 인증하세요';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      '이 단어를 가진 사람은 누구나 보관함의 잠금을 해제할 수 있습니다. 사본은 FiFe 외부의 안전한 곳에 보관하세요.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      '복구 구문을 불러올 수 없습니다. 다시 시도하거나 저장한 백업 또는 로그인된 다른 기기를 사용하세요.';
 }

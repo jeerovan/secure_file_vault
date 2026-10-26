@@ -941,4 +941,23 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'Tệp này không có trên thiết bị này hoặc trong bản sao lưu đã hoàn tất.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Tải cụm từ khôi phục';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Xác thực để xem, sao chép hoặc lưu cụm từ khôi phục của bạn.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Xác thực để xem cụm từ khôi phục của bạn';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Bất kỳ ai có những từ này đều có thể mở khóa kho của bạn. Giữ bản sao ở nơi riêng tư bên ngoài FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Không thể tải cụm từ khôi phục. Hãy thử lại hoặc dùng bản sao lưu đã lưu hay thiết bị khác đã đăng nhập.';
 }

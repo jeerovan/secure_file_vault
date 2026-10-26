@@ -1,14 +1,21 @@
 package com.jeerovan.fife
 
 import android.content.res.Configuration
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.PersistableBundle
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.util.UUID
 
 class MainActivity: FlutterFragmentActivity() {
     private var privacyEnabled = false
@@ -84,6 +91,40 @@ class MainActivity: FlutterFragmentActivity() {
                 "frameReady" -> {
                     if (resumed && hasWindowFocus()) revealSafeFrame()
                     result.success(null)
+                }
+                "copyRecoveryPhrase" -> {
+                    val text = call.arguments as? String
+                    if (!privacyEnabled || !resumed || !hasWindowFocus() ||
+                        text == null || text.split(" ").size != 24) {
+                        result.error("RECOVERY_COPY_UNAVAILABLE", "Protected copy unavailable", null)
+                    } else {
+                        try {
+                            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                            val token = UUID.randomUUID().toString()
+                            val tokenKey = "com.jeerovan.fife.recovery_clip"
+                            val clip = ClipData.newPlainText("FiFe recovery phrase", text)
+                            clip.description.extras = PersistableBundle().apply {
+                                putBoolean("android.content.extra.IS_SENSITIVE", true)
+                                putString(tokenKey, token)
+                            }
+                            clipboard.setPrimaryClip(clip)
+                            Handler(Looper.getMainLooper()).postDelayed({
+                                // Never erase a subsequent copy, including another app's.
+                                try {
+                                    if (clipboard.primaryClipDescription?.extras?.getString(tokenKey) == token) {
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                                            clipboard.clearPrimaryClip()
+                                        } else {
+                                            clipboard.setPrimaryClip(ClipData.newPlainText("", ""))
+                                        }
+                                    }
+                                } catch (_: SecurityException) { /* OS owns background clipboard access. */ }
+                            }, 60_000)
+                            result.success(null)
+                        } catch (_: Exception) {
+                            result.error("RECOVERY_COPY_UNAVAILABLE", "Protected copy unavailable", null)
+                        }
+                    }
                 }
                 else -> result.notImplemented()
             }

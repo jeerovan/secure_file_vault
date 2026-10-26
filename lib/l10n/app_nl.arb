@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "Dit bestand is niet beschikbaar op dit apparaat of in een voltooide back-up.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "Herstelzin downloaden",
+  "recoveryPhraseExportHint": "Verifieer je identiteit om je herstelzin te bekijken, kopiëren of bewaren.",
+  "recoveryPhraseExportAuth": "Verifieer je identiteit om je herstelzin te bekijken",
+  "recoveryPhraseExportWarning": "Iedereen met deze woorden kan je kluis ontgrendelen. Bewaar je kopie op een veilige plek buiten FiFe.",
+  "recoveryPhraseUnavailable": "Je herstelzin kon niet worden geladen. Probeer opnieuw of gebruik je opgeslagen back-up of een ander aangemeld apparaat."
 }

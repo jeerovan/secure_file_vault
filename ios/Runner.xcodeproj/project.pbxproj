@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		F1FEA17D26B0010000000001 /* FileViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1FEA17D26B0010000000002 /* FileViewer.swift */; };
+		F1FEA17D26B0020000000001 /* RecoveryPhraseExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1FEA17D26B0020000000002 /* RecoveryPhraseExport.swift */; };
 		B33ED00CAF16233E6C436BE8 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = BE89814B7D0688DFDE45DA1B /* InfoPlist.strings */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
@@ -48,6 +49,7 @@
 
 /* Begin PBXFileReference section */
 		F1FEA17D26B0010000000002 /* FileViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileViewer.swift; sourceTree = "<group>"; };
+		F1FEA17D26B0020000000002 /* RecoveryPhraseExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoveryPhraseExport.swift; sourceTree = "<group>"; };
 		18B5B120459A98B2299C872B /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		81656978A18982DC9686EE6D /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		50E8F4C40F74072E031F3492 /* el */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = el; path = el.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -196,6 +198,7 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				F1FEA17D26B0010000000002 /* FileViewer.swift */,
+				F1FEA17D26B0020000000002 /* RecoveryPhraseExport.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -460,6 +463,7 @@
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				F1FEA17D26B0010000000001 /* FileViewer.swift in Sources */,
+				F1FEA17D26B0020000000001 /* RecoveryPhraseExport.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

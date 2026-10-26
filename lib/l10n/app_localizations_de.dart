@@ -967,4 +967,23 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'Diese Datei ist weder auf diesem Gerät noch in einer abgeschlossenen Sicherung verfügbar.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Wiederherstellungsphrase herunterladen';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Authentifiziere dich, um deine Wiederherstellungsphrase anzuzeigen, zu kopieren oder zu speichern.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Authentifiziere dich, um deine Wiederherstellungsphrase anzuzeigen';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Mit diesen Wörtern kann jeder deinen Tresor entsperren. Bewahre deine Kopie sicher außerhalb von FiFe auf.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Deine Wiederherstellungsphrase konnte nicht geladen werden. Versuche es erneut oder verwende deine Sicherung oder ein anderes angemeldetes Gerät.';
 }

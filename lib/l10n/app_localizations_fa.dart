@@ -943,4 +943,23 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'این فایل در این دستگاه یا در یک نسخهٔ پشتیبان کامل‌شده موجود نیست.';
+
+  @override
+  String get downloadRecoveryPhrase => 'دانلود عبارت بازیابی';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'برای مشاهده، کپی یا ذخیرهٔ عبارت بازیابی، هویت خود را تأیید کنید.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'برای مشاهدهٔ عبارت بازیابی، هویت خود را تأیید کنید';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'هر کسی این کلمات را داشته باشد می‌تواند خزانهٔ شما را باز کند. نسخهٔ خود را خصوصی و خارج از FiFe نگه دارید.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'عبارت بازیابی بارگیری نشد. دوباره تلاش کنید یا از نسخهٔ پشتیبان ذخیره‌شده یا دستگاه دیگری که در آن وارد شده‌اید استفاده کنید.';
 }

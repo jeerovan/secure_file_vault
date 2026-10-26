@@ -555,3 +555,126 @@ private final class TestFileDocument: FileDocumentPresenting {
   func showOpenIn(from rect: CGRect, in view: UIView) -> Bool { menus += 1; return menuSucceeds }
   func closePresentation() { closes += 1 }
 }
+
+@MainActor
+final class RecoveryPhraseExportTests: XCTestCase {
+  private let words = Array(repeating: "abandon", count: 23).joined(separator: " ") + " art"
+
+  private func call(_ exporter: IosRecoveryPhraseExport, _ method: String,
+                    _ arguments: Any? = nil) -> Any? {
+    var response: Any?
+    exporter.handle(FlutterMethodCall(methodName: method, arguments: arguments)) { response = $0 }
+    return response
+  }
+
+  private func withExporter(_ body: (IosRecoveryPhraseExport, RecoveryTestPresenter, URL) throws -> Void) throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let host = RecoveryTestPresenter()
+    let exporter = IosRecoveryPhraseExport(root: directory.appendingPathComponent("owned"),
+        canExport: { true }, presentingController: { host })
+    try body(exporter, host, directory)
+  }
+
+  func testRejectedOrRetiredReservationCannotCreatePlaintext() throws {
+    try withExporter { exporter, _, directory in
+      let token = try XCTUnwrap(call(exporter, "reserve") as? String)
+      _ = call(exporter, "clear")
+      let reply = call(exporter, "save", ["text": words, "reservation": token])
+      XCTAssertTrue(reply is FlutterError)
+      XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("owned").path))
+    }
+  }
+
+  func testCancelRemovesOnlyOwnedProtectedStaging() throws {
+    try withExporter { exporter, host, directory in
+      let original = directory.appendingPathComponent("external-original.txt")
+      try Data("keep external original".utf8).write(to: original)
+      let token = try XCTUnwrap(call(exporter, "reserve") as? String)
+      var replies: [Any?] = []
+      exporter.handle(FlutterMethodCall(methodName: "save", arguments: ["text": words, "reservation": token])) { replies.append($0) }
+      let owned = directory.appendingPathComponent("owned")
+      let files = FileManager.default.enumerator(at: owned, includingPropertiesForKeys: nil)!.allObjects as! [URL]
+      let file = try XCTUnwrap(files.first { $0.lastPathComponent == "fife_recovery_phrase.txt" })
+      XCTAssertEqual(try String(contentsOf: file, encoding: .utf8), words)
+      let attributes = try FileManager.default.attributesOfItem(atPath: file.path)
+      XCTAssertEqual(attributes[.protectionKey] as? String, FileProtectionType.complete.rawValue)
+      exporter.documentPickerWasCancelled(try XCTUnwrap(host.dialog))
+      XCTAssertEqual(replies.count, 1)
+      XCTAssertEqual(replies[0] as? Bool, false)
+      XCTAssertFalse(FileManager.default.fileExists(atPath: owned.path))
+      XCTAssertEqual(try String(contentsOf: original, encoding: .utf8), "keep external original")
+      XCTAssertTrue(call(exporter, "save", ["text": words, "reservation": token]) is FlutterError)
+    }
+  }
+
+  func testSuccessfulSaveKeepsTheExternalCopyAndRemovesPrivateStaging() throws {
+    try withExporter { exporter, host, directory in
+      let token = try XCTUnwrap(call(exporter, "reserve") as? String)
+      var reply: Any?
+      exporter.handle(FlutterMethodCall(methodName: "save", arguments: ["text": words, "reservation": token])) { reply = $0 }
+      let owned = directory.appendingPathComponent("owned")
+      let files = FileManager.default.enumerator(at: owned, includingPropertiesForKeys: nil)!.allObjects as! [URL]
+      let staged = try XCTUnwrap(files.first { $0.lastPathComponent == "fife_recovery_phrase.txt" })
+      let destination = directory.appendingPathComponent("saved-copy.txt")
+      // Component substitute for the OS picker copying to the selected target.
+      try FileManager.default.copyItem(at: staged, to: destination)
+      exporter.documentPicker(try XCTUnwrap(host.dialog), didPickDocumentsAt: [destination])
+      XCTAssertEqual(reply as? Bool, true)
+      XCTAssertEqual(try String(contentsOf: destination, encoding: .utf8), words)
+      XCTAssertFalse(FileManager.default.fileExists(atPath: owned.path))
+    }
+  }
+
+  func testSessionCleanupCancelsAnOpenExportAndInvalidatesLateSaves() throws {
+    try withExporter { exporter, host, directory in
+      let token = try XCTUnwrap(call(exporter, "reserve") as? String)
+      var replies: [Any?] = []
+      exporter.handle(FlutterMethodCall(methodName: "save", arguments: ["text": words, "reservation": token])) { replies.append($0) }
+      XCTAssertNotNil(host.dialog)
+      _ = call(exporter, "clear")
+      XCTAssertEqual(replies.count, 1)
+      XCTAssertEqual(replies[0] as? Bool, false)
+      XCTAssertTrue(call(exporter, "save", ["text": words, "reservation": token]) is FlutterError)
+      XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("owned").path))
+    }
+  }
+
+  func testDisabledPrivacyRefusesReservationWithoutCreatingFiles() throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    let exporter = IosRecoveryPhraseExport(root: directory, canExport: { false })
+    XCTAssertTrue(call(exporter, "reserve") is FlutterError)
+    XCTAssertFalse(FileManager.default.fileExists(atPath: directory.path))
+  }
+
+  func testLateReleaseAndOldDialogCallbacksPreserveTheNewExport() throws {
+    try withExporter { exporter, host, directory in
+      let oldToken = try XCTUnwrap(call(exporter, "reserve") as? String)
+      exporter.handle(FlutterMethodCall(methodName: "save", arguments: ["text": words, "reservation": oldToken])) { _ in }
+      let oldDialog = try XCTUnwrap(host.dialog)
+      exporter.documentPickerWasCancelled(oldDialog)
+      let newToken = try XCTUnwrap(call(exporter, "reserve") as? String)
+      var newReply: Any?
+      exporter.handle(FlutterMethodCall(methodName: "save", arguments: ["text": words, "reservation": newToken])) { newReply = $0 }
+      let newDialog = try XCTUnwrap(host.dialog)
+      _ = call(exporter, "release", oldToken)
+      exporter.documentPickerWasCancelled(oldDialog)
+      XCTAssertNil(newReply)
+      XCTAssertTrue(FileManager.default.fileExists(atPath: directory.appendingPathComponent("owned").path))
+      exporter.documentPickerWasCancelled(newDialog)
+      XCTAssertEqual(newReply as? Bool, false)
+      XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("owned").path))
+    }
+  }
+}
+
+@MainActor
+private final class RecoveryTestPresenter: UIViewController {
+  var dialog: UIDocumentPickerViewController?
+  override func present(_ viewController: UIViewController, animated: Bool,
+                        completion: (() -> Void)? = nil) {
+    dialog = viewController as? UIDocumentPickerViewController
+    // No native UI in component tests; the test explicitly supplies completion.
+  }
+}

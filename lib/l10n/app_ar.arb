@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "هذا الملف غير متاح على هذا الجهاز أو في نسخة احتياطية مكتملة.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "تنزيل عبارة الاسترداد",
+  "recoveryPhraseExportHint": "تحقّق من هويتك لعرض عبارة الاسترداد أو نسخها أو حفظها.",
+  "recoveryPhraseExportAuth": "تحقّق من هويتك لعرض عبارة الاسترداد",
+  "recoveryPhraseExportWarning": "يمكن لأي شخص يملك هذه الكلمات فتح خزنتك. احتفظ بنسختك في مكان خاص خارج FiFe.",
+  "recoveryPhraseUnavailable": "تعذّر تحميل عبارة الاسترداد. حاول مجددًا، أو استخدم نسختك المحفوظة أو جهازًا آخر سجّلت الدخول عليه."
 }

@@ -944,4 +944,23 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'הקובץ הזה אינו זמין במכשיר הזה או בגיבוי שהושלם.';
+
+  @override
+  String get downloadRecoveryPhrase => 'הורדת ביטוי השחזור';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'יש לאמת את זהותך כדי להציג, להעתיק או לשמור את ביטוי השחזור.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'יש לאמת את זהותך כדי להציג את ביטוי השחזור';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'כל מי שמחזיק במילים האלה יכול לפתוח את הכספת שלך. יש לשמור עותק פרטי מחוץ ל-FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'לא ניתן לטעון את ביטוי השחזור. יש לנסות שוב, להשתמש בגיבוי ששמרת או במכשיר אחר שכבר מחובר לחשבון.';
 }

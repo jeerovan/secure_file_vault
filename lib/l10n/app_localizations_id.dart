@@ -947,4 +947,23 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'File ini tidak tersedia di perangkat ini atau dalam cadangan yang telah selesai.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Unduh frasa pemulihan';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Autentikasi untuk melihat, menyalin, atau menyimpan frasa pemulihan Anda.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Autentikasi untuk melihat frasa pemulihan Anda';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Siapa pun yang memiliki kata-kata ini dapat membuka brankas Anda. Simpan salinan Anda secara pribadi di luar FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Frasa pemulihan Anda tidak dapat dimuat. Coba lagi, atau gunakan cadangan tersimpan atau perangkat lain yang sudah masuk.';
 }

@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "Цей файл недоступний на пристрої та в завершеній резервній копії.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "Завантажити фразу відновлення",
+  "recoveryPhraseExportHint": "Підтвердьте особу, щоб переглянути, скопіювати або зберегти фразу відновлення.",
+  "recoveryPhraseExportAuth": "Підтвердьте особу для перегляду фрази відновлення",
+  "recoveryPhraseExportWarning": "Будь-хто з цими словами може відкрити ваше сховище. Зберігайте свою копію в приватному місці поза FiFe.",
+  "recoveryPhraseUnavailable": "Не вдалося завантажити фразу відновлення. Спробуйте ще раз або скористайтеся збереженою копією чи іншим пристроєм, на якому виконано вхід."
 }

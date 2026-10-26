@@ -20,6 +20,7 @@ import '../../utils/enums.dart';
 import '../common_widgets.dart';
 import '../app_lock.dart';
 import '../thumb_reach_list.dart';
+import 'page_recovery_phrase_export.dart';
 
 class SettingsPage extends StatefulWidget {
   final Function(String?) onThemeChange;
@@ -573,7 +574,12 @@ class SettingsPageState extends State<SettingsPage> {
           ],
         ),
       if (isMobile)
-        AppLockSettings(controller: context.read<AppLockController>()),
+        AppLockSettings(
+            controller: context.read<AppLockController>(),
+            enabledActions: [
+              RecoveryPhraseSettingsAction(
+                  controller: context.read<AppLockController>())
+            ]),
     ];
 
     final screen = CrossPlatformBackHandler(

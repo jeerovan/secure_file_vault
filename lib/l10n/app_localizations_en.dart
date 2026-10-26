@@ -951,4 +951,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'This file is not available on this device or in a completed backup.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Download recovery phrase';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Authenticate to view, copy or save your recovery phrase.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Authenticate to view your recovery phrase';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Anyone with these words can unlock your vault. Keep your copy private and outside FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Your recovery phrase couldn\'t be loaded. Try again, or use your saved backup or another signed-in device.';
 }

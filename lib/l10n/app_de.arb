@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "Diese Datei ist weder auf diesem Gerät noch in einer abgeschlossenen Sicherung verfügbar.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "Wiederherstellungsphrase herunterladen",
+  "recoveryPhraseExportHint": "Authentifiziere dich, um deine Wiederherstellungsphrase anzuzeigen, zu kopieren oder zu speichern.",
+  "recoveryPhraseExportAuth": "Authentifiziere dich, um deine Wiederherstellungsphrase anzuzeigen",
+  "recoveryPhraseExportWarning": "Mit diesen Wörtern kann jeder deinen Tresor entsperren. Bewahre deine Kopie sicher außerhalb von FiFe auf.",
+  "recoveryPhraseUnavailable": "Deine Wiederherstellungsphrase konnte nicht geladen werden. Versuche es erneut oder verwende deine Sicherung oder ein anderes angemeldetes Gerät."
 }

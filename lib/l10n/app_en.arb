@@ -1099,5 +1099,10 @@
   "fileNotAvailable": "This file is not available on this device or in a completed backup.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "Download recovery phrase",
+  "recoveryPhraseExportHint": "Authenticate to view, copy or save your recovery phrase.",
+  "recoveryPhraseExportAuth": "Authenticate to view your recovery phrase",
+  "recoveryPhraseExportWarning": "Anyone with these words can unlock your vault. Keep your copy private and outside FiFe.",
+  "recoveryPhraseUnavailable": "Your recovery phrase couldn't be loaded. Try again, or use your saved backup or another signed-in device."
 }

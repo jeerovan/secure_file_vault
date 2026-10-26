@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "Este archivo no está disponible en este dispositivo ni en una copia de seguridad completada.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "Descargar frase de recuperación",
+  "recoveryPhraseExportHint": "Autentícate para ver, copiar o guardar tu frase de recuperación.",
+  "recoveryPhraseExportAuth": "Autentícate para ver tu frase de recuperación",
+  "recoveryPhraseExportWarning": "Cualquiera que tenga estas palabras puede desbloquear tu bóveda. Guarda tu copia en privado y fuera de FiFe.",
+  "recoveryPhraseUnavailable": "No se pudo cargar tu frase de recuperación. Inténtalo de nuevo o usa tu copia guardada u otro dispositivo con sesión iniciada."
 }

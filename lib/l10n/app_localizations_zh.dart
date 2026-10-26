@@ -892,4 +892,20 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get fileNotAvailable => '此设备或已完成的备份中没有此文件。';
+
+  @override
+  String get downloadRecoveryPhrase => '下载恢复短语';
+
+  @override
+  String get recoveryPhraseExportHint => '请验证身份以查看、复制或保存恢复短语。';
+
+  @override
+  String get recoveryPhraseExportAuth => '请验证身份以查看恢复短语';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      '任何拥有这些单词的人都能解锁您的保险库。请将副本妥善保存在 FiFe 之外。';
+
+  @override
+  String get recoveryPhraseUnavailable => '无法加载恢复短语。请重试，或使用已保存的备份或其他已登录的设备。';
 }

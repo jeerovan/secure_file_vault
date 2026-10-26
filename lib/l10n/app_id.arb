@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "File ini tidak tersedia di perangkat ini atau dalam cadangan yang telah selesai.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "Unduh frasa pemulihan",
+  "recoveryPhraseExportHint": "Autentikasi untuk melihat, menyalin, atau menyimpan frasa pemulihan Anda.",
+  "recoveryPhraseExportAuth": "Autentikasi untuk melihat frasa pemulihan Anda",
+  "recoveryPhraseExportWarning": "Siapa pun yang memiliki kata-kata ini dapat membuka brankas Anda. Simpan salinan Anda secara pribadi di luar FiFe.",
+  "recoveryPhraseUnavailable": "Frasa pemulihan Anda tidak dapat dimuat. Coba lagi, atau gunakan cadangan tersimpan atau perangkat lain yang sudah masuk."
 }

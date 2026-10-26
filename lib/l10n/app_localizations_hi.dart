@@ -944,4 +944,23 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'यह फ़ाइल इस डिवाइस या किसी पूरे हो चुके बैकअप में उपलब्ध नहीं है।';
+
+  @override
+  String get downloadRecoveryPhrase => 'रिकवरी वाक्यांश डाउनलोड करें';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'अपना रिकवरी वाक्यांश देखने, कॉपी करने या सहेजने के लिए पहचान सत्यापित करें।';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'अपना रिकवरी वाक्यांश देखने के लिए पहचान सत्यापित करें';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'इन शब्दों वाला कोई भी व्यक्ति आपका वॉल्ट खोल सकता है। अपनी प्रति निजी रखें और FiFe के बाहर सहेजें।';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'आपका रिकवरी वाक्यांश लोड नहीं हो सका। फिर कोशिश करें, या अपने सहेजे गए बैकअप या किसी अन्य साइन इन किए गए डिवाइस का उपयोग करें।';
 }

@@ -948,4 +948,22 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'هذا الملف غير متاح على هذا الجهاز أو في نسخة احتياطية مكتملة.';
+
+  @override
+  String get downloadRecoveryPhrase => 'تنزيل عبارة الاسترداد';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'تحقّق من هويتك لعرض عبارة الاسترداد أو نسخها أو حفظها.';
+
+  @override
+  String get recoveryPhraseExportAuth => 'تحقّق من هويتك لعرض عبارة الاسترداد';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'يمكن لأي شخص يملك هذه الكلمات فتح خزنتك. احتفظ بنسختك في مكان خاص خارج FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'تعذّر تحميل عبارة الاسترداد. حاول مجددًا، أو استخدم نسختك المحفوظة أو جهازًا آخر سجّلت الدخول عليه.';
 }

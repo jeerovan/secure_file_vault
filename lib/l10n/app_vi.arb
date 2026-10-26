@@ -1043,5 +1043,10 @@
   "fileNotAvailable": "Tệp này không có trên thiết bị này hoặc trong bản sao lưu đã hoàn tất.",
   "@fileNotAvailable": {
     "description": "Shown when a missing file has no confirmed completed cloud backup."
-  }
+  },
+  "downloadRecoveryPhrase": "Tải cụm từ khôi phục",
+  "recoveryPhraseExportHint": "Xác thực để xem, sao chép hoặc lưu cụm từ khôi phục của bạn.",
+  "recoveryPhraseExportAuth": "Xác thực để xem cụm từ khôi phục của bạn",
+  "recoveryPhraseExportWarning": "Bất kỳ ai có những từ này đều có thể mở khóa kho của bạn. Giữ bản sao ở nơi riêng tư bên ngoài FiFe.",
+  "recoveryPhraseUnavailable": "Không thể tải cụm từ khôi phục. Hãy thử lại hoặc dùng bản sao lưu đã lưu hay thiết bị khác đã đăng nhập."
 }

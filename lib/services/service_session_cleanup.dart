@@ -14,6 +14,7 @@ import 'package:uuid/uuid.dart';
 import '../models/model_setting.dart';
 import '../models/model_profile.dart';
 import '../storage/storage_secure.dart';
+import 'service_recovery_phrase.dart';
 import '../storage/storage_sqlite.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
@@ -490,6 +491,8 @@ class SessionCleanup {
   }
 
   List<SessionCleanupAction> _actions(Map<String, dynamic> state) => [
+        SessionCleanupAction(
+            'Recovery exports', RecoveryPhraseExportFiles.clear),
         SessionCleanupAction('Scheduled work', () async {
           SyncUtils().stopAutoSync();
           await TaskManager.stopBackgroundWakes();

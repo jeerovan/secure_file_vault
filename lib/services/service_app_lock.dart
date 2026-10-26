@@ -100,6 +100,36 @@ enum AppLockFailure {
   storageUnavailable
 }
 
+class AppLockAccessDenied implements Exception {
+  const AppLockAccessDenied();
+}
+
+/// An in-memory proof for one sensitive view, never a saved unlock or PIN.
+class AppLockAuthorization {
+  AppLockAuthorization._(this.controller, this._epoch, this._revision);
+  final AppLockController controller;
+  final int _epoch;
+  final String _revision;
+  bool _revoked = false;
+
+  bool get isValid =>
+      !_revoked &&
+      controller._current(_epoch, _revision) &&
+      controller.ready &&
+      controller.enabled &&
+      !controller.locked &&
+      SessionWork.active &&
+      !SessionWork.authenticationRequired;
+
+  bool get available => isValid && controller.foreground;
+
+  void requireAvailable() {
+    if (!available) throw const AppLockAccessDenied();
+  }
+
+  void revoke() => _revoked = true;
+}
+
 /// Protects foreground UI only. It never invalidates keys, sessions or sync work.
 /// Inactivity counts device sleep as well as elapsed runtime. Clock rollback
 /// fails closed; a new process never inherits an unlock.
@@ -216,6 +246,27 @@ class AppLockController extends ChangeNotifier {
       return Future.value(false);
     }
     return _authenticate(prompt, nextEnabled: enabled);
+  }
+
+  /// A normal unlocked/grace-period session is not proof for exporting keys.
+  /// Never share an in-flight unlock/settings prompt with a sensitive action.
+  Future<AppLockAuthorization?> authorizeSensitiveAction(
+      AppLockPrompt prompt) async {
+    if (!_ready ||
+        !_enabled ||
+        _locked ||
+        _busy ||
+        !_foreground ||
+        !SessionWork.active ||
+        SessionWork.authenticationRequired) {
+      return null;
+    }
+    final revision = SessionWork.revision;
+    final authentication = _authenticate(prompt);
+    final epoch = _epoch;
+    if (!await authentication || !_current(epoch, revision)) return null;
+    final proof = AppLockAuthorization._(this, epoch, revision);
+    return proof.isValid ? proof : null;
   }
 
   Future<bool> _authenticate(AppLockPrompt prompt, {bool? nextEnabled}) {

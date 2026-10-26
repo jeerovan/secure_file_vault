@@ -19,6 +19,7 @@ import BackgroundTasks
       IosBackgroundSync.shared.registerScheduler(with: engineBridge.applicationRegistrar.messenger())
       AppLockPrivacy.shared.register(with: engineBridge.applicationRegistrar.messenger())
       IosFileViewer.shared.register(with: engineBridge.applicationRegistrar.messenger())
+      IosRecoveryPhraseExport.shared.register(with: engineBridge.applicationRegistrar.messenger())
     }
 }
 
@@ -31,6 +32,7 @@ final class AppLockPrivacy {
     private var channel: FlutterMethodChannel?
     private var active = false
     private var lifecycleRevision = 0
+    var allowsRecoveryExport: Bool { enabled && applicationActive }
 
     private init() {
         NotificationCenter.default.addObserver(self, selector: #selector(conceal),
@@ -66,6 +68,18 @@ final class AppLockPrivacy {
                     }
                     self.removeCovers()
                 }
+                result(nil)
+            case "copyRecoveryPhrase":
+                guard self.enabled, self.applicationActive,
+                      let text = call.arguments as? String,
+                      text.split(separator: " ").count == 24 else {
+                    result(FlutterError(code: "RECOVERY_COPY_UNAVAILABLE",
+                        message: "Protected copy unavailable", details: nil))
+                    return
+                }
+                UIPasteboard.general.setItems([[UIPasteboard.typeAutomatic: text]],
+                    options: [.localOnly: true,
+                              .expirationDate: Date(timeIntervalSinceNow: 60)])
                 result(nil)
             default: result(FlutterMethodNotImplemented)
             }
@@ -351,6 +365,7 @@ final class IosBackgroundSync {
         }
         GeneratedPluginRegistrant.register(with: engine)
         SecureStorageManager.register(with: engine.binaryMessenger)
+        IosRecoveryPhraseExport.shared.register(with: engine.binaryMessenger)
         let worker = FlutterMethodChannel(name: "com.jeerovan.fife/background_worker", binaryMessenger: engine.binaryMessenger)
         workerChannel = worker
         worker.setMethodCallHandler { call, result in

@@ -441,8 +441,10 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
 }
 
 class AppLockSettings extends StatefulWidget {
-  const AppLockSettings({super.key, required this.controller});
+  const AppLockSettings(
+      {super.key, required this.controller, this.enabledActions = const []});
   final AppLockController controller;
+  final List<Widget> enabledActions;
 
   @override
   State<AppLockSettings> createState() => _AppLockSettingsState();
@@ -484,49 +486,54 @@ class _AppLockSettingsState extends State<AppLockSettings> {
             _AppLockDisclosure(
               child: !controller.enabled
                   ? const SizedBox.shrink()
-                  : ListTile(
-                      leading:
-                          const Icon(LucideIcons.clock, color: Colors.grey),
-                      horizontalTitleGap: 24,
-                      title: Text(loc.appLockTimeout),
-                      subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(loc.syncIntervalMinutes(minutes)),
-                            Text(loc.appLockTimeoutDescription),
-                            Slider(
-                              key: const ValueKey('app-lock-timeout'),
-                              min: 0,
-                              max: (choices.length - 1).toDouble(),
-                              divisions: choices.length - 1,
-                              value: choices.indexOf(minutes).toDouble(),
-                              label:
-                                  '${loc.appLockTimeout}: ${loc.syncIntervalMinutes(minutes)}',
-                              semanticFormatterCallback: (value) => loc
-                                  .syncIntervalMinutes(choices[value.round()]),
-                              onChanged: controller.busy
-                                  ? null
-                                  : (value) => setState(() =>
-                                      _previewMinutes = choices[value.round()]),
-                              onChangeEnd: (value) async {
-                                await controller
-                                    .setTimeout(choices[value.round()]);
-                                if (mounted) {
-                                  setState(() => _previewMinutes = null);
-                                }
-                              },
-                            ),
-                            Row(children: [
-                              Expanded(
-                                  child: Text(
-                                      loc.syncIntervalMinutes(choices.first))),
-                              Expanded(
-                                  child: Text(
-                                      loc.syncIntervalMinutes(choices.last),
-                                      textAlign: TextAlign.end)),
+                  : Column(children: [
+                      ListTile(
+                        leading:
+                            const Icon(LucideIcons.clock, color: Colors.grey),
+                        horizontalTitleGap: 24,
+                        title: Text(loc.appLockTimeout),
+                        subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(loc.syncIntervalMinutes(minutes)),
+                              Text(loc.appLockTimeoutDescription),
+                              Slider(
+                                key: const ValueKey('app-lock-timeout'),
+                                min: 0,
+                                max: (choices.length - 1).toDouble(),
+                                divisions: choices.length - 1,
+                                value: choices.indexOf(minutes).toDouble(),
+                                label:
+                                    '${loc.appLockTimeout}: ${loc.syncIntervalMinutes(minutes)}',
+                                semanticFormatterCallback: (value) =>
+                                    loc.syncIntervalMinutes(
+                                        choices[value.round()]),
+                                onChanged: controller.busy
+                                    ? null
+                                    : (value) => setState(() =>
+                                        _previewMinutes =
+                                            choices[value.round()]),
+                                onChangeEnd: (value) async {
+                                  await controller
+                                      .setTimeout(choices[value.round()]);
+                                  if (mounted) {
+                                    setState(() => _previewMinutes = null);
+                                  }
+                                },
+                              ),
+                              Row(children: [
+                                Expanded(
+                                    child: Text(loc
+                                        .syncIntervalMinutes(choices.first))),
+                                Expanded(
+                                    child: Text(
+                                        loc.syncIntervalMinutes(choices.last),
+                                        textAlign: TextAlign.end)),
+                              ]),
                             ]),
-                          ]),
-                    ),
+                      ),
+                      ...widget.enabledActions
+                    ]),
             ),
           ]);
         });

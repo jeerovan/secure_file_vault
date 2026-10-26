@@ -960,4 +960,23 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'Dit bestand is niet beschikbaar op dit apparaat of in een voltooide back-up.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Herstelzin downloaden';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Verifieer je identiteit om je herstelzin te bekijken, kopiëren of bewaren.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Verifieer je identiteit om je herstelzin te bekijken';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Iedereen met deze woorden kan je kluis ontgrendelen. Bewaar je kopie op een veilige plek buiten FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Je herstelzin kon niet worden geladen. Probeer opnieuw of gebruik je opgeslagen back-up of een ander aangemeld apparaat.';
 }

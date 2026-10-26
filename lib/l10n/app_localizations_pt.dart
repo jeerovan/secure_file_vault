@@ -965,4 +965,23 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get fileNotAvailable =>
       'Este ficheiro não está disponível neste dispositivo nem numa cópia de segurança concluída.';
+
+  @override
+  String get downloadRecoveryPhrase => 'Baixar frase de recuperação';
+
+  @override
+  String get recoveryPhraseExportHint =>
+      'Autentique-se para ver, copiar ou salvar sua frase de recuperação.';
+
+  @override
+  String get recoveryPhraseExportAuth =>
+      'Autentique-se para ver sua frase de recuperação';
+
+  @override
+  String get recoveryPhraseExportWarning =>
+      'Qualquer pessoa com estas palavras pode desbloquear seu cofre. Mantenha sua cópia em um local privado, fora do FiFe.';
+
+  @override
+  String get recoveryPhraseUnavailable =>
+      'Não foi possível carregar sua frase de recuperação. Tente novamente ou use seu backup salvo ou outro dispositivo conectado.';
 }
