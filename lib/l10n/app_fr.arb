@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "Appui long pour télécharger",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "Certains éléments existent encore localement.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "J’ai enregistré ma nouvelle phrase de récupération.",
   "recoveryResetStarting": "Démarrage de la réinitialisation…",
   "sessionExpiredRetained": "Votre session a expiré. Reconnectez-vous pour déverrouiller votre coffre. Vos données locales sont conservées.",
-  "signinVerifiedContinue": "Votre adresse e-mail est vérifiée. Continuez pour terminer la connexion."
+  "signinVerifiedContinue": "Votre adresse e-mail est vérifiée. Continuez pour terminer la connexion.",
+  "noSupportedApplication": "Aucune application compatible pour afficher ce fichier.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "Impossible d’accéder à ce fichier. Vérifiez les autorisations du dossier et réessayez.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "Impossible d’ouvrir ce fichier. Veuillez réessayer.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "Ce fichier n’est disponible ni sur cet appareil ni dans une sauvegarde terminée.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

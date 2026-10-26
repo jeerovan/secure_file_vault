@@ -255,7 +255,10 @@ class VaultKeySetupService {
         await _validate(stage);
         if (stage['phase'] != 'intent') return _reconcile(stage, revision);
         if (simulateTesting()) return _activate(stage, revision);
-        final response = await _api().post(endpoint: '/keys', jsonBody: {
+        // Publication is idempotent for this staged envelope. A JWT may expire
+        // while deletion finishes or the user reads the key notice.
+        final response = await _api()
+            .post(endpoint: '/keys', retryUnauthorized: true, jsonBody: {
           ...Map<String, dynamic>.from(stage['serverKeys']),
           'expectedGeneration': stage['generation']
         });

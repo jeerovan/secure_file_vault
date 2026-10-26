@@ -474,7 +474,7 @@ Future<void> withSelectionFixture(
             throw PlatformException(code: 'ACCESS_DENIED');
           }
           fixture.scopeHolds++;
-          return source.path;
+          return fixture.resolvedRootPath ?? source.path;
         } finally {
           fixture.pendingAccess--;
         }
@@ -515,6 +515,7 @@ class SelectionFixture {
   final WidgetTester tester;
   final Directory directory;
   final Directory source;
+  String? resolvedRootPath;
   bool denyAccess = false;
   int scopeHolds = 0;
   int pendingAccess = 0;

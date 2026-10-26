@@ -5,6 +5,7 @@ import 'package:file_vault_bb/main.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_logger.dart';
 import 'package:file_vault_bb/utils/common.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 
 import '../l10n/app_localizations.dart';
@@ -19,8 +20,9 @@ class ServiceForeground {
   StreamSubscription<AppEvent>? _appEventSubscription;
 
   void init() {
-    FlutterForegroundTask.initCommunicationPort();
     if (!_taskDataCallbackRegistered) {
+      // Rechecking setup must retain the port and its queued service messages.
+      FlutterForegroundTask.initCommunicationPort();
       FlutterForegroundTask.addTaskDataCallback(_onTaskData);
       _taskDataCallbackRegistered = true;
     }
@@ -101,6 +103,9 @@ class ServiceForeground {
   }
 
   Future<void> start() async {
+    // Reset/reauthentication can defer startup initialization. Reconnect the UI
+    // before starting or reusing an engine that can publish work or revocation.
+    init();
     await updateSyncInterval();
     if (await FlutterForegroundTask.isRunningService) {
       return;
@@ -142,5 +147,13 @@ class ServiceForeground {
         logger.error("Failed to stop", error: result.error);
       }
     }
+  }
+
+  @visibleForTesting
+  Future<void> resetForTesting() async {
+    FlutterForegroundTask.removeTaskDataCallback(_onTaskData);
+    _taskDataCallbackRegistered = false;
+    await _appEventSubscription?.cancel();
+    _appEventSubscription = null;
   }
 }

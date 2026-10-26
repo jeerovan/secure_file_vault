@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "Παρατεταμένο πάτημα για λήψη",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "Μερικά στοιχεία υπάρχουν ακόμη τοπικά.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "Αποθήκευσα τη νέα φράση ανάκτησης.",
   "recoveryResetStarting": "Έναρξη επαναφοράς…",
   "sessionExpiredRetained": "Η συνεδρία σας έληξε. Συνδεθείτε ξανά για να ξεκλειδώσετε το θησαυροφυλάκιό σας. Τα τοπικά δεδομένα σας διατηρούνται.",
-  "signinVerifiedContinue": "Το email σας επαληθεύτηκε. Συνεχίστε για να ολοκληρώσετε τη σύνδεση."
+  "signinVerifiedContinue": "Το email σας επαληθεύτηκε. Συνεχίστε για να ολοκληρώσετε τη σύνδεση.",
+  "noSupportedApplication": "Δεν υπάρχει συμβατή εφαρμογή για την προβολή αυτού του αρχείου.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "Δεν είναι δυνατή η πρόσβαση σε αυτό το αρχείο. Ελέγξτε τα δικαιώματα του φακέλου και δοκιμάστε ξανά.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "Δεν είναι δυνατό το άνοιγμα αυτού του αρχείου. Δοκιμάστε ξανά.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "Αυτό το αρχείο δεν είναι διαθέσιμο στη συσκευή ή σε ολοκληρωμένο αντίγραφο ασφαλείας.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

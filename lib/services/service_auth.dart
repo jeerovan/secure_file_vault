@@ -32,7 +32,7 @@ class NeonAuth {
   static final AuthRefreshSingleFlight _refreshSingleFlight =
       AuthRefreshSingleFlight();
   final SecureStorage _storage;
-  final http.Client _http;
+  final http.Client? _httpOverride;
   final String _neonAuthUrl;
   final Duration timeout;
   final logger = AppLogger(prefixes: ["NeonAuth"]);
@@ -42,7 +42,7 @@ class NeonAuth {
     http.Client? httpClient,
     this.timeout = const Duration(seconds: 20),
   })  : _storage = storage ?? SecureStorage(),
-        _http = httpClient ?? AppHttpClients.auth,
+        _httpOverride = httpClient,
         _neonAuthUrl = AppEnv.neonAuthUrl {
     if (_neonAuthUrl.isEmpty) {
       throw StateError(
@@ -50,6 +50,10 @@ class NeonAuth {
       );
     }
   }
+
+  // Resolve inside the request's authentication scope. Construction may happen
+  // on the sign-in page while the retained vault still blocks private work.
+  http.Client get _http => _httpOverride ?? AppHttpClients.auth;
 
   String? _getHeader(Map<String, String> headers, String key) {
     final lowerKey = key.toLowerCase();

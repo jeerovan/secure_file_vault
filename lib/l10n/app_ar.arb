@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "اضغط مطولًا للتنزيل",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "بعض العناصر ما تزال موجودة محليًا.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "لقد حفظت عبارة الاسترداد الجديدة.",
   "recoveryResetStarting": "جارٍ بدء إعادة التعيين…",
   "sessionExpiredRetained": "انتهت جلسة تسجيل الدخول. سجّل الدخول مجددًا لفتح خزنتك. يتم الاحتفاظ ببياناتك المحلية.",
-  "signinVerifiedContinue": "تم التحقق من بريدك الإلكتروني. تابع لإكمال تسجيل الدخول."
+  "signinVerifiedContinue": "تم التحقق من بريدك الإلكتروني. تابع لإكمال تسجيل الدخول.",
+  "noSupportedApplication": "لا يوجد تطبيق يدعم عرض هذا الملف.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "تعذر الوصول إلى هذا الملف. تحقق من أذونات المجلد وحاول مجددًا.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "تعذر فتح هذا الملف. يرجى المحاولة مجددًا.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "هذا الملف غير متاح على هذا الجهاز أو في نسخة احتياطية مكتملة.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

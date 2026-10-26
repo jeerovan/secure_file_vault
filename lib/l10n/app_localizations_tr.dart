@@ -933,4 +933,19 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'E-posta adresiniz doğrulandı. Oturum açmayı tamamlamak için devam edin.';
+
+  @override
+  String get noSupportedApplication =>
+      'Bu dosyayı görüntüleyecek desteklenen bir uygulama yok.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'Bu dosyaya erişilemiyor. Klasör izinlerini kontrol edip tekrar deneyin.';
+
+  @override
+  String get unableToOpenFile => 'Bu dosya açılamıyor. Lütfen tekrar deneyin.';
+
+  @override
+  String get fileNotAvailable =>
+      'Bu dosya bu cihazda veya tamamlanmış bir yedekte mevcut değil.';
 }

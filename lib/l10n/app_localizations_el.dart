@@ -950,4 +950,20 @@ class AppLocalizationsEl extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'Το email σας επαληθεύτηκε. Συνεχίστε για να ολοκληρώσετε τη σύνδεση.';
+
+  @override
+  String get noSupportedApplication =>
+      'Δεν υπάρχει συμβατή εφαρμογή για την προβολή αυτού του αρχείου.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'Δεν είναι δυνατή η πρόσβαση σε αυτό το αρχείο. Ελέγξτε τα δικαιώματα του φακέλου και δοκιμάστε ξανά.';
+
+  @override
+  String get unableToOpenFile =>
+      'Δεν είναι δυνατό το άνοιγμα αυτού του αρχείου. Δοκιμάστε ξανά.';
+
+  @override
+  String get fileNotAvailable =>
+      'Αυτό το αρχείο δεν είναι διαθέσιμο στη συσκευή ή σε ολοκληρωμένο αντίγραφο ασφαλείας.';
 }

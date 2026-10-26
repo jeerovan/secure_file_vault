@@ -931,4 +931,20 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'Email Anda telah diverifikasi. Lanjutkan untuk menyelesaikan proses masuk.';
+
+  @override
+  String get noSupportedApplication =>
+      'Tidak ada aplikasi yang mendukung untuk melihat file ini.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'Tidak dapat mengakses file ini. Periksa izin folder dan coba lagi.';
+
+  @override
+  String get unableToOpenFile =>
+      'Tidak dapat membuka file ini. Silakan coba lagi.';
+
+  @override
+  String get fileNotAvailable =>
+      'File ini tidak tersedia di perangkat ini atau dalam cadangan yang telah selesai.';
 }

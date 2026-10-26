@@ -5,6 +5,7 @@ import 'package:file_vault_bb/services/service_app_lock.dart';
 import 'package:file_vault_bb/services/service_session_work.dart';
 import 'package:file_vault_bb/ui/app_lock.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/app_lock_fixture.dart';
@@ -68,6 +69,133 @@ void main() {
     await lock.load();
     await tester.pumpAndSettle();
     expect(find.text('Private fixture content'), findsOneWidget);
+  });
+
+  testWidgets('native frame transport denies native documents by default',
+      (tester) async {
+    MethodCall? received;
+    const channel = MethodChannel('com.jeerovan.fife/app_lock_privacy');
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel,
+        (call) async {
+      received = call;
+      return null;
+    });
+    addTearDown(() =>
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+    await const SystemAppLockPrivacy().frameReady();
+    expect(received?.method, 'frameReady');
+    expect(received?.arguments, {'allowNativeDocuments': false});
+  });
+
+  testWidgets('native frame exposure follows the actual App lock state',
+      (tester) async {
+    store.enabled = true;
+    auth.result = false;
+    await lock.load();
+    final privacy = _DelayedPrivacy()..enabled.complete();
+    await tester.pumpWidget(app(privacy: privacy));
+    await tester.pumpAndSettle();
+    expect(find.text('Private fixture content'), findsNothing);
+    expect(privacy.documentExposure.last, isFalse);
+    auth.result = true;
+    await tester.tap(find.byKey(const ValueKey('app-lock-unlock')));
+    await tester.pumpAndSettle();
+    expect(find.text('Private fixture content'), findsOneWidget);
+    expect(privacy.documentExposure.last, isTrue);
+  });
+
+  testWidgets(
+      'native application activity owns timeout while Flutter is hidden',
+      (tester) async {
+    store.enabled = true;
+    store.minutes = 1;
+    await lock.load();
+    await lock.unlock(testAppLockPrompt);
+    final privacy = _DelayedPrivacy()
+      ..reportsApplicationLifecycle = true
+      ..enabled.complete();
+    await tester.pumpWidget(app(privacy: privacy));
+    await tester.pumpAndSettle();
+    for (final state in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused
+    ]) {
+      binding.handleAppLifecycleStateChanged(state);
+    }
+    // A native file preview hides Flutter while the actual scene stays active.
+    time += const Duration(minutes: 2);
+    expect(lock.foreground, isTrue);
+    expect(lock.locked, isFalse);
+    // Native deactivation closes the preview; Flutter can paint again when
+    // its host returns. The physical channel test verifies that native close.
+    for (final state in [
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed
+    ]) {
+      binding.handleAppLifecycleStateChanged(state);
+    }
+    privacy.lifecycleListener!(AppLifecycleState.inactive);
+    time += const Duration(seconds: 30);
+    privacy.lifecycleListener!(AppLifecycleState.resumed);
+    expect(lock.locked, isFalse);
+    auth.result = false;
+    privacy.lifecycleListener!(AppLifecycleState.inactive);
+    time += const Duration(seconds: 61);
+    privacy.lifecycleListener!(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(lock.locked, isTrue);
+    expect(find.text('Private fixture content'), findsNothing);
+    expect(privacy.documentExposure.last, isFalse);
+  });
+
+  testWidgets('native lifecycle ignores a late older initial snapshot',
+      (tester) async {
+    const bridge = SystemAppLockPrivacy();
+    const channel = MethodChannel('com.jeerovan.fife/app_lock_privacy');
+    final initial = Completer<Object?>();
+    binding.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async => initial.future);
+    addTearDown(() =>
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+    final events = <AppLifecycleState>[];
+    final watching = bridge.watchLifecycle(events.add);
+    await tester.idle();
+    ServicesBinding.instance.channelBuffers.push(
+        channel.name,
+        const StandardMethodCodec().encodeMethodCall(
+            const MethodCall('lifecycle', {'active': false, 'revision': 2})),
+        (_) {});
+    await tester.idle();
+    initial.complete({'active': true, 'revision': 1});
+    final stop = await watching;
+    addTearDown(stop);
+    expect(events, [AppLifecycleState.inactive]);
+  });
+
+  testWidgets('old lifecycle disposal cannot disconnect the replacement gate',
+      (tester) async {
+    const bridge = SystemAppLockPrivacy();
+    const channel = MethodChannel('com.jeerovan.fife/app_lock_privacy');
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel, (call) async => {'active': true, 'revision': 0});
+    addTearDown(() =>
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null));
+    final oldEvents = <AppLifecycleState>[];
+    final newEvents = <AppLifecycleState>[];
+    final oldStop = await bridge.watchLifecycle(oldEvents.add);
+    final stop = await bridge.watchLifecycle(newEvents.add);
+    addTearDown(stop);
+    oldStop();
+    ServicesBinding.instance.channelBuffers.push(
+        channel.name,
+        const StandardMethodCodec().encodeMethodCall(
+            const MethodCall('lifecycle', {'active': false, 'revision': 1})),
+        (_) {});
+    await tester.idle();
+    expect(oldEvents, [AppLifecycleState.resumed]);
+    expect(newEvents, [AppLifecycleState.resumed, AppLifecycleState.inactive]);
   });
 
   testWidgets(
@@ -295,12 +423,27 @@ void main() {
 class _DelayedPrivacy implements AppLockPrivacyBridge {
   final enabled = Completer<void>();
   int readyFrames = 0;
+  final documentExposure = <bool>[];
+  @override
+  bool reportsApplicationLifecycle = false;
+  ValueChanged<AppLifecycleState>? lifecycleListener;
+  @override
+  Future<VoidCallback> watchLifecycle(
+      ValueChanged<AppLifecycleState> listener) async {
+    lifecycleListener = listener;
+    listener(AppLifecycleState.resumed);
+    return () {
+      if (identical(lifecycleListener, listener)) lifecycleListener = null;
+    };
+  }
+
   @override
   bool get supported => true;
   @override
   Future<void> setEnabled(bool value) => enabled.future;
   @override
-  Future<void> frameReady() async {
+  Future<void> frameReady({bool allowNativeDocuments = false}) async {
     readyFrames++;
+    documentExposure.add(allowNativeDocuments);
   }
 }

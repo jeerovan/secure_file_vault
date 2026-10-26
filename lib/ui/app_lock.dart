@@ -87,20 +87,67 @@ class _AppLockPopEntry extends PopEntry<Object?> {
 
 abstract interface class AppLockPrivacyBridge {
   bool get supported;
+  bool get reportsApplicationLifecycle;
+  Future<VoidCallback> watchLifecycle(ValueChanged<AppLifecycleState> listener);
   Future<void> setEnabled(bool enabled);
-  Future<void> frameReady();
+  Future<void> frameReady({bool allowNativeDocuments = false});
 }
 
 class SystemAppLockPrivacy implements AppLockPrivacyBridge {
   const SystemAppLockPrivacy();
   static const _channel = MethodChannel('com.jeerovan.fife/app_lock_privacy');
+  static Object? _lifecycleOwner;
   @override
   bool get supported => Platform.isAndroid || Platform.isIOS;
+  @override
+  bool get reportsApplicationLifecycle => Platform.isIOS;
+  @override
+  Future<VoidCallback> watchLifecycle(
+      ValueChanged<AppLifecycleState> listener) async {
+    final owner = Object();
+    _lifecycleOwner = owner;
+    var lastRevision = -1;
+    void accept(Object? value) {
+      if (!identical(_lifecycleOwner, owner)) return;
+      if (value is! Map ||
+          value['active'] is! bool ||
+          value['revision'] is! int) {
+        throw const FormatException('Invalid native application lifecycle');
+      }
+      final revision = value['revision'] as int;
+      if (revision <= lastRevision) return;
+      lastRevision = revision;
+      listener(value['active'] == true
+          ? AppLifecycleState.resumed
+          : AppLifecycleState.inactive);
+    }
+
+    void stop() {
+      if (identical(_lifecycleOwner, owner)) {
+        _lifecycleOwner = null;
+        _channel.setMethodCallHandler(null);
+      }
+    }
+
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'lifecycle') accept(call.arguments);
+    });
+    try {
+      accept(await _channel.invokeMethod<Object?>('observeLifecycle'));
+    } catch (_) {
+      stop();
+      rethrow;
+    }
+    return stop;
+  }
+
   @override
   Future<void> setEnabled(bool enabled) =>
       _channel.invokeMethod<void>('setEnabled', enabled);
   @override
-  Future<void> frameReady() => _channel.invokeMethod<void>('frameReady');
+  Future<void> frameReady({bool allowNativeDocuments = false}) =>
+      _channel.invokeMethod<void>(
+          'frameReady', {'allowNativeDocuments': allowNativeDocuments});
 }
 
 /// The shield surrounds the Navigator, including routes, dialogs and sheets.
@@ -128,6 +175,10 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
   int _privacyFrame = 0;
   bool? _nativeEnabled;
   bool _privacyFailed = false;
+  bool _lifecycleFailed = false;
+  bool _nativeLifecycleReady = false;
+  int _lifecycleEpoch = 0;
+  VoidCallback? _stopNativeLifecycle;
   Future<void> _nativeWork = Future.value();
 
   @override
@@ -135,8 +186,7 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     widget.controller.addListener(_changed);
-    widget.controller.handleLifecycle(
-        WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed);
+    _configureLifecycle();
     _changed();
   }
 
@@ -147,6 +197,10 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
       oldWidget.controller.removeListener(_changed);
       widget.controller.addListener(_changed);
       _promptedRevision = -1;
+      _configureLifecycle();
+      _changed();
+    } else if (oldWidget.privacy != widget.privacy) {
+      _configureLifecycle();
       _changed();
     } else if (oldWidget.cleanup != widget.cleanup) {
       _changed();
@@ -154,8 +208,49 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) =>
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!widget.privacy.reportsApplicationLifecycle) {
       widget.controller.handleLifecycle(state);
+    }
+  }
+
+  void _configureLifecycle() {
+    _lifecycleEpoch++;
+    _stopNativeLifecycle?.call();
+    _stopNativeLifecycle = null;
+    _nativeLifecycleReady = !widget.privacy.reportsApplicationLifecycle;
+    if (_nativeLifecycleReady) {
+      widget.controller.handleLifecycle(
+          WidgetsBinding.instance.lifecycleState ?? AppLifecycleState.resumed);
+    } else {
+      widget.controller.handleLifecycle(AppLifecycleState.inactive);
+      unawaited(_connectNativeLifecycle());
+    }
+  }
+
+  Future<void> _connectNativeLifecycle() async {
+    final epoch = ++_lifecycleEpoch;
+    try {
+      final stop = await widget.privacy.watchLifecycle((state) {
+        if (!mounted || epoch != _lifecycleEpoch) return;
+        setState(() {
+          _nativeLifecycleReady = true;
+          _lifecycleFailed = false;
+        });
+        widget.controller.handleLifecycle(state);
+        _changed();
+      });
+      if (!mounted || epoch != _lifecycleEpoch) {
+        stop();
+      } else {
+        _stopNativeLifecycle = stop;
+      }
+    } catch (_) {
+      if (mounted && epoch == _lifecycleEpoch) {
+        setState(() => _lifecycleFailed = true);
+      }
+    }
+  }
 
   void _changed() {
     if (!mounted) return;
@@ -191,11 +286,17 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
     // resumed frame (either the lock screen or an authorized vault).
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _nativeWork;
-      if (!mounted || !widget.controller.foreground || frame != _privacyFrame) {
+      if (!mounted ||
+          !_nativeLifecycleReady ||
+          !widget.controller.foreground ||
+          frame != _privacyFrame) {
         return;
       }
       try {
-        await privacy.frameReady();
+        await privacy.frameReady(
+            allowNativeDocuments: widget.cleanup == null &&
+                !widget.controller.concealed &&
+                !_privacyFailed);
       } catch (_) {
         if (mounted) setState(() => _privacyFailed = true);
       }
@@ -205,6 +306,9 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
   void _schedulePrompt() {
     final controller = widget.controller;
     if (widget.cleanup != null ||
+        !_nativeLifecycleReady ||
+        _lifecycleFailed ||
+        _privacyFailed ||
         !controller.ready ||
         !controller.enabled ||
         !controller.locked ||
@@ -227,6 +331,11 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
   }
 
   Future<void> _retry() async {
+    if (!_nativeLifecycleReady) {
+      await _connectNativeLifecycle();
+      if (!_nativeLifecycleReady) return;
+    }
+    if (!mounted) return;
     if (_privacyFailed) _syncNativePrivacy(retry: true);
     final controller = widget.controller;
     if (!controller.ready) {
@@ -238,6 +347,8 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _lifecycleEpoch++;
+    _stopNativeLifecycle?.call();
     widget.controller.removeListener(_changed);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -249,8 +360,11 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
         listenable: widget.controller,
         builder: (context, _) {
           final controller = widget.controller;
-          final concealed =
-              widget.cleanup != null || controller.concealed || _privacyFailed;
+          final concealed = widget.cleanup != null ||
+              controller.concealed ||
+              _privacyFailed ||
+              _lifecycleFailed ||
+              !_nativeLifecycleReady;
           final loc = AppLocalizations.of(context)!;
           return Stack(fit: StackFit.expand, children: [
             Offstage(
@@ -280,10 +394,12 @@ class _AppLockGateState extends State<AppLockGate> with WidgetsBindingObserver {
                         style: Theme.of(context).textTheme.headlineSmall),
                     const SizedBox(height: 12),
                     Text(loc.appLockAuthenticate, textAlign: TextAlign.center),
-                    if (_privacyFailed || controller.failure != null) ...[
+                    if (_privacyFailed ||
+                        _lifecycleFailed ||
+                        controller.failure != null) ...[
                       const SizedBox(height: 16),
                       Text(
-                          _privacyFailed
+                          _privacyFailed || _lifecycleFailed
                               ? loc.appLockAuthenticationFailed
                               : appLockFailureText(loc, controller.failure)!,
                           textAlign: TextAlign.center,

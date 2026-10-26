@@ -1183,8 +1183,8 @@ class _FileListItemState extends State<FileListItem> {
         listenable: Listenable.merge(
             [widget.selectedItemsNotifier, widget.isMultiSelectNotifier]),
         builder: (context, _) {
-          final isSelected =
-              widget.selectedItemsNotifier.value.contains(widget.item);
+          final isSelected = widget.selectedItemsNotifier.value
+              .any((item) => item.id == widget.item.id);
           final isMultiSelectMode = widget.isMultiSelectNotifier.value;
           final theme = Theme.of(context);
 

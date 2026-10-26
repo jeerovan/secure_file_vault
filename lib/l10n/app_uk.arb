@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "Натисніть і утримуйте, щоб завантажити",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "Деякі елементи все ще є локально.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "Я зберіг нову фразу відновлення.",
   "recoveryResetStarting": "Початок скидання…",
   "sessionExpiredRetained": "Термін дії сеансу минув. Увійдіть знову, щоб розблокувати сховище. Локальні дані збережено.",
-  "signinVerifiedContinue": "Електронну адресу підтверджено. Продовжте, щоб завершити вхід."
+  "signinVerifiedContinue": "Електронну адресу підтверджено. Продовжте, щоб завершити вхід.",
+  "noSupportedApplication": "Немає сумісної програми для перегляду цього файлу.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "Не вдалося отримати доступ до файлу. Перевірте дозволи папки та спробуйте ще раз.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "Не вдалося відкрити файл. Спробуйте ще раз.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "Цей файл недоступний на пристрої та в завершеній резервній копії.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

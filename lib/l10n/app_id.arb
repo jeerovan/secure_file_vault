@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "Tekan lama untuk mengunduh",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "Beberapa item masih ada secara lokal.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "Saya telah menyimpan frasa pemulihan baru.",
   "recoveryResetStarting": "Memulai pengaturan ulang…",
   "sessionExpiredRetained": "Sesi masuk Anda telah berakhir. Masuk kembali untuk membuka brankas. Data lokal Anda tetap disimpan.",
-  "signinVerifiedContinue": "Email Anda telah diverifikasi. Lanjutkan untuk menyelesaikan proses masuk."
+  "signinVerifiedContinue": "Email Anda telah diverifikasi. Lanjutkan untuk menyelesaikan proses masuk.",
+  "noSupportedApplication": "Tidak ada aplikasi yang mendukung untuk melihat file ini.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "Tidak dapat mengakses file ini. Periksa izin folder dan coba lagi.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "Tidak dapat membuka file ini. Silakan coba lagi.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "File ini tidak tersedia di perangkat ini atau dalam cadangan yang telah selesai.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

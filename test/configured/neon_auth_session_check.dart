@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
 import 'package:file_vault_bb/services/service_auth.dart';
+import 'package:file_vault_bb/services/service_http_clients.dart';
 import 'package:file_vault_bb/services/service_session_work.dart';
 import 'package:file_vault_bb/services/service_session_cleanup.dart';
 import 'package:file_vault_bb/services/service_session_authentication.dart';
@@ -36,6 +37,36 @@ void main() {
             'exp': DateTime.now().millisecondsSinceEpoch ~/ 1000 +
                 expiresInSeconds,
           }))).replaceAll('=', '')}.signature';
+
+  test('default Neon client sends OTP after expiry without unlocking the vault',
+      () async {
+    final master = fixture.secrets[AppString.masterKey.string];
+    expect(await SessionCleanup.instance.expiredAuthentication(), isTrue);
+    var clients = 0, requests = 0;
+    await http.runWithClient(() async {
+      final auth = NeonAuth();
+      expect(clients, 0);
+      final response = await auth.sendOTP('fixture@example.test');
+      expect(response.statusCode, 200);
+      expect(clients, 1);
+      expect(requests, 1);
+      expect(SessionWork.authenticationRequired, isTrue);
+      expect(fixture.secrets[AppString.masterKey.string], master);
+      expect(() => AppHttpClients.auth, throwsA(isA<SessionInvalidated>()));
+      await expectLater(
+          auth.refreshSessionAndGetJWT(), throwsA(isA<SessionInvalidated>()));
+      expect(requests, 1);
+    }, () {
+      clients++;
+      return MockClient((request) async {
+        requests++;
+        expect(request.url.path, '/email-otp/send-verification-otp');
+        expect(jsonDecode(request.body),
+            {'email': 'fixture@example.test', 'type': 'sign-in'});
+        return http.Response('{}', 200);
+      });
+    });
+  });
 
   test('unexpired token needs no network request or session mutation',
       () async {

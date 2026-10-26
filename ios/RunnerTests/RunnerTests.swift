@@ -324,3 +324,234 @@ class RunnerTests: XCTestCase {
   }
 
 }
+
+/// UIKit's presentation decisions are controlled here. The separate physical
+/// Flutter test exercises the default channel and actual system viewer.
+final class FileViewerTests: XCTestCase {
+  @MainActor
+  private func withFile(_ body: (URL, UIViewController) throws -> Void) throws {
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let file = directory.appendingPathComponent("viewer-test.txt")
+    try Data("Synthetic viewer test".utf8).write(to: file)
+    let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+    let window = UIWindow(windowScene: scene)
+    let host = UIViewController()
+    window.frame = scene.coordinateSpace.bounds
+    window.rootViewController = host
+    window.isHidden = false
+    host.loadViewIfNeeded()
+    defer { window.isHidden = true }
+    try body(file, host)
+  }
+
+  @MainActor
+  func testUnsupportedFileCompletesWhenBothPresentationOptionsDecline() throws {
+    try withFile { file, host in
+      for previewable in [false, true] {
+        let document = TestFileDocument(file)
+        let viewer = IosFileViewer(makeDocument: { _ in document }, canPreview: { _ in previewable },
+                                   presentingController: { host })
+        var results: [String] = []
+        viewer.open(path: file.path) { results.append($0 as! String) }
+        XCTAssertEqual(results, ["unsupported"])
+        XCTAssertEqual(document.previews, previewable ? 1 : 0)
+        XCTAssertEqual(document.menus, 1)
+        XCTAssertNil(document.delegate)
+        // Declining a presentation must not leave the next request busy.
+        viewer.open(path: file.path) { results.append($0 as! String) }
+        XCTAssertEqual(results, ["unsupported", "unsupported"])
+      }
+    }
+  }
+
+  @MainActor
+  func testPreviewHoldsRequestUntilDismissalAndCompletesOnlyOnce() throws {
+    try withFile { file, host in
+      let document = TestFileDocument(file)
+      document.previewSucceeds = true
+      let viewer = IosFileViewer(makeDocument: { _ in document }, canPreview: { _ in true },
+                                 presentingController: { host })
+      var results: [String] = []
+      viewer.open(path: file.path) { results.append($0 as! String) }
+      XCTAssertTrue(results.isEmpty)
+      XCTAssertTrue(document.delegate === viewer)
+      XCTAssertEqual(document.menus, 0)
+      viewer.documentInteractionControllerDidEndPreview(document.interactionController)
+      viewer.documentInteractionControllerDidEndPreview(document.interactionController)
+      XCTAssertEqual(results, ["opened"])
+      XCTAssertNil(document.delegate)
+    }
+  }
+
+  @MainActor
+  func testOpenInWaitsForDismissalAndBusyRequestCannotReplaceIt() throws {
+    try withFile { file, host in
+      let document = TestFileDocument(file)
+      document.menuSucceeds = true
+      let viewer = IosFileViewer(makeDocument: { _ in document }, canPreview: { _ in false },
+                                 presentingController: { host })
+      var results: [String] = []
+      viewer.open(path: file.path) { results.append($0 as! String) }
+      viewer.open(path: file.path) { results.append($0 as! String) }
+      XCTAssertEqual(results, ["cancelled"])
+      XCTAssertTrue(document.delegate === viewer)
+      viewer.documentInteractionControllerDidDismissOpenInMenu(document.interactionController)
+      XCTAssertEqual(results, ["cancelled", "opened"])
+    }
+  }
+
+  @MainActor
+  func testCancelReleasesPresentationAndLateCallbackCannotFinishNextRequest() throws {
+    try withFile { file, host in
+      let first = TestFileDocument(file)
+      let second = TestFileDocument(file)
+      first.previewSucceeds = true
+      second.previewSucceeds = true
+      var documents = [first, second]
+      let viewer = IosFileViewer(makeDocument: { _ in documents.removeFirst() }, canPreview: { _ in true },
+                                 presentingController: { host })
+      var results: [String] = []
+      viewer.open(path: file.path) { results.append($0 as! String) }
+      viewer.cancel()
+      viewer.cancel()
+      XCTAssertEqual(results, ["cancelled"])
+      XCTAssertEqual(first.closes, 1)
+      XCTAssertNil(first.delegate)
+      viewer.open(path: file.path) { results.append($0 as! String) }
+      viewer.documentInteractionControllerDidEndPreview(first.interactionController)
+      XCTAssertEqual(results, ["cancelled"])
+      XCTAssertTrue(second.delegate === viewer)
+      viewer.documentInteractionControllerDidEndPreview(second.interactionController)
+      XCTAssertEqual(results, ["cancelled", "opened"])
+    }
+  }
+
+  @MainActor
+  func testApplicationHandoffRetainsRequestUntilBothHandoffAndPresentationEnd() throws {
+    try withFile { file, host in
+      for preview in [false, true] {
+        for handoffFirst in [false, true] {
+          let document = TestFileDocument(file)
+          document.previewSucceeds = preview
+          document.menuSucceeds = !preview
+          let viewer = IosFileViewer(makeDocument: { _ in document }, canPreview: { _ in preview },
+                                     presentingController: { host })
+          var results: [String] = []
+          viewer.open(path: file.path) { results.append($0 as! String) }
+          document.delegate?.documentInteractionController?(document.interactionController,
+              willBeginSendingToApplication: "test.synthetic.viewer")
+          func endPresentation() {
+            if preview {
+              viewer.documentInteractionControllerDidEndPreview(document.interactionController)
+            } else {
+              viewer.documentInteractionControllerDidDismissOpenInMenu(document.interactionController)
+            }
+          }
+          func endHandoff() {
+            document.delegate?.documentInteractionController?(document.interactionController,
+                didEndSendingToApplication: "test.synthetic.viewer")
+          }
+          if handoffFirst { endHandoff() } else { endPresentation() }
+          XCTAssertTrue(results.isEmpty, "The source bookmark must outlive both presentation and handoff")
+          XCTAssertTrue(document.delegate === viewer)
+          if handoffFirst { endPresentation() } else { endHandoff() }
+          XCTAssertEqual(results, ["opened"])
+          XCTAssertNil(document.delegate)
+        }
+      }
+    }
+  }
+
+  @MainActor
+  func testCancellationDuringHandoffClosesUIButRetainsSourceUntilHandoffEnds() throws {
+    try withFile { file, host in
+      let document = TestFileDocument(file)
+      document.menuSucceeds = true
+      let viewer = IosFileViewer(makeDocument: { _ in document }, canPreview: { _ in false },
+                                 presentingController: { host })
+      var results: [String] = []
+      viewer.open(path: file.path) { results.append($0 as! String) }
+      document.delegate?.documentInteractionController?(document.interactionController,
+          willBeginSendingToApplication: "test.synthetic.viewer")
+      viewer.cancel()
+      viewer.cancel()
+      XCTAssertEqual(document.closes, 1)
+      XCTAssertTrue(results.isEmpty, "An in-flight handoff still owns the source")
+      XCTAssertTrue(document.delegate === viewer)
+      viewer.documentInteractionControllerDidDismissOpenInMenu(document.interactionController)
+      XCTAssertTrue(results.isEmpty)
+      document.delegate?.documentInteractionController?(document.interactionController,
+          didEndSendingToApplication: "test.synthetic.viewer")
+      XCTAssertEqual(results, ["cancelled"])
+      XCTAssertNil(document.delegate)
+    }
+  }
+
+  @MainActor
+  func testUnknownTypeDoesNotOfferEmptyNativeViewer() throws {
+    try withFile { file, host in
+      let unknown = file.deletingPathExtension().appendingPathExtension("fifeunsupported")
+      try Data((0..<4096).map { UInt8(($0 * 173 + $0 / 7) % 256) }).write(to: unknown)
+      let document = TestFileDocument(unknown)
+      document.previewSucceeds = true
+      document.menuSucceeds = true
+      let viewer = IosFileViewer(makeDocument: { _ in document }, presentingController: { host })
+      defer { viewer.cancel() }
+      var results: [String] = []
+      viewer.open(path: unknown.path) { results.append($0 as! String) }
+      XCTAssertEqual(document.previews, 0, "An unknown binary must not open an empty native viewer")
+      XCTAssertEqual(document.menus, 0, "A generic Open In screen is not a viewer for an unknown format")
+      XCTAssertEqual(results, ["unsupported"])
+    }
+  }
+
+  @MainActor
+  func testDefaultEligibilityStillAllowsSupportedTextPreview() throws {
+    try withFile { file, host in
+      let document = TestFileDocument(file)
+      document.previewSucceeds = true
+      let viewer = IosFileViewer(makeDocument: { _ in document }, presentingController: { host })
+      defer { viewer.cancel() }
+      viewer.open(path: file.path) { _ in }
+      XCTAssertEqual(document.previews, 1)
+      XCTAssertEqual(document.menus, 0)
+    }
+  }
+
+  @MainActor
+  func testMissingDirectoryAndUnavailablePresenterDoNotStartPresentation() throws {
+    try withFile { file, host in
+      var creations = 0
+      let viewer = IosFileViewer(makeDocument: { url in
+        creations += 1
+        return TestFileDocument(url)
+      }, presentingController: { host })
+      var results: [String] = []
+      viewer.open(path: file.appendingPathExtension("missing").path) { results.append($0 as! String) }
+      viewer.open(path: file.deletingLastPathComponent().path) { results.append($0 as! String) }
+      let noHost = IosFileViewer(presentingController: { nil })
+      noHost.open(path: file.path) { results.append($0 as! String) }
+      XCTAssertEqual(results, ["missing", "denied", "failed"])
+      XCTAssertEqual(creations, 0)
+    }
+  }
+}
+
+private final class TestFileDocument: FileDocumentPresenting {
+  let interactionController: UIDocumentInteractionController
+  var delegate: UIDocumentInteractionControllerDelegate? {
+    get { interactionController.delegate }
+    set { interactionController.delegate = newValue }
+  }
+  var previewSucceeds = false
+  var menuSucceeds = false
+  var previews = 0
+  var menus = 0
+  var closes = 0
+  init(_ url: URL) { interactionController = UIDocumentInteractionController(url: url) }
+  func showPreview() -> Bool { previews += 1; return previewSucceeds }
+  func showOpenIn(from rect: CGRect, in view: UIView) -> Bool { menus += 1; return menuSucceeds }
+  func closePresentation() { closes += 1 }
+}

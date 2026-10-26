@@ -37,6 +37,11 @@ class _PageTrashState extends State<PageTrash> {
     if (mounted) {
       setState(() {
         _items = items;
+        final selectedIds = _selectedItems.map((item) => item.id).toSet();
+        _selectedItems
+          ..clear()
+          ..addAll(items.where((item) => selectedIds.contains(item.id)));
+        if (_selectedItems.isEmpty) _isMultiSelectMode = false;
         _isLoading = false;
       });
     }
@@ -53,8 +58,8 @@ class _PageTrashState extends State<PageTrash> {
 
   void _toggleSelection(ModelItem item) {
     setState(() {
-      if (_selectedItems.contains(item)) {
-        _selectedItems.remove(item);
+      if (_selectedItems.any((selected) => selected.id == item.id)) {
+        _selectedItems.removeWhere((selected) => selected.id == item.id);
         if (_selectedItems.isEmpty) {
           _isMultiSelectMode = false;
         }
@@ -197,7 +202,8 @@ class _PageTrashState extends State<PageTrash> {
       itemCount: _items.length,
       itemBuilder: (context, index) {
         final item = _items[index];
-        final isSelected = _selectedItems.contains(item);
+        final isSelected =
+            _selectedItems.any((selected) => selected.id == item.id);
 
         return _FileListItem(
           key: Key(item.id),

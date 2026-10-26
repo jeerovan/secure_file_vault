@@ -78,7 +78,10 @@ class _PageRegisterDeviceState extends State<PageRegisterDevice> {
     bool deviceRegistered = false;
     if (!simulateTesting()) {
       String? fcmToken = await storage.read(key: AppString.fcmId.string);
-      final result = await api.post(endpoint: '/devices', jsonBody: {
+      // Reuse this UUID/body when renewing a JWT after phrase backup. The
+      // server upserts the same registration, so one auth retry is idempotent.
+      final result = await api
+          .post(endpoint: '/devices', retryUnauthorized: true, jsonBody: {
         "device_uuid": deviceUuid,
         "title": deviceName,
         "type": deviceType,

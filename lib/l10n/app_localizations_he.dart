@@ -930,4 +930,18 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'כתובת הדוא״ל אומתה. אפשר להמשיך להשלמת ההתחברות.';
+
+  @override
+  String get noSupportedApplication => 'אין יישום תואם להצגת הקובץ הזה.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'לא ניתן לגשת לקובץ הזה. יש לבדוק את הרשאות התיקייה ולנסות שוב.';
+
+  @override
+  String get unableToOpenFile => 'לא ניתן לפתוח את הקובץ הזה. יש לנסות שוב.';
+
+  @override
+  String get fileNotAvailable =>
+      'הקובץ הזה אינו זמין במכשיר הזה או בגיבוי שהושלם.';
 }

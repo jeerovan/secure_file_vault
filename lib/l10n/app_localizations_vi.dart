@@ -926,4 +926,19 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'Email của bạn đã được xác minh. Tiếp tục để hoàn tất đăng nhập.';
+
+  @override
+  String get noSupportedApplication =>
+      'Không có ứng dụng phù hợp để xem tệp này.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'Không thể truy cập tệp này. Hãy kiểm tra quyền của thư mục rồi thử lại.';
+
+  @override
+  String get unableToOpenFile => 'Không thể mở tệp này. Vui lòng thử lại.';
+
+  @override
+  String get fileNotAvailable =>
+      'Tệp này không có trên thiết bị này hoặc trong bản sao lưu đã hoàn tất.';
 }

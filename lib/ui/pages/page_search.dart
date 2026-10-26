@@ -3,12 +3,12 @@ import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:open_filex/open_filex.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/service_logger.dart';
 import '../../utils/utils_tasks.dart';
 import 'page_file_info.dart';
 import '../item_selection_actions.dart';
+import '../item_file_opener.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -21,6 +21,7 @@ class _SearchScreenState extends State<SearchScreen>
     with WidgetsBindingObserver {
   AppLogger logger = AppLogger(prefixes: ["Search"]);
   bool processing = false;
+  final _fileOpener = ItemFileOpener();
   Timer? _debounce;
   late final TextEditingController _searchController;
 
@@ -49,6 +50,7 @@ class _SearchScreenState extends State<SearchScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _fileOpener.dispose();
     _selectionActions.dispose();
     _debounce?.cancel();
     _searchController.dispose();
@@ -109,19 +111,8 @@ class _SearchScreenState extends State<SearchScreen>
       _toggleSelection(item);
       return;
     }
-    String path = await ModelItem.getPathForItem(item.id);
-    final openResult = await OpenFilex.open(path);
-    if (openResult.type != ResultType.done) {
-      String message = 'Could not open file: ${openResult.message}';
-      logger.error(message);
-      if (mounted) {
-        displaySnackBar(
-          context,
-          message: AppLocalizations.of(context)!.longPressToDownload,
-          seconds: 2,
-        );
-      }
-    }
+    await openFileItem(context, item, _fileOpener,
+        () => mounted && !_isMultiSelectNotifier.value);
   }
 
   void _onLongPress(ModelItem item) {
@@ -134,8 +125,8 @@ class _SearchScreenState extends State<SearchScreen>
   void _toggleSelection(ModelItem item) {
     final currentSelection = Set<ModelItem>.from(_selectedItemsNotifier.value);
 
-    if (currentSelection.contains(item)) {
-      currentSelection.remove(item);
+    if (currentSelection.any((selected) => selected.id == item.id)) {
+      currentSelection.removeWhere((selected) => selected.id == item.id);
     } else {
       currentSelection.add(item);
     }
@@ -177,7 +168,7 @@ class _SearchScreenState extends State<SearchScreen>
 
   Future<void> showInfo() async {
     final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
-    if (selectedItems.length > 1) {
+    if (selectedItems.length != 1) {
       return;
     }
     ModelItem item = selectedItems.first;

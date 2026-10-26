@@ -18,6 +18,7 @@ import BackgroundTasks
       SecureStorageManager.register(with: engineBridge.applicationRegistrar.messenger())
       IosBackgroundSync.shared.registerScheduler(with: engineBridge.applicationRegistrar.messenger())
       AppLockPrivacy.shared.register(with: engineBridge.applicationRegistrar.messenger())
+      IosFileViewer.shared.register(with: engineBridge.applicationRegistrar.messenger())
     }
 }
 
@@ -27,27 +28,44 @@ final class AppLockPrivacy {
     static let shared = AppLockPrivacy()
     private var enabled = UserDefaults.standard.bool(forKey: "fife.appLock.privacy")
     private var covers: [UIView] = []
+    private var channel: FlutterMethodChannel?
+    private var active = false
+    private var lifecycleRevision = 0
 
     private init() {
         NotificationCenter.default.addObserver(self, selector: #selector(conceal),
             name: UIScene.willDeactivateNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(conceal),
             name: UIScene.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(activate),
+            name: UIScene.didActivateNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(activate),
+            name: UIApplication.didBecomeActiveNotification, object: nil)
     }
 
     func register(with messenger: FlutterBinaryMessenger) {
         let channel = FlutterMethodChannel(name: "com.jeerovan.fife/app_lock_privacy",
             binaryMessenger: messenger)
+        self.channel = channel
         channel.setMethodCallHandler { [weak self] call, result in
             guard let self = self else { result(nil); return }
             switch call.method {
+            case "observeLifecycle":
+                self.updateLifecycle(self.applicationActive)
+                result(self.lifecycleState)
             case "setEnabled":
                 self.enabled = call.arguments as? Bool == true
                 UserDefaults.standard.set(self.enabled, forKey: "fife.appLock.privacy")
                 if !self.enabled { self.removeCovers() }
                 result(nil)
             case "frameReady":
-                if UIApplication.shared.applicationState == .active { self.removeCovers() }
+                if self.applicationActive {
+                    let args = call.arguments as? [String: Any]
+                    if args?["allowNativeDocuments"] as? Bool != true {
+                        IosFileViewer.shared.cancel()
+                    }
+                    self.removeCovers()
+                }
                 result(nil)
             default: result(FlutterMethodNotImplemented)
             }
@@ -55,8 +73,8 @@ final class AppLockPrivacy {
     }
 
     @objc private func conceal() {
-        guard enabled else { return }
-        for scene in UIApplication.shared.connectedScenes {
+        if enabled {
+          for scene in UIApplication.shared.connectedScenes {
             guard let windowScene = scene as? UIWindowScene else { continue }
             for window in windowScene.windows where !window.isHidden {
                 if covers.contains(where: { $0.superview === window }) { continue }
@@ -67,7 +85,32 @@ final class AppLockPrivacy {
                 window.addSubview(cover)
                 covers.append(cover)
             }
+          }
+          // A native document can hide Flutter's view/lifecycle. Return to the
+          // covered Flutter host before resume so its lock gate stays usable.
+          IosFileViewer.shared.cancel()
         }
+        updateLifecycle(false)
+    }
+
+    private var applicationActive: Bool {
+        UIApplication.shared.applicationState == .active &&
+            UIApplication.shared.connectedScenes.contains { $0.activationState == .foregroundActive }
+    }
+
+    private var lifecycleState: [String: Any] {
+        ["active": active, "revision": lifecycleRevision]
+    }
+
+    private func updateLifecycle(_ next: Bool) {
+        guard active != next else { return }
+        active = next
+        lifecycleRevision += 1
+        channel?.invokeMethod("lifecycle", arguments: lifecycleState)
+    }
+
+    @objc private func activate() {
+        updateLifecycle(applicationActive)
     }
 
     private func removeCovers() {

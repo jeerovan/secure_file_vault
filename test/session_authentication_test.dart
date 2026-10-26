@@ -238,16 +238,37 @@ void main() {
     });
   }
 
-  for (final status in [401, 403]) {
-    test('fresh backend authentication $status expires only the candidate',
+  for (final status in [401, 403, 200]) {
+    test(
+        'backend rejection $status keeps the verified candidate locked for retry',
         () async {
+      final normal = respond;
       respond = (_) async => json({'success': 0, 'message': '14'}, status);
       await stage();
-      await expectLater(complete(), throwsA(isA<VerifiedSigninExpired>()));
-      expect(await sessions.pendingAccount(), isNull);
+      await expectLater(
+          complete(), throwsA(isA<BackendAuthenticationExpired>()));
+      expect((await sessions.pendingAccount())?.id, account.id);
       await retained();
+      respond = normal;
+      await complete();
+      expect(fixture.secrets[AppString.masterKey.string], master);
+      expect(SessionWork.active, isTrue);
     });
   }
+
+  test(
+      'provider-confirmed expiry after backend denial retires only the candidate',
+      () async {
+    respond = (_) async => json({'success': 0, 'message': '14'}, 401);
+    await stage();
+    await expectLater(complete(), throwsA(isA<BackendAuthenticationExpired>()));
+    expect(await sessions.pendingAccount(), isNotNull);
+    await expectLater(sessions.completeSignin(refreshNeon: (_) async {
+      throw const VerifiedSigninExpired();
+    }), throwsA(isA<VerifiedSigninExpired>()));
+    expect(await sessions.pendingAccount(), isNull);
+    await retained();
+  });
 
   for (final reason in [
     'device_revoked',

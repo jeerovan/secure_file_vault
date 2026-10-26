@@ -108,6 +108,98 @@ void main() {
     expect(posts, 0);
   });
 
+  for (final status in [401, 403, 200]) {
+    for (final authorizationRecovers in [true, false]) {
+      test(
+          'key creation renews once for $status and ${authorizationRecovers ? 'publishes the same candidate' : 'retains an unaccepted candidate'}',
+          () async {
+        var token = 'old-token';
+        var renewals = 0;
+        final bodies = <String>[];
+        final setup = VaultKeySetupService.test(
+            apiFactory: () => BackendApi(
+                baseUrlOverride: 'https://api.example.test/api',
+                accessTokenProvider: () async => token,
+                refreshAuth: () async {
+                  renewals++;
+                  token = 'new-token';
+                },
+                httpClient: MockClient((request) async {
+                  if (request.method == 'POST') {
+                    bodies.add(request.body);
+                    expect(await getMasterKey(), isNull);
+                    expect(fixture.secrets[stageKey], isNotNull);
+                    if (bodies.length == 1 || !authorizationRecovers) {
+                      return http.Response(
+                          '{"success":0,"message":14}', status);
+                    }
+                    expect(
+                        request.headers['authorization'], 'Bearer new-token');
+                    accepted = jsonDecode(request.body);
+                    return http.Response('{"success":1}', 200);
+                  }
+                  return http.Response(
+                      jsonEncode({
+                        'success': 1,
+                        'data': {
+                          'cipher': accepted?['cipher'],
+                          'nonce': accepted?['nonce'],
+                          'key_state': accepted == null ? 'missing' : 'present',
+                          'vault_generation': generation
+                        }
+                      }),
+                      200);
+                })));
+
+        final result = await setup.generate();
+        expect(
+            result.phase,
+            authorizationRecovers
+                ? VaultKeySetupPhase.phrase
+                : VaultKeySetupPhase.generation);
+        expect(renewals, 1);
+        expect(bodies, hasLength(2));
+        expect(bodies[1], bodies[0]);
+        expect(jsonDecode(bodies[0])['expectedGeneration'], generation);
+        expect(stage()['phase'], authorizationRecovers ? 'phrase' : 'intent');
+        expect(await ModelSetting.getRaw(AppString.deviceUuid.string), isEmpty);
+        expect(await getSignedInUserId(), 'fixture-user');
+        if (authorizationRecovers) {
+          expect(await getMasterKey(),
+              stage()['privateKeys'][AppString.masterKey.string]);
+          await expectLater(setup.registrationUuid(), throwsStateError);
+        } else {
+          expect(await getMasterKey(), isNull);
+          expect(accepted, isNull);
+        }
+      });
+    }
+  }
+
+  test(
+      'confirmed session expiry during key renewal retains the locked candidate',
+      () async {
+    var attempts = 0;
+    final setup = VaultKeySetupService.test(
+        apiFactory: () => BackendApi(
+            baseUrlOverride: 'https://api.example.test/api',
+            refreshAuth: () async {
+              await SessionCleanup.instance.expiredAuthentication();
+            },
+            httpClient: MockClient((request) async {
+              attempts++;
+              return http.Response('{"success":0,"message":14}', 200);
+            })));
+    await expectLater(setup.generate(), throwsA(isA<SessionInvalidated>()));
+    expect(attempts, 1);
+    expect(await ModelSetting.getRaw(AppString.signedIn.string), isNot('yes'));
+    expect(await getSignedInUserId(), isNull);
+    expect(fixture.secrets[AppString.jwtToken.string], isNull);
+    expect(stage()['phase'], 'intent');
+    expect(await getMasterKey(), isNull);
+    expect(accepted, isNull);
+  });
+
   test(
       'accepted creation requires phrase acknowledgment and stable registration',
       () async {

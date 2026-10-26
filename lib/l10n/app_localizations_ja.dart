@@ -902,4 +902,17 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get signinVerifiedContinue => 'メールアドレスが確認されました。続行してログインを完了してください。';
+
+  @override
+  String get noSupportedApplication => 'このファイルを表示できる対応アプリがありません。';
+
+  @override
+  String get fileAccessUnavailable =>
+      'このファイルにアクセスできません。フォルダのアクセス権を確認して、もう一度お試しください。';
+
+  @override
+  String get unableToOpenFile => 'このファイルを開けません。もう一度お試しください。';
+
+  @override
+  String get fileNotAvailable => 'このファイルは、このデバイスにも完了したバックアップにもありません。';
 }

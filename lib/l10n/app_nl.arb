@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "Houd ingedrukt om te downloaden",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "Enkele items bestaan nog lokaal.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "Ik heb mijn nieuwe herstelzin opgeslagen.",
   "recoveryResetStarting": "Opnieuw instellen wordt gestart…",
   "sessionExpiredRetained": "Je sessie is verlopen. Meld je opnieuw aan om je kluis te ontgrendelen. Je lokale gegevens blijven bewaard.",
-  "signinVerifiedContinue": "Je e-mailadres is geverifieerd. Ga verder om het aanmelden te voltooien."
+  "signinVerifiedContinue": "Je e-mailadres is geverifieerd. Ga verder om het aanmelden te voltooien.",
+  "noSupportedApplication": "Er is geen geschikte app om dit bestand te bekijken.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "Dit bestand is niet toegankelijk. Controleer de mapmachtigingen en probeer het opnieuw.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "Dit bestand kan niet worden geopend. Probeer het opnieuw.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "Dit bestand is niet beschikbaar op dit apparaat of in een voltooide back-up.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

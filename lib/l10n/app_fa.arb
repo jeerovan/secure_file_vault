@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "برای دانلود، لمس طولانی کنید",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "بعضی از موارد هنوز به‌صورت محلی وجود دارند.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "عبارت بازیابی جدیدم را ذخیره کرده‌ام.",
   "recoveryResetStarting": "در حال شروع بازنشانی…",
   "sessionExpiredRetained": "نشست ورود شما منقضی شده است. برای باز کردن گاوصندوق دوباره وارد شوید. داده‌های محلی شما حفظ می‌شوند.",
-  "signinVerifiedContinue": "ایمیل شما تأیید شده است. برای تکمیل ورود ادامه دهید."
+  "signinVerifiedContinue": "ایمیل شما تأیید شده است. برای تکمیل ورود ادامه دهید.",
+  "noSupportedApplication": "برنامهٔ سازگاری برای نمایش این فایل وجود ندارد.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "دسترسی به این فایل ممکن نیست. مجوزهای پوشه را بررسی کنید و دوباره تلاش کنید.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "باز کردن این فایل ممکن نیست. لطفاً دوباره تلاش کنید.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "این فایل در این دستگاه یا در یک نسخهٔ پشتیبان کامل‌شده موجود نیست.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

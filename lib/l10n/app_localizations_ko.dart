@@ -902,4 +902,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get signinVerifiedContinue => '이메일이 확인되었습니다. 계속하여 로그인을 완료하세요.';
+
+  @override
+  String get noSupportedApplication => '이 파일을 볼 수 있는 지원 앱이 없습니다.';
+
+  @override
+  String get fileAccessUnavailable => '이 파일에 접근할 수 없습니다. 폴더 권한을 확인하고 다시 시도하세요.';
+
+  @override
+  String get unableToOpenFile => '이 파일을 열 수 없습니다. 다시 시도하세요.';
+
+  @override
+  String get fileNotAvailable => '이 파일은 이 기기나 완료된 백업에 없습니다.';
 }

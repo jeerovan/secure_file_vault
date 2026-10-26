@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "Nhấn giữ để tải xuống",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "Một số mục vẫn còn tồn tại trên thiết bị.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "Tôi đã lưu cụm từ khôi phục mới.",
   "recoveryResetStarting": "Đang bắt đầu đặt lại…",
   "sessionExpiredRetained": "Phiên đăng nhập đã hết hạn. Đăng nhập lại để mở khóa kho lưu trữ. Dữ liệu cục bộ của bạn vẫn được giữ lại.",
-  "signinVerifiedContinue": "Email của bạn đã được xác minh. Tiếp tục để hoàn tất đăng nhập."
+  "signinVerifiedContinue": "Email của bạn đã được xác minh. Tiếp tục để hoàn tất đăng nhập.",
+  "noSupportedApplication": "Không có ứng dụng phù hợp để xem tệp này.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "Không thể truy cập tệp này. Hãy kiểm tra quyền của thư mục rồi thử lại.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "Không thể mở tệp này. Vui lòng thử lại.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "Tệp này không có trên thiết bị này hoặc trong bản sao lưu đã hoàn tất.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

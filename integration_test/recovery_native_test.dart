@@ -49,7 +49,9 @@ Future<void> cleanupInIndependentIsolate(List<Object> arguments) async {
       throw StateError('Pending cleanup');
     }
     final succeeded = await SessionCleanup.instance.request();
-    await (await StorageSqlite.instance.database).close();
+    // This isolate uses the UI engine's binary messenger and native SQLite
+    // handles. The UI owns their lifetime; closing here can interrupt its
+    // cleanup-completion reads and leave it on the retry screen.
     reply.send(succeeded ? 'cleaned' : 'pending');
   } catch (error) {
     // Never send key-store values or arbitrary native exception messages.

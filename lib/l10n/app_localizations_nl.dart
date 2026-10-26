@@ -944,4 +944,20 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'Je e-mailadres is geverifieerd. Ga verder om het aanmelden te voltooien.';
+
+  @override
+  String get noSupportedApplication =>
+      'Er is geen geschikte app om dit bestand te bekijken.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'Dit bestand is niet toegankelijk. Controleer de mapmachtigingen en probeer het opnieuw.';
+
+  @override
+  String get unableToOpenFile =>
+      'Dit bestand kan niet worden geopend. Probeer het opnieuw.';
+
+  @override
+  String get fileNotAvailable =>
+      'Dit bestand is niet beschikbaar op dit apparaat of in een voltooide back-up.';
 }

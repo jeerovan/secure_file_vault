@@ -28,7 +28,8 @@ void markNativeCheckpoint(NativeTestCheckpoint checkpoint) =>
 /// Report nonsecret outcomes through the isolated app's container when Xcode
 /// cannot attach. The ordinary integration driver remains supported.
 void recordIphoneResults(
-    IntegrationTestWidgetsFlutterBinding binding, String suite) {
+    IntegrationTestWidgetsFlutterBinding binding, String suite,
+    {bool probeBackend = true}) {
   const runId = String.fromEnvironment('FIFE_NATIVE_RUN_ID');
   if (!Platform.isIOS || runId.isEmpty) return;
   unawaited(binding.allTestsPassed.future.then((passed) async {
@@ -49,15 +50,17 @@ void recordIphoneResults(
     final prefix = endpoint.host.split('.').take(3).join('.');
     var reachable = false;
     int? socketErrno;
-    try {
-      final socket = await Socket.connect(endpoint.host, endpoint.port,
-          timeout: const Duration(seconds: 3));
-      socket.destroy();
-      reachable = true;
-    } on SocketException catch (error) {
-      socketErrno = error.osError?.errorCode;
-    } on TimeoutException {
-      // A timeout is an outcome, never authority to clear a local account.
+    if (probeBackend) {
+      try {
+        final socket = await Socket.connect(endpoint.host, endpoint.port,
+            timeout: const Duration(seconds: 3));
+        socket.destroy();
+        reachable = true;
+      } on SocketException catch (error) {
+        socketErrno = error.osError?.errorCode;
+      } on TimeoutException {
+        // A timeout is an outcome, never authority to clear a local account.
+      }
     }
     final temporary = File('${result.path}.partial');
     await temporary.writeAsString(
@@ -90,6 +93,7 @@ void recordIphoneResults(
             };
           }).toList(),
           'network': {
+            'probeAttempted': probeBackend,
             'wifiIPv4Present': wifi.isNotEmpty,
             'sameIPv4PrefixAsBackend':
                 wifi.any((address) => address.startsWith('$prefix.')),

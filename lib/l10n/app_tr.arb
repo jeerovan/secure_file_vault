@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "İndirmek için uzun basın",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "Bazı öğeler hâlâ yerel olarak mevcut.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "Yeni kurtarma ifademi kaydettim.",
   "recoveryResetStarting": "Sıfırlama başlatılıyor…",
   "sessionExpiredRetained": "Oturumunuzun süresi doldu. Kasanızın kilidini açmak için yeniden oturum açın. Yerel verileriniz korunur.",
-  "signinVerifiedContinue": "E-posta adresiniz doğrulandı. Oturum açmayı tamamlamak için devam edin."
+  "signinVerifiedContinue": "E-posta adresiniz doğrulandı. Oturum açmayı tamamlamak için devam edin.",
+  "noSupportedApplication": "Bu dosyayı görüntüleyecek desteklenen bir uygulama yok.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "Bu dosyaya erişilemiyor. Klasör izinlerini kontrol edip tekrar deneyin.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "Bu dosya açılamıyor. Lütfen tekrar deneyin.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "Bu dosya bu cihazda veya tamamlanmış bir yedekte mevcut değil.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

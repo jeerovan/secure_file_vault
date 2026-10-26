@@ -196,7 +196,7 @@ void main() {
         AppEvent(type: EventType.system, id: 'signout', key: EventKey.signout));
     await tester.pump();
     for (var n = 0;
-        n < 50 && (!lock.ready || setup.currentStep == SetupStep.loading);
+        n < 200 && (!lock.ready || setup.currentStep != SetupStep.signin);
         n++) {
       await tester.runAsync(
           () => Future<void>.delayed(const Duration(milliseconds: 10)));

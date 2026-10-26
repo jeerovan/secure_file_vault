@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "กดค้างเพื่อดาวน์โหลด",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "ยังมีบางรายการอยู่ในอุปกรณ์",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "ฉันบันทึกวลีการกู้คืนใหม่แล้ว",
   "recoveryResetStarting": "กำลังเริ่มรีเซ็ต…",
   "sessionExpiredRetained": "เซสชันการเข้าสู่ระบบหมดอายุแล้ว โปรดเข้าสู่ระบบอีกครั้งเพื่อปลดล็อกคลังข้อมูล ข้อมูลในเครื่องของคุณยังคงอยู่",
-  "signinVerifiedContinue": "ยืนยันอีเมลของคุณแล้ว ดำเนินการต่อเพื่อเข้าสู่ระบบให้เสร็จสมบูรณ์"
+  "signinVerifiedContinue": "ยืนยันอีเมลของคุณแล้ว ดำเนินการต่อเพื่อเข้าสู่ระบบให้เสร็จสมบูรณ์",
+  "noSupportedApplication": "ไม่มีแอปที่รองรับการดูไฟล์นี้",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "ไม่สามารถเข้าถึงไฟล์นี้ได้ โปรดตรวจสอบสิทธิ์ของโฟลเดอร์แล้วลองอีกครั้ง",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "ไม่สามารถเปิดไฟล์นี้ได้ โปรดลองอีกครั้ง",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "ไม่มีไฟล์นี้ในอุปกรณ์นี้หรือในข้อมูลสำรองที่เสร็จสมบูรณ์",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

@@ -910,7 +910,7 @@ abstract class AppLocalizations {
   /// **'Devices'**
   String get devicesTitle;
 
-  /// Snackbar message shown when a file cannot be opened and the user should long press to download it
+  /// Shown only when the file is absent from this device and a completed cloud backup is available.
   ///
   /// In en, this message translates to:
   /// **'Long press to download'**
@@ -1749,6 +1749,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your email is verified. Continue to finish signing in.'**
   String get signinVerifiedContinue;
+
+  /// Shown when a present file has no supported system preview or installed viewer.
+  ///
+  /// In en, this message translates to:
+  /// **'No supported application to view this file.'**
+  String get noSupportedApplication;
+
+  /// Shown when file or security-scoped folder access is denied or unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to access this file. Check its folder permissions and try again.'**
+  String get fileAccessUnavailable;
+
+  /// Shown for a temporary native file presentation failure.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to open this file. Please try again.'**
+  String get unableToOpenFile;
+
+  /// Shown when a missing file has no confirmed completed cloud backup.
+  ///
+  /// In en, this message translates to:
+  /// **'This file is not available on this device or in a completed backup.'**
+  String get fileNotAvailable;
 }
 
 class _AppLocalizationsDelegate

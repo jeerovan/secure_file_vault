@@ -60,6 +60,7 @@ void main() {
   });
 
   tearDown(() async {
+    await ServiceForeground.instance.resetForTesting();
     FlutterForegroundTask.resetStatic();
     await StorageSqlite.instance.close();
     ModelSetting.clear();

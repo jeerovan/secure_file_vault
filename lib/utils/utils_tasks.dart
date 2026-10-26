@@ -301,7 +301,9 @@ class TaskManager {
     return Duration(milliseconds: (nextAttemptAt - current).clamp(1, 900000));
   }
 
-  Future<void> _scheduleNextRetryWake() async {
+  Future<void> _scheduleNextRetryWake({
+    Duration minimumDelay = Duration.zero,
+  }) async {
     if (SyncBudget.current != null) return;
     final nextAttemptAt = await ModelItemTask.fetchNextWakeAt();
     if (nextAttemptAt == null) {
@@ -315,7 +317,9 @@ class TaskManager {
     }
     _cancelRetryWakeTimer();
     _retryWakeAt = nextAttemptAt;
-    _retryWakeTimer = Timer(retryWakeDelay(nextAttemptAt), () {
+    final dueDelay = retryWakeDelay(nextAttemptAt);
+    final delay = dueDelay < minimumDelay ? minimumDelay : dueDelay;
+    _retryWakeTimer = Timer(delay, () {
       _retryWakeTimer = null;
       _retryWakeAt = null;
       unawaited(_restartFromWake());
@@ -356,6 +360,7 @@ class TaskManager {
   }
 
   Future<void> _restartFromWake() async {
+    final revision = SessionWork.revision;
     try {
       if (!await InternetConnection().hasInternetAccess) {
         _waitForConnectivity();
@@ -366,6 +371,14 @@ class TaskManager {
         await handler();
       } else {
         await TaskManager.init();
+      }
+      // A wake can arrive before the earlier metadata pass releases its lease.
+      // Recheck durable queued work after the handler, including that skipped
+      // pass, without spinning on a past deadline or reviving an old session.
+      if (SessionWork.active &&
+          !SessionWork.authenticationRequired &&
+          SessionWork.revision == revision) {
+        await _scheduleNextRetryWake(minimumDelay: const Duration(seconds: 5));
       }
     } catch (e, s) {
       logger.error('Retry wake failed', error: e, stackTrace: s);

@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "길게 눌러 다운로드",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "일부 항목이 로컬에 남아 있습니다.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "새 복구 문구를 저장했습니다.",
   "recoveryResetStarting": "재설정 시작 중…",
   "sessionExpiredRetained": "로그인 세션이 만료되었습니다. 보관함을 잠금 해제하려면 다시 로그인하세요. 로컬 데이터는 유지됩니다.",
-  "signinVerifiedContinue": "이메일이 확인되었습니다. 계속하여 로그인을 완료하세요."
+  "signinVerifiedContinue": "이메일이 확인되었습니다. 계속하여 로그인을 완료하세요.",
+  "noSupportedApplication": "이 파일을 볼 수 있는 지원 앱이 없습니다.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "이 파일에 접근할 수 없습니다. 폴더 권한을 확인하고 다시 시도하세요.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "이 파일을 열 수 없습니다. 다시 시도하세요.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "이 파일은 이 기기나 완료된 백업에 없습니다.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

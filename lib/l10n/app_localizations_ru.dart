@@ -941,4 +941,19 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'Адрес электронной почты подтверждён. Продолжите, чтобы завершить вход.';
+
+  @override
+  String get noSupportedApplication =>
+      'Нет подходящего приложения для просмотра этого файла.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'Не удалось получить доступ к файлу. Проверьте разрешения папки и повторите попытку.';
+
+  @override
+  String get unableToOpenFile => 'Не удалось открыть файл. Повторите попытку.';
+
+  @override
+  String get fileNotAvailable =>
+      'Этот файл недоступен на устройстве и в завершённой резервной копии.';
 }

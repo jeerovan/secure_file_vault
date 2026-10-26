@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "לחץ לחיצה ארוכה כדי להוריד",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "חלק מהפריטים עדיין קיימים באופן מקומי.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "שמרתי את ביטוי השחזור החדש שלי.",
   "recoveryResetStarting": "מתחילים באיפוס…",
   "sessionExpiredRetained": "תוקף ההתחברות פג. יש להתחבר שוב כדי לפתוח את הכספת. הנתונים המקומיים נשמרים.",
-  "signinVerifiedContinue": "כתובת הדוא״ל אומתה. אפשר להמשיך להשלמת ההתחברות."
+  "signinVerifiedContinue": "כתובת הדוא״ל אומתה. אפשר להמשיך להשלמת ההתחברות.",
+  "noSupportedApplication": "אין יישום תואם להצגת הקובץ הזה.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "לא ניתן לגשת לקובץ הזה. יש לבדוק את הרשאות התיקייה ולנסות שוב.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "לא ניתן לפתוח את הקובץ הזה. יש לנסות שוב.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "הקובץ הזה אינו זמין במכשיר הזה או בגיבוי שהושלם.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

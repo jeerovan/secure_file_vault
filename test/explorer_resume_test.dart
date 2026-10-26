@@ -95,6 +95,61 @@ void main() {
     });
   });
 
+  testWidgets('sync refresh keeps selection on the current item snapshot',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      await fixture.mount(() async {});
+      await tester.tap(find.text('nested'));
+      await fixture.waitFor(find.byKey(const ValueKey('file')));
+      final beforeRefresh = fixture.file;
+      beforeRefresh.onLongPress();
+      await fixture.pump();
+      final updated = (await ModelItem.get('file'))!;
+      updated.size = 75;
+      updated.fileHash = 'changed-after-selection';
+      await updated.update(['size', 'file_hash']);
+      EventStream().publish(AppEvent(
+          type: EventType.system, id: 'fixture', key: EventKey.stopped));
+      for (var i = 0; i < 30 && fixture.file.item.size != 75; i++) {
+        await fixture.pump();
+      }
+      final selection = fixture.file.selectedItemsNotifier;
+      expect(selection.value, hasLength(1));
+      expect(selection.value.single.size, 75,
+          reason: 'Info and selection must use refreshed file metadata');
+      expect(selection.value.single.fileHash, 'changed-after-selection');
+      expect(selection.value.contains(fixture.file.item), isTrue,
+          reason: 'The refreshed row must retain its selected appearance');
+      beforeRefresh.onTap();
+      await fixture.pump();
+      expect(selection.value, isEmpty,
+          reason: 'An old pointer callback must deselect the same file ID');
+      expect(fixture.file.isMultiSelectNotifier.value, isFalse);
+    });
+  });
+
+  testWidgets('a selected item removed during sync leaves no stale actions',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      await fixture.mount(() async {});
+      await tester.tap(find.text('nested'));
+      await fixture.waitFor(find.byKey(const ValueKey('file')));
+      final row = fixture.file;
+      row.onLongPress();
+      await fixture.pump();
+      await (await StorageSqlite.instance.database)
+          .delete('items', where: 'id = ?', whereArgs: ['file']);
+      EventStream().publish(AppEvent(
+          type: EventType.system, id: 'fixture', key: EventKey.stopped));
+      for (var i = 0; i < 30 && row.isMultiSelectNotifier.value; i++) {
+        await fixture.pump();
+      }
+      expect(row.selectedItemsNotifier.value, isEmpty);
+      expect(row.isMultiSelectNotifier.value, isFalse);
+      expect(find.byTooltip('Info'), findsNothing);
+    });
+  });
+
   testWidgets('Sync is last and refreshes both vault root and remote folders',
       (tester) async {
     await withExplorer(tester, (fixture) async {

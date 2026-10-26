@@ -880,4 +880,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get signinVerifiedContinue => '电子邮箱已验证。请继续完成登录。';
+
+  @override
+  String get noSupportedApplication => '没有支持查看此文件的应用。';
+
+  @override
+  String get fileAccessUnavailable => '无法访问此文件。请检查文件夹权限后重试。';
+
+  @override
+  String get unableToOpenFile => '无法打开此文件。请重试。';
+
+  @override
+  String get fileNotAvailable => '此设备或已完成的备份中没有此文件。';
 }

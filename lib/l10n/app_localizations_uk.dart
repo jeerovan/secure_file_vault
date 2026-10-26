@@ -949,4 +949,19 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'Електронну адресу підтверджено. Продовжте, щоб завершити вхід.';
+
+  @override
+  String get noSupportedApplication =>
+      'Немає сумісної програми для перегляду цього файлу.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'Не вдалося отримати доступ до файлу. Перевірте дозволи папки та спробуйте ще раз.';
+
+  @override
+  String get unableToOpenFile => 'Не вдалося відкрити файл. Спробуйте ще раз.';
+
+  @override
+  String get fileNotAvailable =>
+      'Цей файл недоступний на пристрої та в завершеній резервній копії.';
 }

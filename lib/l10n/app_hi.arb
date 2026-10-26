@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "डाउनलोड करने के लिए लंबा दबाएँ",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "कुछ आइटम स्थानीय रूप से मौजूद हैं।",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "मैंने अपना नया रिकवरी वाक्यांश सहेज लिया है।",
   "recoveryResetStarting": "रीसेट शुरू हो रहा है…",
   "sessionExpiredRetained": "आपका साइन-इन सत्र समाप्त हो गया है। वॉल्ट अनलॉक करने के लिए फिर से साइन इन करें। आपका स्थानीय डेटा सुरक्षित रखा गया है।",
-  "signinVerifiedContinue": "आपका ईमेल सत्यापित हो गया है। साइन इन पूरा करने के लिए आगे बढ़ें।"
+  "signinVerifiedContinue": "आपका ईमेल सत्यापित हो गया है। साइन इन पूरा करने के लिए आगे बढ़ें।",
+  "noSupportedApplication": "इस फ़ाइल को देखने के लिए कोई समर्थित ऐप नहीं है।",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "इस फ़ाइल तक पहुँच नहीं हो सकी। फ़ोल्डर की अनुमतियाँ जाँचें और फिर कोशिश करें।",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "यह फ़ाइल नहीं खुल सकी। कृपया फिर कोशिश करें।",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "यह फ़ाइल इस डिवाइस या किसी पूरे हो चुके बैकअप में उपलब्ध नहीं है।",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

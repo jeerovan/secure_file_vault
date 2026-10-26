@@ -934,4 +934,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'تم التحقق من بريدك الإلكتروني. تابع لإكمال تسجيل الدخول.';
+
+  @override
+  String get noSupportedApplication => 'لا يوجد تطبيق يدعم عرض هذا الملف.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'تعذر الوصول إلى هذا الملف. تحقق من أذونات المجلد وحاول مجددًا.';
+
+  @override
+  String get unableToOpenFile => 'تعذر فتح هذا الملف. يرجى المحاولة مجددًا.';
+
+  @override
+  String get fileNotAvailable =>
+      'هذا الملف غير متاح على هذا الجهاز أو في نسخة احتياطية مكتملة.';
 }

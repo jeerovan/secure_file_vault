@@ -926,4 +926,18 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'ยืนยันอีเมลของคุณแล้ว ดำเนินการต่อเพื่อเข้าสู่ระบบให้เสร็จสมบูรณ์';
+
+  @override
+  String get noSupportedApplication => 'ไม่มีแอปที่รองรับการดูไฟล์นี้';
+
+  @override
+  String get fileAccessUnavailable =>
+      'ไม่สามารถเข้าถึงไฟล์นี้ได้ โปรดตรวจสอบสิทธิ์ของโฟลเดอร์แล้วลองอีกครั้ง';
+
+  @override
+  String get unableToOpenFile => 'ไม่สามารถเปิดไฟล์นี้ได้ โปรดลองอีกครั้ง';
+
+  @override
+  String get fileNotAvailable =>
+      'ไม่มีไฟล์นี้ในอุปกรณ์นี้หรือในข้อมูลสำรองที่เสร็จสมบูรณ์';
 }

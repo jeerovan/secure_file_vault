@@ -929,4 +929,19 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'आपका ईमेल सत्यापित हो गया है। साइन इन पूरा करने के लिए आगे बढ़ें।';
+
+  @override
+  String get noSupportedApplication =>
+      'इस फ़ाइल को देखने के लिए कोई समर्थित ऐप नहीं है।';
+
+  @override
+  String get fileAccessUnavailable =>
+      'इस फ़ाइल तक पहुँच नहीं हो सकी। फ़ोल्डर की अनुमतियाँ जाँचें और फिर कोशिश करें।';
+
+  @override
+  String get unableToOpenFile => 'यह फ़ाइल नहीं खुल सकी। कृपया फिर कोशिश करें।';
+
+  @override
+  String get fileNotAvailable =>
+      'यह फ़ाइल इस डिवाइस या किसी पूरे हो चुके बैकअप में उपलब्ध नहीं है।';
 }

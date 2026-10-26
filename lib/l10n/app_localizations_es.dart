@@ -952,4 +952,20 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'Tu correo electrónico está verificado. Continúa para completar el inicio de sesión.';
+
+  @override
+  String get noSupportedApplication =>
+      'No hay ninguna aplicación compatible para ver este archivo.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'No se puede acceder a este archivo. Revisa los permisos de la carpeta e inténtalo de nuevo.';
+
+  @override
+  String get unableToOpenFile =>
+      'No se puede abrir este archivo. Inténtalo de nuevo.';
+
+  @override
+  String get fileNotAvailable =>
+      'Este archivo no está disponible en este dispositivo ni en una copia de seguridad completada.';
 }

@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "長押しでダウンロード",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "一部の項目はローカルに残っています。",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "新しい復元フレーズを保存しました。",
   "recoveryResetStarting": "リセットを開始しています…",
   "sessionExpiredRetained": "ログインセッションの有効期限が切れました。保管庫を解除するには、もう一度ログインしてください。ローカルデータは保持されます。",
-  "signinVerifiedContinue": "メールアドレスが確認されました。続行してログインを完了してください。"
+  "signinVerifiedContinue": "メールアドレスが確認されました。続行してログインを完了してください。",
+  "noSupportedApplication": "このファイルを表示できる対応アプリがありません。",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "このファイルにアクセスできません。フォルダのアクセス権を確認して、もう一度お試しください。",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "このファイルを開けません。もう一度お試しください。",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "このファイルは、このデバイスにも完了したバックアップにもありません。",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

@@ -6,6 +6,7 @@ import 'package:file_vault_bb/models/model_profile.dart';
 import 'package:file_vault_bb/models/model_item.dart';
 import 'package:file_vault_bb/services/service_recovery_reset.dart';
 import 'package:file_vault_bb/services/service_session_cleanup.dart';
+import 'package:file_vault_bb/services/service_session_work.dart';
 import 'package:file_vault_bb/utils/common.dart' as common;
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_sync.dart';
@@ -109,7 +110,9 @@ void main() {
 
   Future<AppSetupState> mount(WidgetTester tester, Widget page) async {
     final setup = (await tester.runAsync(() async {
-      await ModelSetting.set(AppString.onboarding.string, 'yes');
+      if (!SessionWork.authenticationRequired) {
+        await ModelSetting.set(AppString.onboarding.string, 'yes');
+      }
       final state = AppSetupState(SecureStorage());
       // Finish startup before a short-lived page tears down its SQL/platform
       // fixture; the constructor's read is otherwise still pending at dispose.
@@ -131,6 +134,84 @@ void main() {
   }
 
   group('local authentication and registration', () {
+    testWidgets('retained local vault resumes through default sign-in clients',
+        (tester) async {
+      final master = fixture.secrets[AppString.masterKey.string];
+      final before = await tester.runAsync(() async {
+        await (await fixture.db).update(
+            'profiles', {'email': common.localTestEmailId},
+            where: 'id = ?', whereArgs: ['fixture-user']);
+        await ModelItem.ensureVaultRoot();
+        await ModelSetting.set(AppString.onboarding.string, 'yes');
+        final before = await fixture.snapshot();
+        expect(await SessionCleanup.instance.expiredAuthentication(), isTrue);
+        return before;
+      });
+      var authentications = 0, memberships = 0;
+      purchasesConfigured = true;
+      await http.runWithClient(() async {
+        final setup = await mount(tester, const PageSignin());
+        await until(
+            tester,
+            () async => tester
+                .widget<TextFormField>(find.byType(TextFormField))
+                .controller!
+                .text
+                .isNotEmpty);
+        expect(
+            tester
+                .widget<TextFormField>(find.byType(TextFormField))
+                .controller!
+                .text,
+            common.localTestEmailId);
+        await tester.tap(find.byType(FilledButton));
+        await until(
+            tester, () async => setup.currentStep == SetupStep.explorer);
+        expect(authentications, 1);
+        expect(memberships, 1);
+        await tester.runAsync(() async {
+          expect(SessionWork.authenticationRequired, isFalse);
+          expect(fixture.secrets[AppString.masterKey.string], master);
+          expect(fixture.secrets[AppString.sessionCookie.string],
+              'fife-local.resumed-session');
+          expect(await common.getDeviceUuid(), 'fixture-device-uuid');
+          expect(await fixture.snapshot(), before);
+        });
+        expect(tester.takeException(), isNull);
+      },
+          () => MockClient((request) async {
+                if (request.url.path == '/api/local-test/session') {
+                  authentications++;
+                  return http.Response(
+                      jsonEncode({
+                        'success': 1,
+                        'data': {
+                          'sessionToken': 'fife-local.resumed-session',
+                          'user': {
+                            'id': 'fixture-user',
+                            'email': common.localTestEmailId
+                          }
+                        }
+                      }),
+                      200);
+                }
+                expect(request.headers['x-fife-session'],
+                    'fife-local.resumed-session');
+                if (request.url.path == '/api/devices') {
+                  memberships++;
+                  expect(request.url.queryParameters['device_uuid'],
+                      'fixture-device-uuid');
+                  return http.Response(
+                      '{"success":1,"data":{"id":"fixture-device-uuid","active":1}}',
+                      200);
+                }
+                expect(request.url.path, '/api/keys');
+                return http.Response(
+                    '{"success":1,"data":{"cipher":"cipher","nonce":"nonce","vault_generation":"legacy"}}',
+                    200);
+              }));
+    });
+
     for (final accepted in [true, false]) {
       testWidgets(
           'sign-in ${accepted ? 'stores' : 'rejects missing'} server session proof',

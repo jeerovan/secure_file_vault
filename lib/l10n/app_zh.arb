@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "长按即可下载",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "部分项目仍保留在本地。",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "我已保存新的恢复短语。",
   "recoveryResetStarting": "正在开始重置…",
   "sessionExpiredRetained": "登录会话已过期。请重新登录以解锁保险库。本地数据将保留。",
-  "signinVerifiedContinue": "电子邮箱已验证。请继续完成登录。"
+  "signinVerifiedContinue": "电子邮箱已验证。请继续完成登录。",
+  "noSupportedApplication": "没有支持查看此文件的应用。",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "无法访问此文件。请检查文件夹权限后重试。",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "无法打开此文件。请重试。",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "此设备或已完成的备份中没有此文件。",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

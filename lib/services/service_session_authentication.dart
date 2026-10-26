@@ -227,10 +227,10 @@ class SessionAuthentication {
     } on VerifiedSigninExpired {
       await discardAttempt(nonce);
       rethrow;
-    } on BackendAuthenticationExpired {
-      await discardAttempt(nonce);
-      throw const VerifiedSigninExpired();
     }
+    // An application API rejection does not establish that the provider session
+    // ended. Keep its verified candidate and the private-data hold for Continue;
+    // the next attempt rechecks Neon before retrying backend authorization.
     final state = await SessionCleanup.instance.authenticationState();
     final switched = state['mode'] == SessionCleanupMode.accountSwitch.name &&
         state['authenticationTarget'] == account.ownerHash;

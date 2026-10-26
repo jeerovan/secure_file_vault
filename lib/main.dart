@@ -22,6 +22,7 @@ import 'l10n/app_localizations.dart';
 import 'services/service_locale.dart';
 import 'services/service_app_lock.dart';
 import 'ui/app_lock.dart';
+import 'ui/sync_activity_overlay.dart';
 import 'services/service_events.dart';
 import 'services/service_session_cleanup.dart';
 import 'services/service_session_work.dart';
@@ -169,15 +170,24 @@ Future<void> initializeInParallel() async {
   await Future.wait(startupTasks);
 }
 
-Future<void> initializeBackgroundExecution() async {
+Future<void> initializeBackgroundExecution({
+  BackgroundExecutionService? execution,
+}) async {
+  final background = execution ?? BackgroundExecutionService.instance;
   try {
     await SessionWork.checkpoint();
-    if (await RecoveryResetService.instance.hasPending()) return;
-    await BackgroundExecutionService.instance.initialize(
+    // iOS must register its callback even when a restored reset defers setup.
+    // Durable readiness prevents scheduling private work; later setup can then
+    // enable the initialized scheduler without requiring another app restart.
+    if (await RecoveryResetService.instance.hasPending() &&
+        background.kind != BackgroundExecutionKind.iosRefresh) {
+      return;
+    }
+    await background.initialize(
       iosCallbackDispatcher: backgroundTaskDispatcher,
     );
     await SessionWork.checkpoint();
-    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+    if (background.kind == BackgroundExecutionKind.desktopTimer) {
       SyncUtils().startAutoSync();
       logger.info("initialized autosync");
     }
@@ -352,7 +362,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                           SetupStep.sessionCleanup
                       ? const PageSessionCleanup()
                       : null,
-                  child: child ?? const SizedBox.shrink()),
+                  child: SyncActivityOverlay(
+                      child: child ?? const SizedBox.shrink())),
               navigatorKey: _navigationKey,
               navigatorObservers: [_appLockNavigation],
               locale: localeProvider.locale,

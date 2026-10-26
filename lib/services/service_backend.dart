@@ -19,8 +19,7 @@ class BackendAuthenticationExpired implements Exception {
 
 class BackendApi {
   final SecureStorage _storage;
-  final http.Client _http;
-  final bool _ownsHttpClient;
+  final http.Client? _httpOverride;
   final Uri _base;
   final Duration timeout;
   final Future<String?> Function()? _accessTokenProvider;
@@ -51,8 +50,7 @@ class BackendApi {
     bool requireFreshAuthentication = false,
     this.timeout = const Duration(seconds: 30),
   })  : _storage = storage ?? SecureStorage(),
-        _http = httpClient ?? AppHttpClients.backend,
-        _ownsHttpClient = httpClient != null,
+        _httpOverride = httpClient,
         _accessTokenProvider = accessTokenProvider,
         _signedEmailIdProvider = signedEmailIdProvider,
         _deviceUuidProvider = deviceUuidProvider,
@@ -72,6 +70,10 @@ class BackendApi {
       );
     }
   }
+
+  // Public sign-in can construct this API before entering its authentication
+  // scope; acquire the guarded shared client only when sending the request.
+  http.Client get _http => _httpOverride ?? AppHttpClients.backend;
 
   bool get _isLocalTesting => _localTestingProvider?.call() ?? localTesting();
 
@@ -454,6 +456,6 @@ class BackendApi {
 
   /// Shared default clients are closed by [AppHttpClients.closeAll].
   void close() {
-    if (_ownsHttpClient) _http.close();
+    _httpOverride?.close();
   }
 }

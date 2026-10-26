@@ -479,7 +479,7 @@
   },
   "longPressToDownload": "Нажмите и удерживайте для скачивания",
   "@longPressToDownload": {
-    "description": "Snackbar message shown when a file cannot be opened and the user should long press to download it"
+    "description": "Shown only when the file is absent from this device and a completed cloud backup is available."
   },
   "fewItemsExistLocally": "Некоторые элементы всё ещё есть локально.",
   "@fewItemsExistLocally": {
@@ -1027,5 +1027,21 @@
   "recoveryPhraseSaved": "Я сохранил новую фразу восстановления.",
   "recoveryResetStarting": "Запуск сброса…",
   "sessionExpiredRetained": "Срок действия сеанса истёк. Войдите снова, чтобы разблокировать хранилище. Локальные данные сохранены.",
-  "signinVerifiedContinue": "Адрес электронной почты подтверждён. Продолжите, чтобы завершить вход."
+  "signinVerifiedContinue": "Адрес электронной почты подтверждён. Продолжите, чтобы завершить вход.",
+  "noSupportedApplication": "Нет подходящего приложения для просмотра этого файла.",
+  "@noSupportedApplication": {
+    "description": "Shown when a present file has no supported system preview or installed viewer."
+  },
+  "fileAccessUnavailable": "Не удалось получить доступ к файлу. Проверьте разрешения папки и повторите попытку.",
+  "@fileAccessUnavailable": {
+    "description": "Shown when file or security-scoped folder access is denied or unavailable."
+  },
+  "unableToOpenFile": "Не удалось открыть файл. Повторите попытку.",
+  "@unableToOpenFile": {
+    "description": "Shown for a temporary native file presentation failure."
+  },
+  "fileNotAvailable": "Этот файл недоступен на устройстве и в завершённой резервной копии.",
+  "@fileNotAvailable": {
+    "description": "Shown when a missing file has no confirmed completed cloud backup."
+  }
 }

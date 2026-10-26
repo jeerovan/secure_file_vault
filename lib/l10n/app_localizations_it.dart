@@ -947,4 +947,19 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'La tua email è verificata. Continua per completare l’accesso.';
+
+  @override
+  String get noSupportedApplication =>
+      'Nessuna applicazione compatibile per visualizzare questo file.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'Impossibile accedere a questo file. Controlla le autorizzazioni della cartella e riprova.';
+
+  @override
+  String get unableToOpenFile => 'Impossibile aprire questo file. Riprova.';
+
+  @override
+  String get fileNotAvailable =>
+      'Questo file non è disponibile sul dispositivo né in un backup completato.';
 }

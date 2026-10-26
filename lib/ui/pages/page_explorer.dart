@@ -20,7 +20,6 @@ import '../../ui/pages/page_trash.dart';
 import '../../utils/enums.dart';
 import '../../utils/utils_sync.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:open_filex/open_filex.dart';
 import 'package:provider/provider.dart';
 import '../../models/model_item.dart';
 import '../../models/model_item_task.dart';
@@ -37,6 +36,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../utils/utils_tasks.dart';
 import '../common_widgets.dart';
 import '../item_selection_actions.dart';
+import '../item_file_opener.dart';
 
 class PageExplorer extends StatefulWidget {
   final Function(String?) onThemeChange;
@@ -95,6 +95,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   bool _isDeviceRoot = false;
   bool _syncInProgress = false;
   bool _checkingFolderAccess = false;
+  final _fileOpener = ItemFileOpener();
   bool _resumeRefreshInProgress = false;
   bool _resumeRefreshPending = false;
   bool _loggingEnabled =
@@ -162,6 +163,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _fileOpener.dispose();
     EventStream().notifier.removeListener(_handleAppEvents);
     _breadcrumbController.dispose();
     _itemsNotifier.dispose();
@@ -248,6 +250,13 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
       // timestamps during reconciliation. Always publish the fresh snapshot;
       // comparing IDs alone leaves visible metadata stale until navigation.
       _itemsNotifier.value = items;
+      final selectedIds =
+          _selectedItemsNotifier.value.map((item) => item.id).toSet();
+      if (selectedIds.isNotEmpty) {
+        _selectedItemsNotifier.value =
+            items.where((item) => selectedIds.contains(item.id)).toSet();
+        if (_selectedItemsNotifier.value.isEmpty) _cancelMultiSelect();
+      }
       unawaited(_selectionActions.refresh());
 
       setState(() {
@@ -315,17 +324,8 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
         parentChilds.add(item);
       }
     } else {
-      String path = await ModelItem.getPathForItem(item.id);
-      final openResult = await OpenFilex.open(path);
-      if (openResult.type != ResultType.done) {
-        String message = 'Could not open file: ${openResult.message}';
-        logger.error(message);
-        if (mounted) {
-          displaySnackBar(context,
-              message: AppLocalizations.of(context)!.longPressToDownload,
-              seconds: 2);
-        }
-      }
+      await openFileItem(context, item, _fileOpener,
+          () => mounted && !_isMultiSelectNotifier.value);
     }
   }
 
@@ -351,8 +351,8 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   void _toggleSelection(ModelItem item) {
     final currentSelection = Set<ModelItem>.from(_selectedItemsNotifier.value);
 
-    if (currentSelection.contains(item)) {
-      currentSelection.remove(item);
+    if (currentSelection.any((selected) => selected.id == item.id)) {
+      currentSelection.removeWhere((selected) => selected.id == item.id);
     } else {
       currentSelection.add(item);
     }
@@ -395,7 +395,7 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
 
   Future<void> showInfo() async {
     final selectedItems = List<ModelItem>.from(_selectedItemsNotifier.value);
-    if (selectedItems.length > 1) {
+    if (selectedItems.length != 1) {
       return;
     }
     ModelItem item = selectedItems.first;

@@ -927,4 +927,20 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get signinVerifiedContinue =>
       'ایمیل شما تأیید شده است. برای تکمیل ورود ادامه دهید.';
+
+  @override
+  String get noSupportedApplication =>
+      'برنامهٔ سازگاری برای نمایش این فایل وجود ندارد.';
+
+  @override
+  String get fileAccessUnavailable =>
+      'دسترسی به این فایل ممکن نیست. مجوزهای پوشه را بررسی کنید و دوباره تلاش کنید.';
+
+  @override
+  String get unableToOpenFile =>
+      'باز کردن این فایل ممکن نیست. لطفاً دوباره تلاش کنید.';
+
+  @override
+  String get fileNotAvailable =>
+      'این فایل در این دستگاه یا در یک نسخهٔ پشتیبان کامل‌شده موجود نیست.';
 }
