@@ -12,7 +12,7 @@ import '../models/model_file.dart';
 import '../models/model_item.dart';
 import '../models/model_item_task.dart';
 import '../storage/local_item_access.dart';
-import '../storage/storage_channel.dart';
+import '../storage/synced_folder_access.dart';
 import '../storage/storage_secure.dart';
 import '../utils/enums.dart';
 import 'package:flutter/material.dart';
@@ -1101,7 +1101,9 @@ class _FileListItemState extends State<FileListItem> {
     if (Platform.isIOS || Platform.isMacOS) {
       String deviceHash = await getDeviceHash();
       if (item.parentId == deviceHash) {
-        return !ChannelStorage.hasUsableBookmark(item.bookmark);
+        // A stored bookmark may be stale, denied or point to a removed folder.
+        // Match the reconnect decision made when this root is tapped.
+        return !await SyncedFolderAccess.isAvailable(item);
       }
     }
     return false;

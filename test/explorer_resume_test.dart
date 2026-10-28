@@ -16,6 +16,132 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 void main() {
+  testWidgets('trashed but readable root warns on resume and fresh Explorer',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      var resolved =
+          await Directory('${fixture.directory.path}/selected').create();
+      await File('${resolved.path}/source.txt').writeAsString('keep source');
+      var activeLeases = 0;
+      var pickerCalls = 0;
+      const channel = MethodChannel('com.jeerovan.fife/channel_storage');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, (call) async {
+        switch (call.method) {
+          case 'startAccessing':
+            activeLeases++;
+            return resolved.path;
+          case 'stopAccessing':
+            activeLeases--;
+            return true;
+          case 'pickDirectory':
+            pickerCalls++;
+            return null;
+          default:
+            throw StateError('Unexpected storage operation');
+        }
+      });
+      // Compare persisted rows; this fixture has null timestamps, for which
+      // ModelItem.fromMap supplies a fresh presentation-time default.
+      final db = await StorageSqlite.instance.database;
+      final row = find.byKey(const ValueKey('folder'));
+      final warning = find.descendant(
+          of: row, matching: find.byIcon(LucideIcons.alertCircle));
+      await fixture.mount(() async {});
+      await fixture.pump();
+      expect(warning, findsNothing);
+      // Let normal Explorer initialization create its app root before taking
+      // the baseline for the deletion/recovery transition under test.
+      final before = await db.query('items', orderBy: 'id');
+
+      // Unlike permanent deletion, Files leaves a readable directory whose
+      // bookmark follows the move. Only the native resolution is substituted.
+      await Directory('${fixture.directory.path}/.Trash').create();
+      resolved = await resolved.rename('${fixture.directory.path}/.Trash/root');
+      expect(await resolved.exists(), isTrue);
+      fixture.resumeRepeatedly();
+      await fixture.waitFor(warning);
+      await tester.tap(row);
+      for (var i = 0; i < 30 && pickerCalls == 0; i++) {
+        await fixture.pump();
+      }
+      expect(pickerCalls, 1);
+      expect(warning, findsOneWidget);
+      expect(await db.query('items', orderBy: 'id'), before);
+      expect(fixture.scans, 1, reason: 'Resume must not start another sync');
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await fixture.mount(() async {});
+      await fixture.waitFor(warning);
+      expect(activeLeases, 0);
+      expect(await File('${resolved.path}/source.txt').readAsString(),
+          'keep source');
+
+      resolved = await resolved.rename('${fixture.directory.path}/restored');
+      fixture.resumeRepeatedly();
+      for (var i = 0; i < 30 && warning.evaluate().isNotEmpty; i++) {
+        await fixture.pump();
+      }
+      expect(warning, findsNothing);
+      expect(activeLeases, 0);
+      expect(await db.query('items', orderBy: 'id'), before);
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
+  testWidgets(
+      'resume refreshes reconnect warning without changing the bookmark',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      var denied = false;
+      var pickerCalls = 0;
+      var activeLeases = 0;
+      const storage = MethodChannel('com.jeerovan.fife/channel_storage');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(storage, (call) async {
+        switch (call.method) {
+          case 'startAccessing':
+            if (denied) throw PlatformException(code: 'ACCESS_DENIED');
+            activeLeases++;
+            return fixture.directory.path;
+          case 'stopAccessing':
+            activeLeases--;
+            return true;
+          case 'pickDirectory':
+            pickerCalls++;
+            return null;
+          default:
+            throw StateError('Unexpected storage operation');
+        }
+      });
+      final row = find.byKey(const ValueKey('folder'));
+      final warning = find.descendant(
+          of: row, matching: find.byIcon(LucideIcons.alertCircle));
+      await fixture.mount(() async {});
+      await fixture.pump();
+      expect(warning, findsNothing);
+      denied = true;
+      fixture.resumeRepeatedly();
+      await fixture.waitFor(warning);
+      // The same visible row triggers the existing reconnect-only picker.
+      await tester.tap(row);
+      for (var i = 0; i < 30 && pickerCalls == 0; i++) {
+        await fixture.pump();
+      }
+      expect(pickerCalls, 1);
+      expect(warning, findsOneWidget);
+      expect((await ModelItem.get('folder'))!.bookmark, 'fixture-bookmark');
+      expect((await ModelItem.get('folder'))!.archivedAt, 0);
+      denied = false;
+      fixture.resumeRepeatedly();
+      for (var i = 0; i < 30 && warning.evaluate().isNotEmpty; i++) {
+        await fixture.pump();
+      }
+      expect(warning, findsNothing);
+      expect(activeLeases, 0);
+      expect(fixture.scans, 1, reason: 'Resume must not start another sync');
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
   test('Sync has a translated label in every supported locale', () async {
     for (final locale in L10n.all) {
       final strings = await AppLocalizations.delegate.load(locale);

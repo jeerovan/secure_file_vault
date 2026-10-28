@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as path;
 
 class ChannelStorage {
   static const MethodChannel _channel =
@@ -19,8 +20,20 @@ class ChannelStorage {
   }
 
   static Future<String?> startAccessing(String bookmarkBase64) async {
-    return await _channel
-        .invokeMethod('startAccessing', {'bookmark': bookmarkBase64});
+    final accessPath = await _channel
+        .invokeMethod<String>('startAccessing', {'bookmark': bookmarkBase64});
+    // Apple bookmarks follow moves into Recently Deleted, where the folder
+    // may still exist and be readable. Do not scan, read or publish into it.
+    // iOS trash-directory APIs can also miss this case (Apple DTS 813329).
+    // Match reserved path components, not ordinary names such as "Trash".
+    if (accessPath != null &&
+        path.posix.split(path.posix.normalize(accessPath)).any(
+            (component) => component == '.Trash' || component == '.Trashes')) {
+      // Native access was acquired; callers receiving null own no lease.
+      await stopAccessing(accessPath);
+      return null;
+    }
+    return accessPath;
   }
 
   static Future<void> stopAccessing(String path) async {

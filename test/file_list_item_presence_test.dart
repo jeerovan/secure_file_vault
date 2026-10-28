@@ -11,9 +11,77 @@ import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
+  for (final failure in ['ACCESS_DENIED', 'STALE_BOOKMARK', 'RESOLVE_ERROR']) {
+    testWidgets('sync root warns when its stored bookmark fails: $failure',
+        (tester) async {
+      await _withPresenceFixture(tester, (fixture) async {
+        fixture.denyAccess = true;
+        fixture.accessError = failure;
+        await fixture.mount(itemId: 'root');
+        await fixture.expectFolderWarning(true);
+        expect((await ModelItem.get('root'))!.bookmark, 'fixture-bookmark');
+        expect(await fixture.source.readAsString(), 'source stays on device');
+        expect(fixture.scopeHolds, 0);
+      });
+    }, skip: !Platform.isMacOS && !Platform.isIOS);
+  }
+
+  testWidgets('missing sync-root directory warns despite a stored bookmark',
+      (tester) async {
+    await _withPresenceFixture(tester, (fixture) async {
+      fixture.resolvedPath = '${fixture.source.parent.path}/missing';
+      await fixture.mount(itemId: 'root');
+      await fixture.expectFolderWarning(true);
+      expect(fixture.scopeHolds, 0);
+      expect(await ModelItem.get('file'), isNotNull);
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
+  testWidgets('moved accessible root uses resolved path and has no warning',
+      (tester) async {
+    await _withPresenceFixture(tester, (fixture) async {
+      await fixture.db.update('items', {'path': '/old-container/selected'},
+          where: 'id = ?', whereArgs: ['root']);
+      await fixture.mount(itemId: 'root');
+      await fixture.expectFolderWarning(false);
+      expect(fixture.accessAttempts, greaterThan(0));
+      expect(fixture.scopeHolds, 0);
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
+  testWidgets('reconnected same root removes warning on the next snapshot',
+      (tester) async {
+    await _withPresenceFixture(tester, (fixture) async {
+      fixture.denyAccess = true;
+      await fixture.mount(itemId: 'root');
+      await fixture.expectFolderWarning(true);
+      fixture.denyAccess = false;
+      await ModelItem.updateBookmark('root', 'fresh-bookmark');
+      await fixture.mount(itemId: 'root');
+      await fixture.expectFolderWarning(false);
+      expect((await ModelItem.get('file'))!.fileHash, 'uploaded-content');
+      expect(fixture.scopeHolds, 0);
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
+  testWidgets('remote and nested folders do not ask for a root bookmark',
+      (tester) async {
+    await _withPresenceFixture(tester, (fixture) async {
+      fixture.denyAccess = true;
+      for (final parent in ['other-device', 'another-folder']) {
+        await fixture.db.update('items', {'parent_id': parent},
+            where: 'id = ?', whereArgs: ['root']);
+        await fixture.mount(itemId: 'root');
+        await fixture.expectFolderWarning(false);
+      }
+      expect(fixture.accessAttempts, 0);
+    });
+  });
+
   testWidgets('selected file stays green after upload releases folder access',
       (tester) async {
     await _withPresenceFixture(tester, (fixture) async {
@@ -246,11 +314,12 @@ Future<void> _withPresenceFixture(WidgetTester tester,
     messenger.setMockMethodCallHandler(storage, (call) async {
       switch (call.method) {
         case 'startAccessing':
+          fixture.accessAttempts++;
           if (fixture.denyAccess) {
-            throw PlatformException(code: 'ACCESS_DENIED');
+            throw PlatformException(code: fixture.accessError);
           }
           fixture.scopeHolds++;
-          return source.parent.path;
+          return fixture.resolvedPath ?? source.parent.path;
         case 'stopAccessing':
           fixture.scopeHolds--;
           expect(fixture.scopeHolds, greaterThanOrEqualTo(0));
@@ -294,19 +363,22 @@ class _PresenceFixture {
   final multiSelect = ValueNotifier(false);
   int scopeHolds = 0;
   bool denyAccess = false;
+  String accessError = 'ACCESS_DENIED';
+  String? resolvedPath;
+  int accessAttempts = 0;
   int probesStarted = 0;
   int probesCompleted = 0;
   Future<bool> Function(File, bool)? probe;
   final gates = <Completer<void>>[];
 
-  Future<void> mount({TaskStatus? status}) async {
+  Future<void> mount({TaskStatus? status, String itemId = 'file'}) async {
     await tester.pumpWidget(MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: FileListItem(
           key: const ValueKey('presence-row'),
-          item: (await ModelItem.get('file'))!,
+          item: (await ModelItem.get(itemId))!,
           taskStatus: status,
           selectedItemsNotifier: selected,
           isMultiSelectNotifier: multiSelect,
@@ -358,6 +430,16 @@ class _PresenceFixture {
     expect(color, expected,
         reason: 'Folder leases: $scopeHolds; file probes: '
             '$probesStarted started, $probesCompleted completed');
+  }
+
+  Future<void> expectFolderWarning(bool expected) async {
+    await pump();
+    await waitUntil(() =>
+        find.byType(CircularProgressIndicator).evaluate().isEmpty &&
+        find.byIcon(LucideIcons.alertCircle).evaluate().isNotEmpty == expected);
+    expect(find.byIcon(LucideIcons.alertCircle),
+        expected ? findsOneWidget : findsNothing);
+    expect(tester.takeException(), isNull);
   }
 
   Future<void> waitUntil(bool Function() ready) async {

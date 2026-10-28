@@ -113,6 +113,35 @@ void main() {
     });
   });
 
+  test('readable trash root cannot be reconnected or change vault metadata',
+      () async {
+    final trash =
+        await Directory('${selected.path}/.Trash/root').create(recursive: true);
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call);
+      if (call.method == 'pickDirectory') {
+        return {'path': trash.path, 'bookmark': 'trash-bookmark'};
+      }
+      if (call.method == 'startAccessing') return trash.path;
+      return true;
+    });
+    await inDatabase((root) async {
+      final before = await items();
+      expect(await SyncedFolderAccess.isAvailable(root), isFalse);
+      await expectLater(
+          SyncedFolderAccess.reselect(root), throwsA(isA<PlatformException>()));
+      expect(await items(), before);
+      expect(await trash.exists(), isTrue);
+      expect(calls.map((c) => c.method), [
+        'startAccessing',
+        'stopAccessing',
+        'pickDirectory',
+        'startAccessing',
+        'stopAccessing',
+      ]);
+    });
+  });
+
   test('denied fresh bookmark cannot replace existing access or metadata',
       () async {
     messenger.setMockMethodCallHandler(channel, (call) async {

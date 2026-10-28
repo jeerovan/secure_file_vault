@@ -124,6 +124,26 @@ void main() {
     });
   }, skip: !Platform.isMacOS && !Platform.isIOS);
 
+  test('trash bookmark never enters a file read or publication operation',
+      () async {
+    final calls = <String>[];
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      calls.add(call.method);
+      return call.method == 'startAccessing' ? '/provider/.Trash/root' : true;
+    });
+    await withFixture(() async {
+      var entered = false;
+      await expectLater(
+          LocalItemAccess.withAccess('fixture-file', (_) async {
+            entered = true;
+          }),
+          throwsA(isA<PlatformException>()));
+      expect(entered, isFalse);
+      expect(await ModelItem.get('fixture-file'), isNotNull);
+      expect(calls, ['startAccessing', 'stopAccessing']);
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
   test('failed file operation releases the resolved root exactly once',
       () async {
     final calls = <MethodCall>[];

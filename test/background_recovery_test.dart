@@ -108,6 +108,35 @@ void main() {
     expect(access, ['startAccessing', 'stopAccessing']);
   }, skip: !Platform.isMacOS && !Platform.isIOS);
 
+  test('readable trashed root is unavailable without changing backup or queue',
+      () async {
+    final trash = await Directory('${directory.path}/.Trash/root')
+        .create(recursive: true);
+    await File('${trash.path}/new.txt').writeAsString('must not upload');
+    messenger.setMockMethodCallHandler(storage, (call) async {
+      access.add(call.method);
+      return call.method == 'startAccessing' ? trash.path : null;
+    });
+    final db = await StorageSqlite.instance.database;
+    final before = await db.query('items', orderBy: 'id');
+    final filesBefore = await db.query('files');
+    final task = await ModelItemTask.fromMap(
+        {'id': 'file', 'task': ItemTask.upload.value});
+    await task.insert();
+    final tasksBefore = await db.query(Tables.itemTasks.string);
+    final result = await ReconciliationService(await SodiumSumoInit.init())
+        .reconcile((await ModelItem.get('root'))!);
+    expect(result.status, ReconciliationStatus.unavailable);
+    expect(result.scannedItems, 0);
+    expect(await db.query('items', orderBy: 'id'), before);
+    expect(await db.query('files'), filesBefore);
+    expect(await db.query(Tables.itemTasks.string), tasksBefore);
+    expect(await db.query(Tables.states.string), isEmpty);
+    expect(access, ['startAccessing', 'stopAccessing']);
+    expect(
+        await File('${trash.path}/new.txt').readAsString(), 'must not upload');
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
   test(
       'expiration before publication keeps download pending without consuming retry attempts',
       () async {
