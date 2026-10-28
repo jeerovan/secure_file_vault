@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "リカバリーフレーズの表示、コピー、保存には認証が必要です。",
   "recoveryPhraseExportAuth": "リカバリーフレーズを表示するには認証してください",
   "recoveryPhraseExportWarning": "これらの単語を知っている人は、あなたの保管庫を解除できます。コピーはFiFeの外の安全な場所に保管してください。",
-  "recoveryPhraseUnavailable": "リカバリーフレーズを読み込めませんでした。もう一度試すか、保存済みのバックアップまたはログイン済みの別の端末を使用してください。"
+  "recoveryPhraseUnavailable": "リカバリーフレーズを読み込めませんでした。もう一度試すか、保存済みのバックアップまたはログイン済みの別の端末を使用してください。",
+  "reconnect": "再接続",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "バックアップをアーカイブ",
+  "archiveFolderBackupMessage": "選択したフォルダのバックアップをゴミ箱に移動し、ダウンロード済みのコピーをFiFeから削除しますか？元のファイルと他のフォルダは保持されます。これらのフォルダのパスは、ゴミ箱から復元するまで同期対象から除外されます。"
 }

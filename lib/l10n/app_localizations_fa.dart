@@ -962,4 +962,14 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'عبارت بازیابی بارگیری نشد. دوباره تلاش کنید یا از نسخهٔ پشتیبان ذخیره‌شده یا دستگاه دیگری که در آن وارد شده‌اید استفاده کنید.';
+
+  @override
+  String get reconnect => 'اتصال مجدد';
+
+  @override
+  String get archiveBackup => 'بایگانی نسخهٔ پشتیبان';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'نسخه‌های پشتیبان پوشه‌های انتخاب‌شده به سطل زباله منتقل و نسخه‌های دانلودشدهٔ آن‌ها از FiFe حذف شوند؟ فایل‌های اصلی و سایر پوشه‌ها حفظ می‌شوند. مسیر این پوشه‌ها تا زمانی که آن‌ها را از سطل زباله بازیابی کنید، از همگام‌سازی مستثنا می‌ماند.';
 }

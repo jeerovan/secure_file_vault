@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "Autentique-se para ver, copiar ou salvar sua frase de recuperação.",
   "recoveryPhraseExportAuth": "Autentique-se para ver sua frase de recuperação",
   "recoveryPhraseExportWarning": "Qualquer pessoa com estas palavras pode desbloquear seu cofre. Mantenha sua cópia em um local privado, fora do FiFe.",
-  "recoveryPhraseUnavailable": "Não foi possível carregar sua frase de recuperação. Tente novamente ou use seu backup salvo ou outro dispositivo conectado."
+  "recoveryPhraseUnavailable": "Não foi possível carregar sua frase de recuperação. Tente novamente ou use seu backup salvo ou outro dispositivo conectado.",
+  "reconnect": "Reconectar",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Arquivar backup",
+  "archiveFolderBackupMessage": "Mover os backups das pastas selecionadas para a Lixeira e remover suas cópias baixadas do FiFe? Os arquivos originais e as outras pastas serão mantidos. Esses caminhos de pasta ficarão excluídos da sincronização até que você os restaure da Lixeira."
 }

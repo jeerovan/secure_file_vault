@@ -13,6 +13,7 @@ import '../services/service_app_lock.dart';
 import '../services/service_file_viewer.dart';
 import '../services/service_session_work.dart';
 import '../storage/local_item_access.dart';
+import '../storage/managed_file_copies.dart';
 import 'common_widgets.dart';
 
 enum ItemOpenResult {
@@ -44,7 +45,7 @@ class ItemFileOpener {
         final ancestry = await ModelItem.getPathRowsForItem(id);
         LocalItemAccess? access;
         try {
-          access = await LocalItemAccess.acquire(id);
+          access = await LocalItemAccess.acquireReadable(id);
           await SessionWork.checkpoint();
           final type =
               await FileSystemEntity.type(access.itemPath, followLinks: false);
@@ -53,6 +54,7 @@ class ItemFileOpener {
           if (current == null ||
               current.isFolder ||
               current.archivedAt != 0 ||
+              await ManagedFileCopies.hasArchivedAncestor(id) ||
               ancestry.length != currentAncestry.length ||
               !Iterable.generate(ancestry.length)
                   .every((i) => mapEquals(ancestry[i], currentAncestry[i]))) {

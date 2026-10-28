@@ -983,4 +983,14 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Не вдалося завантажити фразу відновлення. Спробуйте ще раз або скористайтеся збереженою копією чи іншим пристроєм, на якому виконано вхід.';
+
+  @override
+  String get reconnect => 'Підключити знову';
+
+  @override
+  String get archiveBackup => 'Архівувати резервну копію';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Перемістити резервні копії вибраних папок до Кошика та видалити їхні завантажені копії з FiFe? Оригінальні файли й інші папки збережуться. Ці шляхи папок буде виключено із синхронізації, доки ви не відновите їх із Кошика.';
 }

@@ -908,4 +908,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get recoveryPhraseUnavailable => '无法加载恢复短语。请重试，或使用已保存的备份或其他已登录的设备。';
+
+  @override
+  String get reconnect => '重新连接';
+
+  @override
+  String get archiveBackup => '归档备份';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      '将所选文件夹的备份移至回收站，并从 FiFe 中移除已下载的副本？原始文件和其他文件夹将保留。这些文件夹路径将暂停同步，直到你从回收站恢复它们。';
 }

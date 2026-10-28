@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "Autenticati per visualizzare, copiare o salvare la frase di recupero.",
   "recoveryPhraseExportAuth": "Autenticati per visualizzare la frase di recupero",
   "recoveryPhraseExportWarning": "Chiunque abbia queste parole può sbloccare la tua cassaforte. Conserva la tua copia in un luogo privato, fuori da FiFe.",
-  "recoveryPhraseUnavailable": "Impossibile caricare la frase di recupero. Riprova oppure usa il backup salvato o un altro dispositivo su cui hai effettuato l’accesso."
+  "recoveryPhraseUnavailable": "Impossibile caricare la frase di recupero. Riprova oppure usa il backup salvato o un altro dispositivo su cui hai effettuato l’accesso.",
+  "reconnect": "Riconnetti",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Archivia backup",
+  "archiveFolderBackupMessage": "Spostare i backup delle cartelle selezionate nel Cestino e rimuovere le copie scaricate da FiFe? I file originali e le altre cartelle verranno conservati. Questi percorsi resteranno esclusi dalla sincronizzazione finché non li ripristini dal Cestino."
 }

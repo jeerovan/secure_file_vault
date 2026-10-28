@@ -967,4 +967,14 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Kurtarma ifadeniz yüklenemedi. Tekrar deneyin veya kayıtlı yedeğinizi ya da oturum açılmış başka bir cihazı kullanın.';
+
+  @override
+  String get reconnect => 'Yeniden bağlan';
+
+  @override
+  String get archiveBackup => 'Yedeği arşivle';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Seçilen klasörlerin yedekleri Çöp Kutusuna taşınsın ve indirilen kopyaları FiFe’den kaldırılsın mı? Orijinal dosyalar ve diğer klasörler korunur. Bu klasör yolları, Çöp Kutusundan geri yüklenene kadar eşitleme dışında tutulur.';
 }

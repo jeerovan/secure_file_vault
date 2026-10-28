@@ -958,4 +958,14 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'ไม่สามารถโหลดวลีกู้คืนได้ ลองอีกครั้ง หรือใช้ข้อมูลสำรองที่บันทึกไว้หรืออุปกรณ์อื่นที่เข้าสู่ระบบแล้ว';
+
+  @override
+  String get reconnect => 'เชื่อมต่ออีกครั้ง';
+
+  @override
+  String get archiveBackup => 'เก็บข้อมูลสำรองเข้าคลัง';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'ย้ายข้อมูลสำรองของโฟลเดอร์ที่เลือกไปยังถังขยะ และลบสำเนาที่ดาวน์โหลดออกจาก FiFe หรือไม่? ไฟล์ต้นฉบับและโฟลเดอร์อื่นจะยังอยู่ เส้นทางโฟลเดอร์เหล่านี้จะไม่ถูกซิงค์จนกว่าคุณจะกู้คืนจากถังขยะ';
 }

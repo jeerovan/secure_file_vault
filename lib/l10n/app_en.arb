@@ -1104,5 +1104,9 @@
   "recoveryPhraseExportHint": "Authenticate to view, copy or save your recovery phrase.",
   "recoveryPhraseExportAuth": "Authenticate to view your recovery phrase",
   "recoveryPhraseExportWarning": "Anyone with these words can unlock your vault. Keep your copy private and outside FiFe.",
-  "recoveryPhraseUnavailable": "Your recovery phrase couldn't be loaded. Try again, or use your saved backup or another signed-in device."
+  "recoveryPhraseUnavailable": "Your recovery phrase couldn't be loaded. Try again, or use your saved backup or another signed-in device.",
+  "reconnect": "Reconnect",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Archive backup",
+  "archiveFolderBackupMessage": "Move the selected folder backups to Trash and remove their downloaded copies from FiFe? Original files and other folders are kept. These folder paths will stay excluded from sync until you restore them from Trash."
 }

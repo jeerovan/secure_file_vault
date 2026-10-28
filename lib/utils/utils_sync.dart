@@ -17,6 +17,8 @@ import '../storage/storage_secure.dart';
 import '../storage/storage_channel.dart';
 import '../storage/storage_sqlite.dart';
 import '../storage/local_item_access.dart';
+import '../storage/managed_file_copies.dart';
+import '../storage/remote_file_copies.dart';
 import '../utils/common.dart';
 import '../utils/enums.dart';
 import '../models/model_file.dart';
@@ -78,6 +80,8 @@ class SyncUtils {
   }
 
   Future<bool> _reconFolders({String caller = ""}) async {
+    // Retry local deletion before any network or secure-storage sync gates.
+    await ManagedFileCopies.resumeCleanup();
     String? userId = await getSignedInUserId();
     if (userId == null) {
       return true;
@@ -670,10 +674,14 @@ class SyncUtils {
     try {
       final filePath = await ModelItem.getPathForItem(item.id);
       final managedRootPath = await ModelItem.getPathForItem('fife');
-      await deleteManagedFileIfExists(
-        filePath: filePath,
-        managedRootPath: managedRootPath,
-      );
+      if (await RemoteFileCopies.isRemote(item.id)) {
+        await RemoteFileCopies.deleteLocal(item, filePath);
+      } else {
+        await deleteManagedFileIfExists(
+          filePath: filePath,
+          managedRootPath: managedRootPath,
+        );
+      }
 
       final fileHash = item.fileHash;
       if (fileHash != null) {

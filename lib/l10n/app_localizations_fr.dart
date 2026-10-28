@@ -983,4 +983,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Impossible de charger votre phrase de récupération. Réessayez ou utilisez votre sauvegarde ou un autre appareil connecté.';
+
+  @override
+  String get reconnect => 'Reconnecter';
+
+  @override
+  String get archiveBackup => 'Archiver la sauvegarde';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Déplacer les sauvegardes des dossiers sélectionnés vers la Corbeille et supprimer leurs copies téléchargées de FiFe ? Les fichiers originaux et les autres dossiers sont conservés. Ces chemins de dossiers resteront exclus de la synchronisation jusqu’à leur restauration depuis la Corbeille.';
 }

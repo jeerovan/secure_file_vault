@@ -960,4 +960,14 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Không thể tải cụm từ khôi phục. Hãy thử lại hoặc dùng bản sao lưu đã lưu hay thiết bị khác đã đăng nhập.';
+
+  @override
+  String get reconnect => 'Kết nối lại';
+
+  @override
+  String get archiveBackup => 'Lưu trữ bản sao lưu';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Chuyển bản sao lưu của các thư mục đã chọn vào Thùng rác và xóa các bản đã tải xuống khỏi FiFe? Các tệp gốc và thư mục khác vẫn được giữ lại. Những đường dẫn thư mục này sẽ không được đồng bộ cho đến khi bạn khôi phục chúng từ Thùng rác.';
 }

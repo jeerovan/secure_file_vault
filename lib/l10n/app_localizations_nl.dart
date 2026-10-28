@@ -979,4 +979,14 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Je herstelzin kon niet worden geladen. Probeer opnieuw of gebruik je opgeslagen back-up of een ander aangemeld apparaat.';
+
+  @override
+  String get reconnect => 'Opnieuw verbinden';
+
+  @override
+  String get archiveBackup => 'Back-up archiveren';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'De back-ups van de geselecteerde mappen naar de Prullenbak verplaatsen en hun gedownloade kopieën uit FiFe verwijderen? Originele bestanden en andere mappen blijven behouden. Deze mappaden blijven uitgesloten van synchronisatie totdat je ze uit de Prullenbak herstelt.';
 }

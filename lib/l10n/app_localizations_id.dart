@@ -966,4 +966,14 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Frasa pemulihan Anda tidak dapat dimuat. Coba lagi, atau gunakan cadangan tersimpan atau perangkat lain yang sudah masuk.';
+
+  @override
+  String get reconnect => 'Hubungkan kembali';
+
+  @override
+  String get archiveBackup => 'Arsipkan cadangan';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Pindahkan cadangan folder yang dipilih ke Sampah dan hapus salinan unduhannya dari FiFe? File asli dan folder lain tetap disimpan. Jalur folder ini akan tetap dikecualikan dari sinkronisasi hingga Anda memulihkannya dari Sampah.';
 }

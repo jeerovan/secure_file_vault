@@ -981,4 +981,14 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Impossibile caricare la frase di recupero. Riprova oppure usa il backup salvato o un altro dispositivo su cui hai effettuato l’accesso.';
+
+  @override
+  String get reconnect => 'Riconnetti';
+
+  @override
+  String get archiveBackup => 'Archivia backup';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Spostare i backup delle cartelle selezionate nel Cestino e rimuovere le copie scaricate da FiFe? I file originali e le altre cartelle verranno conservati. Questi percorsi resteranno esclusi dalla sincronizzazione finché non li ripristini dal Cestino.';
 }

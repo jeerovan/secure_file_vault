@@ -340,7 +340,8 @@ class ModelItem {
     final changed = await db.update(
       Tables.items.string,
       {'path': pickedPath, 'bookmark': bookmark},
-      where: 'id = ? AND parent_id = ? AND is_folder = 1 '
+      where:
+          'id = ? AND parent_id = ? AND is_folder = 1 AND COALESCE(archived_at, 0) = 0 '
           'AND path IS ? AND bookmark IS ?',
       whereArgs: [
         expected.id,

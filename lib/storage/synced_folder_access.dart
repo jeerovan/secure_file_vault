@@ -7,6 +7,7 @@ import '../models/model_item.dart';
 import '../utils/common.dart';
 import 'storage_channel.dart';
 import 'storage_sqlite.dart';
+import 'managed_file_copies.dart';
 
 /// Renews permission for an explicitly chosen existing root, preserving its
 /// identity even when iOS has moved the app container or the folder was recreated.
@@ -54,7 +55,7 @@ class SyncedFolderAccess {
       if (!await Directory(accessPath).exists()) {
         throw PlatformException(code: 'FOLDER_UNAVAILABLE');
       }
-      return await StorageSqlite.instance.runInTransaction(() async {
+      final recovered = await StorageSqlite.instance.runInTransaction(() async {
         // A picker may outlive logout, root removal or another recovery attempt.
         if (await getDeviceHash() != deviceHash) {
           throw PlatformException(code: 'FOLDER_UNAVAILABLE');
@@ -67,8 +68,11 @@ class SyncedFolderAccess {
             pickedPath: pickedPath, bookmark: bookmark)) {
           throw PlatformException(code: 'FOLDER_UNAVAILABLE');
         }
+        await ManagedFileCopies.prepareRootCleanup(root);
         return ModelItem.get(root.id);
       });
+      await ManagedFileCopies.finishRootCleanup(root.id);
+      return recovered;
     } finally {
       await ChannelStorage.stopAccessing(accessPath);
     }

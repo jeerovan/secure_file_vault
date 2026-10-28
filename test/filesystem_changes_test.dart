@@ -215,6 +215,48 @@ void main() {
     expect(await (await fixture.db).query('item_tasks'), isEmpty);
   });
 
+  for (final folderCopy in [false, true]) {
+    test(
+        'bookmark-resolved root preserves original identity when copying ${folderCopy ? "a folder" : "a file"}',
+        () async {
+      final originalName = folderCopy ? 'z-original/one.txt' : 'z-original.txt';
+      await fixture.text(originalName, 'shared bytes');
+      if (folderCopy) await fixture.text('z-original/two.txt', 'second file');
+      await scan();
+      final original = await fixture.item(originalName);
+      final originalFolder =
+          folderCopy ? await fixture.item('z-original') : null;
+      await fixture.markUploaded();
+      // A real Apple bookmark may resolve a moved root or a canonical path
+      // different from its originally persisted path. Keep that stale path.
+      final moved = await fixture.source
+          .rename('${fixture.directory.path}/resolved-root');
+      await Directory('${moved.path}/a-copy').create();
+      await File('${moved.path}/$originalName')
+          .copy('${moved.path}/a-copy/one.txt');
+      if (folderCopy) {
+        await File('${moved.path}/z-original/two.txt')
+            .copy('${moved.path}/a-copy/two.txt');
+      }
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+              SyncFixture.access,
+              (call) async =>
+                  call.method == 'startAccessing' ? moved.path : true);
+      await scan();
+      final retained = (await ModelItem.get(original.id))!;
+      expect(retained.name, folderCopy ? 'one.txt' : 'z-original.txt');
+      expect(retained.parentId, original.parentId);
+      if (originalFolder != null) {
+        expect((await ModelItem.get(originalFolder.id))!.name, 'z-original');
+      }
+      expect((await fixture.items()).where((item) => !item.isFolder),
+          hasLength(folderCopy ? 4 : 2));
+      expect(await File('${moved.path}/$originalName').readAsString(),
+          'shared bytes');
+    }, skip: !Platform.isIOS && !Platform.isMacOS);
+  }
+
   test('ambiguous identical missing files cannot donate an arbitrary identity',
       () async {
     await fixture.text('one.txt', 'identical');

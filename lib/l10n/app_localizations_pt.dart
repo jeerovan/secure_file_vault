@@ -984,4 +984,14 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Não foi possível carregar sua frase de recuperação. Tente novamente ou use seu backup salvo ou outro dispositivo conectado.';
+
+  @override
+  String get reconnect => 'Reconectar';
+
+  @override
+  String get archiveBackup => 'Arquivar backup';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Mover os backups das pastas selecionadas para a Lixeira e remover suas cópias baixadas do FiFe? Os arquivos originais e as outras pastas serão mantidos. Esses caminhos de pasta ficarão excluídos da sincronização até que você os restaure da Lixeira.';
 }

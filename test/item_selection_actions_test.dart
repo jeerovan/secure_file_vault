@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_vault_bb/l10n/app_localizations.dart';
@@ -363,14 +364,31 @@ void main() {
     });
   });
 
-  testWidgets('unavailable source permission offers no destructive action',
+  testWidgets(
+      'disconnected source file offers Download without source deletion',
       (tester) async {
     await withSelectionFixture(tester, (fixture) async {
       await fixture.mount();
       fixture.denyAccess = true;
       await fixture.select('local');
-      fixture.expectActions(delete: false, archive: false, download: false);
+      fixture.expectActions(delete: false, archive: false, download: true);
       expect((await ModelItem.get('local'))!.archivedAt, 0);
+    });
+  }, skip: !Platform.isIOS && !Platform.isMacOS);
+
+  testWidgets('disconnected root selection offers Reconnect Download Archive',
+      (tester) async {
+    await withSelectionFixture(tester, (fixture) async {
+      await fixture.mount();
+      fixture.denyAccess = true;
+      await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+      await fixture.waitFor(
+          () => find.byKey(const ValueKey('local-root')).evaluate().isNotEmpty);
+      fixture.row('local-root').onLongPress();
+      await fixture.waitForAction('Reconnect');
+      fixture.expectActions(delete: false, archive: true, download: true);
+      expect(fixture.row('local-root').selectedItemsNotifier.value.single.id,
+          'local-root');
     });
   }, skip: !Platform.isIOS && !Platform.isMacOS);
 
@@ -385,7 +403,7 @@ void main() {
       await fixture.waitFor(() => find.byTooltip('Archive').evaluate().isEmpty);
       await fixture.pump();
       expect((await ModelItem.get('local'))!.archivedAt, 0);
-      fixture.expectActions(delete: false, archive: false, download: false);
+      fixture.expectActions(delete: false, archive: false, download: true);
     });
   }, skip: !Platform.isIOS && !Platform.isMacOS);
 
@@ -464,6 +482,11 @@ Future<void> withSelectionFixture(
     if (await downloadedRoot.exists()) {
       await downloadedRoot.delete(recursive: true);
     }
+    final copyToken =
+        base64UrlEncode(utf8.encode('local-root')).replaceAll('=', '');
+    final managedRoot = Directory(
+        '${await ModelItem.getPathForItem('fife')}/.downloads/$copyToken');
+    if (await managedRoot.exists()) await managedRoot.delete(recursive: true);
     final fixture = SelectionFixture(tester, directory, source);
     messenger.setMockMethodCallHandler(storage, (call) async {
       if (call.method == 'startAccessing') {
@@ -501,6 +524,7 @@ Future<void> withSelectionFixture(
       if (await downloadedRoot.exists()) {
         await downloadedRoot.delete(recursive: true);
       }
+      if (await managedRoot.exists()) await managedRoot.delete(recursive: true);
       await StorageSqlite.instance.close();
       ModelSetting.clear();
       messenger.setMockMethodCallHandler(paths, null);
@@ -590,6 +614,16 @@ class SelectionFixture {
         .byKey(ValueKey(remote ? 'remote' : 'local'))
         .evaluate()
         .isNotEmpty);
+    // A visible row may still be resolving its initial bookmark. Fault hooks
+    // installed by callers must target the subsequent user action, not that
+    // unfinished render (which can race differently in a larger test run).
+    await waitFor(() => find
+        .descendant(
+            of: find.byKey(ValueKey(remote ? 'remote' : 'local')),
+            matching: find.byType(CircularProgressIndicator))
+        .evaluate()
+        .isEmpty);
+    await waitFor(() => accessesReleased);
   }
 
   Future<void> select(String id) async {
@@ -604,7 +638,12 @@ class SelectionFixture {
   void expectActions(
       {required bool delete, required bool archive, required bool download}) {
     expect(find.byTooltip('Delete'), delete ? findsOneWidget : findsNothing);
-    expect(find.byTooltip('Archive'), archive ? findsOneWidget : findsNothing);
+    expect(
+        find.byWidgetPredicate((widget) =>
+            widget is Tooltip &&
+            (widget.message == 'Archive' ||
+                widget.message == 'Archive backup')),
+        archive ? findsOneWidget : findsNothing);
     expect(
         find.byTooltip('Download'), download ? findsOneWidget : findsNothing);
   }

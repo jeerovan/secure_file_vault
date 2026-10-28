@@ -19,6 +19,7 @@ class TransferApi {
   Map<String, dynamic>? authorizationFailure;
   Future<void> Function(Map<String, dynamic>)? beforeUploadAuthorization;
   List<int> Function(List<int>)? alterDownload;
+  Future<void> Function()? beforeDownloadResponse;
   bool loseNextUploadResponse = false;
   bool b2S3;
   bool omitUploadVersionId = false;
@@ -42,6 +43,7 @@ class TransferApi {
     _downloads = server;
     server.listen((request) async {
       downloadedIds.add(request.uri.pathSegments.last);
+      await beforeDownloadResponse?.call();
       final status =
           downloadStatuses.isEmpty ? 200 : downloadStatuses.removeAt(0);
       final bytes = objects[request.uri.pathSegments.last];

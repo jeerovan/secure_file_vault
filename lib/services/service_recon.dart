@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:file_vault_bb/models/model_item_task.dart';
 import 'package:file_vault_bb/storage/storage_channel.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
+import '../storage/archived_sync_folders.dart';
 
 import '../utils/enums.dart';
 
@@ -122,6 +123,10 @@ class ReconciliationService {
     String? acquiredAccessPath;
     OperationLease? metadataLease;
     try {
+      final currentRoot = await ModelItem.get(rootItem.id);
+      if (currentRoot == null || currentRoot.archivedAt != 0) {
+        return const ReconciliationResult(ReconciliationStatus.unavailable);
+      }
       String? directoryPath = rootItem.path;
       logger.info("Starting reconciliation scan");
 
@@ -142,7 +147,9 @@ class ReconciliationService {
         return const ReconciliationResult(ReconciliationStatus.unavailable);
       }
 
-      final snapshot = await _scanFileSystemTree(directoryPath);
+      final exclusions = await ArchivedSyncFolders.load(rootItem.id);
+      final snapshot = await _scanFileSystemTree(directoryPath,
+          excludedPaths: exclusions.paths(directoryPath));
       if (snapshot.status == _SnapshotStatus.unavailable) {
         return const ReconciliationResult(ReconciliationStatus.unavailable);
       }
@@ -174,9 +181,16 @@ class ReconciliationService {
         return const ReconciliationResult(ReconciliationStatus.busy);
       }
 
-      await StorageSqlite.instance.runInTransaction(() async {
+      final committed = await StorageSqlite.instance.runInTransaction(() async {
         SyncBudget.check();
+        final currentRoot = await ModelItem.get(rootItem.id);
+        if (currentRoot == null || currentRoot.archivedAt != 0) return false;
+        if ((await ArchivedSyncFolders.load(rootItem.id)).signature !=
+            exclusions.signature) {
+          return false;
+        }
         await ModelItem.resetScanState(rootItem.id);
+        await exclusions.retainScanState();
         await _reconcileNode(
           rootItemId: rootItem.id,
           dbParentId: rootItem.id,
@@ -204,7 +218,11 @@ class ReconciliationService {
         }
         // Throw inside the transaction so a late expiration rolls it back.
         SyncBudget.check();
+        return true;
       });
+      if (!committed) {
+        return const ReconciliationResult(ReconciliationStatus.busy);
+      }
       return ReconciliationResult(
         ReconciliationStatus.completed,
         scannedItems: snapshot.itemCount,
@@ -404,7 +422,8 @@ class ReconciliationService {
         await ModelItem.getAllUnScannedFolderForRootItemId(rootItemId);
     final candidates = <ReconciliationIdentityCandidate<ModelItem>>[];
     for (final candidate in candidateDbFolders) {
-      final oldPath = await ModelItem.getPathForLocalItem(candidate.id);
+      final oldPath =
+          await _snapshotPath(candidate.id, rootItemId, snapshot.rootPath);
       final dbFingerprint = await _databaseFolderFingerprint(
         candidate,
         requireMultipleEntries: candidate.name != fsFolder.name,
@@ -437,7 +456,8 @@ class ReconciliationService {
     }
     final candidates = <ReconciliationIdentityCandidate<ModelItem>>[];
     for (final candidate in dbCandidatesMatchingSize) {
-      final oldPath = await ModelItem.getPathForLocalItem(candidate.id);
+      final oldPath =
+          await _snapshotPath(candidate.id, rootItemId, snapshot.rootPath);
       candidates.add(ReconciliationIdentityCandidate(
         value: candidate,
         stableId: candidate.id,
@@ -472,7 +492,8 @@ class ReconciliationService {
     final candidates = <ReconciliationIdentityCandidate<ModelItem>>[];
 
     for (final dbFolder in dbChildrenFolders) {
-      final oldPath = await ModelItem.getPathForLocalItem(dbFolder.id);
+      final oldPath =
+          await _snapshotPath(dbFolder.id, rootItemId, snapshot.rootPath);
       final dbFingerprint = await _databaseFolderFingerprint(
         dbFolder,
         requireMultipleEntries: true,
@@ -529,7 +550,8 @@ class ReconciliationService {
 
     final identityCandidates = <ReconciliationIdentityCandidate<ModelItem>>[];
     for (final candidate in dbFilesBySize[fsFile.size] ?? <ModelItem>[]) {
-      final oldPath = await ModelItem.getPathForLocalItem(candidate.id);
+      final oldPath =
+          await _snapshotPath(candidate.id, rootItemId, snapshot.rootPath);
       identityCandidates.add(ReconciliationIdentityCandidate(
         value: candidate,
         stableId: candidate.id,
@@ -686,6 +708,27 @@ class ReconciliationService {
   }
 
   // --- Helpers ---
+  // Compare identities in the same coordinate system as the actual scan.
+  // Apple bookmarks can resolve moves or canonical aliases of persisted paths.
+  Future<String> _snapshotPath(
+      String id, String rootId, String resolvedRoot) async {
+    final rows = await ModelItem.getPathRowsForItem(id);
+    final index = rows.indexWhere((row) => row['id'] == rootId);
+    if (index < 0) throw StateError('Item left its reconciliation root');
+    final names =
+        rows.skip(index + 1).map((row) => row['name'] as String).toList();
+    if (names.any((name) =>
+        name.isEmpty ||
+        name == '.' ||
+        name == '..' ||
+        name.contains('/') ||
+        name.contains('\\') ||
+        name.contains('\u0000'))) {
+      throw StateError('Invalid source item path');
+    }
+    return path_lib.joinAll([resolvedRoot, ...names]);
+  }
+
   String? _fileSystemFolderFingerprint(
     String folderPath,
     _FileSystemSnapshot snapshot,
@@ -872,8 +915,8 @@ class ReconciliationService {
     }
   }
 
-  static Future<_FileSystemSnapshot> _scanFileSystemTree(
-      String rootPath) async {
+  static Future<_FileSystemSnapshot> _scanFileSystemTree(String rootPath,
+      {Set<String> excludedPaths = const {}}) async {
     final normalizedRoot = path_lib.normalize(path_lib.absolute(rootPath));
     final rootType = await FileSystemEntity.type(
       normalizedRoot,
@@ -908,6 +951,7 @@ class ReconciliationService {
                 path_lib.normalize(path_lib.absolute(entity.path));
             final name = path_lib.basename(entityPath);
             if (name.startsWith('.')) continue;
+            if (excludedPaths.contains(entityPath)) continue;
             final type = await FileSystemEntity.type(
               entityPath,
               followLinks: false,

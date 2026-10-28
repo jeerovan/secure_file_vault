@@ -1061,12 +1061,22 @@ class _FileListItemState extends State<FileListItem> {
   bool _requiresBookmark = false;
   int transferProgress = 0;
   int _fileStateCheck = 0;
+  late final StreamSubscription<AppEvent> _completedTransfers;
 
   @override
   void initState() {
     super.initState();
     _updateTaskState();
     _checkFileStates();
+    // A fast transfer may finish between task snapshots. Search also renders
+    // these rows without a task stream, so refresh presence on completion.
+    _completedTransfers = EventStream().events.listen((event) {
+      if (event.type == EventType.system &&
+          event.key == EventKey.removed &&
+          event.id == widget.item.id) {
+        unawaited(_checkFileStates());
+      }
+    });
   }
 
   @override
@@ -1083,6 +1093,7 @@ class _FileListItemState extends State<FileListItem> {
 
   @override
   void dispose() {
+    _completedTransfers.cancel();
     super.dispose();
   }
 
@@ -1102,7 +1113,7 @@ class _FileListItemState extends State<FileListItem> {
       String deviceHash = await getDeviceHash();
       if (item.parentId == deviceHash) {
         // A stored bookmark may be stale, denied or point to a removed folder.
-        // Match the reconnect decision made when this root is tapped.
+        // Match the selected root's Reconnect action eligibility.
         return !await SyncedFolderAccess.isAvailable(item);
       }
     }
@@ -1111,7 +1122,7 @@ class _FileListItemState extends State<FileListItem> {
 
   Future<bool?> fileExistsLocally(ModelItem item) async {
     try {
-      return await LocalItemAccess.withAccess(
+      return await LocalItemAccess.withReadableAccess(
           item.id, (path) => File(path).exists());
     } on PlatformException {
       // Failed folder permission is an unknown state, not proof of deletion.

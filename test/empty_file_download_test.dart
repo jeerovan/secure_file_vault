@@ -86,6 +86,20 @@ void main() {
     await TaskManager().checkInitDownload(task);
   }
 
+  void expectBookmarkAccessReleased() {
+    // Publication revalidates its destination while the original lease is
+    // held. Nested access is valid, but every acquired lease must be released.
+    expect(accessCalls, contains('startAccessing'));
+    var active = 0;
+    for (final method in accessCalls) {
+      expect(method, isIn(['startAccessing', 'stopAccessing']));
+      active += method == 'startAccessing' ? 1 : -1;
+      expect(active, greaterThanOrEqualTo(0));
+    }
+    expect(active, 0,
+        reason: 'A completed/blocked download must not leak access');
+  }
+
   test('zero-part empty file restores verified bytes and completes its task',
       () async {
     await StorageSqlite.runInDatabaseTransaction(db, () async {
@@ -95,7 +109,7 @@ void main() {
       expect(await restored.exists(), isTrue);
       expect(await restored.readAsBytes(), isEmpty);
       expect(await ModelItem.get('fixture-file'), isNotNull);
-      expect(accessCalls, ['startAccessing', 'stopAccessing']);
+      expectBookmarkAccessReleased();
     });
   }, skip: !Platform.isMacOS && !Platform.isIOS);
 
@@ -148,7 +162,7 @@ void main() {
       expect(task?.state, TransferTaskState.blocked);
       expect(task?.lastError, 'destination_conflict');
       expect(await destination.readAsString(), 'keep existing bytes');
-      expect(accessCalls, ['startAccessing', 'stopAccessing']);
+      expectBookmarkAccessReleased();
     });
   }, skip: !Platform.isMacOS && !Platform.isIOS);
 

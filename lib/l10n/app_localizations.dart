@@ -1803,6 +1803,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your recovery phrase couldn\'t be loaded. Try again, or use your saved backup or another signed-in device.'**
   String get recoveryPhraseUnavailable;
+
+  /// Reconnect a selected folder whose source access is unavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnect'**
+  String get reconnect;
+
+  /// No description provided for @archiveBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive backup'**
+  String get archiveBackup;
+
+  /// No description provided for @archiveFolderBackupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Move the selected folder backups to Trash and remove their downloaded copies from FiFe? Original files and other folders are kept. These folder paths will stay excluded from sync until you restore them from Trash.'**
+  String get archiveFolderBackupMessage;
 }
 
 class _AppLocalizationsDelegate

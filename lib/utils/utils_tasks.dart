@@ -2,7 +2,11 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+
+import 'package:flutter/services.dart';
+
+import '../storage/managed_file_copies.dart';
+import '../storage/remote_file_copies.dart';
 import 'package:crypto/crypto.dart';
 import 'package:file_vault_bb/models/model_file.dart';
 import 'package:file_vault_bb/models/model_setting.dart';
@@ -124,8 +128,10 @@ class TaskManager {
       if (prepare) {
         // Hold the dispatcher guard across cleanup/network and queue recovery.
         // A second sync start must join this run's existing completer.
+        await ManagedFileCopies.resumeCleanup();
         await ManagedUploadClient().drainCleanup();
         await ModelItemTask.recoverInterruptedTasks();
+        await RemoteFileCopies.reconcile(_fileHash);
       }
       // An idle queue needs neither a network probe nor a transfer-sized
       // reserve. Keep blocked/future-retry work intact and schedule its wake.
@@ -387,7 +393,9 @@ class TaskManager {
 
   Future<bool> checkInitUpload(ModelItemTask itemTask) async {
     ModelItem? modelItem = await ModelItem.get(itemTask.id);
-    if (modelItem == null || modelItem.fileHash == null) {
+    if (modelItem == null ||
+        modelItem.fileHash == null ||
+        await ManagedFileCopies.hasArchivedAncestor(modelItem.id)) {
       await itemTask.delete();
       return true;
     }
@@ -917,12 +925,17 @@ class TaskManager {
   }
 
   Future<void> checkInitDownload(ModelItemTask itemTask) async {
+    if (await ModelItemTask.get(itemTask.id) == null) return;
+    final transfer = await ManagedFileCopies.captureTransfer(itemTask.id);
     SyncBudget.check(reserve: const Duration(seconds: 5));
     ModelItem? modelItem = await ModelItem.get(itemTask.id);
-    if (modelItem == null || modelItem.fileHash == null) {
+    if (modelItem == null ||
+        modelItem.fileHash == null ||
+        await ManagedFileCopies.hasArchivedAncestor(modelItem.id)) {
       await itemTask.delete();
       return;
     }
+    final remote = await RemoteFileCopies.capture(modelItem);
     ModelFile? modelFile = await ModelFile.get(modelItem.fileHash!);
     if (modelFile == null) {
       await itemTask.scheduleRetry('missing_file_metadata');
@@ -942,102 +955,131 @@ class TaskManager {
       partCount: parts,
       expectedPlaintextLength: modelItem.size,
     );
-    final manifest = await staging.load();
-    int? partToDownload;
-    for (var part = 1; part <= parts; part++) {
-      if (!manifest.completedParts.contains(part)) {
-        partToDownload = part;
-        break;
+    try {
+      final manifest = await staging.load();
+      int? partToDownload;
+      for (var part = 1; part <= parts; part++) {
+        if (!manifest.completedParts.contains(part)) {
+          partToDownload = part;
+          break;
+        }
       }
-    }
 
-    if (partToDownload == null) {
-      await _finalizeDownload(itemTask, modelItem, staging);
-      return;
-    }
-    String fileHashPart = '${modelFile.id}_$partToDownload';
-    ModelPart? modelPart = await ModelPart.get(fileHashPart);
-    if (modelPart == null ||
-        modelPart.cipher == null ||
-        modelPart.nonce == null) {
-      await itemTask.scheduleRetry('missing_part_metadata');
-      return;
-    }
-    await _checkPartBudget('download', modelPart.size);
-    String downloadUrl = await getDownloadUrl(modelFile, partToDownload);
-    if (downloadUrl.isNotEmpty) {
-      logger.info("Fetched download authorization");
-      final tempFile = staging.encryptedPart(partToDownload);
-      final fileSink = tempFile.openWrite(mode: FileMode.write);
-      final transferWatch = Stopwatch()..start();
-      final downloadResult = await downloadFileStream(
-          url: downloadUrl, headers: null, fileOut: fileSink, onProgress: null);
-      if (downloadResult.succeeded) {
-        SyncBudget.check();
-        logger.info("Downloaded encrypted file part");
-        final contentLength = await tempFile.length();
-        final transferMilliseconds = transferWatch.elapsedMilliseconds;
-        final expectedSha1 = modelPart.data['sha1']?.toString();
-        final actualSha1 = await _sha1ForFile(tempFile);
-        final checksumMatches = expectedSha1 == null ||
-            expectedSha1.isEmpty ||
-            expectedSha1 == actualSha1;
-        if (modelPart.size == contentLength && checksumMatches) {
-          await _recordTransferRate(
-              'download', contentLength, transferMilliseconds);
-          String keyCipherBase64 = modelPart.cipher!;
-          String keyNonceBase64 = modelPart.nonce!;
-          SodiumSumo sodium = await SodiumSumoInit.init();
-          CryptoUtils cryptoUtils = CryptoUtils(sodium);
-          String? masterKeyBase64 = await getMasterKey();
-          if (masterKeyBase64 == null) {
-            return;
-          }
-          Uint8List? fileEncryptionKeyBytes =
-              cryptoUtils.getFileEncryptionKeyBytes(
-                  keyCipherBase64, keyNonceBase64, masterKeyBase64);
-          if (fileEncryptionKeyBytes != null) {
-            final plainPartial = staging.plainPartPartial(partToDownload);
-            ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
-                tempFile.path, plainPartial.path, fileEncryptionKeyBytes,
-                writeMode: FileMode.write);
-            if (decryptionResult.isSuccess) {
-              SyncBudget.check();
-              logger.info("Decrypted file part");
-              final readyPart = staging.readyPart(partToDownload);
-              if (await readyPart.exists()) await readyPart.delete();
-              await plainPartial.rename(readyPart.path);
-              await staging.markComplete(manifest, partToDownload);
-              itemTask.progress = (partToDownload * 100 ~/ parts).clamp(0, 100);
-              await itemTask.update(["progress"]);
-              if (manifest.completedParts.length == parts) {
-                await _finalizeDownload(itemTask, modelItem, staging);
-              } else {
-                await itemTask.markPending();
-              }
-            } else {
-              String error = decryptionResult.failureReason ?? "";
-              logger.error("File part decryption failed", error: error);
+      if (partToDownload == null) {
+        await _finalizeDownload(itemTask, modelItem, staging, transfer, remote);
+        return;
+      }
+      String fileHashPart = '${modelFile.id}_$partToDownload';
+      ModelPart? modelPart = await ModelPart.get(fileHashPart);
+      if (modelPart == null ||
+          modelPart.cipher == null ||
+          modelPart.nonce == null) {
+        await itemTask.scheduleRetry('missing_part_metadata');
+        return;
+      }
+      await _checkPartBudget('download', modelPart.size);
+      String downloadUrl = await getDownloadUrl(modelFile, partToDownload);
+      if (downloadUrl.isNotEmpty) {
+        logger.info("Fetched download authorization");
+        final tempFile = staging.encryptedPart(partToDownload);
+        final fileSink = tempFile.openWrite(mode: FileMode.write);
+        final transferWatch = Stopwatch()..start();
+        final downloadResult = await downloadFileStream(
+            url: downloadUrl,
+            headers: null,
+            fileOut: fileSink,
+            onProgress: null);
+        await ManagedFileCopies.checkTransfer(transfer);
+        await RemoteFileCopies.check(remote);
+        if (downloadResult.succeeded) {
+          SyncBudget.check();
+          logger.info("Downloaded encrypted file part");
+          final contentLength = await tempFile.length();
+          final transferMilliseconds = transferWatch.elapsedMilliseconds;
+          final expectedSha1 = modelPart.data['sha1']?.toString();
+          final actualSha1 = await _sha1ForFile(tempFile);
+          final checksumMatches = expectedSha1 == null ||
+              expectedSha1.isEmpty ||
+              expectedSha1 == actualSha1;
+          if (modelPart.size == contentLength && checksumMatches) {
+            await _recordTransferRate(
+                'download', contentLength, transferMilliseconds);
+            String keyCipherBase64 = modelPart.cipher!;
+            String keyNonceBase64 = modelPart.nonce!;
+            SodiumSumo sodium = await SodiumSumoInit.init();
+            CryptoUtils cryptoUtils = CryptoUtils(sodium);
+            String? masterKeyBase64 = await getMasterKey();
+            if (masterKeyBase64 == null) {
+              return;
             }
+            Uint8List? fileEncryptionKeyBytes =
+                cryptoUtils.getFileEncryptionKeyBytes(
+                    keyCipherBase64, keyNonceBase64, masterKeyBase64);
+            if (fileEncryptionKeyBytes != null) {
+              final plainPartial = staging.plainPartPartial(partToDownload);
+              ExecutionResult decryptionResult = await cryptoUtils.decryptFile(
+                  tempFile.path, plainPartial.path, fileEncryptionKeyBytes,
+                  writeMode: FileMode.write);
+              await ManagedFileCopies.checkTransfer(transfer);
+              await RemoteFileCopies.check(remote);
+              if (decryptionResult.isSuccess) {
+                SyncBudget.check();
+                logger.info("Decrypted file part");
+                final readyPart = staging.readyPart(partToDownload);
+                if (await readyPart.exists()) await readyPart.delete();
+                await plainPartial.rename(readyPart.path);
+                await staging.markComplete(manifest, partToDownload);
+                await ManagedFileCopies.checkTransfer(transfer);
+                await RemoteFileCopies.check(remote);
+                itemTask.progress =
+                    (partToDownload * 100 ~/ parts).clamp(0, 100);
+                await itemTask.update(["progress"]);
+                if (manifest.completedParts.length == parts) {
+                  await _finalizeDownload(
+                      itemTask, modelItem, staging, transfer, remote);
+                } else {
+                  await itemTask.markPending();
+                }
+              } else {
+                String error = decryptionResult.failureReason ?? "";
+                logger.error("File part decryption failed", error: error);
+              }
+            }
+          } else {
+            logger.error("Downloaded file part integrity check failed");
           }
+          if (await tempFile.exists()) await tempFile.delete();
         } else {
-          logger.error("Downloaded file part integrity check failed");
+          final retry =
+              downloadResult.isRetryable ? "retryable" : "non-retryable";
+          logger
+              .warning("Download failed ($retry); retaining metadata and task");
+          if (!downloadResult.isRetryable) {
+            await itemTask.markBlocked(
+                'download_${downloadResult.failureKind?.name ?? 'failed'}');
+          }
         }
-        if (await tempFile.exists()) await tempFile.delete();
+      }
+    } on PlatformException catch (error) {
+      if (error.code != 'DOWNLOAD_CANCELLED' &&
+          error.code != 'DOWNLOAD_SUPERSEDED') {
+        rethrow;
+      }
+      await staging.cleanup();
+      if (error.code == 'DOWNLOAD_SUPERSEDED') {
+        final current = await ModelItemTask.get(itemTask.id);
+        await current?.markPending();
       } else {
-        final retry =
-            downloadResult.isRetryable ? "retryable" : "non-retryable";
-        logger.warning("Download failed ($retry); retaining metadata and task");
-        if (!downloadResult.isRetryable) {
-          await itemTask.markBlocked(
-              'download_${downloadResult.failureKind?.name ?? 'failed'}');
-        }
+        await RemoteFileCopies.stopCancelled(remote);
       }
     }
   }
 
   Future<void> _finalizeDownload(ModelItemTask itemTask, ModelItem modelItem,
-      DownloadStaging staging) async {
+      DownloadStaging staging, ManagedCopyTransfer? transfer,
+      RemoteCopyTransfer? remote) async {
+    await ManagedFileCopies.checkTransfer(transfer);
+    await RemoteFileCopies.check(remote);
     SyncBudget.check();
     await staging.assemble();
     if (await staging.assembledFile.length() != modelItem.size ||
@@ -1047,21 +1089,74 @@ class TaskManager {
       return;
     }
 
-    await LocalItemAccess.withAccess(
-        modelItem.id,
-        (finalFilePath) =>
-            _publishDownload(itemTask, modelItem, staging, finalFilePath));
+    final access = await LocalItemAccess.acquireDownload(modelItem.id);
+    try {
+      await _publishDownload(
+          itemTask, modelItem, staging, access.itemPath, transfer, remote);
+    } finally {
+      await access.release();
+    }
   }
 
-  Future<void> _publishDownload(ModelItemTask itemTask, ModelItem modelItem,
-      DownloadStaging staging, String finalFilePath) async {
+  Future<void> _publishDownload(
+      ModelItemTask itemTask,
+      ModelItem modelItem,
+      DownloadStaging staging,
+      String finalFilePath,
+      ManagedCopyTransfer? transfer,
+      RemoteCopyTransfer? remote) async {
     final published = await SessionCleanup.instance.withPublication(() async {
+      await ManagedFileCopies.checkTransfer(transfer);
+      await RemoteFileCopies.check(remote);
       SyncBudget.check();
+      final current = await ModelItem.get(modelItem.id);
+      if (current == null ||
+          current.fileHash != modelItem.fileHash ||
+          current.size != modelItem.size ||
+          await ManagedFileCopies.hasArchivedAncestor(modelItem.id)) {
+        return false;
+      }
+      // Recheck persisted intent after waiting for publication. A reconnected
+      // source must not redirect an already requested recovery copy.
+      final destination = await LocalItemAccess.acquireDownload(modelItem.id);
+      try {
+        if (destination.itemPath != finalFilePath) return false;
+      } finally {
+        await destination.release();
+      }
       await File(finalFilePath).parent.create(recursive: true);
       final finalFile = File(finalFilePath);
       if (await Directory(finalFilePath).exists()) return false;
       if (await finalFile.exists()) {
-        return _fileMatchesHash(finalFile, modelItem.fileHash!);
+        if (await _fileMatchesHash(finalFile, modelItem.fileHash!)) return true;
+        if (remote == null ||
+            !await RemoteFileCopies.mayReplace(remote, finalFilePath)) {
+          return false;
+        }
+        // Prepare beside the destination so the final rename stays on the
+        // same filesystem. Never delete/truncate the previous readable copy.
+        final candidate = File(RemoteFileCopies.replacementPath(
+            finalFilePath, remote.generation));
+        try {
+          await LocalItemAccess.validateManagedPath(
+              await ModelItem.getPathForItem('fife'), candidate.path);
+          await staging.assembledFile.copy(candidate.path);
+          final output = await candidate.open(mode: FileMode.append);
+          try {
+            await output.flush();
+          } finally {
+            await output.close();
+          }
+          if (!await _fileMatchesHash(candidate, modelItem.fileHash!)) {
+            throw const FileSystemException('Replacement verification failed');
+          }
+          await RemoteFileCopies.check(remote);
+          SyncBudget.check();
+          await candidate.rename(finalFilePath);
+        } finally {
+          if (await candidate.exists()) await candidate.delete();
+        }
+        return true;
       }
       await moveFileSafely(staging.assembledFile.path, finalFilePath);
       if (!await finalFile.exists() ||
@@ -1077,8 +1172,14 @@ class TaskManager {
       await itemTask.markBlocked('destination_conflict');
       return;
     }
-    await ModelItemTask.completeTask(itemTask.id);
+    await StorageSqlite.instance.runInTransaction(() async {
+      await ManagedFileCopies.checkTransfer(transfer);
+      await RemoteFileCopies.complete(remote, finalFilePath);
+      await ManagedFileCopies.complete(modelItem.id, finalFilePath);
+      await ModelItemTask.completeTask(itemTask.id);
+    });
     await staging.cleanup();
+    if (remote != null) await RemoteFileCopies.retirePrevious(modelItem.id);
   }
 
   static Future<String> _sha1ForFile(File file) async {
@@ -1105,8 +1206,12 @@ class TaskManager {
   }
 
   static Future<bool> _fileMatchesHash(File file, String expectedHash) async {
+    return await _fileHash(file) == expectedHash;
+  }
+
+  static Future<String?> _fileHash(File file) async {
     final fileHashKey = await getFileHashKey();
-    if (fileHashKey == null || !await file.exists()) return false;
+    if (fileHashKey == null || !await file.exists()) return null;
     final sodium = await SodiumSumoInit.init();
     final secureKey = sodium.secureCopy(base64Decode(fileHashKey));
     try {
@@ -1119,7 +1224,7 @@ class TaskManager {
               (chunk) => chunk is Uint8List ? chunk : Uint8List.fromList(chunk))
           .pipe(consumer);
       final digest = await consumer.hash;
-      return base64UrlEncode(digest).replaceAll('=', '') == expectedHash;
+      return base64UrlEncode(digest).replaceAll('=', '');
     } finally {
       secureKey.dispose();
     }

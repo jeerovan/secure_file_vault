@@ -2,6 +2,7 @@ import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/model_item.dart';
+import '../../storage/managed_file_copies.dart';
 import '../../services/service_logger.dart';
 import '../../utils/common.dart';
 import 'package:flutter/material.dart';
@@ -111,10 +112,19 @@ class _PageTrashState extends State<PageTrash> {
 
   Future<void> recoverItems() async {
     logger.log('Recovering ${_selectedItems.length} items');
-    for (ModelItem item in _selectedItems) {
-      item.archivedAt = 0;
-      await item.update(["archived_at"]);
+    try {
+      for (ModelItem item in _selectedItems.toList()) {
+        await ManagedFileCopies.restoreFolder(item);
+      }
+    } catch (error, stack) {
+      logger.error('Backup restore failed', error: error, stackTrace: stack);
+      if (mounted) {
+        displaySnackBar(context,
+            message: AppLocalizations.of(context)!.pleaseTryAgain, seconds: 3);
+      }
+      return;
     }
+    if (!mounted) return;
     _cancelMultiSelect();
     _loadFiles();
   }

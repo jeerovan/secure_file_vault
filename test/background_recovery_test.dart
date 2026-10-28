@@ -165,7 +165,13 @@ void main() {
     await TaskManager().checkInitDownload(pending);
     expect(await ModelItemTask.get('file'), isNull);
     expect(await File('${directory.path}/empty.txt').readAsBytes(), isEmpty);
-    expect(access,
-        ['startAccessing', 'stopAccessing', 'startAccessing', 'stopAccessing']);
+    expect(access, [
+      'startAccessing',
+      'stopAccessing',
+      'startAccessing',
+      'startAccessing',
+      'stopAccessing',
+      'stopAccessing',
+    ]); // Publication revalidates its destination while the first lease is held.
   }, skip: !Platform.isMacOS && !Platform.isIOS);
 }

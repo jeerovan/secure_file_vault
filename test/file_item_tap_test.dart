@@ -1,6 +1,10 @@
 import 'dart:io';
 
 import 'package:file_vault_bb/services/service_session_work.dart';
+import 'package:file_vault_bb/models/model_item.dart';
+import 'package:file_vault_bb/models/model_item_task.dart';
+import 'package:file_vault_bb/storage/managed_file_copies.dart';
+import 'package:file_vault_bb/ui/item_selection_actions.dart';
 import 'package:file_vault_bb/services/service_file_viewer.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +43,60 @@ void main() {
   tearDown(() => FileViewerPlatform.instance = previous);
 
   for (final search in [false, true]) {
+    testWidgets(
+        '${search ? "Search" : "Explorer"}: disconnected file offers Info and Download then opens its managed copy',
+        (tester) async {
+      await withSelectionFixture(tester, (fixture) async {
+        fixture.denyAccess = true;
+        await fixture.mount(search: search);
+        await fixture.select('local');
+        await fixture.waitForAction('Download');
+        expect(find.byTooltip('Info'), findsOneWidget);
+        fixture.expectActions(delete: false, archive: false, download: true);
+        // This UI case supplies completed bytes at the transfer boundary.
+        // managed_file_copies_test exercises encryption and real publication.
+        final selection =
+            ValueNotifier<Set<ModelItem>>({(await ModelItem.get('local'))!});
+        final actions = ItemSelectionActions(selection);
+        try {
+          expect(await actions.perform(ItemSelectionAction.download), isTrue);
+        } finally {
+          actions.dispose();
+          selection.dispose();
+        }
+        final copy = (await ManagedFileCopies.downloadPath('local'))!;
+        await File(copy).parent.create(recursive: true);
+        await File(copy).writeAsString('recovered fixture');
+        await ManagedFileCopies.complete('local', copy);
+        await ModelItemTask.completeTask('local');
+        final greenIndicator = find.descendant(
+          of: find.byKey(const ValueKey('local')),
+          matching: find.byWidgetPredicate((widget) =>
+              widget is Container &&
+              widget.decoration is BoxDecoration &&
+              (widget.decoration as BoxDecoration).shape == BoxShape.circle &&
+              (widget.decoration as BoxDecoration).color == Colors.green),
+        );
+        await fixture.waitFor(() => greenIndicator.evaluate().isNotEmpty);
+        viewer.handle = (path) async {
+          expect(path, copy);
+          expect(await File(path).readAsString(), 'recovered fixture');
+          return FileViewResult.opened;
+        };
+        await tester.tap(find.byTooltip('Cancel'));
+        await fixture.pump();
+        await tester.tap(find.byKey(const ValueKey('local')));
+        await fixture.waitFor(() => viewer.paths.isNotEmpty);
+        expect(viewer.paths, [copy]);
+        expect(
+            find.text(
+                'Unable to access this file. Check its folder permissions and try again.'),
+            findsNothing);
+        expect(await File('${fixture.source.path}/local-sample.txt').exists(),
+            isFalse);
+      });
+    }, skip: !Platform.isMacOS && !Platform.isIOS);
+
     testWidgets(
         '${search ? "Search" : "Explorer"}: tap uses the resolved local bookmark, not the missing old path',
         (tester) async {

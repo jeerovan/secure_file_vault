@@ -986,4 +986,14 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Deine Wiederherstellungsphrase konnte nicht geladen werden. Versuche es erneut oder verwende deine Sicherung oder ein anderes angemeldetes Gerät.';
+
+  @override
+  String get reconnect => 'Erneut verbinden';
+
+  @override
+  String get archiveBackup => 'Sicherung archivieren';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Die Sicherungen der ausgewählten Ordner in den Papierkorb verschieben und ihre heruntergeladenen Kopien aus FiFe entfernen? Originaldateien und andere Ordner bleiben erhalten. Diese Ordnerpfade bleiben von der Synchronisierung ausgeschlossen, bis du sie aus dem Papierkorb wiederherstellst.';
 }

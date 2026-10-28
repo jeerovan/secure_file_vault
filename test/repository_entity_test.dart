@@ -14,7 +14,8 @@ void main() {
     db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
     await db.execute(
       'CREATE TABLE items ('
-      'id TEXT PRIMARY KEY, path TEXT, parent_id TEXT, updated_at INTEGER)',
+      'id TEXT PRIMARY KEY, path TEXT, parent_id TEXT, updated_at INTEGER, '
+      'archived_at INTEGER DEFAULT 0)',
     );
     await db.execute(
       'CREATE TABLE files ('
@@ -56,14 +57,25 @@ void main() {
       'parent_id': 'device-a',
       'updated_at': 1,
     });
+    await repository.insert({
+      'id': 'legacy-null-archive',
+      'parent_id': 'device-a',
+      'archived_at': null,
+    });
+    await repository.insert({
+      'id': 'archived-local',
+      'parent_id': 'device-a',
+      'archived_at': 1,
+    });
 
     final match = await repository.findSyncedFolder('device-a', '/local');
     final folders = await repository.getSyncedFolders('device-a');
 
     expect(match?['id'], 'local');
-    expect(folders.map((row) => row['id']),
-        containsAll(['local', 'root-child-without-path']));
-    expect(folders.map((row) => row['id']), isNot(contains('other')));
+    expect(
+        folders.map((row) => row['id']),
+        unorderedEquals(
+            ['local', 'root-child-without-path', 'legacy-null-archive']));
   });
 
   test('file repository ignores stale server rows', () async {

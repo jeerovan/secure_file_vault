@@ -963,4 +963,14 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'לא ניתן לטעון את ביטוי השחזור. יש לנסות שוב, להשתמש בגיבוי ששמרת או במכשיר אחר שכבר מחובר לחשבון.';
+
+  @override
+  String get reconnect => 'חיבור מחדש';
+
+  @override
+  String get archiveBackup => 'העברת הגיבוי לארכיון';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'להעביר את גיבויי התיקיות שנבחרו לאשפה ולהסיר את העותקים שהורדו מ-FiFe? הקבצים המקוריים והתיקיות האחרות יישמרו. נתיבי התיקיות האלה יישארו מחוץ לסנכרון עד לשחזורם מהאשפה.';
 }

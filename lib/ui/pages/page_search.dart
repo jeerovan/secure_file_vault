@@ -8,6 +8,7 @@ import '../../services/service_logger.dart';
 import '../../utils/utils_tasks.dart';
 import 'page_file_info.dart';
 import '../item_selection_actions.dart';
+import '../archive_backup_confirmation.dart';
 import '../item_file_opener.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -157,8 +158,15 @@ class _SearchScreenState extends State<SearchScreen>
     await performSearch(_searchController.text);
   }
 
-  Future<void> trashItems() =>
-      _performSelectionAction(ItemSelectionAction.archive);
+  Future<void> trashItems() async {
+    final selected = _selectedItemsNotifier.value.toList();
+    final ids = selected.map((item) => item.id).toSet();
+    if (!await confirmArchiveBackup(context, selected) || !mounted) return;
+    final currentIds =
+        _selectedItemsNotifier.value.map((item) => item.id).toSet();
+    if (ids.length != currentIds.length || !ids.containsAll(currentIds)) return;
+    await _performSelectionAction(ItemSelectionAction.archive);
+  }
 
   Future<void> deleteLocal() =>
       _performSelectionAction(ItemSelectionAction.deleteLocal);
@@ -222,7 +230,9 @@ class _SearchScreenState extends State<SearchScreen>
               if (_selectionActions.allows(ItemSelectionAction.archive))
                 IconButton(
                   icon: const Icon(LucideIcons.archive),
-                  tooltip: AppLocalizations.of(context)!.archive,
+                  tooltip: selectedItems.any((item) => item.isFolder)
+                      ? AppLocalizations.of(context)!.archiveBackup
+                      : AppLocalizations.of(context)!.archive,
                   onPressed: trashItems,
                 ),
             ],

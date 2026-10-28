@@ -932,4 +932,14 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'リカバリーフレーズを読み込めませんでした。もう一度試すか、保存済みのバックアップまたはログイン済みの別の端末を使用してください。';
+
+  @override
+  String get reconnect => '再接続';
+
+  @override
+  String get archiveBackup => 'バックアップをアーカイブ';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      '選択したフォルダのバックアップをゴミ箱に移動し、ダウンロード済みのコピーをFiFeから削除しますか？元のファイルと他のフォルダは保持されます。これらのフォルダのパスは、ゴミ箱から復元するまで同期対象から除外されます。';
 }

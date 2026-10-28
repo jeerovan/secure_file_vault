@@ -987,4 +987,14 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'No se pudo cargar tu frase de recuperación. Inténtalo de nuevo o usa tu copia guardada u otro dispositivo con sesión iniciada.';
+
+  @override
+  String get reconnect => 'Volver a conectar';
+
+  @override
+  String get archiveBackup => 'Archivar copia de seguridad';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      '¿Mover las copias de seguridad de las carpetas seleccionadas a la Papelera y eliminar sus copias descargadas de FiFe? Se conservarán los archivos originales y las demás carpetas. Estas rutas de carpetas quedarán excluidas de la sincronización hasta que las restaures desde la Papelera.';
 }

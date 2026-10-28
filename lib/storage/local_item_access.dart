@@ -6,6 +6,8 @@ import 'package:path/path.dart' as path;
 import '../models/model_item.dart';
 import '../utils/common.dart';
 import 'storage_channel.dart';
+import 'managed_file_copies.dart';
+import 'remote_file_copies.dart';
 
 /// Keeps a selected folder accessible throughout a file operation, including
 /// awaits. A denied bookmark must never be treated as a missing source file.
@@ -14,6 +16,46 @@ class LocalItemAccess {
   String? _accessPath;
 
   LocalItemAccess._(this.itemPath, this._accessPath);
+
+  /// Preview/presence may use an explicit recovery copy. Uploads continue to
+  /// call acquire/withAccess, which only grant the original source location.
+  static Future<LocalItemAccess> acquireReadable(String itemId) async {
+    LocalItemAccess? source;
+    try {
+      source = await acquire(itemId);
+      if (await File(source.itemPath).exists()) return source;
+      final copy = await ManagedFileCopies.existingPath(itemId) ??
+          await RemoteFileCopies.existingPath(itemId);
+      if (copy == null) return source;
+      await source.release();
+      return LocalItemAccess._(copy, null);
+    } on PlatformException {
+      await source?.release();
+      final copy = await ManagedFileCopies.existingPath(itemId);
+      if (copy == null) rethrow;
+      return LocalItemAccess._(copy, null);
+    } on FileSystemException {
+      await source?.release();
+      final copy = await ManagedFileCopies.existingPath(itemId);
+      if (copy == null) rethrow;
+      return LocalItemAccess._(copy, null);
+    }
+  }
+
+  static Future<LocalItemAccess> acquireDownload(String itemId) async {
+    final copy = await ManagedFileCopies.downloadPath(itemId);
+    return copy == null ? acquire(itemId) : LocalItemAccess._(copy, null);
+  }
+
+  static Future<T> withReadableAccess<T>(
+      String itemId, Future<T> Function(String itemPath) operation) async {
+    final access = await acquireReadable(itemId);
+    try {
+      return await operation(access.itemPath);
+    } finally {
+      await access.release();
+    }
+  }
 
   static Future<LocalItemAccess> acquire(String itemId) async {
     final itemPath = await ModelItem.getPathForItem(itemId);
@@ -89,6 +131,9 @@ class LocalItemAccess {
       }
     }
   }
+
+  static Future<void> validateManagedPath(String rootPath, String itemPath) =>
+      _validatePath(rootPath, itemPath);
 
   Future<void> release() async {
     final accessPath = _accessPath;

@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "Xác thực để xem, sao chép hoặc lưu cụm từ khôi phục của bạn.",
   "recoveryPhraseExportAuth": "Xác thực để xem cụm từ khôi phục của bạn",
   "recoveryPhraseExportWarning": "Bất kỳ ai có những từ này đều có thể mở khóa kho của bạn. Giữ bản sao ở nơi riêng tư bên ngoài FiFe.",
-  "recoveryPhraseUnavailable": "Không thể tải cụm từ khôi phục. Hãy thử lại hoặc dùng bản sao lưu đã lưu hay thiết bị khác đã đăng nhập."
+  "recoveryPhraseUnavailable": "Không thể tải cụm từ khôi phục. Hãy thử lại hoặc dùng bản sao lưu đã lưu hay thiết bị khác đã đăng nhập.",
+  "reconnect": "Kết nối lại",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Lưu trữ bản sao lưu",
+  "archiveFolderBackupMessage": "Chuyển bản sao lưu của các thư mục đã chọn vào Thùng rác và xóa các bản đã tải xuống khỏi FiFe? Các tệp gốc và thư mục khác vẫn được giữ lại. Những đường dẫn thư mục này sẽ không được đồng bộ cho đến khi bạn khôi phục chúng từ Thùng rác."
 }

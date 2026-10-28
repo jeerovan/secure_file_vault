@@ -975,4 +975,14 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Не удалось загрузить фразу восстановления. Повторите попытку или используйте сохранённую копию либо другое устройство, на котором выполнен вход.';
+
+  @override
+  String get reconnect => 'Подключить заново';
+
+  @override
+  String get archiveBackup => 'Архивировать резервную копию';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Переместить резервные копии выбранных папок в Корзину и удалить их загруженные копии из FiFe? Исходные файлы и другие папки сохранятся. Эти пути папок будут исключены из синхронизации, пока вы не восстановите их из Корзины.';
 }

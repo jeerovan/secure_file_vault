@@ -11,11 +11,76 @@ import 'package:file_vault_bb/ui/common_widgets.dart';
 import 'package:file_vault_bb/ui/pages/page_explorer.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 void main() {
+  testWidgets(
+      'disconnected subfolder Archive confirms, cancels and restores through Trash',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      final db = await StorageSqlite.instance.database;
+      await db.insert('items', {
+        'id': 'subfolder',
+        'parent_id': 'folder',
+        'root_id': 'folder',
+        'name': 'archive-me',
+        'is_folder': 1,
+        'archived_at': 0
+      });
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+              const MethodChannel('com.jeerovan.fife/channel_storage'),
+              (_) async => null);
+      await fixture.mount(() async {});
+      await tester.tap(find.text('nested'));
+      final row = find.byKey(const ValueKey('subfolder'));
+      await fixture.waitFor(row);
+      await fixture.longPress(row);
+      await fixture.waitFor(find.byTooltip('Archive backup'));
+      expect(find.byTooltip('Reconnect'), findsNothing);
+      expect(find.byTooltip('Download'), findsOneWidget);
+      await tester.tap(find.byTooltip('Archive backup'));
+      await fixture.waitFor(find.byType(AlertDialog));
+      expect(find.textContaining('Original files and other folders are kept.'),
+          findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await fixture.pump();
+      expect((await ModelItem.get('subfolder'))!.archivedAt, 0);
+      await fixture.waitFor(find.byTooltip('Archive backup'));
+      await tester.tap(find.byTooltip('Archive backup'));
+      await fixture.waitFor(find.byType(AlertDialog));
+      await tester.tap(find.widgetWithText(FilledButton, 'Archive backup'));
+      for (var i = 0;
+          i < 60 && (await ModelItem.get('subfolder'))!.archivedAt == 0;
+          i++) {
+        await fixture.pump();
+      }
+      expect((await ModelItem.get('subfolder'))!.archivedAt, greaterThan(0));
+      await fixture.waitFor(find.byType(PopupMenuButton<int>));
+      await tester.tap(find.byType(PopupMenuButton<int>));
+      await fixture.waitFor(find.text('Trash'));
+      await fixture.pumpMenu();
+      await tester.tap(find.text('Trash'));
+      await fixture.waitFor(find.text('archive-me'));
+      await fixture.longPress(find.text('archive-me'));
+      final strings =
+          AppLocalizations.of(tester.element(find.text('archive-me')))!;
+      await fixture.waitFor(find.byTooltip(strings.recover));
+      await tester.tap(find.byTooltip(strings.recover));
+      for (var i = 0;
+          i < 60 && (await ModelItem.get('subfolder'))!.archivedAt != 0;
+          i++) {
+        await fixture.pump();
+      }
+      expect((await ModelItem.get('subfolder'))!.archivedAt, 0);
+      expect((await ModelItem.get('folder'))!.archivedAt, 0);
+      expect(tester.takeException(), isNull);
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
   testWidgets('trashed but readable root warns on resume and fresh Explorer',
       (tester) async {
     await withExplorer(tester, (fixture) async {
@@ -61,7 +126,9 @@ void main() {
       expect(await resolved.exists(), isTrue);
       fixture.resumeRepeatedly();
       await fixture.waitFor(warning);
-      await tester.tap(row);
+      await fixture.longPress(row);
+      await fixture.waitFor(find.byTooltip('Reconnect'));
+      await tester.tap(find.byTooltip('Reconnect'));
       for (var i = 0; i < 30 && pickerCalls == 0; i++) {
         await fixture.pump();
       }
@@ -122,8 +189,10 @@ void main() {
       denied = true;
       fixture.resumeRepeatedly();
       await fixture.waitFor(warning);
-      // The same visible row triggers the existing reconnect-only picker.
-      await tester.tap(row);
+      // Long press selects; Reconnect is an explicit toolbar action.
+      await fixture.longPress(row);
+      await fixture.waitFor(find.byTooltip('Reconnect'));
+      await tester.tap(find.byTooltip('Reconnect'));
       for (var i = 0; i < 30 && pickerCalls == 0; i++) {
         await fixture.pump();
       }
@@ -139,6 +208,204 @@ void main() {
       expect(warning, findsNothing);
       expect(activeLeases, 0);
       expect(fixture.scans, 1, reason: 'Resume must not start another sync');
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
+  testWidgets('warning folder tap browses saved contents without a picker',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      var pickerCalls = 0;
+      const storage = MethodChannel('com.jeerovan.fife/channel_storage');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(storage, (call) async {
+        if (call.method == 'pickDirectory') {
+          pickerCalls++;
+          return null;
+        }
+        throw PlatformException(code: 'ACCESS_DENIED');
+      });
+      await fixture.mount(() async {});
+      final row = find.byKey(const ValueKey('folder'));
+      await fixture.waitFor(find.byIcon(LucideIcons.alertCircle));
+      final db = await StorageSqlite.instance.database;
+      final before = await db.query('items', orderBy: 'id');
+      await tester.tap(row);
+      await fixture.waitFor(find.byKey(const ValueKey('file')));
+      expect(find.text('hello.txt'), findsOneWidget);
+      expect(pickerCalls, 0);
+      expect(fixture.file.isMultiSelectNotifier.value, isFalse);
+      await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+      await fixture.waitFor(row);
+      await fixture.waitFor(find.byIcon(LucideIcons.alertCircle));
+      expect(await db.query('items', orderBy: 'id'), before);
+      expect(pickerCalls, 0);
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
+  testWidgets(
+      'selected Reconnect is single flight and retains selection on failure or Cancel',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      var pickerCalls = 0;
+      final picker = Completer<dynamic>();
+      const storage = MethodChannel('com.jeerovan.fife/channel_storage');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(storage, (call) async {
+        if (call.method == 'startAccessing') {
+          throw PlatformException(code: 'ACCESS_DENIED');
+        }
+        if (call.method == 'pickDirectory') {
+          pickerCalls++;
+          return pickerCalls == 1 ? picker.future : null;
+        }
+        return null;
+      });
+      await fixture.mount(() async {});
+      final row = find.byKey(const ValueKey('folder'));
+      await fixture.longPress(row);
+      await fixture.waitFor(find.byTooltip('Reconnect'));
+      await tester.tap(find.byTooltip('Reconnect'));
+      for (var i = 0; i < 30 && pickerCalls == 0; i++) {
+        await fixture.pump();
+      }
+      expect(pickerCalls, 1);
+      await fixture.longPress(row);
+      await fixture.pump();
+      expect(pickerCalls, 1);
+      expect(
+          tester.widget<FileListItem>(row).isMultiSelectNotifier.value, isTrue);
+      picker.completeError(PlatformException(code: 'PICKER_BUSY'));
+      final strings = AppLocalizations.of(tester.element(row))!;
+      await fixture.waitFor(find.text(strings.pleaseTryAgain));
+      // The transient snackbar overlays this fixture's bottom toolbar.
+      for (var i = 0;
+          i < 100 && find.byType(SnackBar).evaluate().isNotEmpty;
+          i++) {
+        await fixture.pump();
+      }
+      expect(find.byType(SnackBar), findsNothing);
+      await fixture.waitFor(find.byTooltip('Reconnect'));
+      await tester.tap(find.byTooltip('Reconnect'));
+      for (var i = 0; i < 30 && pickerCalls != 2; i++) {
+        await fixture.pump();
+      }
+      expect(pickerCalls, 2);
+      expect(
+          tester.widget<FileListItem>(row).isMultiSelectNotifier.value, isTrue);
+      expect((await ModelItem.get('folder'))!.bookmark, 'fixture-bookmark');
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
+  testWidgets('accessible folder long press keeps ordinary selection behavior',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      await fixture.mount(() async {});
+      final row = find.byKey(const ValueKey('folder'));
+      await fixture.longPress(row);
+      for (var i = 0;
+          i < 30 &&
+              !tester.widget<FileListItem>(row).isMultiSelectNotifier.value;
+          i++) {
+        await fixture.pump();
+      }
+      final tile = tester.widget<FileListItem>(row);
+      expect(tile.isMultiSelectNotifier.value, isTrue);
+      expect(tile.selectedItemsNotifier.value.single.id, 'folder');
+      await tester.tap(row);
+      await fixture.pump();
+      expect(tile.isMultiSelectNotifier.value, isFalse);
+      expect(tile.selectedItemsNotifier.value, isEmpty);
+    });
+  });
+
+  testWidgets('successful selected Reconnect refreshes the same folder list',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      final replacement =
+          await Directory('${fixture.directory.path}/replacement').create();
+      await File('${replacement.path}/hello.txt').writeAsString('fixture');
+      var pickerCalls = 0;
+      const storage = MethodChannel('com.jeerovan.fife/channel_storage');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(storage, (call) async {
+        switch (call.method) {
+          case 'startAccessing':
+            return call.arguments['bookmark'] == 'fresh-bookmark'
+                ? replacement.path
+                : null;
+          case 'stopAccessing':
+            return true;
+          case 'pickDirectory':
+            pickerCalls++;
+            return {'path': replacement.path, 'bookmark': 'fresh-bookmark'};
+          default:
+            throw StateError('Unexpected storage operation');
+        }
+      });
+      await fixture.mount(() async {});
+      final row = find.byKey(const ValueKey('folder'));
+      await fixture.waitFor(find.byIcon(LucideIcons.alertCircle));
+      final db = await StorageSqlite.instance.database;
+      final idsBefore = await db.query('items', columns: ['id'], orderBy: 'id');
+      await fixture.longPress(row);
+      await fixture.waitFor(find.byTooltip('Reconnect'));
+      await tester.tap(find.byTooltip('Reconnect'));
+      for (var i = 0; i < 50; i++) {
+        await fixture.pump();
+        if ((await ModelItem.get('folder'))?.bookmark == 'fresh-bookmark' &&
+            find.byIcon(LucideIcons.plus).evaluate().isNotEmpty &&
+            find.byIcon(LucideIcons.alertCircle).evaluate().isEmpty) {
+          break;
+        }
+      }
+      expect(pickerCalls, 1);
+      expect(find.byIcon(LucideIcons.alertCircle), findsNothing);
+      expect(find.byIcon(LucideIcons.plus), findsOneWidget);
+      expect(row, findsOneWidget);
+      expect(find.byKey(const ValueKey('file')), findsNothing,
+          reason: 'Reconnection must not navigate away from the current list');
+      expect(tester.widget<FileListItem>(row).isMultiSelectNotifier.value,
+          isFalse);
+      expect((await ModelItem.get('folder'))!.path, replacement.path);
+      expect((await ModelItem.get('folder'))!.bookmark, 'fresh-bookmark');
+      expect(
+          await db.query('items', columns: ['id'], orderBy: 'id'), idsBefore);
+      await tester.tap(row);
+      await fixture.waitFor(find.byKey(const ValueKey('file')));
+      expect(pickerCalls, 1);
+    });
+  }, skip: !Platform.isMacOS && !Platform.isIOS);
+
+  testWidgets('late access check cannot open a picker after browsing away',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      final access = Completer<String?>();
+      var delayAccess = false;
+      var pickerCalls = 0;
+      const storage = MethodChannel('com.jeerovan.fife/channel_storage');
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(storage, (call) async {
+        if (call.method == 'startAccessing') {
+          return delayAccess ? access.future : null;
+        }
+        if (call.method == 'pickDirectory') pickerCalls++;
+        return null;
+      });
+      await fixture.mount(() async {});
+      await fixture.waitFor(find.byIcon(LucideIcons.alertCircle));
+      delayAccess = true;
+      final row = find.byKey(const ValueKey('folder'));
+      await fixture.longPress(row);
+      await tester.tap(row); // Deselect while eligibility is still checking.
+      await fixture.pump();
+      await tester.tap(row); // Now browse without waiting for the old check.
+      await fixture.waitFor(find.byKey(const ValueKey('file')));
+      access.complete(null);
+      await fixture.pump();
+      await fixture.pump();
+      expect(pickerCalls, 0);
+      expect(find.byKey(const ValueKey('file')), findsOneWidget);
+      expect(fixture.file.isMultiSelectNotifier.value, isFalse);
     });
   }, skip: !Platform.isMacOS && !Platform.isIOS);
 
@@ -492,6 +759,17 @@ class ExplorerFixture {
   Future<void> pump() async {
     await Future<void>.delayed(const Duration(milliseconds: 40));
     await tester.pump(const Duration(milliseconds: 40));
+  }
+
+  Future<void> longPress(Finder target) async {
+    final gesture = await tester.startGesture(tester.getCenter(target));
+    // withExplorer uses runAsync for SQLite/filesystem work. Gesture timers
+    // therefore use real time; tester.longPress's fake-clock pump is a tap here.
+    await Future<void>.delayed(
+        kLongPressTimeout + const Duration(milliseconds: 50));
+    await tester.pump();
+    await gesture.up();
+    await pump();
   }
 
   Future<void> pumpMenu() async {

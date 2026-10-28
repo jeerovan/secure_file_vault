@@ -111,8 +111,12 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 600));
       await gesture.up();
       await pumpUntil(
-          tester, () => find.byTooltip('Archive').evaluate().isNotEmpty);
-      await tester.tap(find.byTooltip('Archive'));
+          tester, () => find.byTooltip('Archive backup').evaluate().isNotEmpty);
+      await tester.tap(find.byTooltip('Archive backup'));
+      await pumpUntil(
+          tester, () => find.byType(AlertDialog).evaluate().isNotEmpty);
+      expect((await ModelItem.get('folder'))!.archivedAt, 0);
+      await tester.tap(find.widgetWithText(FilledButton, 'Archive backup'));
       await pumpUntil(tester,
           () => find.byKey(const ValueKey('folder')).evaluate().isEmpty);
       expect((await ModelItem.get('folder'))!.archivedAt, greaterThan(0));

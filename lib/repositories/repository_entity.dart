@@ -109,8 +109,8 @@ class RepositoryItem<T> extends RepositoryEntity<T> {
     final db = await executor;
     final rows = await db.query(
       table,
-      where: 'parent_id = ?',
-      whereArgs: [deviceRootId],
+      where: 'parent_id = ? AND COALESCE(archived_at, 0) = ?',
+      whereArgs: [deviceRootId, 0],
     );
     return Future.wait(rows.map(decoder));
   }

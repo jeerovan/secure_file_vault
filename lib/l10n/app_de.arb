@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "Authentifiziere dich, um deine Wiederherstellungsphrase anzuzeigen, zu kopieren oder zu speichern.",
   "recoveryPhraseExportAuth": "Authentifiziere dich, um deine Wiederherstellungsphrase anzuzeigen",
   "recoveryPhraseExportWarning": "Mit diesen Wörtern kann jeder deinen Tresor entsperren. Bewahre deine Kopie sicher außerhalb von FiFe auf.",
-  "recoveryPhraseUnavailable": "Deine Wiederherstellungsphrase konnte nicht geladen werden. Versuche es erneut oder verwende deine Sicherung oder ein anderes angemeldetes Gerät."
+  "recoveryPhraseUnavailable": "Deine Wiederherstellungsphrase konnte nicht geladen werden. Versuche es erneut oder verwende deine Sicherung oder ein anderes angemeldetes Gerät.",
+  "reconnect": "Erneut verbinden",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Sicherung archivieren",
+  "archiveFolderBackupMessage": "Die Sicherungen der ausgewählten Ordner in den Papierkorb verschieben und ihre heruntergeladenen Kopien aus FiFe entfernen? Originaldateien und andere Ordner bleiben erhalten. Diese Ordnerpfade bleiben von der Synchronisierung ausgeschlossen, bis du sie aus dem Papierkorb wiederherstellst."
 }

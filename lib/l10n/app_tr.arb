@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "Kurtarma ifadenizi görüntülemek, kopyalamak veya kaydetmek için kimliğinizi doğrulayın.",
   "recoveryPhraseExportAuth": "Kurtarma ifadenizi görüntülemek için kimliğinizi doğrulayın",
   "recoveryPhraseExportWarning": "Bu kelimelere sahip olan herkes kasanızın kilidini açabilir. Kopyanızı FiFe dışında güvenli bir yerde saklayın.",
-  "recoveryPhraseUnavailable": "Kurtarma ifadeniz yüklenemedi. Tekrar deneyin veya kayıtlı yedeğinizi ya da oturum açılmış başka bir cihazı kullanın."
+  "recoveryPhraseUnavailable": "Kurtarma ifadeniz yüklenemedi. Tekrar deneyin veya kayıtlı yedeğinizi ya da oturum açılmış başka bir cihazı kullanın.",
+  "reconnect": "Yeniden bağlan",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Yedeği arşivle",
+  "archiveFolderBackupMessage": "Seçilen klasörlerin yedekleri Çöp Kutusuna taşınsın ve indirilen kopyaları FiFe’den kaldırılsın mı? Orijinal dosyalar ve diğer klasörler korunur. Bu klasör yolları, Çöp Kutusundan geri yüklenene kadar eşitleme dışında tutulur."
 }

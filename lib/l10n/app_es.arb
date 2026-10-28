@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "Autentícate para ver, copiar o guardar tu frase de recuperación.",
   "recoveryPhraseExportAuth": "Autentícate para ver tu frase de recuperación",
   "recoveryPhraseExportWarning": "Cualquiera que tenga estas palabras puede desbloquear tu bóveda. Guarda tu copia en privado y fuera de FiFe.",
-  "recoveryPhraseUnavailable": "No se pudo cargar tu frase de recuperación. Inténtalo de nuevo o usa tu copia guardada u otro dispositivo con sesión iniciada."
+  "recoveryPhraseUnavailable": "No se pudo cargar tu frase de recuperación. Inténtalo de nuevo o usa tu copia guardada u otro dispositivo con sesión iniciada.",
+  "reconnect": "Volver a conectar",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Archivar copia de seguridad",
+  "archiveFolderBackupMessage": "¿Mover las copias de seguridad de las carpetas seleccionadas a la Papelera y eliminar sus copias descargadas de FiFe? Se conservarán los archivos originales y las demás carpetas. Estas rutas de carpetas quedarán excluidas de la sincronización hasta que las restaures desde la Papelera."
 }

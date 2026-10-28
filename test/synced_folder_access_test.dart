@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:file_vault_bb/models/model_item.dart';
+import 'package:file_vault_bb/models/model_setting.dart';
+import 'package:file_vault_bb/services/service_session_cleanup.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
 import 'package:file_vault_bb/storage/synced_folder_access.dart';
 import 'package:file_vault_bb/utils/enums.dart';
@@ -22,8 +24,13 @@ void main() {
     calls.clear();
     selected = await Directory.systemTemp.createTemp('folder-recovery-');
     await File('${selected.path}/child.txt').writeAsString('survives recovery');
-    db = await databaseFactoryFfi.openDatabase(inMemoryDatabasePath);
-    await StorageSqlite.instance.initTables(db);
+    SessionCleanup.instance.resetForTesting();
+    ModelSetting.clear();
+    messenger.setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/path_provider'),
+        (_) async => selected.path);
+    await StorageSqlite.initialize(ExecutionMode.mainApp);
+    db = await StorageSqlite.instance.database;
     await db.insert('settings',
         {'id': AppString.deviceHash.string, 'value': 'local-device'});
     await db.insert(
@@ -61,14 +68,17 @@ void main() {
 
   tearDown(() async {
     messenger.setMockMethodCallHandler(channel, null);
-    await db.close();
+    await StorageSqlite.instance.close();
+    SessionCleanup.instance.resetForTesting();
+    ModelSetting.clear();
+    messenger.setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/path_provider'), null);
     await selected.delete(recursive: true);
   });
 
-  Future<void> inDatabase(Future<void> Function(ModelItem root) action) =>
-      StorageSqlite.runInDatabaseTransaction(db, () async {
-        await action((await ModelItem.get('root'))!);
-      });
+  Future<void> inDatabase(Future<void> Function(ModelItem root) action) async {
+    await action((await ModelItem.get('root'))!);
+  }
 
   Future<List<Map<String, Object?>>> items() async =>
       (await StorageSqlite.instance.executor).query('items', orderBy: 'id');
@@ -216,6 +226,23 @@ void main() {
       expect(current.path, root.path);
       expect((await items()).length, 3);
       expect(calls.last.method, 'stopAccessing');
+    });
+  });
+
+  test('root archived while picker is open rejects the stale reconnect',
+      () async {
+    await inDatabase((root) async {
+      overridePicker(() async {
+        await db.update('items', {'archived_at': 123},
+            where: 'id = ?', whereArgs: ['root']);
+        return {'path': selected.path, 'bookmark': 'fresh-bookmark'};
+      });
+      await expectLater(
+          SyncedFolderAccess.reselect(root), throwsA(isA<PlatformException>()));
+      final current = (await ModelItem.get('root'))!;
+      expect(current.archivedAt, 123);
+      expect(current.bookmark, 'old-bookmark');
+      expect(await db.query('states'), isEmpty);
     });
   });
 

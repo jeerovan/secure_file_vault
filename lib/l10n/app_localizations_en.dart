@@ -970,4 +970,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'Your recovery phrase couldn\'t be loaded. Try again, or use your saved backup or another signed-in device.';
+
+  @override
+  String get reconnect => 'Reconnect';
+
+  @override
+  String get archiveBackup => 'Archive backup';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'Move the selected folder backups to Trash and remove their downloaded copies from FiFe? Original files and other folders are kept. These folder paths will stay excluded from sync until you restore them from Trash.';
 }

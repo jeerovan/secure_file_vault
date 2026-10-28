@@ -963,4 +963,14 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'आपका रिकवरी वाक्यांश लोड नहीं हो सका। फिर कोशिश करें, या अपने सहेजे गए बैकअप या किसी अन्य साइन इन किए गए डिवाइस का उपयोग करें।';
+
+  @override
+  String get reconnect => 'फिर से कनेक्ट करें';
+
+  @override
+  String get archiveBackup => 'बैकअप संग्रहित करें';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'चुने गए फ़ोल्डरों के बैकअप को ट्रैश में ले जाएँ और उनकी डाउनलोड की गई प्रतियाँ FiFe से हटाएँ? मूल फ़ाइलें और अन्य फ़ोल्डर सुरक्षित रहेंगे। इन फ़ोल्डर पथों को तब तक सिंक नहीं किया जाएगा जब तक आप उन्हें ट्रैश से बहाल नहीं करते।';
 }

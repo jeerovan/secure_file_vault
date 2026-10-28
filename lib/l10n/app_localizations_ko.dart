@@ -931,4 +931,14 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       '복구 구문을 불러올 수 없습니다. 다시 시도하거나 저장한 백업 또는 로그인된 다른 기기를 사용하세요.';
+
+  @override
+  String get reconnect => '다시 연결';
+
+  @override
+  String get archiveBackup => '백업 보관';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      '선택한 폴더의 백업을 휴지통으로 옮기고 다운로드한 사본을 FiFe에서 삭제할까요? 원본 파일과 다른 폴더는 유지됩니다. 이 폴더 경로는 휴지통에서 복원할 때까지 동기화에서 제외됩니다.';
 }

@@ -10,7 +10,6 @@ import '../../l10n/app_localizations.dart';
 import '../../models/model_state.dart';
 import '../../repositories/repository_item_task.dart';
 import '../../storage/storage_channel.dart';
-import '../../storage/synced_folder_access.dart';
 import '../../ui/pages/page_devices.dart';
 import '../../ui/pages/page_file_info.dart';
 import '../../ui/pages/page_search.dart';
@@ -36,6 +35,7 @@ import 'package:file_picker/file_picker.dart';
 import '../../utils/utils_tasks.dart';
 import '../common_widgets.dart';
 import '../item_selection_actions.dart';
+import '../archive_backup_confirmation.dart';
 import '../item_file_opener.dart';
 
 class PageExplorer extends StatefulWidget {
@@ -287,32 +287,8 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
       return;
     }
 
-    if (_checkingFolderAccess) return;
-    if ((Platform.isIOS || Platform.isMacOS) && item.isFolder) {
-      _checkingFolderAccess = true;
-      try {
-        if (item.parentId == await getDeviceHash() &&
-            !await SyncedFolderAccess.isAvailable(item)) {
-          if (!mounted) return;
-          final recovered = await SyncedFolderAccess.reselect(item);
-          if (recovered == null || !mounted) return;
-          await reconFolder(recovered);
-          if (!mounted) return;
-          item = recovered;
-        }
-      } catch (error, stackTrace) {
-        logger.error('Folder access recovery failed',
-            error: error, stackTrace: stackTrace);
-        if (mounted) {
-          displaySnackBar(context,
-              message: AppLocalizations.of(context)!.pleaseTryAgain,
-              seconds: 3);
-        }
-        return;
-      } finally {
-        _checkingFolderAccess = false;
-      }
-    }
+    // Browsing saved vault metadata does not require access to its source.
+    // An unavailable root is reconnected explicitly through long press.
     if (!mounted) return;
 
     if (item.isFolder) {
@@ -339,12 +315,28 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   }
 
   void _onLongPress(ModelItem item) {
-    if (currentItem != null && currentItem!.id == 'fife') {
-      return;
-    }
-    if (!_isMultiSelectNotifier.value) {
-      _isMultiSelectNotifier.value = true;
-      _toggleSelection(item);
+    if (currentItem?.id == 'fife' || _isMultiSelectNotifier.value) return;
+    _isMultiSelectNotifier.value = true;
+    _toggleSelection(item);
+  }
+
+  Future<void> _reconnectSelected() async {
+    if (_checkingFolderAccess) return;
+    _checkingFolderAccess = true;
+    try {
+      final recovered = await _selectionActions.reconnect();
+      if (recovered == null || !mounted) return;
+      _cancelMultiSelect();
+      await reconFolder(recovered);
+    } catch (error, stackTrace) {
+      logger.error('Folder access recovery failed',
+          error: error, stackTrace: stackTrace);
+      if (mounted) {
+        displaySnackBar(context,
+            message: AppLocalizations.of(context)!.pleaseTryAgain, seconds: 3);
+      }
+    } finally {
+      _checkingFolderAccess = false;
     }
   }
 
@@ -387,8 +379,15 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   Future<void> deleteLocal() =>
       _performSelectionAction(ItemSelectionAction.deleteLocal);
 
-  Future<void> trashItems() =>
-      _performSelectionAction(ItemSelectionAction.archive);
+  Future<void> trashItems() async {
+    final selected = _selectedItemsNotifier.value.toList();
+    final ids = selected.map((item) => item.id).toSet();
+    if (!await confirmArchiveBackup(context, selected) || !mounted) return;
+    final currentIds =
+        _selectedItemsNotifier.value.map((item) => item.id).toSet();
+    if (ids.length != currentIds.length || !ids.containsAll(currentIds)) return;
+    await _performSelectionAction(ItemSelectionAction.archive);
+  }
 
   Future<void> downloadItems() =>
       _performSelectionAction(ItemSelectionAction.download);
@@ -469,6 +468,12 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
                   .selectedItemsCount(selectedItems.length),
             ),
             actions: [
+              if (_selectionActions.allows(ItemSelectionAction.reconnect))
+                IconButton(
+                  icon: const Icon(LucideIcons.link),
+                  tooltip: AppLocalizations.of(context)!.reconnect,
+                  onPressed: _reconnectSelected,
+                ),
               if (_selectionActions.allows(ItemSelectionAction.deleteLocal))
                 IconButton(
                   icon: const Icon(LucideIcons.trash),
@@ -491,7 +496,9 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
               if (_selectionActions.allows(ItemSelectionAction.archive))
                 IconButton(
                   icon: const Icon(LucideIcons.archive),
-                  tooltip: AppLocalizations.of(context)!.archive,
+                  tooltip: selectedItems.any((item) => item.isFolder)
+                      ? AppLocalizations.of(context)!.archiveBackup
+                      : AppLocalizations.of(context)!.archive,
                   onPressed: trashItems,
                 ),
             ],

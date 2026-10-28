@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "Authentifiez-vous pour afficher, copier ou enregistrer votre phrase de récupération.",
   "recoveryPhraseExportAuth": "Authentifiez-vous pour afficher votre phrase de récupération",
   "recoveryPhraseExportWarning": "Toute personne possédant ces mots peut déverrouiller votre coffre. Conservez votre copie en lieu sûr, en dehors de FiFe.",
-  "recoveryPhraseUnavailable": "Impossible de charger votre phrase de récupération. Réessayez ou utilisez votre sauvegarde ou un autre appareil connecté."
+  "recoveryPhraseUnavailable": "Impossible de charger votre phrase de récupération. Réessayez ou utilisez votre sauvegarde ou un autre appareil connecté.",
+  "reconnect": "Reconnecter",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Archiver la sauvegarde",
+  "archiveFolderBackupMessage": "Déplacer les sauvegardes des dossiers sélectionnés vers la Corbeille et supprimer leurs copies téléchargées de FiFe ? Les fichiers originaux et les autres dossiers sont conservés. Ces chemins de dossiers resteront exclus de la synchronisation jusqu’à leur restauration depuis la Corbeille."
 }

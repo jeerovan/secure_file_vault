@@ -1048,5 +1048,9 @@
   "recoveryPhraseExportHint": "Verifieer je identiteit om je herstelzin te bekijken, kopiëren of bewaren.",
   "recoveryPhraseExportAuth": "Verifieer je identiteit om je herstelzin te bekijken",
   "recoveryPhraseExportWarning": "Iedereen met deze woorden kan je kluis ontgrendelen. Bewaar je kopie op een veilige plek buiten FiFe.",
-  "recoveryPhraseUnavailable": "Je herstelzin kon niet worden geladen. Probeer opnieuw of gebruik je opgeslagen back-up of een ander aangemeld apparaat."
+  "recoveryPhraseUnavailable": "Je herstelzin kon niet worden geladen. Probeer opnieuw of gebruik je opgeslagen back-up of een ander aangemeld apparaat.",
+  "reconnect": "Opnieuw verbinden",
+  "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
+  "archiveBackup": "Back-up archiveren",
+  "archiveFolderBackupMessage": "De back-ups van de geselecteerde mappen naar de Prullenbak verplaatsen en hun gedownloade kopieën uit FiFe verwijderen? Originele bestanden en andere mappen blijven behouden. Deze mappaden blijven uitgesloten van synchronisatie totdat je ze uit de Prullenbak herstelt."
 }

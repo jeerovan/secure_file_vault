@@ -966,4 +966,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get recoveryPhraseUnavailable =>
       'تعذّر تحميل عبارة الاسترداد. حاول مجددًا، أو استخدم نسختك المحفوظة أو جهازًا آخر سجّلت الدخول عليه.';
+
+  @override
+  String get reconnect => 'إعادة الاتصال';
+
+  @override
+  String get archiveBackup => 'أرشفة النسخة الاحتياطية';
+
+  @override
+  String get archiveFolderBackupMessage =>
+      'هل تريد نقل النسخ الاحتياطية للمجلدات المحددة إلى سلة المهملات وإزالة نسخها المنزّلة من FiFe؟ ستبقى الملفات الأصلية والمجلدات الأخرى محفوظة. ستظل مسارات هذه المجلدات مستثناة من المزامنة حتى تستعيدها من سلة المهملات.';
 }
