@@ -1052,5 +1052,9 @@
   "reconnect": "Hubungkan kembali",
   "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
   "archiveBackup": "Arsipkan cadangan",
-  "archiveFolderBackupMessage": "Pindahkan cadangan folder yang dipilih ke Sampah dan hapus salinan unduhannya dari FiFe? File asli dan folder lain tetap disimpan. Jalur folder ini akan tetap dikecualikan dari sinkronisasi hingga Anda memulihkannya dari Sampah."
+  "archiveFolderBackupMessage": "Pindahkan cadangan folder yang dipilih ke Sampah dan hapus salinan unduhannya dari FiFe? File asli dan folder lain tetap disimpan. Jalur folder ini akan tetap dikecualikan dari sinkronisasi hingga Anda memulihkannya dari Sampah.",
+  "menuBarOpen": "Buka",
+  "menuBarQuit": "Keluar",
+  "appLockMacDescription": "Lindungi FiFe dengan Touch ID atau kata sandi masuk Mac Anda.",
+  "appLockMacUnavailable": "Autentikasi Mac tidak tersedia. Atur kata sandi masuk atau Touch ID di Pengaturan Sistem, lalu coba lagi."
 }

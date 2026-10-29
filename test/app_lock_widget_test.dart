@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/app_lock_fixture.dart';
+import 'support/native_privacy_fixture.dart';
 
 void main() {
   final binding = TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,10 +19,12 @@ void main() {
   late AppLockNavigatorObserver observer;
   late Duration time;
   late GlobalKey<NavigatorState> navigator;
+  late NativePrivacyFixture native;
 
   setUp(() {
     SessionWork.resetForTesting();
     binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    native = NativePrivacyFixture()..install();
     store = MemoryAppLockStore();
     auth = FakeAppLockAuthenticator();
     time = Duration.zero;
@@ -31,6 +34,7 @@ void main() {
     navigator = GlobalKey<NavigatorState>();
   });
   tearDown(() {
+    native.dispose();
     observer.dispose();
     lock.dispose();
     SessionWork.resetForTesting();

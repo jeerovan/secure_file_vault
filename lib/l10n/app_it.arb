@@ -1052,5 +1052,9 @@
   "reconnect": "Riconnetti",
   "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
   "archiveBackup": "Archivia backup",
-  "archiveFolderBackupMessage": "Spostare i backup delle cartelle selezionate nel Cestino e rimuovere le copie scaricate da FiFe? I file originali e le altre cartelle verranno conservati. Questi percorsi resteranno esclusi dalla sincronizzazione finché non li ripristini dal Cestino."
+  "archiveFolderBackupMessage": "Spostare i backup delle cartelle selezionate nel Cestino e rimuovere le copie scaricate da FiFe? I file originali e le altre cartelle verranno conservati. Questi percorsi resteranno esclusi dalla sincronizzazione finché non li ripristini dal Cestino.",
+  "menuBarOpen": "Apri",
+  "menuBarQuit": "Esci",
+  "appLockMacDescription": "Proteggi FiFe con Touch ID o la password di accesso del Mac.",
+  "appLockMacUnavailable": "L’autenticazione del Mac non è disponibile. Configura una password di accesso o Touch ID in Impostazioni di Sistema, poi riprova."
 }

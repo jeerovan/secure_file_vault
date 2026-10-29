@@ -573,7 +573,7 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
-      if (isMobile)
+      if (isMobile || platform == TargetPlatform.macOS)
         AppLockSettings(
             controller: context.read<AppLockController>(),
             enabledActions: [

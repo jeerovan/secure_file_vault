@@ -18,7 +18,8 @@ AppLockPrompt appLockPrompt(AppLocalizations loc, {bool settings = false}) =>
 
 String? appLockFailureText(AppLocalizations loc, AppLockFailure? failure) =>
     switch (failure) {
-      AppLockFailure.authenticationUnavailable => loc.appLockUnavailable,
+      AppLockFailure.authenticationUnavailable =>
+        Platform.isMacOS ? loc.appLockMacUnavailable : loc.appLockUnavailable,
       AppLockFailure.authenticationFailed => loc.appLockAuthenticationFailed,
       AppLockFailure.storageUnavailable => loc.appLockStorageError,
       null => null,
@@ -98,9 +99,10 @@ class SystemAppLockPrivacy implements AppLockPrivacyBridge {
   static const _channel = MethodChannel('com.jeerovan.fife/app_lock_privacy');
   static Object? _lifecycleOwner;
   @override
-  bool get supported => Platform.isAndroid || Platform.isIOS;
+  bool get supported =>
+      Platform.isAndroid || Platform.isIOS || Platform.isMacOS;
   @override
-  bool get reportsApplicationLifecycle => Platform.isIOS;
+  bool get reportsApplicationLifecycle => Platform.isIOS || Platform.isMacOS;
   @override
   Future<VoidCallback> watchLifecycle(
       ValueChanged<AppLifecycleState> listener) async {
@@ -467,7 +469,9 @@ class _AppLockSettingsState extends State<AppLockSettings> {
               key: const ValueKey('app-lock-switch'),
               secondary: const Icon(LucideIcons.lock, color: Colors.grey),
               title: Text(loc.appLockTitle),
-              subtitle: Text(loc.appLockDescription),
+              subtitle: Text(Theme.of(context).platform == TargetPlatform.macOS
+                  ? loc.appLockMacDescription
+                  : loc.appLockDescription),
               value: controller.enabled,
               onChanged: !controller.ready || controller.busy
                   ? null

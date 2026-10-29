@@ -3,14 +3,12 @@ import FlutterMacOS
 
 @main
 class AppDelegate: FlutterAppDelegate {
-  override func applicationDidFinishLaunching(_ notification: Notification) {
-    if let controller = mainFlutterWindow?.contentViewController as? FlutterViewController {
-      MacOSStorageChannel.register(with: controller.engine.binaryMessenger)
-    }
-    super.applicationDidFinishLaunching(notification)
+  override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+    return false
   }
 
-  override func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+  override func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+    MacOSDesktop.shared.openWindow()
     return true
   }
 

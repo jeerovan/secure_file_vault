@@ -941,4 +941,17 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       '선택한 폴더의 백업을 휴지통으로 옮기고 다운로드한 사본을 FiFe에서 삭제할까요? 원본 파일과 다른 폴더는 유지됩니다. 이 폴더 경로는 휴지통에서 복원할 때까지 동기화에서 제외됩니다.';
+
+  @override
+  String get menuBarOpen => '열기';
+
+  @override
+  String get menuBarQuit => '종료';
+
+  @override
+  String get appLockMacDescription => 'Touch ID 또는 Mac 로그인 암호로 FiFe를 보호하세요.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Mac 인증을 사용할 수 없습니다. 시스템 설정에서 로그인 암호 또는 Touch ID를 설정한 후 다시 시도하세요.';
 }

@@ -918,4 +918,17 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       '将所选文件夹的备份移至回收站，并从 FiFe 中移除已下载的副本？原始文件和其他文件夹将保留。这些文件夹路径将暂停同步，直到你从回收站恢复它们。';
+
+  @override
+  String get menuBarOpen => '打开';
+
+  @override
+  String get menuBarQuit => '退出';
+
+  @override
+  String get appLockMacDescription => '使用 Touch ID 或 Mac 登录密码保护 FiFe。';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Mac 身份验证不可用。请在系统设置中设置登录密码或 Touch ID，然后重试。';
 }

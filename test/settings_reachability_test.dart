@@ -126,11 +126,16 @@ void main() {
       'Report Issue',
       'Language',
       'Theme',
-      'Logging'
+      'Logging',
+      'App lock'
     ];
     _expectReadingOrder(tester, labels);
     expect(tester.getTopLeft(find.text('Sign out')).dy, greaterThan(600));
-    expect(find.text('App lock'), findsNothing);
+    expect(find.text('App lock'), findsOneWidget);
+    expect(
+        find.text('Use Touch ID or your Mac login password to protect FiFe.'),
+        findsOneWidget);
+    expect(find.byKey(const ValueKey('app-lock-timeout')), findsNothing);
     expect(find.text('Auto sync notification'), findsNothing);
     expect(tester.takeException(), isNull);
   });

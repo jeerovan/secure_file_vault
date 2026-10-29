@@ -1052,5 +1052,9 @@
   "reconnect": "Kết nối lại",
   "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
   "archiveBackup": "Lưu trữ bản sao lưu",
-  "archiveFolderBackupMessage": "Chuyển bản sao lưu của các thư mục đã chọn vào Thùng rác và xóa các bản đã tải xuống khỏi FiFe? Các tệp gốc và thư mục khác vẫn được giữ lại. Những đường dẫn thư mục này sẽ không được đồng bộ cho đến khi bạn khôi phục chúng từ Thùng rác."
+  "archiveFolderBackupMessage": "Chuyển bản sao lưu của các thư mục đã chọn vào Thùng rác và xóa các bản đã tải xuống khỏi FiFe? Các tệp gốc và thư mục khác vẫn được giữ lại. Những đường dẫn thư mục này sẽ không được đồng bộ cho đến khi bạn khôi phục chúng từ Thùng rác.",
+  "menuBarOpen": "Mở",
+  "menuBarQuit": "Thoát",
+  "appLockMacDescription": "Bảo vệ FiFe bằng Touch ID hoặc mật khẩu đăng nhập máy Mac.",
+  "appLockMacUnavailable": "Không thể xác thực trên máy Mac. Hãy thiết lập mật khẩu đăng nhập hoặc Touch ID trong Cài đặt hệ thống rồi thử lại."
 }

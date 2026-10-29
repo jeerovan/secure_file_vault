@@ -4,6 +4,7 @@ import 'package:flutter/widgets.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 import 'package:local_auth_darwin/local_auth_darwin.dart';
+import 'package:local_auth_darwin/types/auth_messages_macos.dart';
 
 import '../models/model_setting.dart';
 import '../utils/enums.dart';
@@ -85,6 +86,7 @@ class SystemAppLockAuthenticator implements AppLockAuthenticator {
               signInHint: prompt.hint,
               cancelButton: prompt.cancel),
           IOSAuthMessages(cancelButton: prompt.cancel),
+          MacOSAuthMessages(cancelButton: prompt.cancel),
         ],
       );
 

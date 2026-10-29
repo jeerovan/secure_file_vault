@@ -1108,5 +1108,9 @@
   "reconnect": "Reconnect",
   "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
   "archiveBackup": "Archive backup",
-  "archiveFolderBackupMessage": "Move the selected folder backups to Trash and remove their downloaded copies from FiFe? Original files and other folders are kept. These folder paths will stay excluded from sync until you restore them from Trash."
+  "archiveFolderBackupMessage": "Move the selected folder backups to Trash and remove their downloaded copies from FiFe? Original files and other folders are kept. These folder paths will stay excluded from sync until you restore them from Trash.",
+  "menuBarOpen": "Open",
+  "menuBarQuit": "Quit",
+  "appLockMacDescription": "Use Touch ID or your Mac login password to protect FiFe.",
+  "appLockMacUnavailable": "Mac authentication is unavailable. Set up a login password or Touch ID in System Settings, then try again."
 }

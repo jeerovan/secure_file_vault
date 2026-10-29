@@ -1052,5 +1052,9 @@
   "reconnect": "Erneut verbinden",
   "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
   "archiveBackup": "Sicherung archivieren",
-  "archiveFolderBackupMessage": "Die Sicherungen der ausgewählten Ordner in den Papierkorb verschieben und ihre heruntergeladenen Kopien aus FiFe entfernen? Originaldateien und andere Ordner bleiben erhalten. Diese Ordnerpfade bleiben von der Synchronisierung ausgeschlossen, bis du sie aus dem Papierkorb wiederherstellst."
+  "archiveFolderBackupMessage": "Die Sicherungen der ausgewählten Ordner in den Papierkorb verschieben und ihre heruntergeladenen Kopien aus FiFe entfernen? Originaldateien und andere Ordner bleiben erhalten. Diese Ordnerpfade bleiben von der Synchronisierung ausgeschlossen, bis du sie aus dem Papierkorb wiederherstellst.",
+  "menuBarOpen": "Öffnen",
+  "menuBarQuit": "Beenden",
+  "appLockMacDescription": "Schütze FiFe mit Touch ID oder deinem Mac-Anmeldepasswort.",
+  "appLockMacUnavailable": "Die Mac-Authentifizierung ist nicht verfügbar. Richte in den Systemeinstellungen ein Anmeldepasswort oder Touch ID ein und versuche es erneut."
 }

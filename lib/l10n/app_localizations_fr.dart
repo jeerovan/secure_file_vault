@@ -993,4 +993,18 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Déplacer les sauvegardes des dossiers sélectionnés vers la Corbeille et supprimer leurs copies téléchargées de FiFe ? Les fichiers originaux et les autres dossiers sont conservés. Ces chemins de dossiers resteront exclus de la synchronisation jusqu’à leur restauration depuis la Corbeille.';
+
+  @override
+  String get menuBarOpen => 'Ouvrir';
+
+  @override
+  String get menuBarQuit => 'Quitter';
+
+  @override
+  String get appLockMacDescription =>
+      'Protégez FiFe avec Touch ID ou le mot de passe de session de votre Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'L’authentification du Mac est indisponible. Configurez un mot de passe de session ou Touch ID dans Réglages Système, puis réessayez.';
 }

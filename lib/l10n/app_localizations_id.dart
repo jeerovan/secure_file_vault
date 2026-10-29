@@ -976,4 +976,18 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Pindahkan cadangan folder yang dipilih ke Sampah dan hapus salinan unduhannya dari FiFe? File asli dan folder lain tetap disimpan. Jalur folder ini akan tetap dikecualikan dari sinkronisasi hingga Anda memulihkannya dari Sampah.';
+
+  @override
+  String get menuBarOpen => 'Buka';
+
+  @override
+  String get menuBarQuit => 'Keluar';
+
+  @override
+  String get appLockMacDescription =>
+      'Lindungi FiFe dengan Touch ID atau kata sandi masuk Mac Anda.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Autentikasi Mac tidak tersedia. Atur kata sandi masuk atau Touch ID di Pengaturan Sistem, lalu coba lagi.';
 }

@@ -995,4 +995,18 @@ class AppLocalizationsEl extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Να μετακινηθούν τα αντίγραφα ασφαλείας των επιλεγμένων φακέλων στον Κάδο και να αφαιρεθούν τα ληφθέντα αντίγραφά τους από το FiFe; Τα αρχικά αρχεία και οι άλλοι φάκελοι διατηρούνται. Αυτές οι διαδρομές φακέλων θα εξαιρούνται από τον συγχρονισμό μέχρι να τις επαναφέρετε από τον Κάδο.';
+
+  @override
+  String get menuBarOpen => 'Άνοιγμα';
+
+  @override
+  String get menuBarQuit => 'Έξοδος';
+
+  @override
+  String get appLockMacDescription =>
+      'Προστατεύστε το FiFe με Touch ID ή τον κωδικό σύνδεσης του Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Ο έλεγχος ταυτότητας του Mac δεν είναι διαθέσιμος. Ορίστε κωδικό σύνδεσης ή Touch ID στις Ρυθμίσεις συστήματος και δοκιμάστε ξανά.';
 }

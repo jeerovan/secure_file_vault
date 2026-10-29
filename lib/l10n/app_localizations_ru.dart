@@ -985,4 +985,18 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Переместить резервные копии выбранных папок в Корзину и удалить их загруженные копии из FiFe? Исходные файлы и другие папки сохранятся. Эти пути папок будут исключены из синхронизации, пока вы не восстановите их из Корзины.';
+
+  @override
+  String get menuBarOpen => 'Открыть';
+
+  @override
+  String get menuBarQuit => 'Завершить';
+
+  @override
+  String get appLockMacDescription =>
+      'Защитите FiFe с помощью Touch ID или пароля входа на Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Аутентификация Mac недоступна. Настройте пароль входа или Touch ID в Системных настройках и повторите попытку.';
 }

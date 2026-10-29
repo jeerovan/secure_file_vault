@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/app_lock_fixture.dart';
 import 'support/sync_fixture.dart';
+import 'support/native_privacy_fixture.dart';
 
 final syntheticRecoveryPhrase = '${List.filled(23, 'abandon').join(' ')} art';
 
@@ -40,7 +41,9 @@ void main() {
   late FakeAppLockAuthenticator auth;
   late AppLockController lock;
   late RecoveryPlatformProbe platform;
+  late NativePrivacyFixture native;
   setUp(() {
+    native = NativePrivacyFixture()..install();
     SessionWork.resetForTesting();
     store = MemoryAppLockStore()..enabled = true;
     auth = FakeAppLockAuthenticator();
@@ -48,6 +51,7 @@ void main() {
     platform = RecoveryPlatformProbe();
   });
   tearDown(() {
+    native.dispose();
     lock.dispose();
     SessionWork.resetForTesting();
   });

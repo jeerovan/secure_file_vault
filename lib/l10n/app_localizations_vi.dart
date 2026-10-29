@@ -970,4 +970,18 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Chuyển bản sao lưu của các thư mục đã chọn vào Thùng rác và xóa các bản đã tải xuống khỏi FiFe? Các tệp gốc và thư mục khác vẫn được giữ lại. Những đường dẫn thư mục này sẽ không được đồng bộ cho đến khi bạn khôi phục chúng từ Thùng rác.';
+
+  @override
+  String get menuBarOpen => 'Mở';
+
+  @override
+  String get menuBarQuit => 'Thoát';
+
+  @override
+  String get appLockMacDescription =>
+      'Bảo vệ FiFe bằng Touch ID hoặc mật khẩu đăng nhập máy Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Không thể xác thực trên máy Mac. Hãy thiết lập mật khẩu đăng nhập hoặc Touch ID trong Cài đặt hệ thống rồi thử lại.';
 }

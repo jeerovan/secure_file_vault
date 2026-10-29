@@ -942,4 +942,17 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       '選択したフォルダのバックアップをゴミ箱に移動し、ダウンロード済みのコピーをFiFeから削除しますか？元のファイルと他のフォルダは保持されます。これらのフォルダのパスは、ゴミ箱から復元するまで同期対象から除外されます。';
+
+  @override
+  String get menuBarOpen => '開く';
+
+  @override
+  String get menuBarQuit => '終了';
+
+  @override
+  String get appLockMacDescription => 'Touch IDまたはMacのログインパスワードでFiFeを保護します。';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Macの認証を利用できません。システム設定でログインパスワードまたはTouch IDを設定し、もう一度お試しください。';
 }

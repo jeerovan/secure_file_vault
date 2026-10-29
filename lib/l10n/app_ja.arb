@@ -1052,5 +1052,9 @@
   "reconnect": "再接続",
   "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
   "archiveBackup": "バックアップをアーカイブ",
-  "archiveFolderBackupMessage": "選択したフォルダのバックアップをゴミ箱に移動し、ダウンロード済みのコピーをFiFeから削除しますか？元のファイルと他のフォルダは保持されます。これらのフォルダのパスは、ゴミ箱から復元するまで同期対象から除外されます。"
+  "archiveFolderBackupMessage": "選択したフォルダのバックアップをゴミ箱に移動し、ダウンロード済みのコピーをFiFeから削除しますか？元のファイルと他のフォルダは保持されます。これらのフォルダのパスは、ゴミ箱から復元するまで同期対象から除外されます。",
+  "menuBarOpen": "開く",
+  "menuBarQuit": "終了",
+  "appLockMacDescription": "Touch IDまたはMacのログインパスワードでFiFeを保護します。",
+  "appLockMacUnavailable": "Macの認証を利用できません。システム設定でログインパスワードまたはTouch IDを設定し、もう一度お試しください。"
 }

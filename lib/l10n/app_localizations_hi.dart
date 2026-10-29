@@ -973,4 +973,18 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'चुने गए फ़ोल्डरों के बैकअप को ट्रैश में ले जाएँ और उनकी डाउनलोड की गई प्रतियाँ FiFe से हटाएँ? मूल फ़ाइलें और अन्य फ़ोल्डर सुरक्षित रहेंगे। इन फ़ोल्डर पथों को तब तक सिंक नहीं किया जाएगा जब तक आप उन्हें ट्रैश से बहाल नहीं करते।';
+
+  @override
+  String get menuBarOpen => 'खोलें';
+
+  @override
+  String get menuBarQuit => 'बंद करें';
+
+  @override
+  String get appLockMacDescription =>
+      'FiFe की सुरक्षा के लिए Touch ID या अपने Mac का लॉगिन पासवर्ड इस्तेमाल करें।';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Mac प्रमाणीकरण उपलब्ध नहीं है। सिस्टम सेटिंग्स में लॉगिन पासवर्ड या Touch ID सेट करें, फिर दोबारा कोशिश करें।';
 }

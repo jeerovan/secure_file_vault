@@ -991,4 +991,18 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Spostare i backup delle cartelle selezionate nel Cestino e rimuovere le copie scaricate da FiFe? I file originali e le altre cartelle verranno conservati. Questi percorsi resteranno esclusi dalla sincronizzazione finché non li ripristini dal Cestino.';
+
+  @override
+  String get menuBarOpen => 'Apri';
+
+  @override
+  String get menuBarQuit => 'Esci';
+
+  @override
+  String get appLockMacDescription =>
+      'Proteggi FiFe con Touch ID o la password di accesso del Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'L’autenticazione del Mac non è disponibile. Configura una password di accesso o Touch ID in Impostazioni di Sistema, poi riprova.';
 }

@@ -989,4 +989,18 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'De back-ups van de geselecteerde mappen naar de Prullenbak verplaatsen en hun gedownloade kopieën uit FiFe verwijderen? Originele bestanden en andere mappen blijven behouden. Deze mappaden blijven uitgesloten van synchronisatie totdat je ze uit de Prullenbak herstelt.';
+
+  @override
+  String get menuBarOpen => 'Openen';
+
+  @override
+  String get menuBarQuit => 'Stoppen';
+
+  @override
+  String get appLockMacDescription =>
+      'Bescherm FiFe met Touch ID of het inlogwachtwoord van je Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Mac-authenticatie is niet beschikbaar. Stel in Systeeminstellingen een inlogwachtwoord of Touch ID in en probeer het opnieuw.';
 }

@@ -1052,5 +1052,9 @@
   "reconnect": "Yeniden bağlan",
   "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
   "archiveBackup": "Yedeği arşivle",
-  "archiveFolderBackupMessage": "Seçilen klasörlerin yedekleri Çöp Kutusuna taşınsın ve indirilen kopyaları FiFe’den kaldırılsın mı? Orijinal dosyalar ve diğer klasörler korunur. Bu klasör yolları, Çöp Kutusundan geri yüklenene kadar eşitleme dışında tutulur."
+  "archiveFolderBackupMessage": "Seçilen klasörlerin yedekleri Çöp Kutusuna taşınsın ve indirilen kopyaları FiFe’den kaldırılsın mı? Orijinal dosyalar ve diğer klasörler korunur. Bu klasör yolları, Çöp Kutusundan geri yüklenene kadar eşitleme dışında tutulur.",
+  "menuBarOpen": "Aç",
+  "menuBarQuit": "Çık",
+  "appLockMacDescription": "FiFe’yi Touch ID veya Mac oturum açma parolanızla koruyun.",
+  "appLockMacUnavailable": "Mac kimlik doğrulaması kullanılamıyor. Sistem Ayarları’nda oturum açma parolası veya Touch ID ayarlayıp yeniden deneyin."
 }

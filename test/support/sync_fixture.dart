@@ -15,6 +15,7 @@ import 'package:sodium/sodium_sumo.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'temporary_directory.dart';
+import 'native_privacy_fixture.dart';
 
 /// Real files, SQLite and libsodium; only OS directory/key storage is replaced.
 class SyncFixture {
@@ -41,6 +42,7 @@ class SyncFixture {
   Future<void> Function(String key, String? value)? afterRead;
   Future<void> Function(String key, String value)? beforeWrite;
   Future<void> Function(String key)? beforeDelete;
+  final nativePrivacy = NativePrivacyFixture();
 
   SyncFixture._(this.directory, this.source, this.sodium);
 
@@ -53,6 +55,7 @@ class SyncFixture {
     final source = await Directory('${directory.path}/source').create();
     final fixture =
         SyncFixture._(directory, source, await SodiumSumoInit.init());
+    fixture.nativePrivacy.install();
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     messenger.setMockMethodCallHandler(paths, (_) async => directory.path);
@@ -160,6 +163,7 @@ class SyncFixture {
     await StorageSqlite.instance.close();
     SessionCleanup.instance.resetForTesting();
     ModelSetting.clear();
+    nativePrivacy.dispose();
     final messenger =
         TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
     for (final channel in [paths, secure, access]) {

@@ -994,4 +994,18 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Mover os backups das pastas selecionadas para a Lixeira e remover suas cópias baixadas do FiFe? Os arquivos originais e as outras pastas serão mantidos. Esses caminhos de pasta ficarão excluídos da sincronização até que você os restaure da Lixeira.';
+
+  @override
+  String get menuBarOpen => 'Abrir';
+
+  @override
+  String get menuBarQuit => 'Sair';
+
+  @override
+  String get appLockMacDescription =>
+      'Proteja o FiFe com Touch ID ou a senha de início de sessão do Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'A autenticação do Mac está indisponível. Configure uma senha de início de sessão ou Touch ID nos Ajustes do Sistema e tente novamente.';
 }

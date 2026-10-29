@@ -968,4 +968,18 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'ย้ายข้อมูลสำรองของโฟลเดอร์ที่เลือกไปยังถังขยะ และลบสำเนาที่ดาวน์โหลดออกจาก FiFe หรือไม่? ไฟล์ต้นฉบับและโฟลเดอร์อื่นจะยังอยู่ เส้นทางโฟลเดอร์เหล่านี้จะไม่ถูกซิงค์จนกว่าคุณจะกู้คืนจากถังขยะ';
+
+  @override
+  String get menuBarOpen => 'เปิด';
+
+  @override
+  String get menuBarQuit => 'ออก';
+
+  @override
+  String get appLockMacDescription =>
+      'ปกป้อง FiFe ด้วย Touch ID หรือรหัสผ่านเข้าสู่ระบบ Mac ของคุณ';
+
+  @override
+  String get appLockMacUnavailable =>
+      'ไม่สามารถใช้การยืนยันตัวตนของ Mac ได้ ตั้งค่ารหัสผ่านเข้าสู่ระบบหรือ Touch ID ในการตั้งค่าระบบ แล้วลองอีกครั้ง';
 }

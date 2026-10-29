@@ -972,4 +972,18 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'نسخه‌های پشتیبان پوشه‌های انتخاب‌شده به سطل زباله منتقل و نسخه‌های دانلودشدهٔ آن‌ها از FiFe حذف شوند؟ فایل‌های اصلی و سایر پوشه‌ها حفظ می‌شوند. مسیر این پوشه‌ها تا زمانی که آن‌ها را از سطل زباله بازیابی کنید، از همگام‌سازی مستثنا می‌ماند.';
+
+  @override
+  String get menuBarOpen => 'باز کردن';
+
+  @override
+  String get menuBarQuit => 'خروج';
+
+  @override
+  String get appLockMacDescription =>
+      'برای محافظت از FiFe از Touch ID یا گذرواژهٔ ورود Mac استفاده کنید.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'احراز هویت Mac در دسترس نیست. گذرواژهٔ ورود یا Touch ID را در تنظیمات سیستم تنظیم کنید و دوباره تلاش کنید.';
 }

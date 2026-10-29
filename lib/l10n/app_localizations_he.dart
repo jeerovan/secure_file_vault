@@ -973,4 +973,18 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'להעביר את גיבויי התיקיות שנבחרו לאשפה ולהסיר את העותקים שהורדו מ-FiFe? הקבצים המקוריים והתיקיות האחרות יישמרו. נתיבי התיקיות האלה יישארו מחוץ לסנכרון עד לשחזורם מהאשפה.';
+
+  @override
+  String get menuBarOpen => 'פתיחה';
+
+  @override
+  String get menuBarQuit => 'יציאה';
+
+  @override
+  String get appLockMacDescription =>
+      'הגנה על FiFe באמצעות Touch ID או סיסמת ההתחברות ל-Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'האימות ב-Mac אינו זמין. יש להגדיר סיסמת התחברות או Touch ID בהגדרות המערכת ולנסות שוב.';
 }

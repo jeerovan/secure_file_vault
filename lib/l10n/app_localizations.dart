@@ -1821,6 +1821,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Move the selected folder backups to Trash and remove their downloaded copies from FiFe? Original files and other folders are kept. These folder paths will stay excluded from sync until you restore them from Trash.'**
   String get archiveFolderBackupMessage;
+
+  /// No description provided for @menuBarOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get menuBarOpen;
+
+  /// No description provided for @menuBarQuit.
+  ///
+  /// In en, this message translates to:
+  /// **'Quit'**
+  String get menuBarQuit;
+
+  /// No description provided for @appLockMacDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use Touch ID or your Mac login password to protect FiFe.'**
+  String get appLockMacDescription;
+
+  /// No description provided for @appLockMacUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Mac authentication is unavailable. Set up a login password or Touch ID in System Settings, then try again.'**
+  String get appLockMacUnavailable;
 }
 
 class _AppLocalizationsDelegate

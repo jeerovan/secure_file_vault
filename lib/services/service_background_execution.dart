@@ -16,7 +16,11 @@ const String iosBackgroundTaskIdentifier = 'com.jeerovan.fife.data_sync';
 
 /// Scheduling and delivered workers use durable session state, never the old
 /// background_sync opt-in or a possibly stale foreground settings cache.
-Future<bool> isIosBackgroundSyncReady() => SessionWork.run(() async {
+Future<bool> isIosBackgroundSyncReady() => isVaultSyncReady();
+
+/// Shared readiness for sync entry points outside Explorer (including macOS's
+/// menu bar). A signed-in flag alone does not mean onboarding/keys are ready.
+Future<bool> isVaultSyncReady() => SessionWork.run(() async {
       if (await ModelSetting.getRaw(AppString.onboarding.string) != 'yes' ||
           await ModelSetting.getRaw(AppString.signedIn.string) != 'yes' ||
           (await ModelSetting.getRaw(AppString.deviceUuid.string)).isEmpty) {

@@ -18,8 +18,8 @@ import 'package:path_provider/path_provider.dart';
 import 'support/apple_bookmark.dart';
 import 'support/native_test_install.dart';
 
-/// A synthetic app-owned root exercises the real iOS bookmark channel and row.
-/// External Files permissions and production account data are not modified.
+/// A synthetic app-owned root exercises the real Apple bookmark channel and row.
+/// External folder permissions and production account data are not modified.
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized()
     ..framePolicy = LiveTestWidgetsFlutterBindingFramePolicy.fullyLive;
@@ -27,7 +27,7 @@ void main() {
   final checks = <String, bool>{};
   setUpAll(() async {
     await verifyNativeTestInstall();
-    expect(Platform.isIOS, isTrue);
+    expect(Platform.isIOS || Platform.isMacOS, isTrue);
     expect(
         const bool.fromEnvironment('FIFE_RUN_FOLDER_INDICATOR_TESTS'), isTrue);
     isolated = true;

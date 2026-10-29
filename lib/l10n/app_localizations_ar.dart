@@ -976,4 +976,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'هل تريد نقل النسخ الاحتياطية للمجلدات المحددة إلى سلة المهملات وإزالة نسخها المنزّلة من FiFe؟ ستبقى الملفات الأصلية والمجلدات الأخرى محفوظة. ستظل مسارات هذه المجلدات مستثناة من المزامنة حتى تستعيدها من سلة المهملات.';
+
+  @override
+  String get menuBarOpen => 'فتح';
+
+  @override
+  String get menuBarQuit => 'إنهاء';
+
+  @override
+  String get appLockMacDescription =>
+      'استخدم Touch ID أو كلمة مرور تسجيل الدخول إلى Mac لحماية FiFe.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'المصادقة على Mac غير متاحة. أعدّ كلمة مرور تسجيل الدخول أو Touch ID في إعدادات النظام، ثم حاول مجددًا.';
 }

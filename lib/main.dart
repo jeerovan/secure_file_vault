@@ -22,6 +22,7 @@ import 'l10n/app_localizations.dart';
 import 'services/service_locale.dart';
 import 'services/service_app_lock.dart';
 import 'ui/app_lock.dart';
+import 'ui/desktop_menu.dart';
 import 'ui/sync_activity_overlay.dart';
 import 'services/service_events.dart';
 import 'services/service_session_cleanup.dart';
@@ -363,14 +364,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           valueListenable: themeNotifier,
           builder: (context, ThemeMode currentMode, child) {
             return MaterialApp(
-              builder: (context, child) => AppLockGate(
-                  controller: _appLock,
-                  cleanup: context.watch<AppSetupState>().currentStep ==
-                          SetupStep.sessionCleanup
-                      ? const PageSessionCleanup()
-                      : null,
-                  child: SyncActivityOverlay(
-                      child: child ?? const SizedBox.shrink())),
+              builder: (context, child) => DesktopMenu(
+                  child: AppLockGate(
+                      controller: _appLock,
+                      cleanup: context.watch<AppSetupState>().currentStep ==
+                              SetupStep.sessionCleanup
+                          ? const PageSessionCleanup()
+                          : null,
+                      child: SyncActivityOverlay(
+                          child: child ?? const SizedBox.shrink()))),
               navigatorKey: _navigationKey,
               navigatorObservers: [_appLockNavigation],
               locale: localeProvider.locale,

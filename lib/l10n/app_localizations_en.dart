@@ -980,4 +980,18 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Move the selected folder backups to Trash and remove their downloaded copies from FiFe? Original files and other folders are kept. These folder paths will stay excluded from sync until you restore them from Trash.';
+
+  @override
+  String get menuBarOpen => 'Open';
+
+  @override
+  String get menuBarQuit => 'Quit';
+
+  @override
+  String get appLockMacDescription =>
+      'Use Touch ID or your Mac login password to protect FiFe.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Mac authentication is unavailable. Set up a login password or Touch ID in System Settings, then try again.';
 }

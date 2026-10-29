@@ -993,4 +993,18 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Перемістити резервні копії вибраних папок до Кошика та видалити їхні завантажені копії з FiFe? Оригінальні файли й інші папки збережуться. Ці шляхи папок буде виключено із синхронізації, доки ви не відновите їх із Кошика.';
+
+  @override
+  String get menuBarOpen => 'Відкрити';
+
+  @override
+  String get menuBarQuit => 'Завершити';
+
+  @override
+  String get appLockMacDescription =>
+      'Захистіть FiFe за допомогою Touch ID або пароля входу на Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Автентифікація Mac недоступна. Налаштуйте пароль входу або Touch ID у Системних параметрах і спробуйте ще раз.';
 }

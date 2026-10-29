@@ -111,6 +111,18 @@ void main() {
     priorPicker = FilePickerPlatform.instance;
     picker = _SavePicker();
     FilePickerPlatform.instance = picker;
+    // Apple uses a protected native save reservation. Only the OS boundary is
+    // substituted; normal Settings still constructs the default service.
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        RecoveryPhraseExportFiles.channel, (call) async {
+      if (call.method == 'reserve') return 'synthetic-export-reservation';
+      if (call.method == 'save') {
+        expect(call.arguments['reservation'], 'synthetic-export-reservation');
+        picker.phrases.add(call.arguments['text'] as String);
+        return true;
+      }
+      return null;
+    });
     copied.clear();
     binding.defaultBinaryMessenger.setMockMethodCallHandler(privacyChannel,
         (call) async {

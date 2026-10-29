@@ -977,4 +977,18 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Seçilen klasörlerin yedekleri Çöp Kutusuna taşınsın ve indirilen kopyaları FiFe’den kaldırılsın mı? Orijinal dosyalar ve diğer klasörler korunur. Bu klasör yolları, Çöp Kutusundan geri yüklenene kadar eşitleme dışında tutulur.';
+
+  @override
+  String get menuBarOpen => 'Aç';
+
+  @override
+  String get menuBarQuit => 'Çık';
+
+  @override
+  String get appLockMacDescription =>
+      'FiFe’yi Touch ID veya Mac oturum açma parolanızla koruyun.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Mac kimlik doğrulaması kullanılamıyor. Sistem Ayarları’nda oturum açma parolası veya Touch ID ayarlayıp yeniden deneyin.';
 }

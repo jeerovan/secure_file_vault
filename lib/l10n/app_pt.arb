@@ -1052,5 +1052,9 @@
   "reconnect": "Reconectar",
   "@reconnect": {"description": "Reconnect a selected folder whose source access is unavailable."},
   "archiveBackup": "Arquivar backup",
-  "archiveFolderBackupMessage": "Mover os backups das pastas selecionadas para a Lixeira e remover suas cópias baixadas do FiFe? Os arquivos originais e as outras pastas serão mantidos. Esses caminhos de pasta ficarão excluídos da sincronização até que você os restaure da Lixeira."
+  "archiveFolderBackupMessage": "Mover os backups das pastas selecionadas para a Lixeira e remover suas cópias baixadas do FiFe? Os arquivos originais e as outras pastas serão mantidos. Esses caminhos de pasta ficarão excluídos da sincronização até que você os restaure da Lixeira.",
+  "menuBarOpen": "Abrir",
+  "menuBarQuit": "Sair",
+  "appLockMacDescription": "Proteja o FiFe com Touch ID ou a senha de início de sessão do Mac.",
+  "appLockMacUnavailable": "A autenticação do Mac está indisponível. Configure uma senha de início de sessão ou Touch ID nos Ajustes do Sistema e tente novamente."
 }

@@ -996,4 +996,18 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       'Die Sicherungen der ausgewählten Ordner in den Papierkorb verschieben und ihre heruntergeladenen Kopien aus FiFe entfernen? Originaldateien und andere Ordner bleiben erhalten. Diese Ordnerpfade bleiben von der Synchronisierung ausgeschlossen, bis du sie aus dem Papierkorb wiederherstellst.';
+
+  @override
+  String get menuBarOpen => 'Öffnen';
+
+  @override
+  String get menuBarQuit => 'Beenden';
+
+  @override
+  String get appLockMacDescription =>
+      'Schütze FiFe mit Touch ID oder deinem Mac-Anmeldepasswort.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'Die Mac-Authentifizierung ist nicht verfügbar. Richte in den Systemeinstellungen ein Anmeldepasswort oder Touch ID ein und versuche es erneut.';
 }

@@ -121,6 +121,7 @@ node_modules
 # AI
 .codex/
 .serena/
+/.local/macos-testing/
 
 # Markdowns
 *.md

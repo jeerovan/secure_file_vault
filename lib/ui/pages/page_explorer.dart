@@ -306,7 +306,11 @@ class _FilePaneState extends State<FilePane> with WidgetsBindingObserver {
   }
 
   Future<void> _navigateBack() async {
-    ModelItem? parentItem = await ModelItem.getParentItem(currentItem);
+    final from = currentItem;
+    ModelItem? parentItem = await ModelItem.getParentItem(from);
+    // Parent reads can overlap another Back click or breadcrumb navigation.
+    // Only the still-current source may publish its parent and trim the trail.
+    if (!mounted || currentItem?.id != from?.id) return;
     if (parentItem != null) {
       parentChilds = parentChilds.sublist(0, parentChilds.length - 1);
       currentItem = parentItem;

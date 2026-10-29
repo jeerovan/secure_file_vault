@@ -997,4 +997,18 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get archiveFolderBackupMessage =>
       '¿Mover las copias de seguridad de las carpetas seleccionadas a la Papelera y eliminar sus copias descargadas de FiFe? Se conservarán los archivos originales y las demás carpetas. Estas rutas de carpetas quedarán excluidas de la sincronización hasta que las restaures desde la Papelera.';
+
+  @override
+  String get menuBarOpen => 'Abrir';
+
+  @override
+  String get menuBarQuit => 'Salir';
+
+  @override
+  String get appLockMacDescription =>
+      'Protege FiFe con Touch ID o tu contraseña de inicio de sesión del Mac.';
+
+  @override
+  String get appLockMacUnavailable =>
+      'La autenticación del Mac no está disponible. Configura una contraseña de inicio de sesión o Touch ID en Ajustes del Sistema y vuelve a intentarlo.';
 }

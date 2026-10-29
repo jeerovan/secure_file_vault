@@ -8,19 +8,26 @@ import 'package:http/http.dart' as http;
 /// Controls native framework callbacks as well as test-zone requests. Only
 /// fixture hosts are accepted; no socket or external account is accessed.
 class NativeFixtureHttpOverrides extends HttpOverrides {
-  NativeFixtureHttpOverrides(this.respond);
+  NativeFixtureHttpOverrides(this.respond,
+      {this.allowedHosts = const {
+        'auth.example.test',
+        'backend.example.test'
+      }});
   final Future<http.Response> Function(http.Request) respond;
+  final Set<String> allowedHosts;
 
   @override
-  HttpClient createHttpClient(SecurityContext? context) => _Client(respond);
+  HttpClient createHttpClient(SecurityContext? context) =>
+      _Client(respond, allowedHosts);
 }
 
 class _Client implements HttpClient {
-  _Client(this.respond);
+  _Client(this.respond, this.allowedHosts);
   final Future<http.Response> Function(http.Request) respond;
+  final Set<String> allowedHosts;
   @override
   Future<HttpClientRequest> openUrl(String method, Uri url) async {
-    if (!{'auth.example.test', 'backend.example.test'}.contains(url.host)) {
+    if (!allowedHosts.contains(url.host)) {
       throw StateError('Native fixture refuses an unexpected HTTP host');
     }
     return _Request(method, url, respond);

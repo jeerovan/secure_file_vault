@@ -17,6 +17,73 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 void main() {
+  testWidgets('overlapping Back clicks keep the breadcrumb with the contents',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      final db = await StorageSqlite.instance.database;
+      await db.insert('items', {
+        'id': 'deeper',
+        'parent_id': 'folder',
+        'root_id': 'folder',
+        'name': 'deeper',
+        'is_folder': 1,
+        'archived_at': 0,
+      });
+      await fixture.mount(() async {});
+      await tester.tap(find.text('nested'));
+      await fixture.waitFor(find.byKey(const ValueKey('deeper')));
+      await tester.tap(find.byKey(const ValueKey('deeper')));
+      await fixture.waitFor(find.text(
+          AppLocalizations.of(tester.element(find.byType(FilePane)))!
+              .thisFolderIsEmpty));
+      final back = tester.widget<IconButton>(find.ancestor(
+          of: find.byIcon(LucideIcons.arrowLeft),
+          matching: find.byType(IconButton)));
+      // Two actual toolbar callbacks before either asynchronous parent read
+      // completes reproduce the rapid clicks observed in the native journey.
+      back.onPressed!();
+      back.onPressed!();
+      await fixture.waitFor(find.byKey(const ValueKey('deeper')));
+      await fixture.pump();
+      expect(
+          tester
+              .widget<BreadcrumbTrail>(find.byType(BreadcrumbTrail))
+              .parentChilds
+              .map((item) => item.id),
+          ['fife', 'device', 'folder']);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('a pending Back read cannot replace newer breadcrumb navigation',
+      (tester) async {
+    await withExplorer(tester, (fixture) async {
+      await (await StorageSqlite.instance.database).update(
+          'items', {'parent_id': 'fife'},
+          where: 'id = ?', whereArgs: ['device']);
+      await fixture.mount(() async {});
+      await tester.tap(find.text('nested'));
+      await fixture.waitFor(find.byKey(const ValueKey('file')));
+      final trail =
+          tester.widget<BreadcrumbTrail>(find.byType(BreadcrumbTrail));
+      final back = tester.widget<IconButton>(find.ancestor(
+          of: find.byIcon(LucideIcons.arrowLeft),
+          matching: find.byType(IconButton)));
+      back.onPressed!();
+      trail.onTap(trail.parentChilds.first);
+      await fixture.waitFor(find.byKey(const ValueKey('device')));
+      await fixture.pump();
+      expect(
+          tester
+              .widget<BreadcrumbTrail>(find.byType(BreadcrumbTrail))
+              .parentChilds
+              .map((item) => item.id),
+          ['fife']);
+      expect(find.byKey(const ValueKey('folder')), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   testWidgets(
       'disconnected subfolder Archive confirms, cancels and restores through Trash',
       (tester) async {

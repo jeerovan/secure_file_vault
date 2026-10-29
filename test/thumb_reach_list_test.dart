@@ -1,3 +1,4 @@
+import 'support/native_privacy_fixture.dart';
 import 'dart:math' as math;
 
 import 'package:file_vault_bb/l10n/app_localizations.dart';
@@ -118,6 +119,9 @@ Future<void> _reveal(WidgetTester tester, {double distance = 150}) async {
 }
 
 void main() {
+  late NativePrivacyFixture native;
+  setUp(() => native = NativePrivacyFixture()..install());
+  tearDown(() => native.dispose());
   for (final platform in [TargetPlatform.android, TargetPlatform.iOS]) {
     testWidgets(
         '$platform starts normally and retains bounded reach on release',
