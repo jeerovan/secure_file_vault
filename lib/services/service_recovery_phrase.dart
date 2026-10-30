@@ -16,14 +16,17 @@ class RecoveryPhraseUnavailable implements Exception {
   const RecoveryPhraseUnavailable();
 }
 
-/// Apple/Windows own exports natively; Android writes to a selected document.
+/// Desktop/Apple own exports natively; Android writes to a selected document.
 /// Cleanup never touches a shared temporary directory or user-saved copies.
 class RecoveryPhraseExportFiles {
   static const fileName = 'fife_recovery_phrase.txt';
   static const channel = MethodChannel('com.jeerovan.fife/recovery_export');
 
   static Future<void> clear() async {
-    if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
+    if (Platform.isIOS ||
+        Platform.isMacOS ||
+        Platform.isWindows ||
+        Platform.isLinux) {
       await channel.invokeMethod<void>('clear');
     }
   }
@@ -60,7 +63,10 @@ class NativeRecoveryPhrasePlatform implements RecoveryPhrasePlatform {
   final Future<void> Function(String?) _release;
 
   static Future<void> _nativeRelease(String? reservation) async {
-    if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
+    if (Platform.isIOS ||
+        Platform.isMacOS ||
+        Platform.isWindows ||
+        Platform.isLinux) {
       await RecoveryPhraseExportFiles.channel
           .invokeMethod<void>('release', reservation);
     }
@@ -68,7 +74,10 @@ class NativeRecoveryPhrasePlatform implements RecoveryPhrasePlatform {
 
   static Future<bool> _nativeSave(
       Uint8List bytes, String title, String? reservation) async {
-    if (Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
+    if (Platform.isIOS ||
+        Platform.isMacOS ||
+        Platform.isWindows ||
+        Platform.isLinux) {
       return await RecoveryPhraseExportFiles.channel
               .invokeMethod<bool>('save', {
             'text': utf8.decode(bytes),
@@ -94,7 +103,10 @@ class NativeRecoveryPhrasePlatform implements RecoveryPhrasePlatform {
   @override
   Future<String?> reserveSave() async {
     await _clear();
-    return Platform.isIOS || Platform.isMacOS || Platform.isWindows
+    return Platform.isIOS ||
+            Platform.isMacOS ||
+            Platform.isWindows ||
+            Platform.isLinux
         ? RecoveryPhraseExportFiles.channel.invokeMethod<String>('reserve')
         : null;
   }

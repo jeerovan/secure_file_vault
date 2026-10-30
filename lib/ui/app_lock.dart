@@ -18,8 +18,11 @@ AppLockPrompt appLockPrompt(AppLocalizations loc, {bool settings = false}) =>
 
 String? appLockFailureText(AppLocalizations loc, AppLockFailure? failure) =>
     switch (failure) {
-      AppLockFailure.authenticationUnavailable =>
-        Platform.isMacOS ? loc.appLockMacUnavailable : loc.appLockUnavailable,
+      AppLockFailure.authenticationUnavailable => Platform.isLinux
+          ? loc.appLockLinuxUnavailable
+          : Platform.isMacOS
+              ? loc.appLockMacUnavailable
+              : loc.appLockUnavailable,
       AppLockFailure.authenticationFailed => loc.appLockAuthenticationFailed,
       AppLockFailure.storageUnavailable => loc.appLockStorageError,
       null => null,
@@ -103,10 +106,14 @@ class SystemAppLockPrivacy implements AppLockPrivacyBridge {
       Platform.isAndroid ||
       Platform.isIOS ||
       Platform.isMacOS ||
-      Platform.isWindows;
+      Platform.isWindows ||
+      Platform.isLinux;
   @override
   bool get reportsApplicationLifecycle =>
-      Platform.isIOS || Platform.isMacOS || Platform.isWindows;
+      Platform.isIOS ||
+      Platform.isMacOS ||
+      Platform.isWindows ||
+      Platform.isLinux;
   @override
   Future<VoidCallback> watchLifecycle(
       ValueChanged<AppLifecycleState> listener) async {
@@ -473,9 +480,11 @@ class _AppLockSettingsState extends State<AppLockSettings> {
               key: const ValueKey('app-lock-switch'),
               secondary: const Icon(LucideIcons.lock, color: Colors.grey),
               title: Text(loc.appLockTitle),
-              subtitle: Text(Theme.of(context).platform == TargetPlatform.macOS
-                  ? loc.appLockMacDescription
-                  : loc.appLockDescription),
+              subtitle: Text(Theme.of(context).platform == TargetPlatform.linux
+                  ? loc.appLockLinuxDescription
+                  : Theme.of(context).platform == TargetPlatform.macOS
+                      ? loc.appLockMacDescription
+                      : loc.appLockDescription),
               value: controller.enabled,
               onChanged: !controller.ready || controller.busy
                   ? null

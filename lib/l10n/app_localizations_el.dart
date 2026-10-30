@@ -1009,4 +1009,16 @@ class AppLocalizationsEl extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Ο έλεγχος ταυτότητας του Mac δεν είναι διαθέσιμος. Ορίστε κωδικό σύνδεσης ή Touch ID στις Ρυθμίσεις συστήματος και δοκιμάστε ξανά.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'Χρησιμοποιήστε τον κωδικό σύνδεσης Linux για την προστασία του FiFe.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'Η ταυτοποίηση συστήματος δεν είναι διαθέσιμη. Εγκαταστήστε την υποστήριξη ταυτοποίησης του FiFe και δοκιμάστε ξανά.';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'Πραγματοποιήστε ταυτοποίηση για να συνεχίσετε στο FiFe.';
 }

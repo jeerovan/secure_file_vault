@@ -9,6 +9,10 @@ project(runner LANGUAGES CXX)
 add_executable(${BINARY_NAME}
   "main.cc"
   "my_application.cc"
+  "linux_desktop.cc"
+  "linux_privacy.cc"
+  "linux_auth.cc"
+  "recovery_file.cc"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
 
@@ -18,9 +22,12 @@ apply_standard_settings(${BINARY_NAME})
 
 # Add preprocessor definitions for the application ID.
 add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
+add_definitions(-DAPPLICATION_NAME="${APPLICATION_NAME}")
 
 # Add dependency libraries. Add any application-specific dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
+pkg_check_modules(AYATANA REQUIRED IMPORTED_TARGET ayatana-appindicator3-0.1)
+target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::AYATANA)
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")

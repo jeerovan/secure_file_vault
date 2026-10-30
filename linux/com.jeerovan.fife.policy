@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<policyconfig>
+  <vendor>FiFe</vendor>
+  <vendor_url>https://fife.jeero.one</vendor_url>
+  <action id="com.jeerovan.fife.authenticate">
+    <description>Authenticate to FiFe</description>
+    <message>Authenticate to continue in FiFe.</message>
+    <icon_name>dialog-password</icon_name>
+    <defaults>
+      <allow_any>no</allow_any>
+      <allow_inactive>no</allow_inactive>
+      <allow_active>auth_self</allow_active>
+    </defaults>
+    <message xml:lang="ar">قم بالمصادقة للمتابعة في FiFe.</message>
+    <message xml:lang="de">Authentifiziere dich, um in FiFe fortzufahren.</message>
+    <message xml:lang="el">Πραγματοποιήστε ταυτοποίηση για να συνεχίσετε στο FiFe.</message>
+    <message xml:lang="es">Autentícate para continuar en FiFe.</message>
+    <message xml:lang="fa">برای ادامه در FiFe هویت خود را تأیید کنید.</message>
+    <message xml:lang="fr">Authentifiez-vous pour continuer dans FiFe.</message>
+    <message xml:lang="he">יש לאמת את הזהות כדי להמשיך ב-FiFe.</message>
+    <message xml:lang="hi">FiFe में जारी रखने के लिए पहचान सत्यापित करें।</message>
+    <message xml:lang="id">Lakukan autentikasi untuk melanjutkan di FiFe.</message>
+    <message xml:lang="it">Autenticati per continuare in FiFe.</message>
+    <message xml:lang="ja">認証してFiFeを続行してください。</message>
+    <message xml:lang="ko">FiFe를 계속 사용하려면 인증하세요.</message>
+    <message xml:lang="nl">Verifieer je identiteit om door te gaan in FiFe.</message>
+    <message xml:lang="pt">Autentique-se para continuar no FiFe.</message>
+    <message xml:lang="ru">Подтвердите личность, чтобы продолжить работу в FiFe.</message>
+    <message xml:lang="th">ยืนยันตัวตนเพื่อดำเนินการต่อใน FiFe</message>
+    <message xml:lang="tr">FiFe’de devam etmek için kimliğinizi doğrulayın.</message>
+    <message xml:lang="uk">Підтвердьте особу, щоб продовжити роботу у FiFe.</message>
+    <message xml:lang="vi">Xác thực để tiếp tục trong FiFe.</message>
+    <message xml:lang="zh">请验证身份以继续使用 FiFe。</message>
+  </action>
+</policyconfig>

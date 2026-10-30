@@ -1056,5 +1056,8 @@
   "menuBarOpen": "Відкрити",
   "menuBarQuit": "Завершити",
   "appLockMacDescription": "Захистіть FiFe за допомогою Touch ID або пароля входу на Mac.",
-  "appLockMacUnavailable": "Автентифікація Mac недоступна. Налаштуйте пароль входу або Touch ID у Системних параметрах і спробуйте ще раз."
+  "appLockMacUnavailable": "Автентифікація Mac недоступна. Налаштуйте пароль входу або Touch ID у Системних параметрах і спробуйте ще раз.",
+  "appLockLinuxDescription": "Використовуйте пароль входу в Linux для захисту FiFe.",
+  "appLockLinuxUnavailable": "Системна автентифікація недоступна. Установіть підтримку автентифікації FiFe та спробуйте ще раз.",
+  "appLockLinuxAuthentication": "Підтвердьте особу, щоб продовжити роботу у FiFe."
 }

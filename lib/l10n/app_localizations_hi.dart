@@ -987,4 +987,16 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Mac प्रमाणीकरण उपलब्ध नहीं है। सिस्टम सेटिंग्स में लॉगिन पासवर्ड या Touch ID सेट करें, फिर दोबारा कोशिश करें।';
+
+  @override
+  String get appLockLinuxDescription =>
+      'FiFe की सुरक्षा के लिए अपने Linux लॉगिन पासवर्ड का उपयोग करें।';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'सिस्टम प्रमाणीकरण उपलब्ध नहीं है। FiFe का प्रमाणीकरण समर्थन इंस्टॉल करें और फिर से प्रयास करें।';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'FiFe में जारी रखने के लिए पहचान सत्यापित करें।';
 }

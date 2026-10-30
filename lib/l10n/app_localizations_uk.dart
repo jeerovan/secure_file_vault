@@ -1007,4 +1007,16 @@ class AppLocalizationsUk extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Автентифікація Mac недоступна. Налаштуйте пароль входу або Touch ID у Системних параметрах і спробуйте ще раз.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'Використовуйте пароль входу в Linux для захисту FiFe.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'Системна автентифікація недоступна. Установіть підтримку автентифікації FiFe та спробуйте ще раз.';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'Підтвердьте особу, щоб продовжити роботу у FiFe.';
 }

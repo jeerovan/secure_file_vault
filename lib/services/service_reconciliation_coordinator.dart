@@ -72,6 +72,9 @@ class ExclusiveOperationCoordinator {
   static final Set<String> _activeOperations = <String>{};
   static const _uuid = Uuid();
 
+  static bool isActiveLocally(String operationId) =>
+      _activeOperations.contains(operationId);
+
   static Future<OperationLease?> tryAcquire(String operationId) async {
     await SessionWork.checkpoint();
     if (!_activeOperations.add(operationId)) return null;

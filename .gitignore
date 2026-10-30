@@ -123,6 +123,7 @@ node_modules
 .serena/
 /.local/macos-testing/
 /.local/windows-testing/
+/.local/linux-testing/
 
 # Markdowns
 *.md

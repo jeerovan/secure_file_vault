@@ -982,4 +982,16 @@ class AppLocalizationsTh extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'ไม่สามารถใช้การยืนยันตัวตนของ Mac ได้ ตั้งค่ารหัสผ่านเข้าสู่ระบบหรือ Touch ID ในการตั้งค่าระบบ แล้วลองอีกครั้ง';
+
+  @override
+  String get appLockLinuxDescription =>
+      'ใช้รหัสผ่านเข้าสู่ระบบ Linux เพื่อปกป้อง FiFe';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'ไม่สามารถใช้การยืนยันตัวตนของระบบได้ โปรดติดตั้งการรองรับการยืนยันตัวตนของ FiFe แล้วลองอีกครั้ง';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'ยืนยันตัวตนเพื่อดำเนินการต่อใน FiFe';
 }

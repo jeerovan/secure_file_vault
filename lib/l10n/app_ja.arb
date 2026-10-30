@@ -1056,5 +1056,8 @@
   "menuBarOpen": "開く",
   "menuBarQuit": "終了",
   "appLockMacDescription": "Touch IDまたはMacのログインパスワードでFiFeを保護します。",
-  "appLockMacUnavailable": "Macの認証を利用できません。システム設定でログインパスワードまたはTouch IDを設定し、もう一度お試しください。"
+  "appLockMacUnavailable": "Macの認証を利用できません。システム設定でログインパスワードまたはTouch IDを設定し、もう一度お試しください。",
+  "appLockLinuxDescription": "LinuxのログインパスワードでFiFeを保護します。",
+  "appLockLinuxUnavailable": "システム認証を利用できません。FiFeの認証サポートをインストールして、もう一度お試しください。",
+  "appLockLinuxAuthentication": "認証してFiFeを続行してください。"
 }

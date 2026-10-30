@@ -954,4 +954,14 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Mac 인증을 사용할 수 없습니다. 시스템 설정에서 로그인 암호 또는 Touch ID를 설정한 후 다시 시도하세요.';
+
+  @override
+  String get appLockLinuxDescription => 'Linux 로그인 비밀번호로 FiFe를 보호하세요.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      '시스템 인증을 사용할 수 없습니다. FiFe 인증 지원을 설치하고 다시 시도하세요.';
+
+  @override
+  String get appLockLinuxAuthentication => 'FiFe를 계속 사용하려면 인증하세요.';
 }

@@ -1005,4 +1005,16 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'L’autenticazione del Mac non è disponibile. Configura una password di accesso o Touch ID in Impostazioni di Sistema, poi riprova.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'Usa la password di accesso a Linux per proteggere FiFe.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'L’autenticazione di sistema non è disponibile. Installa il supporto di autenticazione di FiFe e riprova.';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'Autenticati per continuare in FiFe.';
 }

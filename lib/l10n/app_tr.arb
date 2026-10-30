@@ -1056,5 +1056,8 @@
   "menuBarOpen": "Aç",
   "menuBarQuit": "Çık",
   "appLockMacDescription": "FiFe’yi Touch ID veya Mac oturum açma parolanızla koruyun.",
-  "appLockMacUnavailable": "Mac kimlik doğrulaması kullanılamıyor. Sistem Ayarları’nda oturum açma parolası veya Touch ID ayarlayıp yeniden deneyin."
+  "appLockMacUnavailable": "Mac kimlik doğrulaması kullanılamıyor. Sistem Ayarları’nda oturum açma parolası veya Touch ID ayarlayıp yeniden deneyin.",
+  "appLockLinuxDescription": "FiFe’yi korumak için Linux oturum açma parolanızı kullanın.",
+  "appLockLinuxUnavailable": "Sistem kimlik doğrulaması kullanılamıyor. FiFe kimlik doğrulama desteğini yükleyip tekrar deneyin.",
+  "appLockLinuxAuthentication": "FiFe’de devam etmek için kimliğinizi doğrulayın."
 }

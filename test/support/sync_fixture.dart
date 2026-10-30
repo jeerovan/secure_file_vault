@@ -9,6 +9,7 @@ import 'package:file_vault_bb/services/service_session_cleanup.dart';
 import 'package:file_vault_bb/storage/storage_sqlite.dart';
 import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
+import 'package:file_vault_bb/utils/utils_sync.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
@@ -159,6 +160,7 @@ class SyncFixture {
   }
 
   Future<void> dispose() async {
+    SyncUtils().stopAutoSync();
     await TaskManager.stopBackgroundWakes();
     AppHttpClients.closeAll();
     // AppSetupState can still be unwinding a real session-marker probe after

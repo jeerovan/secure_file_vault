@@ -1056,5 +1056,8 @@
   "menuBarOpen": "Buka",
   "menuBarQuit": "Keluar",
   "appLockMacDescription": "Lindungi FiFe dengan Touch ID atau kata sandi masuk Mac Anda.",
-  "appLockMacUnavailable": "Autentikasi Mac tidak tersedia. Atur kata sandi masuk atau Touch ID di Pengaturan Sistem, lalu coba lagi."
+  "appLockMacUnavailable": "Autentikasi Mac tidak tersedia. Atur kata sandi masuk atau Touch ID di Pengaturan Sistem, lalu coba lagi.",
+  "appLockLinuxDescription": "Gunakan kata sandi masuk Linux Anda untuk melindungi FiFe.",
+  "appLockLinuxUnavailable": "Autentikasi sistem tidak tersedia. Instal dukungan autentikasi FiFe dan coba lagi.",
+  "appLockLinuxAuthentication": "Lakukan autentikasi untuk melanjutkan di FiFe."
 }

@@ -11,18 +11,32 @@ import 'storage_sqlite.dart';
 import 'managed_file_copies.dart';
 
 /// Reconnects an explicitly chosen existing root without replacing its identity.
-/// Apple uses security-scoped bookmarks; Windows uses a validated source path.
+/// Apple uses security-scoped bookmarks; Windows/Linux validate a source path.
 class SyncedFolderAccess {
-  static bool get supported =>
-      Platform.isIOS || Platform.isMacOS || Platform.isWindows;
+  static bool get supported => Platform.isIOS || Platform.isMacOS || _pathBased;
 
-  static Future<bool> _windowsDirectoryAvailable(String? location) async {
+  static bool get _pathBased => Platform.isWindows || Platform.isLinux;
+
+  static Future<bool> _directoryAvailable(String? location) async {
     if (location == null || !path.isAbsolute(location)) return false;
     final normalized = path.normalize(location);
-    if (path
-        .split(normalized)
-        .any((part) => part.toLowerCase() == r'$recycle.bin')) {
+    if (Platform.isWindows &&
+        path
+            .split(normalized)
+            .any((part) => part.toLowerCase() == r'$recycle.bin')) {
       return false;
+    }
+    if (Platform.isLinux) {
+      final parts = path.split(normalized);
+      final data = Platform.environment['XDG_DATA_HOME'] ??
+          path.join(Platform.environment['HOME'] ?? '', '.local', 'share');
+      final trash = path.join(data, 'Trash');
+      if (parts.any((part) =>
+              part == '.Trash' || RegExp(r'^\.Trash-\d+$').hasMatch(part)) ||
+          path.equals(normalized, trash) ||
+          path.isWithin(trash, normalized)) {
+        return false;
+      }
     }
     try {
       if (await FileSystemEntity.type(normalized, followLinks: false) !=
@@ -39,7 +53,7 @@ class SyncedFolderAccess {
   }
 
   static Future<bool> isAvailable(ModelItem root) async {
-    if (Platform.isWindows) return _windowsDirectoryAvailable(root.path);
+    if (_pathBased) return _directoryAvailable(root.path);
     if (!ChannelStorage.hasUsableBookmark(root.bookmark)) return false;
     String? accessPath;
     try {
@@ -64,10 +78,10 @@ class SyncedFolderAccess {
       throw PlatformException(code: 'FOLDER_UNAVAILABLE');
     }
     final Map<String, String>? picked;
-    if (Platform.isWindows) {
+    if (_pathBased) {
       final selected = await FilePicker.getDirectoryPath(
           initialDirectory:
-              await _windowsDirectoryAvailable(root.path) ? root.path : null,
+              await _directoryAvailable(root.path) ? root.path : null,
           windowsOptions: const WindowsOptions(lockParentWindow: true));
       picked =
           selected == null ? null : {'path': selected, 'bookmark': 'sandboxed'};
@@ -79,12 +93,12 @@ class SyncedFolderAccess {
     final bookmark = picked['bookmark'];
     if (pickedPath == null ||
         !path.isAbsolute(pickedPath) ||
-        (!Platform.isWindows && !ChannelStorage.hasUsableBookmark(bookmark))) {
+        (!_pathBased && !ChannelStorage.hasUsableBookmark(bookmark))) {
       throw PlatformException(code: 'FOLDER_UNAVAILABLE');
     }
 
-    final accessPath = Platform.isWindows
-        ? (await _windowsDirectoryAvailable(pickedPath) ? pickedPath : null)
+    final accessPath = _pathBased
+        ? (await _directoryAvailable(pickedPath) ? pickedPath : null)
         : await ChannelStorage.startAccessing(bookmark!);
     if (accessPath == null || accessPath.isEmpty) {
       throw PlatformException(code: 'ACCESS_DENIED');
@@ -115,9 +129,9 @@ class SyncedFolderAccess {
         }
         final other = await ModelItem.syncFolderExists(pickedPath);
         var duplicate = other != null && other.id != root.id;
-        if (Platform.isWindows) {
-          // Windows paths are normally case-insensitive. Do not merge roots
-          // just because the picker returned different casing/separators.
+        if (_pathBased) {
+          // Normalize separators on both hosts; fold case only on Windows.
+          // Linux aliases must also be checked against existing source roots.
           final rows = await (await StorageSqlite.instance.executor).query(
               'items',
               columns: ['id', 'path'],
@@ -126,8 +140,27 @@ class SyncedFolderAccess {
           duplicate = rows.any((row) =>
               row['id'] != root.id &&
               row['path'] is String &&
-              path.equals((row['path'] as String).toLowerCase(),
-                  pickedPath.toLowerCase()));
+              path.equals(
+                  Platform.isWindows
+                      ? (row['path'] as String).toLowerCase()
+                      : row['path'] as String,
+                  Platform.isWindows ? pickedPath.toLowerCase() : pickedPath));
+          if (Platform.isLinux && !duplicate) {
+            final selected = await Directory(accessPath).resolveSymbolicLinks();
+            for (final row in rows) {
+              if (row['id'] == root.id || row['path'] is! String) continue;
+              try {
+                if (await Directory(row['path'] as String)
+                        .resolveSymbolicLinks() ==
+                    selected) {
+                  duplicate = true;
+                  break;
+                }
+              } on FileSystemException {
+                // An unavailable different root cannot resolve to this source.
+              }
+            }
+          }
         }
         if (duplicate) {
           throw PlatformException(code: 'FOLDER_ALREADY_SELECTED');
@@ -142,7 +175,7 @@ class SyncedFolderAccess {
       await ManagedFileCopies.finishRootCleanup(root.id);
       return recovered;
     } finally {
-      if (!Platform.isWindows) await ChannelStorage.stopAccessing(accessPath);
+      if (!_pathBased) await ChannelStorage.stopAccessing(accessPath);
     }
   }
 }

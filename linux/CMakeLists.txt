@@ -7,7 +7,8 @@ project(runner LANGUAGES CXX)
 set(BINARY_NAME "secure_file_vault")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "com.jeerovan.fife")
+set(APPLICATION_ID "com.jeerovan.fife" CACHE STRING "GTK application identifier")
+set(APPLICATION_NAME "FiFe" CACHE STRING "Desktop display name")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -129,3 +130,7 @@ endif()
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/libs/libsqlite3.so"
    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
    COMPONENT Runtime)
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/com.jeerovan.fife.policy"
+   DESTINATION "${INSTALL_BUNDLE_DATA_DIR}/authentication" COMPONENT Runtime)
+install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/install-authentication-policy.sh"
+   DESTINATION "${INSTALL_BUNDLE_DATA_DIR}/authentication" COMPONENT Runtime)

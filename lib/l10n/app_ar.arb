@@ -1056,5 +1056,8 @@
   "menuBarOpen": "فتح",
   "menuBarQuit": "إنهاء",
   "appLockMacDescription": "استخدم Touch ID أو كلمة مرور تسجيل الدخول إلى Mac لحماية FiFe.",
-  "appLockMacUnavailable": "المصادقة على Mac غير متاحة. أعدّ كلمة مرور تسجيل الدخول أو Touch ID في إعدادات النظام، ثم حاول مجددًا."
+  "appLockMacUnavailable": "المصادقة على Mac غير متاحة. أعدّ كلمة مرور تسجيل الدخول أو Touch ID في إعدادات النظام، ثم حاول مجددًا.",
+  "appLockLinuxDescription": "استخدم كلمة مرور تسجيل الدخول إلى Linux لحماية FiFe.",
+  "appLockLinuxUnavailable": "مصادقة النظام غير متاحة. ثبّت دعم المصادقة في FiFe ثم حاول مرة أخرى.",
+  "appLockLinuxAuthentication": "قم بالمصادقة للمتابعة في FiFe."
 }

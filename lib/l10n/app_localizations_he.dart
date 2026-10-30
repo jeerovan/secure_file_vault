@@ -987,4 +987,16 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'האימות ב-Mac אינו זמין. יש להגדיר סיסמת התחברות או Touch ID בהגדרות המערכת ולנסות שוב.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'השתמשו בסיסמת הכניסה ל-Linux כדי להגן על FiFe.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'אימות המערכת אינו זמין. התקינו את תמיכת האימות של FiFe ונסו שוב.';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'יש לאמת את הזהות כדי להמשיך ב-FiFe.';
 }

@@ -1845,6 +1845,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Mac authentication is unavailable. Set up a login password or Touch ID in System Settings, then try again.'**
   String get appLockMacUnavailable;
+
+  /// No description provided for @appLockLinuxDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your Linux login password to protect FiFe.'**
+  String get appLockLinuxDescription;
+
+  /// No description provided for @appLockLinuxUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'System authentication is unavailable. Install FiFe’s authentication support and try again.'**
+  String get appLockLinuxUnavailable;
+
+  /// No description provided for @appLockLinuxAuthentication.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to continue in FiFe.'**
+  String get appLockLinuxAuthentication;
 }
 
 class _AppLocalizationsDelegate

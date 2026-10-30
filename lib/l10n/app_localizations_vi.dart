@@ -984,4 +984,15 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Không thể xác thực trên máy Mac. Hãy thiết lập mật khẩu đăng nhập hoặc Touch ID trong Cài đặt hệ thống rồi thử lại.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'Sử dụng mật khẩu đăng nhập Linux để bảo vệ FiFe.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'Không thể xác thực hệ thống. Hãy cài đặt hỗ trợ xác thực của FiFe rồi thử lại.';
+
+  @override
+  String get appLockLinuxAuthentication => 'Xác thực để tiếp tục trong FiFe.';
 }

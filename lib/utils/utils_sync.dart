@@ -59,6 +59,9 @@ class SyncUtils {
   SyncUtils._internal();
 
   Timer? _foregroundSyncTimer;
+  Timer? _deferredSyncTimer;
+  int? _deferredSyncAt;
+  void Function()? _removeDeferredInvalidation;
 
   static final logger = AppLogger(prefixes: ["Sync"]);
 
@@ -72,6 +75,72 @@ class SyncUtils {
   void stopAutoSync() {
     _foregroundSyncTimer?.cancel();
     _foregroundSyncTimer = null;
+    _cancelDeferredSync();
+  }
+
+  void _cancelDeferredSync() {
+    _deferredSyncTimer?.cancel();
+    _deferredSyncTimer = null;
+    _deferredSyncAt = null;
+    _removeDeferredInvalidation?.call();
+    _removeDeferredInvalidation = null;
+  }
+
+  Future<void> _deferBusyOperation(String operationId) async {
+    // A running operation in this isolate already owns its completion path.
+    // Another engine/process may finish, renew its lease, or have died. Retry
+    // through normal reconciliation without deleting or stealing its lease.
+    if (SyncBudget.current != null ||
+        ExclusiveOperationCoordinator.isActiveLocally(operationId)) {
+      return;
+    }
+    final revision = SessionWork.revision;
+    final raw = await ModelState.get('operation_lease:$operationId');
+    await SessionWork.checkpoint();
+    if (SessionWork.revision != revision ||
+        ExclusiveOperationCoordinator.isActiveLocally(operationId)) {
+      return;
+    }
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    var expiresAt = now;
+    try {
+      final value = jsonDecode(raw);
+      if (value is Map && value['expires_at'] is int) {
+        expiresAt = value['expires_at'] as int;
+      }
+    } on FormatException {
+      // An already released/malformed lease can be retried shortly.
+    }
+    final delay = (expiresAt - now + 50).clamp(1000, 30000).toInt();
+    final wakeAt = now + delay;
+    if (_deferredSyncTimer?.isActive == true &&
+        _deferredSyncAt != null &&
+        _deferredSyncAt! <= wakeAt) {
+      return;
+    }
+    _cancelDeferredSync();
+    _deferredSyncAt = wakeAt;
+    _removeDeferredInvalidation =
+        SessionWork.onInvalidated(_cancelDeferredSync);
+    _deferredSyncTimer = Timer(Duration(milliseconds: delay), () {
+      _cancelDeferredSync();
+      unawaited(_resumeDeferredSync(revision));
+    });
+  }
+
+  Future<void> _resumeDeferredSync(String revision) async {
+    try {
+      if (!SessionWork.active ||
+          SessionWork.authenticationRequired ||
+          SessionWork.revision != revision) {
+        return;
+      }
+      await reconFolders(caller: 'DeferredSync');
+    } on SessionInvalidated {
+      // Never carry a deferred operation into another account/session.
+    } catch (error, stack) {
+      logger.error('Deferred sync failed', error: error, stackTrace: stack);
+    }
   }
 
   // Pass inBackground flag to determine if we should await everything
@@ -132,6 +201,10 @@ class SyncUtils {
         SyncBudget.check(reserve: const Duration(seconds: 5));
         final result =
             await ReconciliationService(sodium).reconcile(syncFolder);
+        if (result.status == ReconciliationStatus.busy) {
+          reconciliationSucceeded = false;
+          await _deferBusyOperation('reconciliation:${syncFolder.id}');
+        }
         if (result.status == ReconciliationStatus.failed ||
             result.status == ReconciliationStatus.partial ||
             (budget != null && !result.succeeded)) {
@@ -163,6 +236,7 @@ class SyncUtils {
     final lease = await ExclusiveOperationCoordinator.tryAcquire('metadata');
     if (lease == null) {
       logger.warning("Sync already in progress. from $caller.");
+      await _deferBusyOperation('metadata');
       return SyncBudget.current == null;
     }
 

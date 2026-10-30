@@ -986,4 +986,16 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'احراز هویت Mac در دسترس نیست. گذرواژهٔ ورود یا Touch ID را در تنظیمات سیستم تنظیم کنید و دوباره تلاش کنید.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'برای محافظت از FiFe از گذرواژه ورود به لینوکس استفاده کنید.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'احراز هویت سیستم در دسترس نیست. پشتیبانی احراز هویت FiFe را نصب کنید و دوباره تلاش کنید.';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'برای ادامه در FiFe هویت خود را تأیید کنید.';
 }

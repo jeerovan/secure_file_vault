@@ -1056,5 +1056,8 @@
   "menuBarOpen": "פתיחה",
   "menuBarQuit": "יציאה",
   "appLockMacDescription": "הגנה על FiFe באמצעות Touch ID או סיסמת ההתחברות ל-Mac.",
-  "appLockMacUnavailable": "האימות ב-Mac אינו זמין. יש להגדיר סיסמת התחברות או Touch ID בהגדרות המערכת ולנסות שוב."
+  "appLockMacUnavailable": "האימות ב-Mac אינו זמין. יש להגדיר סיסמת התחברות או Touch ID בהגדרות המערכת ולנסות שוב.",
+  "appLockLinuxDescription": "השתמשו בסיסמת הכניסה ל-Linux כדי להגן על FiFe.",
+  "appLockLinuxUnavailable": "אימות המערכת אינו זמין. התקינו את תמיכת האימות של FiFe ונסו שוב.",
+  "appLockLinuxAuthentication": "יש לאמת את הזהות כדי להמשיך ב-FiFe."
 }

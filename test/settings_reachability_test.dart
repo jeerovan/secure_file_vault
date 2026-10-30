@@ -100,6 +100,19 @@ void _expectReadingOrder(WidgetTester tester, List<String> labels) {
 }
 
 void main() {
+  testWidgets(
+      'Linux Settings exposes optional App lock with Linux instructions',
+      (tester) async {
+    await _openSettings(tester,
+        platform: TargetPlatform.linux, viewSize: const Size(700, 1800));
+    final lock = find.byKey(const ValueKey('app-lock-switch'));
+    expect(lock, findsOneWidget);
+    expect(tester.widget<SwitchListTile>(lock).value, isFalse);
+    expect(find.text('Use your Linux login password to protect FiFe.'),
+        findsOneWidget);
+    expect(find.text('Download recovery phrase'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('Windows Settings exposes optional App lock without enabling it',
       (tester) async {
     await _openSettings(tester,

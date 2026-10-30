@@ -990,4 +990,16 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Autentikasi Mac tidak tersedia. Atur kata sandi masuk atau Touch ID di Pengaturan Sistem, lalu coba lagi.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'Gunakan kata sandi masuk Linux Anda untuk melindungi FiFe.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'Autentikasi sistem tidak tersedia. Instal dukungan autentikasi FiFe dan coba lagi.';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'Lakukan autentikasi untuk melanjutkan di FiFe.';
 }

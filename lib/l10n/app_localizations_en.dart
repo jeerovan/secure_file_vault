@@ -994,4 +994,15 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Mac authentication is unavailable. Set up a login password or Touch ID in System Settings, then try again.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'Use your Linux login password to protect FiFe.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'System authentication is unavailable. Install FiFe’s authentication support and try again.';
+
+  @override
+  String get appLockLinuxAuthentication => 'Authenticate to continue in FiFe.';
 }

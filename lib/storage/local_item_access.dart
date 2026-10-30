@@ -87,7 +87,8 @@ class LocalItemAccess {
       throw PlatformException(code: 'FOLDER_UNAVAILABLE');
     }
     if (!Platform.isIOS && !Platform.isMacOS) {
-      if (Platform.isWindows && !await SyncedFolderAccess.isAvailable(root)) {
+      if ((Platform.isWindows || Platform.isLinux) &&
+          !await SyncedFolderAccess.isAvailable(root)) {
         throw PlatformException(code: 'FOLDER_UNAVAILABLE');
       }
       await _validatePath(storedRootPath, storedItemPath);

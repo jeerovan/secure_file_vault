@@ -990,4 +990,15 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'المصادقة على Mac غير متاحة. أعدّ كلمة مرور تسجيل الدخول أو Touch ID في إعدادات النظام، ثم حاول مجددًا.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'استخدم كلمة مرور تسجيل الدخول إلى Linux لحماية FiFe.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'مصادقة النظام غير متاحة. ثبّت دعم المصادقة في FiFe ثم حاول مرة أخرى.';
+
+  @override
+  String get appLockLinuxAuthentication => 'قم بالمصادقة للمتابعة في FiFe.';
 }

@@ -575,7 +575,8 @@ class SettingsPageState extends State<SettingsPage> {
         ),
       if (isMobile ||
           platform == TargetPlatform.macOS ||
-          platform == TargetPlatform.windows)
+          platform == TargetPlatform.windows ||
+          platform == TargetPlatform.linux)
         AppLockSettings(
             controller: context.read<AppLockController>(),
             enabledActions: [

@@ -19,7 +19,7 @@ class _DesktopMenuState extends State<DesktopMenu> {
   @override
   void initState() {
     super.initState();
-    if (Platform.isMacOS || Platform.isWindows) {
+    if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
       _controller = DesktopMenuController()..start();
     }
   }

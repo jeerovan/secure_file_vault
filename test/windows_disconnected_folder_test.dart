@@ -42,7 +42,7 @@ class _Picker extends FilePickerPlatform {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  group('Windows disconnected source', () {
+  group('Path-based desktop disconnected source', () {
     late SyncFixture fixture;
     late FilePickerPlatform originalPicker;
     late _Picker picker;
@@ -220,7 +220,8 @@ void main() {
         'path': moved.path,
         'is_folder': 1
       });
-      picker.selected = moved.path.toUpperCase();
+      picker.selected =
+          Platform.isWindows ? moved.path.toUpperCase() : moved.path;
       await expectLater(
           SyncedFolderAccess.reselect(root),
           throwsA(isA<PlatformException>()
@@ -293,6 +294,62 @@ void main() {
       expect(await moved.exists(), isTrue);
     });
 
+    test('Linux reconnect preserves case-sensitive roots and rejects aliases',
+        () async {
+      final root = await fixture.root;
+      await disconnect();
+      final upper =
+          await Directory(p.join(fixture.directory.path, 'Case')).create();
+      final lower =
+          await Directory(p.join(fixture.directory.path, 'case')).create();
+      await (await fixture.db).insert('items', {
+        'id': 'different-case-root',
+        'parent_id': SyncFixture.deviceId,
+        'name': 'Case',
+        'path': upper.path,
+        'is_folder': 1,
+      });
+      picker.selected = lower.path;
+      expect((await SyncedFolderAccess.reselect(root))?.path, lower.path);
+      final linkedParent = await Link(p.join(fixture.directory.path, 'alias'))
+          .create(fixture.directory.path);
+      picker.selected = p.join(linkedParent.path, 'Case');
+      await expectLater(
+          SyncedFolderAccess.reselect(await fixture.root),
+          throwsA(isA<PlatformException>()
+              .having((e) => e.code, 'code', 'FOLDER_ALREADY_SELECTED')));
+      expect((await fixture.root).path, lower.path);
+    }, skip: !Platform.isLinux);
+
+    test('Linux unreadable roots, Trash and root symlinks stay disconnected',
+        () async {
+      final root = await fixture.root;
+      final before = await fixture.snapshot();
+      final chmod = await Process.run('chmod', ['000', fixture.source.path]);
+      expect(chmod.exitCode, 0);
+      try {
+        expect(await SyncedFolderAccess.isAvailable(root), isFalse);
+        await expectLater(LocalItemAccess.acquire(root.id),
+            throwsA(isA<PlatformException>()));
+        expect((await fixture.scan()).succeeded, isFalse,
+            reason: 'A denied scan must not publish a complete empty snapshot');
+        expect(await fixture.snapshot(), before);
+      } finally {
+        await Process.run('chmod', ['700', fixture.source.path]);
+      }
+      expect(await SyncedFolderAccess.isAvailable(root), isTrue);
+      final moved = await disconnect();
+      await Link(fixture.source.path).create(moved.path);
+      expect(await SyncedFolderAccess.isAvailable(root), isFalse);
+      final trash = await Directory(
+              p.join(fixture.directory.path, '.Trash-1000', 'files', 'source'))
+          .create(recursive: true);
+      picker.selected = trash.path;
+      await expectLater(
+          SyncedFolderAccess.reselect(root), throwsA(isA<PlatformException>()));
+      expect(await moved.exists(), isTrue);
+    }, skip: !Platform.isLinux);
+
     test(
         'archiving nested recovery cancels late publication and preserves siblings and originals',
         () async {
@@ -342,5 +399,5 @@ void main() {
         }
       });
     });
-  }, skip: !Platform.isWindows);
+  }, skip: !Platform.isWindows && !Platform.isLinux);
 }

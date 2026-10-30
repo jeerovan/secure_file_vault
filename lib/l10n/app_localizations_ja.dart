@@ -955,4 +955,14 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Macの認証を利用できません。システム設定でログインパスワードまたはTouch IDを設定し、もう一度お試しください。';
+
+  @override
+  String get appLockLinuxDescription => 'LinuxのログインパスワードでFiFeを保護します。';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'システム認証を利用できません。FiFeの認証サポートをインストールして、もう一度お試しください。';
+
+  @override
+  String get appLockLinuxAuthentication => '認証してFiFeを続行してください。';
 }

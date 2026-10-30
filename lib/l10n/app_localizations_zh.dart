@@ -931,4 +931,13 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Mac 身份验证不可用。请在系统设置中设置登录密码或 Touch ID，然后重试。';
+
+  @override
+  String get appLockLinuxDescription => '使用 Linux 登录密码保护 FiFe。';
+
+  @override
+  String get appLockLinuxUnavailable => '系统身份验证不可用。请安装 FiFe 身份验证支持后重试。';
+
+  @override
+  String get appLockLinuxAuthentication => '请验证身份以继续使用 FiFe。';
 }

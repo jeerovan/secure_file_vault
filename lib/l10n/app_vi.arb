@@ -1056,5 +1056,8 @@
   "menuBarOpen": "Mở",
   "menuBarQuit": "Thoát",
   "appLockMacDescription": "Bảo vệ FiFe bằng Touch ID hoặc mật khẩu đăng nhập máy Mac.",
-  "appLockMacUnavailable": "Không thể xác thực trên máy Mac. Hãy thiết lập mật khẩu đăng nhập hoặc Touch ID trong Cài đặt hệ thống rồi thử lại."
+  "appLockMacUnavailable": "Không thể xác thực trên máy Mac. Hãy thiết lập mật khẩu đăng nhập hoặc Touch ID trong Cài đặt hệ thống rồi thử lại.",
+  "appLockLinuxDescription": "Sử dụng mật khẩu đăng nhập Linux để bảo vệ FiFe.",
+  "appLockLinuxUnavailable": "Không thể xác thực hệ thống. Hãy cài đặt hỗ trợ xác thực của FiFe rồi thử lại.",
+  "appLockLinuxAuthentication": "Xác thực để tiếp tục trong FiFe."
 }

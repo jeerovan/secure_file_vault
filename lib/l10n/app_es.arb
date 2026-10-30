@@ -1056,5 +1056,8 @@
   "menuBarOpen": "Abrir",
   "menuBarQuit": "Salir",
   "appLockMacDescription": "Protege FiFe con Touch ID o tu contraseña de inicio de sesión del Mac.",
-  "appLockMacUnavailable": "La autenticación del Mac no está disponible. Configura una contraseña de inicio de sesión o Touch ID en Ajustes del Sistema y vuelve a intentarlo."
+  "appLockMacUnavailable": "La autenticación del Mac no está disponible. Configura una contraseña de inicio de sesión o Touch ID en Ajustes del Sistema y vuelve a intentarlo.",
+  "appLockLinuxDescription": "Usa tu contraseña de inicio de sesión de Linux para proteger FiFe.",
+  "appLockLinuxUnavailable": "La autenticación del sistema no está disponible. Instala el soporte de autenticación de FiFe e inténtalo de nuevo.",
+  "appLockLinuxAuthentication": "Autentícate para continuar en FiFe."
 }

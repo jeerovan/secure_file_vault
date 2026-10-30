@@ -991,4 +991,16 @@ class AppLocalizationsTr extends AppLocalizations {
   @override
   String get appLockMacUnavailable =>
       'Mac kimlik doğrulaması kullanılamıyor. Sistem Ayarları’nda oturum açma parolası veya Touch ID ayarlayıp yeniden deneyin.';
+
+  @override
+  String get appLockLinuxDescription =>
+      'FiFe’yi korumak için Linux oturum açma parolanızı kullanın.';
+
+  @override
+  String get appLockLinuxUnavailable =>
+      'Sistem kimlik doğrulaması kullanılamıyor. FiFe kimlik doğrulama desteğini yükleyip tekrar deneyin.';
+
+  @override
+  String get appLockLinuxAuthentication =>
+      'FiFe’de devam etmek için kimliğinizi doğrulayın.';
 }

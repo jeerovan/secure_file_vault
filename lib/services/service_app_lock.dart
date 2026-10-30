@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/widgets.dart';
+import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
 import 'package:local_auth_darwin/local_auth_darwin.dart';
@@ -96,6 +98,21 @@ class SystemAppLockAuthenticator implements AppLockAuthenticator {
   }
 }
 
+/// Linux's desktop authentication agent owns credentials and the system prompt.
+/// The native side requires a fresh, non-cached current-user polkit challenge.
+class LinuxAppLockAuthenticator implements AppLockAuthenticator {
+  const LinuxAppLockAuthenticator();
+  static const channel = MethodChannel('com.jeerovan.fife/linux_auth');
+  @override
+  Future<bool> isSupported() async =>
+      await channel.invokeMethod<bool>('isSupported') ?? false;
+  @override
+  Future<bool> authenticate(AppLockPrompt prompt) async =>
+      await channel.invokeMethod<bool>('authenticate') ?? false;
+  @override
+  Future<void> cancel() => channel.invokeMethod<void>('cancel');
+}
+
 enum AppLockFailure {
   authenticationUnavailable,
   authenticationFailed,
@@ -142,7 +159,10 @@ class AppLockController extends ChangeNotifier {
       Duration Function()? clock,
       DateTime Function()? wallClock})
       : _store = store ?? ModelAppLockStore(),
-        _auth = authenticator ?? SystemAppLockAuthenticator() {
+        _auth = authenticator ??
+            (Platform.isLinux
+                ? const LinuxAppLockAuthenticator()
+                : SystemAppLockAuthenticator()) {
     final stopwatch = Stopwatch()..start();
     _now = clock ?? (() => stopwatch.elapsed);
     _wallNow = wallClock ?? DateTime.now;
