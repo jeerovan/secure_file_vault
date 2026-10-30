@@ -171,8 +171,15 @@ MyApplication* my_application_new() {
   g_set_prgname(APPLICATION_ID);
   g_set_application_name(APPLICATION_NAME);
 
+  // The default-flags name was introduced in GLib 2.74. Keep older GTK 3
+  // desktops (including Ubuntu 20.04) compatible without disabling uniqueness.
+#if GLIB_CHECK_VERSION(2, 74, 0)
+  constexpr GApplicationFlags flags = G_APPLICATION_DEFAULT_FLAGS;
+#else
+  constexpr GApplicationFlags flags = G_APPLICATION_FLAGS_NONE;
+#endif
   return MY_APPLICATION(g_object_new(my_application_get_type(),
                                      "application-id", APPLICATION_ID,
-                                     "flags", G_APPLICATION_DEFAULT_FLAGS,
+                                     "flags", flags,
                                      nullptr));
 }
