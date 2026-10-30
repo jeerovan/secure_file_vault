@@ -124,6 +124,7 @@ node_modules
 /.local/macos-testing/
 /.local/windows-testing/
 /.local/linux-testing/
+/.local/desktop-focus-review/
 
 # Markdowns
 *.md

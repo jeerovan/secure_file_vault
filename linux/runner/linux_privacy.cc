@@ -61,8 +61,15 @@ LinuxPrivacy::LinuxPrivacy(GtkWindow* window, FlView* view,
         } else if (g_strcmp0(method, "frameReady") == 0) {
           if (self->Active()) {
             self->frame_ready_ = BoolField(args, "allowNativeDocuments");
+            const bool restore_focus =
+                !gtk_widget_get_sensitive(GTK_WIDGET(self->view_));
             gtk_widget_hide(self->cover_);
             gtk_widget_set_sensitive(GTK_WIDGET(self->view_), TRUE);
+            // Cover() removes native keyboard focus. The runner's initial
+            // grab_focus happens while the view is still insensitive, so it
+            // cannot restore it. Do this only when releasing the cover; later
+            // Flutter frames must not steal focus from native window controls.
+            if (restore_focus) gtk_widget_grab_focus(GTK_WIDGET(self->view_));
           }
           Success(call);
         } else if (g_strcmp0(method, "copyRecoveryPhrase") == 0) {
