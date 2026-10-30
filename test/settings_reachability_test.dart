@@ -100,6 +100,16 @@ void _expectReadingOrder(WidgetTester tester, List<String> labels) {
 }
 
 void main() {
+  testWidgets('Windows Settings exposes optional App lock without enabling it',
+      (tester) async {
+    await _openSettings(tester,
+        platform: TargetPlatform.windows, viewSize: const Size(700, 1800));
+    final lock = find.byKey(const ValueKey('app-lock-switch'));
+    expect(lock, findsOneWidget);
+    expect(tester.widget<SwitchListTile>(lock).value, isFalse);
+    expect(find.text('Download recovery phrase'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('mobile Settings opens at the normal top above its fixed toolbar',
       (tester) async {
     await _openSettings(tester);

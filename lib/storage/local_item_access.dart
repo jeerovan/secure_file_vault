@@ -8,6 +8,7 @@ import '../utils/common.dart';
 import 'storage_channel.dart';
 import 'managed_file_copies.dart';
 import 'remote_file_copies.dart';
+import 'synced_folder_access.dart';
 
 /// Keeps a selected folder accessible throughout a file operation, including
 /// awaits. A denied bookmark must never be treated as a missing source file.
@@ -86,6 +87,9 @@ class LocalItemAccess {
       throw PlatformException(code: 'FOLDER_UNAVAILABLE');
     }
     if (!Platform.isIOS && !Platform.isMacOS) {
+      if (Platform.isWindows && !await SyncedFolderAccess.isAvailable(root)) {
+        throw PlatformException(code: 'FOLDER_UNAVAILABLE');
+      }
       await _validatePath(storedRootPath, storedItemPath);
       return LocalItemAccess._(storedItemPath, null);
     }

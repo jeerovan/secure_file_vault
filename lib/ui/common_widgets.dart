@@ -1109,7 +1109,7 @@ class _FileListItemState extends State<FileListItem> {
   }
 
   Future<bool> requiresBookmark(ModelItem item) async {
-    if (Platform.isIOS || Platform.isMacOS) {
+    if (SyncedFolderAccess.supported) {
       String deviceHash = await getDeviceHash();
       if (item.parentId == deviceHash) {
         // A stored bookmark may be stale, denied or point to a removed folder.

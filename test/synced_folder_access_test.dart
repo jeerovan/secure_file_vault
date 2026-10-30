@@ -1,3 +1,6 @@
+@TestOn('mac-os')
+library;
+
 import 'dart:io';
 
 import 'package:file_vault_bb/models/model_item.dart';
@@ -335,6 +338,29 @@ void main() {
           SyncedFolderAccess.reselect(root), throwsA(isA<PlatformException>()));
       expect(await items(), before);
       expect(calls.map((c) => c.method), ['pickDirectory']);
+    });
+  });
+
+  test('recovery directory cannot become the new source and be deleted',
+      () async {
+    final copy =
+        await Directory('${selected.path}/FiFe/.downloads/root/version/source')
+            .create(recursive: true);
+    final original =
+        await File('${copy.path}/child.txt').writeAsString('recovered');
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'pickDirectory') {
+        return {'path': copy.path, 'bookmark': 'fresh-bookmark'};
+      }
+      if (call.method == 'startAccessing') return copy.path;
+      return true;
+    });
+    await inDatabase((root) async {
+      final before = await items();
+      await expectLater(
+          SyncedFolderAccess.reselect(root), throwsA(isA<PlatformException>()));
+      expect(await items(), before);
+      expect(await original.readAsString(), 'recovered');
     });
   });
 }

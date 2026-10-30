@@ -100,9 +100,13 @@ class SystemAppLockPrivacy implements AppLockPrivacyBridge {
   static Object? _lifecycleOwner;
   @override
   bool get supported =>
-      Platform.isAndroid || Platform.isIOS || Platform.isMacOS;
+      Platform.isAndroid ||
+      Platform.isIOS ||
+      Platform.isMacOS ||
+      Platform.isWindows;
   @override
-  bool get reportsApplicationLifecycle => Platform.isIOS || Platform.isMacOS;
+  bool get reportsApplicationLifecycle =>
+      Platform.isIOS || Platform.isMacOS || Platform.isWindows;
   @override
   Future<VoidCallback> watchLifecycle(
       ValueChanged<AppLifecycleState> listener) async {

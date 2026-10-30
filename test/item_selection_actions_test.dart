@@ -423,6 +423,64 @@ void main() {
       expect((await ModelItem.get('local'))!.archivedAt, 0);
     });
   }, skip: !Platform.isIOS && !Platform.isMacOS);
+
+  testWidgets('Windows moved root warns, stays browsable and offers recovery',
+      (tester) async {
+    await withSelectionFixture(tester, (fixture) async {
+      await fixture.createCopy('local');
+      await fixture.mount();
+      await fixture.source.rename('${fixture.source.path}-moved');
+      await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+      await fixture.waitFor(
+          () => find.byKey(const ValueKey('local-root')).evaluate().isNotEmpty);
+      await fixture.waitFor(() => find
+          .descendant(
+              of: find.byKey(const ValueKey('local-root')),
+              matching: find.byIcon(LucideIcons.alertCircle))
+          .evaluate()
+          .isNotEmpty);
+      fixture.row('local-root').onTap();
+      await fixture.waitFor(
+          () => find.byKey(const ValueKey('local')).evaluate().isNotEmpty);
+      await fixture.select('local');
+      fixture.expectActions(delete: false, archive: false, download: true);
+      expect(find.byTooltip('Info'), findsOneWidget);
+      await fixture.tapAction('Cancel');
+      await fixture.select('local-folder');
+      fixture.expectActions(delete: false, archive: true, download: true);
+      expect(find.byTooltip('Reconnect'), findsNothing);
+      await fixture.tapAction('Cancel');
+      await fixture.waitFor(
+          () => find.byIcon(LucideIcons.arrowLeft).evaluate().isNotEmpty);
+      await tester.tap(find.byIcon(LucideIcons.arrowLeft));
+      await fixture.waitFor(
+          () => find.byKey(const ValueKey('local-root')).evaluate().isNotEmpty);
+      fixture.row('local-root').onLongPress();
+      await fixture.waitForAction('Reconnect');
+      fixture.expectActions(delete: false, archive: true, download: true);
+    });
+  }, skip: !Platform.isWindows);
+
+  testWidgets(
+      'Windows returning source removes warning and stale recovery actions',
+      (tester) async {
+    await withSelectionFixture(tester, (fixture) async {
+      await fixture.createCopy('local');
+      await fixture.mount();
+      final held = await fixture.source.rename('${fixture.source.path}-moved');
+      await fixture.select('local');
+      fixture.expectActions(delete: false, archive: false, download: true);
+      await held.rename(fixture.source.path);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await fixture
+          .waitFor(() => find.byTooltip('Download').evaluate().isEmpty);
+      fixture.expectActions(delete: false, archive: false, download: false);
+      expect(
+          await File('${fixture.source.path}/local-sample.txt').readAsString(),
+          'preserve this content');
+    });
+  }, skip: !Platform.isWindows);
 }
 
 Future<void> withSelectionFixture(

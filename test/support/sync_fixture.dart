@@ -11,6 +11,7 @@ import 'package:file_vault_bb/utils/enums.dart';
 import 'package:file_vault_bb/utils/utils_tasks.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 import 'package:sodium/sodium_sumo.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
@@ -134,8 +135,8 @@ class SyncFixture {
 
   Future<ModelItem> item(String relativePath) async {
     for (final item in await items()) {
-      if (await ModelItem.getPathForItem(item.id) ==
-          '${source.path}/$relativePath') {
+      if (path.equals(await ModelItem.getPathForItem(item.id),
+          path.join(source.path, relativePath))) {
         return item;
       }
     }
@@ -160,6 +161,10 @@ class SyncFixture {
   Future<void> dispose() async {
     await TaskManager.stopBackgroundWakes();
     AppHttpClients.closeAll();
+    // AppSetupState can still be unwinding a real session-marker probe after
+    // its widget is disposed. Windows cannot delete those open SQLite mutexes.
+    await SessionCleanup.instance.currentOperation
+        ?.timeout(const Duration(seconds: 5));
     await StorageSqlite.instance.close();
     SessionCleanup.instance.resetForTesting();
     ModelSetting.clear();

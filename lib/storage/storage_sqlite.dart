@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import '../utils/enums.dart';
 import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -47,6 +48,19 @@ class StorageSqlite {
   static final StorageSqlite instance = StorageSqlite._init();
   static Database? _database;
   static Completer<Database>? _databaseCompleter;
+  static String? _testDirectory;
+
+  /// Windows uses its legacy APPDATA database location in production. Host
+  /// fixtures must explicitly isolate it: mocking path_provider cannot redirect
+  /// that environment-based path. Never switch underneath an open connection.
+  @visibleForTesting
+  static void setDatabaseDirectoryForTesting(String? directory) {
+    if (_database != null || _databaseCompleter != null) {
+      throw StateError('Close the database before changing its test directory');
+    }
+    _testDirectory = directory;
+  }
+
   static final Object _transactionExecutorKey = Object();
 
   // Track execution mode to handle background isolate behaviors safely
@@ -122,7 +136,7 @@ class StorageSqlite {
 
   Future<Database> _initDB(String dbFileName) async {
     try {
-      String dbDir = await getDbStoragePath();
+      String dbDir = _testDirectory ?? await getDbStoragePath();
       logger.info("Db path: $dbDir");
       final dbPath = join(dbDir, dbFileName);
       return await openDatabase(

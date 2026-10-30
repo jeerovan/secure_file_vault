@@ -218,7 +218,7 @@ packages:
     source: hosted
     version: "13.2.0"
   device_info_plus_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: device_info_plus_platform_interface
       sha256: "04b173a92e2d9161dfead145667037c8d834db725ce2e7b942bfe18fd2f45a46"
@@ -789,7 +789,7 @@ packages:
     source: hosted
     version: "2.2.2"
   path_provider_platform_interface:
-    dependency: transitive
+    dependency: "direct dev"
     description:
       name: path_provider_platform_interface
       sha256: "484838772624c3a4b94f1e44a3e19897fee738f2d5c4ce448443b0417f7c9dda"

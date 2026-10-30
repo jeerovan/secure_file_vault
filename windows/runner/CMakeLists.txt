@@ -11,6 +11,8 @@ add_executable(${BINARY_NAME} WIN32
   "main.cpp"
   "utils.cpp"
   "win32_window.cpp"
+  "windows_desktop.cpp"
+  "windows_privacy.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "Runner.rc"
   "runner.exe.manifest"
@@ -34,7 +36,24 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+target_link_libraries(${BINARY_NAME} PRIVATE "comctl32.lib" "shell32.lib" "wtsapi32.lib" "ole32.lib" "uuid.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
+
+# Opt-in native transport checks; not shipped with the app and never touch a
+# vault, credentials or the owner's clipboard. Requires an interactive desktop.
+option(FIFE_WINDOWS_NATIVE_TESTS "Build FiFe native Windows component checks" OFF)
+if(FIFE_WINDOWS_NATIVE_TESTS)
+  add_executable(fife_windows_privacy_test
+    "tests/windows_privacy_test.cpp" "windows_privacy.cpp")
+  apply_standard_settings(fife_windows_privacy_test)
+  target_compile_definitions(fife_windows_privacy_test PRIVATE NOMINMAX)
+  target_include_directories(fife_windows_privacy_test PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+  target_link_libraries(fife_windows_privacy_test PRIVATE flutter flutter_wrapper_app
+    "shell32.lib" "wtsapi32.lib" "ole32.lib" "uuid.lib")
+  add_custom_command(TARGET fife_windows_privacy_test POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${FLUTTER_LIBRARY}" "$<TARGET_FILE_DIR:fife_windows_privacy_test>")
+endif()

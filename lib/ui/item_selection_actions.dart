@@ -188,7 +188,7 @@ class ItemSelectionActions extends ChangeNotifier {
       if (await ManagedFileCopies.hasArchivedAncestor(id)) return unavailable;
       final root = isLocal ? await ManagedFileCopies.localRoot(id) : null;
       final disconnected = root != null &&
-              (Platform.isIOS || Platform.isMacOS) &&
+              SyncedFolderAccess.supported &&
               !await SyncedFolderAccess.isAvailable(root)
           ? root
           : null;

@@ -1,6 +1,6 @@
 [Setup]
 AppName=FiFe
-AppVersion=1.0.8
+AppVersion=1.0.14
 DefaultDirName={autopf}\FiFe
 DefaultGroupName=FiFe
 OutputDir=Output

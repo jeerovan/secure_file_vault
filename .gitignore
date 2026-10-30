@@ -122,6 +122,7 @@ node_modules
 .codex/
 .serena/
 /.local/macos-testing/
+/.local/windows-testing/
 
 # Markdowns
 *.md

@@ -89,12 +89,14 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
+            // path_provider uses CompanyName/ProductName for persisted paths.
+            // Preserve this identity until an explicit data migration exists.
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "file_vault_bb" "\0"
+            VALUE "FileDescription", "FiFe" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "file_vault_bb" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "file_vault_bb.exe" "\0"
+            VALUE "OriginalFilename", "fife.exe" "\0"
             VALUE "ProductName", "file_vault_bb" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END

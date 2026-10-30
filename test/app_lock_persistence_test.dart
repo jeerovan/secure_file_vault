@@ -26,8 +26,14 @@ import 'support/sync_fixture.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late SyncFixture fixture;
-  setUp(() async => fixture = await SyncFixture.create());
-  tearDown(() => fixture.dispose());
+  var fixtureDisposed = false;
+  setUp(() async {
+    fixtureDisposed = false;
+    fixture = await SyncFixture.create();
+  });
+  tearDown(() async {
+    if (!fixtureDisposed) await fixture.dispose();
+  });
 
   test(
       'lock policy survives SQLite reopening and ignores stale preference cache',
@@ -95,6 +101,9 @@ void main() {
       setup.dispose();
       locale.dispose();
       lock.dispose();
+      // Native file reads/closes must finish outside the widget fake clock.
+      await tester.runAsync(fixture.dispose);
+      fixtureDisposed = true;
     });
     await tester.pumpWidget(MultiProvider(providers: [
       ChangeNotifierProvider.value(value: setup),
@@ -157,6 +166,8 @@ void main() {
       setup.dispose();
       locale.dispose();
       lock.dispose();
+      await tester.runAsync(fixture.dispose);
+      fixtureDisposed = true;
     });
     await tester.runAsync(() => tester.pumpWidget(MultiProvider(providers: [
           ChangeNotifierProvider.value(value: setup),
